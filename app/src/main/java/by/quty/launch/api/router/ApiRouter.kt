@@ -3,22 +3,20 @@ package by.quty.launch.api.router
 
 import by.quty.launch.api.base.BaseApiMethod
 
+/**
+ * Централизованный роутинг всех API методов.
+ */
 object ApiRouter {
 
-    private val methods = mutableMapOf<String, BaseApiMethod>()
+    private val methods = mutableMapOf<String, BaseApiMethod<*, *>>()
 
-    fun register(method: BaseApiMethod) {
+    fun register(method: BaseApiMethod<*, *>) {
         methods[method.name] = method
     }
 
-    suspend fun execute(
-        methodName: String,
-        params: String?
-    ): String {
-
+    suspend fun execute(methodName: String, params: String?): String {
         val method = methods[methodName]
             ?: return """{"success": false, "error": "Method not found"}"""
-
         return method.execute(params)
     }
 }
