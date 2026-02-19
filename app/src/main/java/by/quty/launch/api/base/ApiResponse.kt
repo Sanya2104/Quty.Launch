@@ -7,6 +7,5 @@ import kotlinx.serialization.Serializable
 data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,
-    val error: String? = null,
-    val code: Int = 0
+    val error: String? = null
 )

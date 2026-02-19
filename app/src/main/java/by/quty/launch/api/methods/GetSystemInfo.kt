@@ -3,21 +3,18 @@ package by.quty.launch.api.methods
 
 import android.content.Context
 import by.quty.launch.api.base.BaseApiMethod
+import by.quty.launch.api.model.SystemInfo
 
 class GetSystemInfo(
     private val context: Context
-) : BaseApiMethod() {
+) : BaseApiMethod<Unit, SystemInfo>() {
 
-    override suspend fun handle(params: String?): String {
+    override fun parseParams(jsonString: String) = Unit
 
-        val infoJson = """
-        {
-            "device": "Android",
-            "version": "14"
-        }
-    """.trimIndent()
-
-        return infoJson
+    override suspend fun handle(params: Unit?): SystemInfo {
+        return SystemInfo(
+            device = android.os.Build.MODEL,
+            version = android.os.Build.VERSION.RELEASE
+        )
     }
-
 }
