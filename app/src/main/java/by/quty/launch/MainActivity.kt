@@ -1,47 +1,39 @@
+// *** MainActivity.kt *** //
 package by.quty.launch
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import by.quty.launch.ui.theme.QutyLaunchTheme
+import androidx.compose.ui.viewinterop.AndroidView
+import by.quty.launch.api.ApiInitializer
+import by.quty.launch.core.Core
+import by.quty.launch.core.webview.*
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // Инициализация API методов
+        ApiInitializer.init(this)
+
+        val core = Core()
+        val webView = LauncherWebView(this)
+
+        webView.addJavascriptInterface(
+            JsBridge(core),
+            "Android"
+        )
+
         setContent {
-            QutyLaunchTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { webView }
+            )
         }
-    }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    QutyLaunchTheme {
-        Greeting("Android")
+        webView.loadUrl("file:///android_asset/themes/default/index.html")
     }
 }
