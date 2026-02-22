@@ -2,11 +2,7 @@
 package by.quty.launch
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -16,7 +12,7 @@ import by.quty.launch.core.ThemeManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var core: Core
     private lateinit var webView: LauncherWebView
@@ -38,18 +34,11 @@ class MainActivity : ComponentActivity() {
         if (activeTheme != null) {
             themeManager.setActiveTheme(activeTheme)
         } else {
-            // Обработка ошибки - нет доступных тем
-            // Если нет тем (что маловероятно), используем дефолтную
             themeManager.setActiveTheme(Theme("Default", true, "file:///android_asset/themes/default/"))
         }
 
-        // Устанавливаем контент
-        setContent {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { webView }
-            )
-        }
+        // Устанавливаем WebView как контент
+        setContentView(webView)
 
         // Загружаем index.html выбранной темы
         webView.loadUrl(themeManager.getActiveThemeIndexHtml())
@@ -60,7 +49,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Восстанавливаем полноэкранный режим при возвращении в активность
         setFullScreen()
     }
 
