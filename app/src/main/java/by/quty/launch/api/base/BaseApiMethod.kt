@@ -2,8 +2,9 @@
 package by.quty.launch.api.base
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.builtins.serializer
 
-abstract class BaseApiMethod<P, R> {
+abstract class BaseApiMethod<P> {
 
     protected val json = Json {
         ignoreUnknownKeys = true
@@ -11,23 +12,23 @@ abstract class BaseApiMethod<P, R> {
     }
 
     open val name: String
-        get() = this::class.simpleName
-            ?.replaceFirstChar { it.lowercase() }
-            ?: "unknown"
+        get() = this::class.simpleName?.replaceFirstChar { it.lowercase() } ?: "unknown"
 
+    // Этот метод нужно вызывать из JsBridge
     suspend fun execute(params: String?): String {
         return try {
             val parsedParams = params?.let { parseParams(it) }
-            val result = handle(parsedParams)
-            json.encodeToString(ApiResponse(success = true, data = result))
+            val result = executeInternal(parsedParams)
+            result
         } catch (e: Exception) {
-            json.encodeToString(ApiResponse<Unit>(
-                success = false,
-                error = e.message ?: "Unknown error"
-            ))
+            json.encodeToString(
+                ApiResponse.serializer(Unit.serializer()),
+                ApiResponse(success = false, error = e.message ?: "Unknown error")
+            )
         }
     }
 
-    protected abstract suspend fun handle(params: P?): R
+    // Абстрактный метод, который возвращает уже сериализованную строку
+    protected abstract suspend fun executeInternal(params: P?): String
     protected abstract fun parseParams(jsonString: String): P
 }

@@ -1,0 +1,7 @@
+{
+  "name": "Simple Theme",
+  "author": "Quty",
+  "version": "1.0",
+  "description": "Простая базовая тема с 3 экранами",
+  "main": "index.html"
+}

@@ -1,10 +1,12 @@
 // *** core/webview/LauncherWebView.kt *** //
 package by.quty.launch.core.webview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.WebSettings
 import android.webkit.WebView
 
+@SuppressLint("SetJavaScriptEnabled")
 class LauncherWebView(context: Context) : WebView(context) {
 
     init {
@@ -13,6 +15,6 @@ class LauncherWebView(context: Context) : WebView(context) {
         settings.allowFileAccess = true
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
-        WebView.setWebContentsDebuggingEnabled(true)
+        setWebContentsDebuggingEnabled(true)
     }
 }

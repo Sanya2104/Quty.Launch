@@ -10,15 +10,15 @@ class JsBridge(
 ) {
 
     @JavascriptInterface
-    fun call(method: String, params: String?) {
-
-        CoroutineScope(Dispatchers.Main).launch {
-
-            val result = withTimeoutOrNull(10_000) {
-                core.execute(method, params)
+    fun call(method: String, params: String?): String {
+        return runBlocking(Dispatchers.IO) {
+            try {
+                withTimeout(10_000) {
+                    core.execute(method, params)
+                }
+            } catch (e: Exception) {
+                """{"success": false, "error": "${e.message}"}"""
             }
-
-            core.execute(method, params)
         }
     }
 }

@@ -18,7 +18,7 @@ object ApiInitializer {
 
     fun init(context: Context) {
         val methods = listOf(
-            GetSystemInfo(context),
+            GetSystemInfo(),
             GetInstalledApps(context),
             LaunchApp(context)
         )

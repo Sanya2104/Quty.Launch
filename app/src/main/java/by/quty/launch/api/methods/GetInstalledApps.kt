@@ -3,17 +3,19 @@ package by.quty.launch.api.methods
 
 import android.content.Context
 import by.quty.launch.api.base.BaseApiMethod
+import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.AppInfo
+import kotlinx.serialization.builtins.ListSerializer
 
 class GetInstalledApps(
     private val context: Context
-) : BaseApiMethod<Unit, List<AppInfo>>() {
+) : BaseApiMethod<Unit>() {
 
     override fun parseParams(jsonString: String) = Unit
 
-    override suspend fun handle(params: Unit?): List<AppInfo> {
+    override suspend fun executeInternal(params: Unit?): String {
         val packageManager = context.packageManager
-        return packageManager
+        val apps = packageManager
             .getInstalledApplications(0)
             .filter { packageManager.getLaunchIntentForPackage(it.packageName) != null }
             .map {
@@ -22,5 +24,10 @@ class GetInstalledApps(
                     packageName = it.packageName
                 )
             }
+
+        return json.encodeToString(
+            ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
+            ApiResponse(success = true, data = apps)
+        )
     }
 }

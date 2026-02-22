@@ -1,14 +1,43 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>QutyLaunch</title>
+    <title>Quty Launcher</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-<h1>QutyLaunch</h1>
-<div id="info"></div>
+<div id="app">
+
+    <div id="nav">
+        <button onclick="navigate('home')">Главная</button>
+        <button onclick="navigate('apps')">Приложения</button>
+        <button onclick="navigate('info')">Информация</button>
+    </div>
+
+    <div id="content">
+
+        <!-- Главная -->
+        <div id="home" class="screen active">
+            <h1>Добро пожаловать</h1>
+            <p>Это простая тема QutyLauncher</p>
+        </div>
+
+        <!-- Приложения -->
+        <div id="apps" class="screen">
+            <h1>Список приложений</h1>
+            <div id="apps-list"></div>
+        </div>
+
+        <!-- Информация -->
+        <div id="info" class="screen">
+            <h1>Информация</h1>
+            <div id="info-content"></div>
+        </div>
+
+    </div>
+
+</div>
 
 <script src="assets/js/app.js"></script>
 </body>

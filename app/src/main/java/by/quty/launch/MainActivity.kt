@@ -11,6 +11,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.quty.launch.core.Core
+import by.quty.launch.core.Theme
+import by.quty.launch.core.ThemeManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 
@@ -18,18 +20,28 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var core: Core
     private lateinit var webView: LauncherWebView
+    private lateinit var themeManager: ThemeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализация Core и WebView
+        // Инициализация Core, WebView, themeManager
         core = Core(this)
         webView = LauncherWebView(this)
+        themeManager = ThemeManager(this)
 
-        webView.addJavascriptInterface(
-            JsBridge(core),
-            "Android"
-        )
+        webView.addJavascriptInterface(JsBridge(core), "Android")
+
+        // Устанавливаем тему (по умолчанию дефолтная)
+        val themes = themeManager.getAvailableThemes()
+        val activeTheme = themes.find { !it.isDefault } ?: themes.firstOrNull()
+        if (activeTheme != null) {
+            themeManager.setActiveTheme(activeTheme)
+        } else {
+            // Обработка ошибки - нет доступных тем
+            // Если нет тем (что маловероятно), используем дефолтную
+            themeManager.setActiveTheme(Theme("Default", true, "file:///android_asset/themes/default/"))
+        }
 
         // Устанавливаем контент
         setContent {
@@ -39,7 +51,8 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        webView.loadUrl("file:///android_asset/themes/default/index.html")
+        // Загружаем index.html выбранной темы
+        webView.loadUrl(themeManager.getActiveThemeIndexHtml())
 
         // Устанавливаем полноэкранный режим
         setFullScreen()
