@@ -7,7 +7,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.quty.launch.core.Core
-import by.quty.launch.core.Theme
+import by.quty.launch.core.ConfigManager
 import by.quty.launch.core.ThemeManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
@@ -17,25 +17,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var core: Core
     private lateinit var webView: LauncherWebView
     private lateinit var themeManager: ThemeManager
+    private lateinit var configManager: ConfigManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализация Core, WebView, themeManager
+        // Инициализация
+        configManager = ConfigManager(this)  // сначала конфиг
         core = Core(this)
         webView = LauncherWebView(this)
-        themeManager = ThemeManager(this)
+        themeManager = ThemeManager(this, configManager)  // передаем конфиг в ThemeManager
 
         webView.addJavascriptInterface(JsBridge(core), "Android")
 
-        // Устанавливаем тему (по умолчанию дефолтная)
-        val themes = themeManager.getAvailableThemes()
-        val activeTheme = themes.find { !it.isDefault } ?: themes.firstOrNull()
-        if (activeTheme != null) {
-            themeManager.setActiveTheme(activeTheme)
-        } else {
-            themeManager.setActiveTheme(Theme("Default", true, "file:///android_asset/themes/default/"))
-        }
+        // Получаем тему для активации из конфига и активируем её
+        val themeToActivate = themeManager.getThemeToActivate()
+        themeManager.setActiveTheme(themeToActivate)
 
         // Устанавливаем WebView как контент
         setContentView(webView)

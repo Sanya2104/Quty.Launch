@@ -10,10 +10,14 @@ import java.util.zip.ZipFile
 data class Theme(
     val name: String,
     val isDefault: Boolean,
-    val sourcePath: String
+    val sourcePath: String,
+    val isAsset: Boolean = false
 )
 
-class ThemeManager(context: Context) {
+class ThemeManager(
+    private val context: Context,
+    private val configManager: ConfigManager  // добавляем параметр
+) {
 
     private val themesDir = File(context.filesDir, "themes")
     private val activeThemeDir = File(themesDir, "active")
@@ -24,20 +28,14 @@ class ThemeManager(context: Context) {
     init {
         if (!themesDir.exists()) themesDir.mkdirs()
         if (!activeThemeDir.exists()) activeThemeDir.mkdirs()
+        if (!customThemesDir.exists()) customThemesDir.mkdirs()
     }
 
-    /** Получаем список доступных тем */
     fun getAvailableThemes(): List<Theme> {
         val themes = mutableListOf<Theme>()
 
-        // Дефолтная тема
-        themes.add(
-            Theme(
-                name = "Default",
-                isDefault = true,
-                sourcePath = "file:///android_asset/themes/default/"
-            )
-        )
+        // Встроенные темы из assets
+        themes.addAll(getBuiltInThemes())
 
         // Кастомные темы из внешней папки
         if (customThemesDir.exists()) {
@@ -46,7 +44,8 @@ class ThemeManager(context: Context) {
                     Theme(
                         name = file.nameWithoutExtension,
                         isDefault = false,
-                        sourcePath = file.absolutePath
+                        sourcePath = file.absolutePath,
+                        isAsset = false
                     )
                 )
             }
@@ -55,28 +54,76 @@ class ThemeManager(context: Context) {
         return themes
     }
 
-    /** Устанавливаем активную тему */
+    private fun getBuiltInThemes(): List<Theme> {
+        val themes = mutableListOf<Theme>()
+
+        try {
+            val assetPaths = context.assets.list("themes") ?: return themes
+
+            assetPaths.forEach { themeFolder ->
+                try {
+                    context.assets.open("themes/$themeFolder/index.html").close()
+
+                    themes.add(
+                        Theme(
+                            name = themeFolder,
+                            isDefault = themeFolder == "default",
+                            sourcePath = "themes/$themeFolder",
+                            isAsset = true
+                        )
+                    )
+                } catch (_: Exception) {
+                    // В папке нет index.html - пропускаем
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return themes
+    }
+
+    // НОВЫЙ МЕТОД: получаем тему для активации согласно конфигу
+    fun getThemeToActivate(): Theme {
+        val themes = getAvailableThemes()
+        val defaultThemeId = configManager.getDefaultTheme()
+
+        // 1. Ищем тему из конфига
+        themes.find { it.name == defaultThemeId }?.let {
+            return it
+        }
+
+        // 2. Если нет - ищем тему с именем "default"
+        themes.find { it.name == "default" }?.let {
+            return it
+        }
+
+        // 3. Если ничего нет - берем первую попавшуюся
+        return themes.firstOrNull() ?: Theme("default", true, "themes/default", true)
+    }
+
     fun setActiveTheme(theme: Theme) {
         activeTheme = theme
-        if (theme.isDefault) {
-            // Для дефолтной темы просто указываем assets
-            clearActiveDir()
+
+        clearActiveDir()
+
+        if (theme.isAsset) {
+            // Тема из assets - ничего не распаковываем
+            // Она будет загружаться напрямую из assets
         } else {
-            // Для кастомной темы распаковываем архив
+            // Кастомная тема - распаковываем архив
             unzipTheme(theme.sourcePath, activeThemeDir)
         }
     }
 
-    /** Получаем путь к index.html для WebView */
     fun getActiveThemeIndexHtml(): String {
-        return if (activeTheme == null || activeTheme!!.isDefault) {
-            "file:///android_asset/themes/default/index.html"
+        return if (activeTheme == null || activeTheme!!.isAsset) {
+            "file:///android_asset/${activeTheme?.sourcePath ?: "themes/default"}/index.html"
         } else {
             File(activeThemeDir, "index.html").absolutePath.let { "file://$it" }
         }
     }
 
-    /** Очищаем активную папку */
     private fun clearActiveDir() {
         if (activeThemeDir.exists()) {
             activeThemeDir.deleteRecursively()
@@ -84,14 +131,10 @@ class ThemeManager(context: Context) {
         }
     }
 
-    /** Распаковка zip архива */
-    private fun unzipTheme(sourcePath: String, outputDir: File) {
-        val zipFile = File(sourcePath)
-        if (!zipFile.exists()) {
-            return
-        }
+    private fun unzipTheme(zipPath: String, outputDir: File) {
+        val zipFile = File(zipPath)
+        if (!zipFile.exists()) return
 
-        clearActiveDir()
         ZipFile(zipFile).use { zip ->
             zip.entries().asSequence().forEach { entry ->
                 val outFile = File(outputDir, entry.name)
