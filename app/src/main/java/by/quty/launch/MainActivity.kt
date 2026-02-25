@@ -1,6 +1,7 @@
 // *** MainActivity.kt *** //
 package by.quty.launch
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -19,29 +20,47 @@ class MainActivity : AppCompatActivity() {
     private lateinit var themeManager: ThemeManager
     private lateinit var configManager: ConfigManager
 
+    companion object {
+        const val REQUEST_CODE_SETTINGS = 1001  // убираем private
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Инициализация
-        configManager = ConfigManager(this)  // сначала конфиг
+        configManager = ConfigManager(this)
         core = Core(this)
         webView = LauncherWebView(this)
-        themeManager = ThemeManager(this, configManager)  // передаем конфиг в ThemeManager
+        themeManager = ThemeManager(this, configManager)
 
         webView.addJavascriptInterface(JsBridge(core), "Android")
 
-        // Получаем тему для активации из конфига и активируем её
-        val themeToActivate = themeManager.getThemeToActivate()
-        themeManager.setActiveTheme(themeToActivate)
+        // Загружаем тему
+        loadTheme()
 
         // Устанавливаем WebView как контент
         setContentView(webView)
 
-        // Загружаем index.html выбранной темы
-        webView.loadUrl(themeManager.getActiveThemeIndexHtml())
-
         // Устанавливаем полноэкранный режим
         setFullScreen()
+    }
+
+    private fun loadTheme() {
+        // Получаем тему для активации из конфига и активируем её
+        val themeToActivate = themeManager.getThemeToActivate()
+        themeManager.setActiveTheme(themeToActivate)
+
+        // Загружаем index.html выбранной темы
+        webView.loadUrl(themeManager.getActiveThemeIndexHtml())
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
+            // Тема изменилась, перезагружаем
+            loadTheme()
+        }
     }
 
     override fun onResume() {

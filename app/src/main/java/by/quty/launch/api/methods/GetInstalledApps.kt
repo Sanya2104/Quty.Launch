@@ -15,19 +15,41 @@ class GetInstalledApps(
 
     override suspend fun executeInternal(params: Unit?): String {
         val packageManager = context.packageManager
-        val apps = packageManager
+
+        // Получаем реальные установленные приложения
+        val realApps = packageManager
             .getInstalledApplications(0)
             .filter { packageManager.getLaunchIntentForPackage(it.packageName) != null }
             .map {
                 AppInfo(
                     name = packageManager.getApplicationLabel(it).toString(),
-                    packageName = it.packageName
+                    packageName = it.packageName,
+                    isCustom = false
                 )
             }
+            .sortedBy { it.name }  // Сортируем обычные приложения по алфавиту
+
+        // Создаем список кастомных приложений
+        val customApps = mutableListOf<AppInfo>()
+
+        // Добавляем кастомное приложение "Настройки" (всегда первое)
+        customApps.add(
+            AppInfo(
+                name = "⚙️ Настройки лаунчера",
+                packageName = "by.quty.launch.settings",
+                isCustom = true
+            )
+        )
+
+        // Здесь можно добавить другие кастомные приложения в будущем
+        // customApps.add(AppInfo(...))
+
+        // Объединяем: сначала кастомные, потом обычные
+        val allApps = customApps + realApps
 
         return json.encodeToString(
             ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
-            ApiResponse(success = true, data = apps)
+            ApiResponse(success = true, data = allApps)
         )
     }
 }

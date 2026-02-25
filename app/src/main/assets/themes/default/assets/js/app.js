@@ -38,6 +38,13 @@ function loadApps() {
         apps.forEach(app => {
             const div = document.createElement("div");
             div.className = "app-item";
+
+            // Можно добавить разный стиль для кастомных приложений
+            if (app.isCustom) {
+                div.style.backgroundColor = "#2A2A5A"; // темно-синий для настроек
+                div.style.fontWeight = "bold";
+            }
+
             div.innerText = app.name;
 
             div.onclick = () => {

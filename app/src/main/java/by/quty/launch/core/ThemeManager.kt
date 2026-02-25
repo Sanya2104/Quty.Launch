@@ -11,12 +11,14 @@ data class Theme(
     val name: String,
     val isDefault: Boolean,
     val sourcePath: String,
-    val isAsset: Boolean = false
+    val isAsset: Boolean = false,
+    val displayName: String? = null,  // добавляем displayName
+    val isCustom: Boolean = false      // добавляем isCustom
 )
 
 class ThemeManager(
     private val context: Context,
-    private val configManager: ConfigManager  // добавляем параметр
+    private val configManager: ConfigManager
 ) {
 
     private val themesDir = File(context.filesDir, "themes")
@@ -45,7 +47,9 @@ class ThemeManager(
                         name = file.nameWithoutExtension,
                         isDefault = false,
                         sourcePath = file.absolutePath,
-                        isAsset = false
+                        isAsset = false,
+                        displayName = file.nameWithoutExtension,
+                        isCustom = true  // помечаем как кастомные
                     )
                 )
             }
@@ -69,10 +73,15 @@ class ThemeManager(
                             name = themeFolder,
                             isDefault = themeFolder == "default",
                             sourcePath = "themes/$themeFolder",
-                            isAsset = true
+                            isAsset = true,
+                            displayName = when (themeFolder) {
+                                "default" -> "Стандартная"
+                                else -> themeFolder.replaceFirstChar { it.uppercase() }
+                            },
+                            isCustom = false
                         )
                     )
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     // В папке нет index.html - пропускаем
                 }
             }
@@ -83,34 +92,53 @@ class ThemeManager(
         return themes
     }
 
-    // НОВЫЙ МЕТОД: получаем тему для активации согласно конфигу
     fun getThemeToActivate(): Theme {
         val themes = getAvailableThemes()
+        val activeThemeId = configManager.getActiveTheme()
+
+        android.util.Log.d("ThemeManager", "Looking for theme: $activeThemeId")
+
+        // 1. Ищем сохраненную тему
+        themes.find { it.name == activeThemeId }?.let {
+            android.util.Log.d("ThemeManager", "Found saved theme: ${it.name}")
+            return it
+        }
+
+        // 2. Если нет - ищем тему из конфига
         val defaultThemeId = configManager.getDefaultTheme()
+        android.util.Log.d("ThemeManager", "Saved theme not found, looking for default: $defaultThemeId")
 
-        // 1. Ищем тему из конфига
         themes.find { it.name == defaultThemeId }?.let {
+            android.util.Log.d("ThemeManager", "Found default theme: ${it.name}")
             return it
         }
 
-        // 2. Если нет - ищем тему с именем "default"
+        // 3. Если нет - ищем тему с именем "default"
+        android.util.Log.d("ThemeManager", "Default theme not found, looking for 'default'")
         themes.find { it.name == "default" }?.let {
+            android.util.Log.d("ThemeManager", "Found 'default' theme: ${it.name}")
             return it
         }
 
-        // 3. Если ничего нет - берем первую попавшуюся
-        return themes.firstOrNull() ?: Theme("default", true, "themes/default", true)
+        // 4. Если ничего нет - берем первую попавшуюся
+        android.util.Log.d("ThemeManager", "No theme found, taking first")
+        return themes.firstOrNull() ?: Theme("Default", true, "themes/default", true, "Стандартная")
     }
 
+    fun getActiveTheme(): Theme? = activeTheme
+
     fun setActiveTheme(theme: Theme) {
+        android.util.Log.d("ThemeManager", "Setting active theme: ${theme.name}")
         activeTheme = theme
+        configManager.setActiveTheme(theme.name)  // сохраняем в конфиг
 
         clearActiveDir()
 
         if (theme.isAsset) {
+            android.util.Log.d("ThemeManager", "Theme is asset, no unpack needed")
             // Тема из assets - ничего не распаковываем
-            // Она будет загружаться напрямую из assets
         } else {
+            android.util.Log.d("ThemeManager", "Unpacking custom theme")
             // Кастомная тема - распаковываем архив
             unzipTheme(theme.sourcePath, activeThemeDir)
         }

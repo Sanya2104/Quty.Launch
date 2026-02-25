@@ -6,6 +6,8 @@ import android.content.Intent
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
+import by.quty.launch.SettingsActivity
+import by.quty.launch.MainActivity
 import kotlinx.serialization.builtins.serializer
 
 class LaunchApp(
@@ -20,12 +22,29 @@ class LaunchApp(
         val packageName = params?.packageName
             ?: throw IllegalArgumentException("Package name required")
 
-        val intent = context.packageManager
-            .getLaunchIntentForPackage(packageName)
-            ?: throw IllegalArgumentException("App not found")
+        when (packageName) {
+            "by.quty.launch.settings" -> {
+                // Открываем настройки
+                val intent = Intent(context, SettingsActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+                // Запускаем с ожиданием результата
+                if (context is MainActivity) {
+                    context.startActivityForResult(intent, MainActivity.REQUEST_CODE_SETTINGS)
+                } else {
+                    context.startActivity(intent)
+                }
+            }
+            else -> {
+                // Обычное приложение
+                val intent = context.packageManager
+                    .getLaunchIntentForPackage(packageName)
+                    ?: throw IllegalArgumentException("App not found")
+
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+        }
 
         return json.encodeToString(
             ApiResponse.serializer(Unit.serializer()),
