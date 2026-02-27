@@ -65,15 +65,32 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
-            // Тема изменилась, перезагружаем
-            loadTheme()
+        if (requestCode == REQUEST_CODE_SETTINGS) {
+            when (resultCode) {
+                SettingsActivity.RESULT_THEME_CHANGED -> {
+                    // Тема изменилась - перезагружаем
+                    loadTheme()
+                }
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
         setFullScreen()
+
+        // ПРОВЕРЯЕМ ОРИЕНТАЦИЮ КАЖДЫЙ РАЗ ПРИ ВОЗВРАТЕ В АКТИВНОСТЬ
+        val savedOrientation = configManager.getOrientation()
+        val currentOrientation = when (requestedOrientation) {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> "portrait"
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> "landscape"
+            else -> "sensor"
+        }
+
+        if (savedOrientation != currentOrientation) {
+            android.util.Log.d("MainActivity", "Orientation changed, restarting...")
+            recreate() // Перезапускаем активность
+        }
     }
 
     private fun setFullScreen() {

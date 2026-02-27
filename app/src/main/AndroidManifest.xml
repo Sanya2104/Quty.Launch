@@ -44,7 +44,9 @@
         <!-- Временно добавляем заглушку для настроек -->
         <activity
             android:name=".SettingsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" >
+        </activity>
     </application>
 
 </manifest>

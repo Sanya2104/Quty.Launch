@@ -2,6 +2,7 @@
 package by.quty.launch
 
 import android.content.Intent
+import android.content.pm.ActivityInfo  // Добавить импорт
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.*
@@ -29,6 +30,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Инициализация
         configManager = ConfigManager(this)
+        applyOrientation()
         themeManager = ThemeManager(this, configManager)
         setContentView(R.layout.activity_settings)
         orientationGroup = findViewById(R.id.orientation_group)
@@ -41,6 +43,19 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.close_button).setOnClickListener {
             finish()
         }
+    }
+
+    // Применяем сохраненную ориентацию
+    private fun applyOrientation() {
+        val orientation = configManager.getOrientation()
+
+        requestedOrientation = when (orientation) {
+            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+        }
+
+        android.util.Log.d("SettingsActivity", "Applied orientation: $orientation")
     }
 
     private fun setupThemeSelector() {
@@ -140,8 +155,8 @@ class SettingsActivity : AppCompatActivity() {
 
             Toast.makeText(
                 this,
-                "Ориентация сохранена. Перезапустите приложение для применения.",
-                Toast.LENGTH_LONG
+                "Ориентация изменена. Перезапустите приложение.",
+                Toast.LENGTH_SHORT
             ).show()
         }
     }
