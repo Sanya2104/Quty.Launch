@@ -3,15 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp">
+    android:background="#121212">
 
+    <!-- Шапка фиксированная -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="#121212">
 
         <TextView
             android:layout_width="0dp"
@@ -33,107 +34,122 @@
             android:onClick="finish" />
     </LinearLayout>
 
-    <TextView
+    <!-- ScrollView для всего остального -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Выберите тему оформления:"
-        android:textColor="#CCCCCC"
-        android:textSize="16sp"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
         android:padding="16dp"
-        android:paddingTop="8dp"/>
+        android:paddingTop="0dp">
 
-    <ListView
-        android:id="@+id/themes_list"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#1E1E1E"
-        android:divider="#333333"
-        android:dividerHeight="1dp"
-        android:choiceMode="singleChoice"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Ориентация экрана"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:padding="16dp"
-        android:paddingTop="24dp"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp">
-
-        <RadioGroup
-            android:id="@+id/orientation_group"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/orientation_sensor"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Авто (следовать за системой)"
+                android:text="Выберите тему оформления:"
+                android:textColor="#CCCCCC"
+                android:textSize="16sp"
+                android:padding="16dp"
+                android:paddingTop="8dp"/>
+
+            <ListView
+                android:id="@+id/themes_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#1E1E1E"
+                android:divider="#333333"
+                android:dividerHeight="1dp"
+                android:choiceMode="singleChoice"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ориентация экрана"
                 android:textColor="#FFFFFF"
-                android:checked="true"/>
+                android:textSize="18sp"
+                android:padding="16dp"
+                android:paddingTop="24dp"/>
 
-            <RadioButton
-                android:id="@+id/orientation_portrait"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Портретная (вертикальная)"
-                android:textColor="#FFFFFF"/>
+                android:orientation="vertical"
+                android:background="#1E1E1E"
+                android:padding="16dp">
 
-            <RadioButton
-                android:id="@+id/orientation_landscape"
+                <RadioGroup
+                    android:id="@+id/orientation_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/orientation_sensor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Авто (следовать за системой)"
+                        android:textColor="#FFFFFF"
+                        android:checked="true"/>
+
+                    <RadioButton
+                        android:id="@+id/orientation_portrait"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Портретная (вертикальная)"
+                        android:textColor="#FFFFFF"/>
+
+                    <RadioButton
+                        android:id="@+id/orientation_landscape"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ландшафтная (горизонтальная)"
+                        android:textColor="#FFFFFF"/>
+
+                </RadioGroup>
+            </LinearLayout>
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ландшафтная (горизонтальная)"
-                android:textColor="#FFFFFF"/>
+                android:text="Дополнительные настройки"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:padding="16dp"
+                android:paddingTop="24dp"/>
 
-        </RadioGroup>
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#1E1E1E"
+                android:padding="16dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Дополнительные настройки"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:padding="16dp"
-        android:paddingTop="24dp"/>
+                <CheckBox
+                    android:id="@+id/fullscreen_checkbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Полноэкранный режим"
+                    android:textColor="#FFFFFF"
+                    android:checked="true"
+                    android:enabled="false"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp">
+            </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/fullscreen_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Полноэкранный режим"
-            android:textColor="#FFFFFF"
-            android:checked="true"
-            android:enabled="false"/>
+            <TextView
+                android:id="@+id/version_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="v: version canal"
+                android:textColor="#666666"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:padding="16dp"/>
 
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/version_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="v: version canal"
-        android:textColor="#666666"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:padding="16dp"/>
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

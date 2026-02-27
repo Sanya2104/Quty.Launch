@@ -40,7 +40,9 @@ class MainActivity : AppCompatActivity() {
         setFullScreen()
     }
 
-    // Применение ориентации
+    /**
+     * Применение сохраненной ориентации экрана
+     */
     private fun applyOrientation() {
         val orientation = configManager.getOrientation()
 
@@ -49,29 +51,24 @@ class MainActivity : AppCompatActivity() {
             "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
         }
-
-        android.util.Log.d("MainActivity", "Applied orientation: $orientation")
     }
 
+    /**
+     * Загрузка активной темы в WebView
+     */
     private fun loadTheme() {
-        // Получаем тему для активации из конфига и активируем её
         val themeToActivate = themeManager.getThemeToActivate()
         themeManager.setActiveTheme(themeToActivate)
-
-        // Загружаем index.html выбранной темы
         webView.loadUrl(themeManager.getActiveThemeIndexHtml())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_CODE_SETTINGS) {
-            when (resultCode) {
-                SettingsActivity.RESULT_THEME_CHANGED -> {
-                    // Тема изменилась - перезагружаем
-                    loadTheme()
-                }
-            }
+        // Обрабатываем только изменение темы (ориентация проверяется в onResume)
+        if (requestCode == REQUEST_CODE_SETTINGS &&
+            resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
+            loadTheme()
         }
     }
 
@@ -79,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         setFullScreen()
 
-        // ПРОВЕРЯЕМ ОРИЕНТАЦИЮ КАЖДЫЙ РАЗ ПРИ ВОЗВРАТЕ В АКТИВНОСТЬ
+        // Проверяем, не изменилась ли ориентация в настройках
         val savedOrientation = configManager.getOrientation()
         val currentOrientation = when (requestedOrientation) {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> "portrait"
@@ -87,12 +84,15 @@ class MainActivity : AppCompatActivity() {
             else -> "sensor"
         }
 
+        // Если ориентация изменилась - перезапускаем активность
         if (savedOrientation != currentOrientation) {
-            android.util.Log.d("MainActivity", "Orientation changed, restarting...")
-            recreate() // Перезапускаем активность
+            recreate()
         }
     }
 
+    /**
+     * Установка полноэкранного режима
+     */
     private fun setFullScreen() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
