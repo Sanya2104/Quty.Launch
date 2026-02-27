@@ -2,22 +2,22 @@
 package by.quty.launch
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import android.content.pm.PackageManager
 import by.quty.launch.core.ConfigManager
 import by.quty.launch.core.Theme
 import by.quty.launch.core.ThemeManager
-
 
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var themeManager: ThemeManager
     private lateinit var configManager: ConfigManager
+    private lateinit var orientationGroup: RadioGroup
 
     companion object {
         const val RESULT_THEME_CHANGED = 1
@@ -27,12 +27,13 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Инициализация
         configManager = ConfigManager(this)
         themeManager = ThemeManager(this, configManager)
-
         setContentView(R.layout.activity_settings)
-
+        orientationGroup = findViewById(R.id.orientation_group)
         setupThemeSelector()
+        setupOrientationSelector()
         setupVersionInfo()
         setupFullScreen()
 
@@ -48,7 +49,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Получаем активную тему
         val activeTheme = themeManager.getActiveTheme()
-        val activeThemeId = configManager.getActiveTheme() // для надёжности
+        val activeThemeId = configManager.getActiveTheme()
 
         // Создаем адаптер с радио-кнопками
         val adapter = object : ArrayAdapter<Theme>(
@@ -67,7 +68,6 @@ class SettingsActivity : AppCompatActivity() {
                         theme.isDefault -> "⭐ ${theme.displayName ?: theme.name}"
                         else -> theme.displayName ?: theme.name
                     }
-
                 } else {
                     textView.text = "Неизвестная тема"
                 }
@@ -85,7 +85,7 @@ class SettingsActivity : AppCompatActivity() {
 
         if (activeIndex >= 0) {
             themesList.setItemChecked(activeIndex, true)
-            themesList.setSelection(activeIndex) // прокручиваем к активной теме
+            themesList.setSelection(activeIndex)
         } else {
             // Если не нашли по имени, пробуем другие варианты
             val fallbackIndex = themes.indexOfFirst {
@@ -119,6 +119,33 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    // Метод для выбора ориентации
+    private fun setupOrientationSelector() {
+        val currentOrientation = configManager.getOrientation()
+
+        when (currentOrientation) {
+            "portrait" -> orientationGroup.check(R.id.orientation_portrait)
+            "landscape" -> orientationGroup.check(R.id.orientation_landscape)
+            else -> orientationGroup.check(R.id.orientation_sensor)
+        }
+
+        orientationGroup.setOnCheckedChangeListener { _, checkedId ->
+            val orientation = when (checkedId) {
+                R.id.orientation_portrait -> "portrait"
+                R.id.orientation_landscape -> "landscape"
+                else -> "sensor"
+            }
+
+            configManager.setOrientation(orientation)
+
+            Toast.makeText(
+                this,
+                "Ориентация сохранена. Перезапустите приложение для применения.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     private fun setupVersionInfo() {
         val versionTextView = findViewById<TextView>(R.id.version_text)
 
@@ -132,7 +159,6 @@ class SettingsActivity : AppCompatActivity() {
         // Разделяем версию на основную часть и суффикс
         // Предполагаем, что суффикс начинается с буквы после цифр
         val versionText = fullVersionName?.replace(Regex("([0-9.]+)([a-zA-Z].*)"), "$1 $2")
-
         versionTextView.text = "v: $versionText"
     }
 

@@ -2,6 +2,7 @@
 package by.quty.launch
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -21,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var configManager: ConfigManager
 
     companion object {
-        const val REQUEST_CODE_SETTINGS = 1001  // убираем private
+        const val REQUEST_CODE_SETTINGS = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,20 +30,27 @@ class MainActivity : AppCompatActivity() {
 
         // Инициализация
         configManager = ConfigManager(this)
+        applyOrientation()
         core = Core(this)
         webView = LauncherWebView(this)
         themeManager = ThemeManager(this, configManager)
-
         webView.addJavascriptInterface(JsBridge(core), "Android")
-
-        // Загружаем тему
         loadTheme()
-
-        // Устанавливаем WebView как контент
         setContentView(webView)
-
-        // Устанавливаем полноэкранный режим
         setFullScreen()
+    }
+
+    // Применение ориентации
+    private fun applyOrientation() {
+        val orientation = configManager.getOrientation()
+
+        requestedOrientation = when (orientation) {
+            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+        }
+
+        android.util.Log.d("MainActivity", "Applied orientation: $orientation")
     }
 
     private fun loadTheme() {
