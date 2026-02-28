@@ -24,11 +24,10 @@ class SettingsActivity : BaseActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Применяем ориентацию ДО super.onCreate
-        // Прозрачная тема (заданная в манифесте) скрывает начальный скачок
-        applyOrientation() // Метод из BaseActivity
         super.onCreate(savedInstanceState)
 
+        // Инициализация
+        applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
         themeManager = ThemeManager(this, configManager) // configManager из BaseActivity
         setContentView(R.layout.activity_settings)
         orientationGroup = findViewById(R.id.orientation_group)
