@@ -3,22 +3,19 @@ package by.quty.launch
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import by.quty.launch.core.ConfigManager
 import by.quty.launch.core.Theme
 import by.quty.launch.core.ThemeManager
 
-class SettingsActivity : AppCompatActivity() {
+/**
+ * Активность настроек лаунчера
+ * Позволяет выбирать тему оформления и ориентацию экрана
+ */
+class SettingsActivity : BaseActivity() {
 
     private lateinit var themeManager: ThemeManager
-    private lateinit var configManager: ConfigManager
     private lateinit var orientationGroup: RadioGroup
 
     companion object {
@@ -28,26 +25,17 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Применяем ориентацию ДО super.onCreate
-        // Прозрачная тема скрывает начальный скачок
-        configManager = ConfigManager(this)
-        val orientation = configManager.getOrientation()
-
-        requestedOrientation = when (orientation) {
-            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
-        }
-
+        // Прозрачная тема (заданная в манифесте) скрывает начальный скачок
+        applyOrientation() // Метод из BaseActivity
         super.onCreate(savedInstanceState)
 
-        // Инициализация
-        themeManager = ThemeManager(this, configManager)
+        themeManager = ThemeManager(this, configManager) // configManager из BaseActivity
         setContentView(R.layout.activity_settings)
         orientationGroup = findViewById(R.id.orientation_group)
         setupThemeSelector()
         setupOrientationSelector()
         setupVersionInfo()
-        setupFullScreen()
+        setFullScreen() // Метод из BaseActivity
 
         // Кнопка закрытия
         findViewById<Button>(R.id.close_button).setOnClickListener {
@@ -57,13 +45,16 @@ class SettingsActivity : AppCompatActivity() {
 
     /**
      * Настройка выбора темы оформления
+     * Отображает список доступных тем с иконками:
+     * - 📦 для кастомных тем
+     * - ⭐ для дефолтной темы
      */
     private fun setupThemeSelector() {
         val themesList = findViewById<ListView>(R.id.themes_list)
         val themes = themeManager.getAvailableThemes()
         val activeThemeId = configManager.getActiveTheme()
 
-        // Адаптер для отображения списка тем
+        // Адаптер для отображения списка тем с иконками
         val adapter = object : ArrayAdapter<Theme>(
             this,
             android.R.layout.simple_list_item_single_choice,
@@ -109,6 +100,10 @@ class SettingsActivity : AppCompatActivity() {
 
     /**
      * Настройка выбора ориентации экрана
+     * Позволяет выбрать:
+     * - Авто (следовать за системой)
+     * - Портретная (вертикальная)
+     * - Ландшафтная (горизонтальная)
      */
     private fun setupOrientationSelector() {
         val currentOrientation = configManager.getOrientation()
@@ -133,6 +128,7 @@ class SettingsActivity : AppCompatActivity() {
 
     /**
      * Отображение версии приложения
+     * Получает versionName из PackageManager
      */
     @SuppressLint("SetTextI18n")
     private fun setupVersionInfo() {
@@ -143,17 +139,5 @@ class SettingsActivity : AppCompatActivity() {
             "unknown"
         }
         versionTextView.text = "v: $fullVersionName"
-    }
-
-    /**
-     * Установка полноэкранного режима
-     */
-    private fun setupFullScreen() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
     }
 }
