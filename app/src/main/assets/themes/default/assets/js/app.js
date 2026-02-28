@@ -39,13 +39,44 @@ function loadApps() {
             const div = document.createElement("div");
             div.className = "app-item";
 
-            // Можно добавить разный стиль для кастомных приложений
+            // Контейнер для иконки и текста
+            const row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.gap = "12px";
+
+            // Иконка (теперь у всех приложений есть iconBase64)
+            const img = document.createElement("img");
+            img.src = "data:image/png;base64," + app.iconBase64;
+            img.style.width = "32px";
+            img.style.height = "32px";
+            img.style.borderRadius = "6px";
+
+            // Если иконка не загрузилась - показываем эмодзи
+            img.onerror = function() {
+                this.style.display = "none";
+                const emoji = document.createElement("span");
+                emoji.textContent = app.isCustom ? "⚙️" : "📱";
+                emoji.style.fontSize = "24px";
+                emoji.style.width = "32px";
+                emoji.style.textAlign = "center";
+                this.parentNode.insertBefore(emoji, this);
+            };
+
+            row.appendChild(img);
+
+            // Название
+            const name = document.createElement("span");
+            name.textContent = app.name;
+            name.style.flex = "1";
+
             if (app.isCustom) {
-                div.style.backgroundColor = "#2A2A5A"; // темно-синий для настроек
-                div.style.fontWeight = "bold";
+                name.style.fontWeight = "bold";
+                div.style.backgroundColor = "#2A2A5A";
             }
 
-            div.innerText = app.name;
+            row.appendChild(name);
+            div.appendChild(row);
 
             div.onclick = () => {
                 const params = JSON.stringify({packageName: app.packageName});

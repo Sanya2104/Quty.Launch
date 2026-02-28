@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class AppInfo(
     val name: String,
     val packageName: String,
-    val isCustom: Boolean = false
+    val isCustom: Boolean = false,
+    val iconBase64: String? = null
 )
