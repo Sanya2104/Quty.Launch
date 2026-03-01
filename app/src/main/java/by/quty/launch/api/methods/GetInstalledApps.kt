@@ -108,7 +108,7 @@ class GetInstalledApps(
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             val byteArray = outputStream.toByteArray()
             Base64.encodeToString(byteArray, Base64.DEFAULT)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
