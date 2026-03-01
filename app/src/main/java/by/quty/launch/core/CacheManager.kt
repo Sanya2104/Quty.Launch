@@ -42,7 +42,7 @@ object CacheManager {
      * @return список приложений или null, если кэш отсутствует/просрочен
      */
     fun getCachedApps(context: Context): List<AppInfo>? {
-        // 1. Проверяем память
+        // 1. Проверяем память (самый быстрый способ)
         memoryCache?.let { cached ->
             if (!isExpired(cached.timestamp)) {
                 return cached.apps
@@ -52,7 +52,7 @@ object CacheManager {
         // 2. Проверяем диск
         val diskCache = loadFromDisk(context)
         if (diskCache != null && !isExpired(diskCache.timestamp)) {
-            memoryCache = diskCache
+            memoryCache = diskCache // сохраняем в память для будущих запросов
             return diskCache.apps
         }
 
@@ -70,10 +70,10 @@ object CacheManager {
     suspend fun saveApps(context: Context, apps: List<AppInfo>) {
         val cached = CachedApps(apps, System.currentTimeMillis())
 
-        // Сохраняем в память
+        // Сохраняем в память (мгновенно)
         memoryCache = cached
 
-        // Сохраняем на диск в фоновом потоке
+        // Сохраняем на диск в фоновом потоке (чтобы не тормозить UI)
         withContext(Dispatchers.IO) {
             saveToDisk(context, cached)
         }
@@ -91,7 +91,7 @@ object CacheManager {
             val jsonString = json.encodeToString(cached)
             val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
             cacheFile.writeText(jsonString)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Игнорируем ошибки кэширования — приложение работает и без кэша
         }
     }
@@ -108,7 +108,7 @@ object CacheManager {
             if (!cacheFile.exists()) return null
             val jsonString = cacheFile.readText()
             json.decodeFromString<CachedApps>(jsonString)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -124,6 +124,7 @@ object CacheManager {
 
     /**
      * Очистить весь кэш (память и диск)
+     * Полезно при выходе из системы или принудительной очистке
      * @param context контекст приложения
      */
     fun clearCache(context: Context) {

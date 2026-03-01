@@ -29,14 +29,11 @@ class GetInstalledApps(
         // 1. Пробуем получить из кэша
         val cachedApps = CacheManager.getCachedApps(context)
         if (cachedApps != null) {
-            android.util.Log.d("GetInstalledApps", "Returning cached apps")
             return json.encodeToString(
                 ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
                 ApiResponse(success = true, data = cachedApps)
             )
         }
-
-        android.util.Log.d("GetInstalledApps", "Cache miss, loading fresh apps")
 
         // 2. Если кэша нет - загружаем свежие
         val freshApps = loadFreshApps()
@@ -112,7 +109,6 @@ class GetInstalledApps(
             val byteArray = outputStream.toByteArray()
             Base64.encodeToString(byteArray, Base64.DEFAULT)
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
