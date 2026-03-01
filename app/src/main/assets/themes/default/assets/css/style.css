@@ -8,7 +8,7 @@ body {
 #nav {
     display: flex;
     justify-content: space-around;
-    padding: 15px;
+    padding: 15px 0px;
     background: #1f1f1f;
     position: fixed;
     bottom: 0;
@@ -19,7 +19,7 @@ body {
     background: #2a2a2a;
     border: none;
     color: white;
-    padding: 10px 20px;
+    padding: 20px 25px;
     border-radius: 8px;
 }
 

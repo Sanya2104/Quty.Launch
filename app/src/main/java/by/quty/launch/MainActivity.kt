@@ -33,7 +33,10 @@ class MainActivity : BaseActivity() {
         webView.addJavascriptInterface(JsBridge(core), "Android")
         loadTheme()
         setContentView(webView)
-        setFullScreen() // Метод из BaseActivity
+
+        window.decorView.post {
+            enableImmersiveMode()
+        }
     }
 
     /**
@@ -58,7 +61,6 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        setFullScreen()
 
         // Проверяем, не изменилась ли ориентация в настройках
         val savedOrientation = configManager.getOrientation()

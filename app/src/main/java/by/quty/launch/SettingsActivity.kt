@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.*
 import by.quty.launch.core.Theme
 import by.quty.launch.core.ThemeManager
@@ -29,12 +30,25 @@ class SettingsActivity : BaseActivity() {
         // Инициализация
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
         themeManager = ThemeManager(this, configManager) // configManager из BaseActivity
+
+        // Включаем иммерсив до отрисовки (для Android 10)
+        enableImmersiveMode()
+
         setContentView(R.layout.activity_settings)
+
+        // Принудительно убиваем padding (для Android 13)
+        window.decorView.findViewById<ViewGroup>(android.R.id.content)
+            ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
+
         orientationGroup = findViewById(R.id.orientation_group)
         setupThemeSelector()
         setupOrientationSelector()
         setupVersionInfo()
-        setFullScreen() // Метод из BaseActivity
+
+        // Дублируем вызов после отрисовки (для надежности)
+        window.decorView.post {
+            enableImmersiveMode()
+        }
 
         // Кнопка закрытия
         findViewById<Button>(R.id.close_button).setOnClickListener {
@@ -59,7 +73,7 @@ class SettingsActivity : BaseActivity() {
             android.R.layout.simple_list_item_single_choice,
             themes
         ) {
-            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+            override fun getView(position: Int, convertView: android.view.View?, parent: ViewGroup): android.view.View {
                 val view = super.getView(position, convertView, parent)
                 val theme = getItem(position)
                 val textView = view.findViewById<TextView>(android.R.id.text1)
