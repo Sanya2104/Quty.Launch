@@ -12,6 +12,9 @@ import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.AppInfo
+import by.quty.launch.core.CacheManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.createBitmap
@@ -23,6 +26,31 @@ class GetInstalledApps(
     override fun parseParams(jsonString: String) = Unit
 
     override suspend fun executeInternal(params: Unit?): String {
+        // 1. Пробуем получить из кэша
+        val cachedApps = CacheManager.getCachedApps(context)
+        if (cachedApps != null) {
+            android.util.Log.d("GetInstalledApps", "Returning cached apps")
+            return json.encodeToString(
+                ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
+                ApiResponse(success = true, data = cachedApps)
+            )
+        }
+
+        android.util.Log.d("GetInstalledApps", "Cache miss, loading fresh apps")
+
+        // 2. Если кэша нет - загружаем свежие
+        val freshApps = loadFreshApps()
+
+        // 3. Сохраняем в кэш
+        CacheManager.saveApps(context, freshApps)
+
+        return json.encodeToString(
+            ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
+            ApiResponse(success = true, data = freshApps)
+        )
+    }
+
+    private suspend fun loadFreshApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val packageManager = context.packageManager
 
         // Получаем реальные установленные приложения с иконками
@@ -40,33 +68,24 @@ class GetInstalledApps(
             }
             .sortedBy { it.name }  // Сортируем обычные приложения по алфавиту
 
-        // Создаем список кастомных приложений
-        val customApps = mutableListOf<AppInfo>()
-
         // Загружаем иконку для настроек из ресурсов
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
         // Добавляем кастомное приложение "Настройки" в начало списка
-        customApps.add(
+        val customApps = listOf(
             AppInfo(
                 name = "Настройки лаунчера",
                 packageName = "by.quty.launch.settings",
                 isCustom = true,
                 iconBase64 = settingsIconBase64  // иконка из ресурсов
             )
+            // Здесь можно добавить другие кастомные приложения в будущем
+            // AppInfo(...)
         )
-
-        // Здесь можно добавить другие кастомные приложения в будущем
-        // customApps.add(AppInfo(...))
 
         // Объединяем: сначала кастомные, потом обычные
-        val allApps = customApps + realApps
-
-        return json.encodeToString(
-            ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
-            ApiResponse(success = true, data = allApps)
-        )
+        customApps + realApps
     }
 
     /**
@@ -78,7 +97,10 @@ class GetInstalledApps(
                 drawable.bitmap
             } else {
                 // Создаем bitmap из drawable
-                val bitmap = createBitmap(drawable.intrinsicWidth.takeIf { it > 0 } ?: 64, drawable.intrinsicHeight.takeIf { it > 0 } ?: 64)
+                val bitmap = createBitmap(
+                    drawable.intrinsicWidth.takeIf { it > 0 } ?: 64,
+                    drawable.intrinsicHeight.takeIf { it > 0 } ?: 64
+                )
                 val canvas = Canvas(bitmap)
                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                 drawable.draw(canvas)
