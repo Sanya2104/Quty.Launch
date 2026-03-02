@@ -166,7 +166,7 @@ class SettingsActivity : BaseActivity() {
 
     /**
      * Отображение версии приложения
-     * Получает versionName из PackageManager
+     * Получает versionName из PackageManager и форматирует с пробелом
      */
     private fun setupVersionInfo() {
         val versionTextView = findViewById<TextView>(R.id.version_text)
@@ -175,6 +175,11 @@ class SettingsActivity : BaseActivity() {
         } catch (_: PackageManager.NameNotFoundException) {
             getString(R.string.version_unknown)
         }
-        versionTextView.text = getString(R.string.version_format, fullVersionName)
+
+        // Добавляем пробел между цифрами и суффиксом (например, "0.0.3 alpha")
+        val versionText = fullVersionName?.replace(Regex("([0-9.]+)([a-zA-Z].*)"), "$1 $2")
+            ?: getString(R.string.version_unknown)
+
+        versionTextView.text = getString(R.string.version_format, versionText)
     }
 }

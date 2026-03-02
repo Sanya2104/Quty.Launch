@@ -145,7 +145,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/version_format"
                 android:textColor="#666666"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:gravity="center"
                 android:padding="16dp"/>
 
