@@ -14,7 +14,7 @@ import java.io.File
  * Хранит приложения в двух уровнях:
  * 1. In-memory кэш (оперативная память) — для мгновенного доступа
  * 2. Disk-кэш (файл на диске) — для сохранения между запусками
- * Кэш считается валидным 5 минут, после чего обновляется
+ * Кэш считается валидным 10 минут, после чего обновляется
  */
 @Serializable
 data class CachedApps(
@@ -24,7 +24,7 @@ data class CachedApps(
 
 object CacheManager {
     private const val CACHE_FILE_NAME = "apps_cache.json"
-    private const val CACHE_VALIDITY_MS = 5 * 60 * 1000 // 5 минут
+    private const val CACHE_VALIDITY_MS = 10 * 60 * 1000 // 10 минут
 
     // In-memory кэш (самый быстрый доступ)
     private var memoryCache: CachedApps? = null
@@ -116,7 +116,7 @@ object CacheManager {
     /**
      * Проверить, не устарел ли кэш
      * @param timestamp время создания кэша
-     * @return true если кэш старше 5 минут
+     * @return true если кэш старше 10 минут
      */
     private fun isExpired(timestamp: Long): Boolean {
         return System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
