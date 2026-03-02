@@ -11,12 +11,13 @@ import by.quty.launch.core.ThemeManager
 
 /**
  * Активность настроек лаунчера
- * Позволяет выбирать тему оформления и ориентацию экрана
+ * Позволяет выбирать тему оформления, ориентацию экрана и полноэкранный режим
  */
 class SettingsActivity : BaseActivity() {
 
     private lateinit var themeManager: ThemeManager
     private lateinit var orientationGroup: RadioGroup
+    private lateinit var fullscreenCheckbox: CheckBox
 
     companion object {
         const val RESULT_THEME_CHANGED = 1
@@ -40,8 +41,11 @@ class SettingsActivity : BaseActivity() {
             ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
 
         orientationGroup = findViewById(R.id.orientation_group)
+        fullscreenCheckbox = findViewById(R.id.fullscreen_checkbox)  // запоминаем чекбокс
+
         setupThemeSelector()
         setupOrientationSelector()
+        setupFullscreenSelector()   // НОВЫЙ метод
         setupVersionInfo()
 
         // Дублируем вызов после отрисовки (для надежности)
@@ -138,6 +142,25 @@ class SettingsActivity : BaseActivity() {
                 else -> "sensor"
             }
             configManager.setOrientation(orientation)
+        }
+    }
+
+    /**
+     * Настройка полноэкранного режима
+     */
+    private fun setupFullscreenSelector() {
+        // Устанавливаем текущее значение из конфига
+        fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
+
+        fullscreenCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            configManager.setFullscreenEnabled(isChecked)
+
+            // Показываем сообщение, что изменения вступят после перезапуска
+            Toast.makeText(
+                this,
+                getString(R.string.fullscreen_changed),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

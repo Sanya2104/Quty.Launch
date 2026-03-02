@@ -9,7 +9,8 @@ import java.io.IOException
 @Serializable
 data class LauncherConfig(
     val defaultTheme: String = "default",
-    val defaultOrientation: String = "sensor"
+    val defaultOrientation: String = "sensor",
+    val defaultFullscreen: Boolean = true
 )
 
 class ConfigManager(private val context: Context) {
@@ -35,29 +36,35 @@ class ConfigManager(private val context: Context) {
 
     fun getDefaultTheme(): String = config.defaultTheme
     fun getDefaultOrientation(): String = config.defaultOrientation
+    fun getDefaultFullscreen(): Boolean = config.defaultFullscreen
 
-    // Метод для получения активной темы
+    // Получения активной темы
     fun getActiveTheme(): String {
-        val theme = prefs.getString("active_theme", getDefaultTheme()) ?: getDefaultTheme()
-        android.util.Log.d("ConfigManager", "Getting active theme: $theme")
-        return theme
+        return prefs.getString("active_theme", getDefaultTheme()) ?: getDefaultTheme()
     }
 
-    // Метод для сохранения активной темы
+    // Сохранения активной темы
     fun setActiveTheme(themeId: String) {
-        android.util.Log.d("ConfigManager", "Saving active theme: $themeId")
         prefs.edit().putString("active_theme", themeId).apply()
     }
 
-    // Ориентация
+    // Получение ориентации
     fun getOrientation(): String {
-        val orientation = prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
-        android.util.Log.d("ConfigManager", "Getting orientation: $orientation")
-        return orientation
+        return prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
     }
 
+    // Сохранение ориентации
     fun setOrientation(orientation: String) {
-        android.util.Log.d("ConfigManager", "Saving orientation: $orientation")
         prefs.edit().putString("orientation", orientation).apply()
+    }
+
+    // Получение полноэкранного режима
+    fun isFullscreenEnabled(): Boolean {
+        return prefs.getBoolean("fullscreen", getDefaultFullscreen())
+    }
+
+    // Сохранение полноэкранного режима
+    fun setFullscreenEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("fullscreen", enabled).apply()
     }
 }

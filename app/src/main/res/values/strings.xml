@@ -22,5 +22,6 @@
 
     <!-- Messages -->
     <string name="theme_applied">Тема \'%s\' применена</string>
+    <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
 </resources>

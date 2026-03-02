@@ -34,8 +34,14 @@ abstract class BaseActivity : AppCompatActivity() {
      * Установка полноэкранного режима
      * Скрывает системные панели (статус бар и навигацию)
      * Позволяет показать их свайпом от края экрана
+     *
+     * Если полноэкранный режим отключен в настройках — ничего не делаем,
+     * системные панели остаются видимыми.
      */
     protected fun enableImmersiveMode() {
+        // Если полноэкранный режим отключен — выходим
+        if (!configManager.isFullscreenEnabled()) return
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Android 11+
             WindowCompat.setDecorFitsSystemWindows(window, false)
