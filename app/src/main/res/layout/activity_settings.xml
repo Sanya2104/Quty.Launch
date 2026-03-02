@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="⚙️ Настройки лаунчера"
+            android:text="@string/settings_title"
             android:textColor="#FFFFFF"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -50,7 +50,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Выберите тему оформления:"
+                android:text="@string/settings_theme_title"
                 android:textColor="#CCCCCC"
                 android:textSize="16sp"
                 android:padding="16dp"
@@ -68,7 +68,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ориентация экрана"
+                android:text="@string/settings_orientation_title"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
                 android:padding="16dp"
@@ -91,7 +91,7 @@
                         android:id="@+id/orientation_sensor"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Авто (следовать за системой)"
+                        android:text="@string/orientation_auto"
                         android:textColor="#FFFFFF"
                         android:checked="true"/>
 
@@ -99,14 +99,14 @@
                         android:id="@+id/orientation_portrait"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Портретная (вертикальная)"
+                        android:text="@string/orientation_portrait"
                         android:textColor="#FFFFFF"/>
 
                     <RadioButton
                         android:id="@+id/orientation_landscape"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Ландшафтная (горизонтальная)"
+                        android:text="@string/orientation_landscape"
                         android:textColor="#FFFFFF"/>
 
                 </RadioGroup>
@@ -115,7 +115,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Дополнительные настройки"
+                android:text="@string/settings_additional_title"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
                 android:padding="16dp"
@@ -132,7 +132,7 @@
                     android:id="@+id/fullscreen_checkbox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Полноэкранный режим"
+                    android:text="@string/additional_fullscreen"
                     android:textColor="#FFFFFF"
                     android:checked="true"
                     android:enabled="false"/>
@@ -143,7 +143,7 @@
                 android:id="@+id/version_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="v: version canal"
+                android:text="@string/version_format"
                 android:textColor="#666666"
                 android:textSize="12sp"
                 android:gravity="center"

@@ -1,7 +1,6 @@
 // *** SettingsActivity.kt *** //
 package by.quty.launch
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -103,6 +102,9 @@ class SettingsActivity : BaseActivity() {
             val selectedTheme = themes[position]
             themeManager.setActiveTheme(selectedTheme)
 
+            val message = getString(R.string.theme_applied, selectedTheme.displayName ?: selectedTheme.name)
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
             // Возвращаем результат в MainActivity
             val resultIntent = Intent()
             resultIntent.putExtra(EXTRA_THEME_NAME, selectedTheme.name)
@@ -143,14 +145,13 @@ class SettingsActivity : BaseActivity() {
      * Отображение версии приложения
      * Получает versionName из PackageManager
      */
-    @SuppressLint("SetTextI18n")
     private fun setupVersionInfo() {
         val versionTextView = findViewById<TextView>(R.id.version_text)
         val fullVersionName = try {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (_: PackageManager.NameNotFoundException) {
-            "unknown"
+            getString(R.string.version_unknown)
         }
-        versionTextView.text = "v: $fullVersionName"
+        versionTextView.text = getString(R.string.version_format, fullVersionName)
     }
 }
