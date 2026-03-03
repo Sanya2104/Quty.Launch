@@ -11,15 +11,6 @@ function navigate(screen) {
     }
 }
 
-/*
-    ==== API METHODS ====
-    Предполагаем что JsBridge имеет методы:
-
-    Android.getApps()
-    Android.getDeviceInfo()
-    Android.launchApp(packageName)
-*/
-
 function loadApps() {
     const container = document.getElementById("apps-list");
     container.innerHTML = "Загрузка...";
@@ -38,28 +29,23 @@ function loadApps() {
         apps.forEach(app => {
             const div = document.createElement("div");
             div.className = "app-item";
+            if (app.isCustom) {
+                div.setAttribute("data-custom", "true");
+            }
 
-            // Контейнер для иконки и текста
             const row = document.createElement("div");
-            row.style.display = "flex";
-            row.style.alignItems = "center";
-            row.style.gap = "12px";
+            row.className = "row";
 
-            // Иконка (теперь у всех приложений есть iconBase64)
+            // Иконка
             const img = document.createElement("img");
             img.src = "data:image/png;base64," + app.iconBase64;
-            img.style.width = "32px";
-            img.style.height = "32px";
-            img.style.borderRadius = "6px";
+            img.alt = app.name;
 
-            // Если иконка не загрузилась - показываем эмодзи
             img.onerror = function() {
                 this.style.display = "none";
                 const emoji = document.createElement("span");
+                emoji.className = "emoji-placeholder";
                 emoji.textContent = app.isCustom ? "⚙️" : "📱";
-                emoji.style.fontSize = "24px";
-                emoji.style.width = "32px";
-                emoji.style.textAlign = "center";
                 this.parentNode.insertBefore(emoji, this);
             };
 
@@ -67,13 +53,8 @@ function loadApps() {
 
             // Название
             const name = document.createElement("span");
+            name.className = "name";
             name.textContent = app.name;
-            name.style.flex = "1";
-
-            if (app.isCustom) {
-                name.style.fontWeight = "bold";
-                div.style.backgroundColor = "#2A2A5A";
-            }
 
             row.appendChild(name);
             div.appendChild(row);
@@ -106,8 +87,8 @@ function loadInfo() {
 
         const info = response.data;
         container.innerHTML = `
-            <p><b>Устройство:</b> ${info.device}</p>
-            <p><b>Android:</b> ${info.version}</p>
+            <p><b>Устройство:</b> <span>${info.device}</span></p>
+            <p><b>Android:</b> <span>${info.version}</span></p>
         `;
     } catch (e) {
         container.innerHTML = "Ошибка загрузки информации";

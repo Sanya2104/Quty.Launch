@@ -15,10 +15,9 @@ class LauncherWebView(context: Context) : WebView(context) {
         settings.allowFileAccess = true
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
+        // Используем аппаратное ускорение для современных CSS
+        setLayerType(LAYER_TYPE_HARDWARE, null)
 
         setWebContentsDebuggingEnabled(true)
     }
-
-    // Убираем onOverScrolled полностью
 }
