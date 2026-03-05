@@ -1,19 +1,42 @@
-// *** core/ThemeManager.kt *** /
+// *** core/ThemeManager.kt *** //
 package by.quty.launch.core
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Environment
+import android.util.Base64
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
+/**
+ * Модель темы с расширенной информацией
+ */
 data class Theme(
     val name: String,
     val isDefault: Boolean,
     val sourcePath: String,
     val isAsset: Boolean = false,
-    val displayName: String? = null,  // добавляем displayName
-    val isCustom: Boolean = false      // добавляем isCustom
+    val displayName: String? = null,
+    val isCustom: Boolean = false,
+    val version: String? = null,           // версия темы из manifest.json
+    val author: String? = null,             // автор темы из manifest.json
+    val previewBase64: String? = null       // превью в base64 для отображения
+)
+
+/**
+ * Структура manifest.json темы
+ */
+@Serializable
+data class ThemeManifest(
+    val name: String,
+    val author: String,
+    val version: String,
+    val preview: String? = null              // путь к превью внутри темы
 )
 
 class ThemeManager(
@@ -27,12 +50,17 @@ class ThemeManager(
 
     private var activeTheme: Theme? = null
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     init {
         if (!themesDir.exists()) themesDir.mkdirs()
         if (!activeThemeDir.exists()) activeThemeDir.mkdirs()
         if (!customThemesDir.exists()) customThemesDir.mkdirs()
     }
 
+    /**
+     * Получить список всех доступных тем
+     */
     fun getAvailableThemes(): List<Theme> {
         val themes = mutableListOf<Theme>()
 
@@ -42,14 +70,20 @@ class ThemeManager(
         // Кастомные темы из внешней папки
         if (customThemesDir.exists()) {
             customThemesDir.listFiles { file -> file.extension == "qutytheme" }?.forEach { file ->
+                val manifest = readManifestFromZip(file)
+                val previewBase64 = loadPreviewFromZip(file, manifest?.preview)
+
                 themes.add(
                     Theme(
                         name = file.nameWithoutExtension,
                         isDefault = false,
                         sourcePath = file.absolutePath,
                         isAsset = false,
-                        displayName = file.nameWithoutExtension,
-                        isCustom = true  // помечаем как кастомные
+                        displayName = manifest?.name ?: file.nameWithoutExtension,
+                        isCustom = true,
+                        version = manifest?.version,
+                        author = manifest?.author,
+                        previewBase64 = previewBase64
                     )
                 )
             }
@@ -58,6 +92,9 @@ class ThemeManager(
         return themes
     }
 
+    /**
+     * Получить встроенные темы из assets
+     */
     private fun getBuiltInThemes(): List<Theme> {
         val themes = mutableListOf<Theme>()
 
@@ -68,20 +105,33 @@ class ThemeManager(
                 try {
                     context.assets.open("themes/$themeFolder/index.html").close()
 
+                    val manifest = try {
+                        context.assets.open("themes/$themeFolder/manifest.json").bufferedReader().use {
+                            json.decodeFromString<ThemeManifest>(it.readText())
+                        }
+                    } catch (_: Exception) {
+                        null
+                    }
+
+                    val previewBase64 = loadPreviewFromAssets(themeFolder, manifest?.preview)
+
                     themes.add(
                         Theme(
                             name = themeFolder,
                             isDefault = themeFolder == "default",
                             sourcePath = "themes/$themeFolder",
                             isAsset = true,
-                            displayName = when (themeFolder) {
+                            displayName = manifest?.name ?: when (themeFolder) {
                                 "default" -> "Стандартная"
                                 else -> themeFolder.replaceFirstChar { it.uppercase() }
                             },
-                            isCustom = false
+                            isCustom = false,
+                            version = manifest?.version,
+                            author = manifest?.author,
+                            previewBase64 = previewBase64
                         )
                     )
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // В папке нет index.html - пропускаем
                 }
             }
@@ -92,54 +142,83 @@ class ThemeManager(
         return themes
     }
 
+    private fun readManifestFromZip(zipFile: File): ThemeManifest? {
+        return try {
+            ZipFile(zipFile).use { zip ->
+                val entry = zip.getEntry("manifest.json") ?: return null
+                zip.getInputStream(entry).bufferedReader().use {
+                    json.decodeFromString<ThemeManifest>(it.readText())
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun loadPreviewFromZip(zipFile: File, previewPath: String?): String? {
+        if (previewPath.isNullOrEmpty()) return null
+
+        return try {
+            ZipFile(zipFile).use { zip ->
+                val entry = zip.getEntry(previewPath) ?: return null
+                zip.getInputStream(entry).use { inputStream ->
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    bitmap?.let { bitmapToBase64(it) }
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun loadPreviewFromAssets(themeFolder: String, previewPath: String?): String? {
+        if (previewPath.isNullOrEmpty()) return null
+
+        return try {
+            val inputStream = context.assets.open("themes/$themeFolder/$previewPath")
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            bitmap?.let { bitmapToBase64(it) }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
     fun getThemeToActivate(): Theme {
         val themes = getAvailableThemes()
         val activeThemeId = configManager.getActiveTheme()
 
-        android.util.Log.d("ThemeManager", "Looking for theme: $activeThemeId")
+        themes.find { it.name == activeThemeId }?.let { return it }
 
-        // 1. Ищем сохраненную тему
-        themes.find { it.name == activeThemeId }?.let {
-            android.util.Log.d("ThemeManager", "Found saved theme: ${it.name}")
-            return it
-        }
-
-        // 2. Если нет - ищем тему из конфига
         val defaultThemeId = configManager.getDefaultTheme()
-        android.util.Log.d("ThemeManager", "Saved theme not found, looking for default: $defaultThemeId")
+        themes.find { it.name == defaultThemeId }?.let { return it }
 
-        themes.find { it.name == defaultThemeId }?.let {
-            android.util.Log.d("ThemeManager", "Found default theme: ${it.name}")
-            return it
-        }
+        themes.find { it.name == "default" }?.let { return it }
 
-        // 3. Если нет - ищем тему с именем "default"
-        android.util.Log.d("ThemeManager", "Default theme not found, looking for 'default'")
-        themes.find { it.name == "default" }?.let {
-            android.util.Log.d("ThemeManager", "Found 'default' theme: ${it.name}")
-            return it
-        }
-
-        // 4. Если ничего нет - берем первую попавшуюся
-        android.util.Log.d("ThemeManager", "No theme found, taking first")
-        return themes.firstOrNull() ?: Theme("Default", true, "themes/default", true, "Стандартная")
+        return themes.firstOrNull() ?: Theme(
+            name = "Default",
+            isDefault = true,
+            sourcePath = "themes/default",
+            isAsset = true,
+            displayName = "Стандартная"
+        )
     }
 
     fun getActiveTheme(): Theme? = activeTheme
 
     fun setActiveTheme(theme: Theme) {
-        android.util.Log.d("ThemeManager", "Setting active theme: ${theme.name}")
         activeTheme = theme
-        configManager.setActiveTheme(theme.name)  // сохраняем в конфиг
+        configManager.setActiveTheme(theme.name)
 
         clearActiveDir()
 
-        if (theme.isAsset) {
-            android.util.Log.d("ThemeManager", "Theme is asset, no unpack needed")
-            // Тема из assets - ничего не распаковываем
-        } else {
-            android.util.Log.d("ThemeManager", "Unpacking custom theme")
-            // Кастомная тема - распаковываем архив
+        if (!theme.isAsset) {
             unzipTheme(theme.sourcePath, activeThemeDir)
         }
     }

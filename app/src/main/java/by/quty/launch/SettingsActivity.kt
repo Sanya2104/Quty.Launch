@@ -3,7 +3,10 @@ package by.quty.launch
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
+import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import by.quty.launch.core.Theme
@@ -28,8 +31,8 @@ class SettingsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         // Инициализация
-        applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
-        themeManager = ThemeManager(this, configManager) // configManager из BaseActivity
+        applyOrientation()
+        themeManager = ThemeManager(this, configManager)
 
         // Включаем иммерсив до отрисовки (для Android 10)
         enableImmersiveMode()
@@ -41,11 +44,11 @@ class SettingsActivity : BaseActivity() {
             ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
 
         orientationGroup = findViewById(R.id.orientation_group)
-        fullscreenCheckbox = findViewById(R.id.fullscreen_checkbox)  // запоминаем чекбокс
+        fullscreenCheckbox = findViewById(R.id.fullscreen_checkbox)
 
         setupThemeSelector()
         setupOrientationSelector()
-        setupFullscreenSelector()   // НОВЫЙ метод
+        setupFullscreenSelector()
         setupVersionInfo()
 
         // Дублируем вызов после отрисовки (для надежности)
@@ -60,34 +63,55 @@ class SettingsActivity : BaseActivity() {
     }
 
     /**
-     * Настройка выбора темы оформления
-     * Отображает список доступных тем с иконками:
-     * - 📦 для кастомных тем
-     * - ⭐ для дефолтной темы
+     * Настройка выбора темы оформления с превью и информацией
      */
     private fun setupThemeSelector() {
         val themesList = findViewById<ListView>(R.id.themes_list)
         val themes = themeManager.getAvailableThemes()
         val activeThemeId = configManager.getActiveTheme()
 
-        // Адаптер для отображения списка тем с иконками
-        val adapter = object : ArrayAdapter<Theme>(
-            this,
-            android.R.layout.simple_list_item_single_choice,
-            themes
-        ) {
-            override fun getView(position: Int, convertView: android.view.View?, parent: ViewGroup): android.view.View {
-                val view = super.getView(position, convertView, parent)
+        // Кастомный адаптер для отображения тем с превью
+        val adapter = object : ArrayAdapter<Theme>(this, 0, themes) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: layoutInflater.inflate(R.layout.item_theme, parent, false)
                 val theme = getItem(position)
-                val textView = view.findViewById<TextView>(android.R.id.text1)
 
-                if (theme != null) {
-                    textView.text = when {
-                        theme.isCustom -> "📦 ${theme.displayName ?: theme.name}"
-                        theme.isDefault -> "⭐ ${theme.displayName ?: theme.name}"
-                        else -> theme.displayName ?: theme.name
-                    }
+                val previewView = view.findViewById<ImageView>(R.id.theme_preview)
+                val nameView = view.findViewById<TextView>(R.id.theme_name)
+                val versionView = view.findViewById<TextView>(R.id.theme_version)
+                val authorView = view.findViewById<TextView>(R.id.theme_author)
+                val radioView = view.findViewById<RadioButton>(R.id.theme_radio)
+
+                // Устанавливаем название
+                nameView.text = theme?.displayName ?: theme?.name ?: "Unknown"
+
+                // Устанавливаем версию
+                versionView.text = if (!theme?.version.isNullOrEmpty()) {
+                    "v${theme.version}"
+                } else {
+                    ""
                 }
+
+                // Устанавливаем автора
+                authorView.text = theme?.author ?: if (theme?.isCustom == true) "Пользовательская" else "Quty"
+
+                // Устанавливаем превью
+                if (!theme?.previewBase64.isNullOrEmpty()) {
+                    try {
+                        val imageBytes = Base64.decode(theme.previewBase64, Base64.DEFAULT)
+                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                        previewView.setImageBitmap(bitmap)
+                        previewView.visibility = View.VISIBLE
+                    } catch (_: Exception) {
+                        previewView.setImageResource(R.drawable.ic_settings)
+                    }
+                } else {
+                    previewView.setImageResource(R.drawable.ic_settings)
+                }
+
+                // Отмечаем радио-кнопку если тема активна
+                radioView.isChecked = theme?.name == activeThemeId
+
                 return view
             }
         }
@@ -95,14 +119,7 @@ class SettingsActivity : BaseActivity() {
         themesList.adapter = adapter
         themesList.choiceMode = ListView.CHOICE_MODE_SINGLE
 
-        // Отмечаем текущую активную тему
-        val activeIndex = themes.indexOfFirst { it.name == activeThemeId }
-        if (activeIndex >= 0) {
-            themesList.setItemChecked(activeIndex, true)
-        }
-
-        // Обработчик выбора темы
-        themesList.setOnItemClickListener { _, _, position, _ ->
+        themesList.setOnItemClickListener { _, view, position, _ ->
             val selectedTheme = themes[position]
             themeManager.setActiveTheme(selectedTheme)
 
@@ -119,22 +136,17 @@ class SettingsActivity : BaseActivity() {
 
     /**
      * Настройка выбора ориентации экрана
-     * Позволяет выбрать:
-     * - Авто (следовать за системой)
-     * - Портретная (вертикальная)
-     * - Ландшафтная (горизонтальная)
      */
     private fun setupOrientationSelector() {
         val currentOrientation = configManager.getOrientation()
 
-        // Устанавливаем текущее значение
         when (currentOrientation) {
             "portrait" -> orientationGroup.check(R.id.orientation_portrait)
             "landscape" -> orientationGroup.check(R.id.orientation_landscape)
             else -> orientationGroup.check(R.id.orientation_sensor)
         }
 
-        // Сохраняем при изменении
+        // Устанавливаем текущее значение
         orientationGroup.setOnCheckedChangeListener { _, checkedId ->
             val orientation = when (checkedId) {
                 R.id.orientation_portrait -> "portrait"
