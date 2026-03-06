@@ -52,9 +52,9 @@ class MainActivity : BaseActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        // Обрабатываем только изменение темы (ориентация проверяется в onResume)
-        if (requestCode == REQUEST_CODE_SETTINGS &&
-            resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
+        // Обрабатываем только изменение темы
+        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
+            // Перезагружаем тему
             loadTheme()
         }
     }

@@ -4,6 +4,7 @@ package by.quty.launch
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
 import android.view.View
@@ -21,6 +22,7 @@ class SettingsActivity : BaseActivity() {
     private lateinit var themeManager: ThemeManager
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
+    private lateinit var themesAdapter: ThemesAdapter
 
     companion object {
         const val RESULT_THEME_CHANGED = 1
@@ -64,64 +66,23 @@ class SettingsActivity : BaseActivity() {
 
     /**
      * Настройка выбора темы оформления с превью и информацией
+     * Активная тема подсвечивается цветом вместо RadioButton
      */
     private fun setupThemeSelector() {
         val themesList = findViewById<ListView>(R.id.themes_list)
         val themes = themeManager.getAvailableThemes()
-        val activeThemeId = configManager.getActiveTheme()
 
-        // Кастомный адаптер для отображения тем с превью
-        val adapter = object : ArrayAdapter<Theme>(this, 0, themes) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val view = convertView ?: layoutInflater.inflate(R.layout.item_theme, parent, false)
-                val theme = getItem(position)
+        themesAdapter = ThemesAdapter(themes)
+        themesList.adapter = themesAdapter
 
-                val previewView = view.findViewById<ImageView>(R.id.theme_preview)
-                val nameView = view.findViewById<TextView>(R.id.theme_name)
-                val versionView = view.findViewById<TextView>(R.id.theme_version)
-                val authorView = view.findViewById<TextView>(R.id.theme_author)
-                val radioView = view.findViewById<RadioButton>(R.id.theme_radio)
-
-                // Устанавливаем название
-                nameView.text = theme?.displayName ?: theme?.name ?: "Unknown"
-
-                // Устанавливаем версию
-                versionView.text = if (!theme?.version.isNullOrEmpty()) {
-                    "v${theme.version}"
-                } else {
-                    ""
-                }
-
-                // Устанавливаем автора
-                authorView.text = theme?.author ?: if (theme?.isCustom == true) "Пользовательская" else "Quty"
-
-                // Устанавливаем превью
-                if (!theme?.previewBase64.isNullOrEmpty()) {
-                    try {
-                        val imageBytes = Base64.decode(theme.previewBase64, Base64.DEFAULT)
-                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                        previewView.setImageBitmap(bitmap)
-                        previewView.visibility = View.VISIBLE
-                    } catch (_: Exception) {
-                        previewView.setImageResource(R.drawable.ic_settings)
-                    }
-                } else {
-                    previewView.setImageResource(R.drawable.ic_settings)
-                }
-
-                // Отмечаем радио-кнопку если тема активна
-                radioView.isChecked = theme?.name == activeThemeId
-
-                return view
-            }
-        }
-
-        themesList.adapter = adapter
-        themesList.choiceMode = ListView.CHOICE_MODE_SINGLE
-
-        themesList.setOnItemClickListener { _, view, position, _ ->
+        themesList.setOnItemClickListener { _, _, position, _ ->
             val selectedTheme = themes[position]
+
+            // Применяем тему
             themeManager.setActiveTheme(selectedTheme)
+
+            // Обновляем адаптер, чтобы подсветка изменилась
+            themesAdapter.notifyDataSetChanged()
 
             val message = getString(R.string.theme_applied, selectedTheme.displayName ?: selectedTheme.name)
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -130,7 +91,71 @@ class SettingsActivity : BaseActivity() {
             val resultIntent = Intent()
             resultIntent.putExtra(EXTRA_THEME_NAME, selectedTheme.name)
             setResult(RESULT_THEME_CHANGED, resultIntent)
-            finish()
+
+            // Не закрываем активность сразу, чтобы пользователь видел изменение подсветки
+            // finish() // Закомментировали, чтобы не закрывать сразу
+        }
+    }
+
+    /**
+     * Внутренний класс адаптера для тем
+     * Использует актуальное состояние activeTheme из ThemeManager при каждом обновлении
+     */
+    inner class ThemesAdapter(private val themes: List<Theme>) : BaseAdapter() {
+
+        override fun getCount(): Int = themes.size
+
+        override fun getItem(position: Int): Theme = themes[position]
+
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = convertView ?: layoutInflater.inflate(R.layout.item_theme, parent, false)
+            val theme = getItem(position)
+
+            val previewView = view.findViewById<ImageView>(R.id.theme_preview)
+            val nameView = view.findViewById<TextView>(R.id.theme_name)
+            val versionView = view.findViewById<TextView>(R.id.theme_version)
+            val authorView = view.findViewById<TextView>(R.id.theme_author)
+
+            // Устанавливаем название
+            nameView.text = theme.displayName ?: theme.name
+
+            // Устанавливаем версию
+            versionView.text = if (!theme.version.isNullOrEmpty()) {
+                "v ${theme.version}"
+            } else {
+                ""
+            }
+
+            // Устанавливаем автора
+            authorView.text = theme.author ?: if (theme.isCustom) "Пользовательская" else "Quty"
+
+            // Устанавливаем превью
+            if (!theme.previewBase64.isNullOrEmpty()) {
+                try {
+                    val imageBytes = Base64.decode(theme.previewBase64, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    previewView.setImageBitmap(bitmap)
+                    previewView.visibility = View.VISIBLE
+                } catch (_: Exception) {
+                    previewView.setImageResource(R.drawable.ic_settings)
+                }
+            } else {
+                previewView.setImageResource(R.drawable.ic_settings)
+            }
+
+            // Получаем актуальную активную тему из менеджера
+            val activeTheme = themeManager.getActiveTheme()
+
+            // Подсвечиваем активную тему
+            if (theme.name == activeTheme?.name) {
+                view.setBackgroundColor(Color.parseColor("#333333")) // Темно-серый фон для активной темы
+            } else {
+                view.setBackgroundColor(Color.TRANSPARENT)
+            }
+
+            return view
         }
     }
 

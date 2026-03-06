@@ -64,11 +64,7 @@
             android:layout_marginTop="2dp" />
     </LinearLayout>
 
-    <!-- RadioButton для выбора -->
-    <RadioButton
-        android:id="@+id/theme_radio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:buttonTint="#FFFFFF" />
+    <!-- Индикатор активной темы (просто точку или галочку, если хотите) -->
+    <!-- Можно оставить пустым, мы будем подсвечивать фоном -->
 
 </LinearLayout>

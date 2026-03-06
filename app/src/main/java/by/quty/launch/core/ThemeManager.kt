@@ -56,6 +56,18 @@ class ThemeManager(
         if (!themesDir.exists()) themesDir.mkdirs()
         if (!activeThemeDir.exists()) activeThemeDir.mkdirs()
         if (!customThemesDir.exists()) customThemesDir.mkdirs()
+
+        // При инициализации загружаем активную тему из настроек
+        loadActiveThemeFromConfig()
+    }
+
+    /**
+     * Загружает активную тему из конфига в память
+     */
+    private fun loadActiveThemeFromConfig() {
+        val themes = getAvailableThemes()
+        val activeThemeId = configManager.getActiveTheme()
+        activeTheme = themes.find { it.name == activeThemeId }
     }
 
     /**
@@ -210,22 +222,35 @@ class ThemeManager(
         )
     }
 
-    fun getActiveTheme(): Theme? = activeTheme
+    fun getActiveTheme(): Theme? {
+        // Если в памяти нет, пробуем загрузить из конфига
+        if (activeTheme == null) {
+            loadActiveThemeFromConfig()
+        }
+        return activeTheme
+    }
 
     fun setActiveTheme(theme: Theme) {
-        activeTheme = theme
+        // Сохраняем в конфиг
         configManager.setActiveTheme(theme.name)
 
+        // Обновляем в памяти
+        activeTheme = theme
+
+        // Очищаем директорию активной темы
         clearActiveDir()
 
+        // Если это не asset тема - распаковываем
         if (!theme.isAsset) {
             unzipTheme(theme.sourcePath, activeThemeDir)
         }
     }
 
     fun getActiveThemeIndexHtml(): String {
-        return if (activeTheme == null || activeTheme!!.isAsset) {
-            "file:///android_asset/${activeTheme?.sourcePath ?: "themes/default"}/index.html"
+        val theme = getActiveTheme() ?: return "file:///android_asset/themes/default/index.html"
+
+        return if (theme.isAsset) {
+            "file:///android_asset/${theme.sourcePath}/index.html"
         } else {
             File(activeThemeDir, "index.html").absolutePath.let { "file://$it" }
         }

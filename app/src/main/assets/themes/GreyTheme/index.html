@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Quty Launcher</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+    <div id="nav">
+        <button onclick="navigate('home')">Главная</button>
+        <button onclick="navigate('apps')">Приложения</button>
+        <button onclick="navigate('info')">Информация</button>
+    </div>
+
+    <div id="content">
+
+        <!-- Главная -->
+        <div id="home" class="screen active">
+            <h1>Добро пожаловать</h1>
+            <p>Это тема "Grey"</p>
+        </div>
+
+        <!-- Приложения -->
+        <div id="apps" class="screen">
+            <h1>Список приложений</h1>
+            <div id="apps-list"></div>
+        </div>
+
+        <!-- Информация -->
+        <div id="info" class="screen">
+            <h1>Информация</h1>
+            <div id="info-content"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>
