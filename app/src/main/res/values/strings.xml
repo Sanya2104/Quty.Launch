@@ -24,4 +24,14 @@
     <string name="theme_applied">Тема \'%s\' применена</string>
     <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
+    <!-- Authors -->
+    <string name="author_custom">Пользовательская</string>
+    <string name="author_default">Quty</string>
+
+    <!-- Dialog messages -->
+    <string name="dialog_apply_settings_title">Применить настройки</string>
+    <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
+    <string name="dialog_restart">Перезапустить</string>
+    <string name="dialog_later">Позже</string>
+
 </resources>

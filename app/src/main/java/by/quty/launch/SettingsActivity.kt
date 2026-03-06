@@ -4,12 +4,13 @@ package by.quty.launch
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import by.quty.launch.core.Theme
 import by.quty.launch.core.ThemeManager
 
@@ -23,6 +24,17 @@ class SettingsActivity : BaseActivity() {
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var themesAdapter: ThemesAdapter
+    private lateinit var closeButton: Button
+
+    // Переменные для отслеживания изменений
+    private var originalTheme: String? = null
+    private var originalOrientation: String? = null
+    private var originalFullscreen: Boolean? = null
+
+    // Текущие значения (могут меняться)
+    private var currentTheme: String? = null
+    private var currentOrientation: String? = null
+    private var currentFullscreen: Boolean? = null
 
     companion object {
         const val RESULT_THEME_CHANGED = 1
@@ -36,6 +48,16 @@ class SettingsActivity : BaseActivity() {
         applyOrientation()
         themeManager = ThemeManager(this, configManager)
 
+        // Сохраняем исходные настройки
+        originalTheme = configManager.getActiveTheme()
+        originalOrientation = configManager.getOrientation()
+        originalFullscreen = configManager.isFullscreenEnabled()
+
+        // Копируем в текущие
+        currentTheme = originalTheme
+        currentOrientation = originalOrientation
+        currentFullscreen = originalFullscreen
+
         // Включаем иммерсив до отрисовки (для Android 10)
         enableImmersiveMode()
 
@@ -47,21 +69,83 @@ class SettingsActivity : BaseActivity() {
 
         orientationGroup = findViewById(R.id.orientation_group)
         fullscreenCheckbox = findViewById(R.id.fullscreen_checkbox)
+        closeButton = findViewById(R.id.close_button)
 
         setupThemeSelector()
         setupOrientationSelector()
         setupFullscreenSelector()
         setupVersionInfo()
+        setupCloseButton()
+        setupBackPressedDispatcher()
 
         // Дублируем вызов после отрисовки (для надежности)
         window.decorView.post {
             enableImmersiveMode()
         }
+    }
 
-        // Кнопка закрытия
-        findViewById<Button>(R.id.close_button).setOnClickListener {
-            finish()
+    /**
+     * Настройка диспетчера для обработки нажатия системной кнопки "Назад"
+     */
+    private fun setupBackPressedDispatcher() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (hasSettingsChanged()) {
+                    showRestartDialog()
+                } else {
+                    finish()
+                }
+            }
+        })
+    }
+
+    /**
+     * Настройка кнопки закрытия с проверкой изменений
+     */
+    private fun setupCloseButton() {
+        closeButton.setOnClickListener {
+            if (hasSettingsChanged()) {
+                showRestartDialog()
+            } else {
+                finish()
+            }
         }
+    }
+
+    /**
+     * Проверка, были ли изменены настройки
+     */
+    private fun hasSettingsChanged(): Boolean {
+        return currentTheme != originalTheme ||
+                currentOrientation != originalOrientation ||
+                currentFullscreen != originalFullscreen
+    }
+
+    /**
+     * Показ диалога с предложением перезапустить приложение
+     */
+    private fun showRestartDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dialog_apply_settings_title))
+            .setMessage(getString(R.string.dialog_apply_settings_message))
+            .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
+                restartApp()
+            }
+            .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
+                finish()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    /**
+     * Перезапуск приложения
+     */
+    private fun restartApp() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 
     /**
@@ -81,6 +165,9 @@ class SettingsActivity : BaseActivity() {
             // Применяем тему
             themeManager.setActiveTheme(selectedTheme)
 
+            // Обновляем текущую тему
+            currentTheme = selectedTheme.name
+
             // Обновляем адаптер, чтобы подсветка изменилась
             themesAdapter.notifyDataSetChanged()
 
@@ -91,9 +178,6 @@ class SettingsActivity : BaseActivity() {
             val resultIntent = Intent()
             resultIntent.putExtra(EXTRA_THEME_NAME, selectedTheme.name)
             setResult(RESULT_THEME_CHANGED, resultIntent)
-
-            // Не закрываем активность сразу, чтобы пользователь видел изменение подсветки
-            // finish() // Закомментировали, чтобы не закрывать сразу
         }
     }
 
@@ -123,13 +207,17 @@ class SettingsActivity : BaseActivity() {
 
             // Устанавливаем версию
             versionView.text = if (!theme.version.isNullOrEmpty()) {
-                "v ${theme.version}"
+                "v.${theme.version}"
             } else {
                 ""
             }
 
             // Устанавливаем автора
-            authorView.text = theme.author ?: if (theme.isCustom) "Пользовательская" else "Quty"
+            authorView.text = theme.author ?: if (theme.isCustom) {
+                getString(R.string.author_custom)
+            } else {
+                getString(R.string.author_default)
+            }
 
             // Устанавливаем превью
             if (!theme.previewBase64.isNullOrEmpty()) {
@@ -150,9 +238,9 @@ class SettingsActivity : BaseActivity() {
 
             // Подсвечиваем активную тему
             if (theme.name == activeTheme?.name) {
-                view.setBackgroundColor(Color.parseColor("#333333")) // Темно-серый фон для активной темы
+                view.setBackgroundColor(getColor(R.color.theme_active_background))
             } else {
-                view.setBackgroundColor(Color.TRANSPARENT)
+                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
 
             return view
@@ -163,8 +251,7 @@ class SettingsActivity : BaseActivity() {
      * Настройка выбора ориентации экрана
      */
     private fun setupOrientationSelector() {
-        val currentOrientation = configManager.getOrientation()
-
+        // Используем свойство класса, а не локальную переменную
         when (currentOrientation) {
             "portrait" -> orientationGroup.check(R.id.orientation_portrait)
             "landscape" -> orientationGroup.check(R.id.orientation_landscape)
@@ -179,6 +266,7 @@ class SettingsActivity : BaseActivity() {
                 else -> "sensor"
             }
             configManager.setOrientation(orientation)
+            currentOrientation = orientation // Обновляем свойство класса
         }
     }
 
@@ -191,6 +279,7 @@ class SettingsActivity : BaseActivity() {
 
         fullscreenCheckbox.setOnCheckedChangeListener { _, isChecked ->
             configManager.setFullscreenEnabled(isChecked)
+            currentFullscreen = isChecked // Обновляем текущее значение
 
             // Показываем сообщение, что изменения вступят после перезапуска
             Toast.makeText(
