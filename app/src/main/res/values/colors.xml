@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/values/colors.xml -->
 <resources>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
@@ -8,5 +8,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <!-- Theme selection colors -->
     <color name="theme_active_background">#2a2a5a</color>
+
+    <!-- TabLayout colors -->
+    <color name="tab_indicator">#009688</color>
+    <color name="tab_text_selected">#009688</color>
+    <color name="tab_text_unselected">#8A8A8A</color>
 </resources>

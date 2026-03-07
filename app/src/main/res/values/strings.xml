@@ -1,10 +1,20 @@
+<!-- res/values/strings.xml -->
 <resources>
 
     <string name="app_name">QutyLaunch</string>
 
     <!-- SettingsActivity - заголовки -->
     <string name="settings_title">⚙️ Настройки лаунчера</string>
+
+    <!-- Tab titles -->
+    <string name="tab_theme">Оформление</string>
+    <string name="tab_display">Экран</string>
+    <string name="tab_system">Система</string>
+
+    <!-- Theme settings -->
     <string name="settings_theme_title">Выберите тему оформления:</string>
+
+    <!-- Display settings -->
     <string name="settings_orientation_title">Ориентация экрана</string>
     <string name="settings_additional_title">Дополнительные настройки</string>
 

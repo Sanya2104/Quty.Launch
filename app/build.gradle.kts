@@ -1,3 +1,5 @@
+// app/build.gradle.kts
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.serialization)
@@ -12,7 +14,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = 1
-        versionName = "0.0.3"
+        versionName = "0.0.4"
         versionNameSuffix = "Alpha"
     }
 
@@ -44,4 +46,13 @@ dependencies {
 
     // WebKit
     implementation(libs.androidx.webkit)
+
+    // Material Components (для TabLayout)
+    implementation(libs.material)
+
+    // ViewPager2
+    implementation(libs.androidx.viewpager2)
+
+    // Fragment KTX
+    implementation(libs.androidx.fragment.ktx)
 }

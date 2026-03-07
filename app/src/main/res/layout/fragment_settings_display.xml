@@ -1,0 +1,91 @@
+<!-- res/layout/fragment_settings_display.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:fillViewport="true"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Ориентация экрана -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_orientation_title"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:paddingTop="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp">
+
+            <RadioGroup
+                android:id="@+id/orientation_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/orientation_sensor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_auto"
+                    android:textColor="#FFFFFF"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/orientation_portrait"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_portrait"
+                    android:textColor="#FFFFFF"/>
+
+                <RadioButton
+                    android:id="@+id/orientation_landscape"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_landscape"
+                    android:textColor="#FFFFFF"/>
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <!-- Дополнительные настройки -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_additional_title"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:paddingTop="24dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp">
+
+            <CheckBox
+                android:id="@+id/fullscreen_checkbox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/additional_fullscreen"
+                android:textColor="#FFFFFF"
+                android:checked="true"
+                android:enabled="true"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

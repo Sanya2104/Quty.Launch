@@ -1,0 +1,58 @@
+<!-- res/layout/fragment_settings_system.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#121212"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Информация о системе"
+        android:textColor="#CCCCCC"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:paddingTop="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1E1E1E"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/version_format"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:padding="12dp"/>
+
+        <!-- Место для будущих системных настроек -->
+        <!--
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Очистить кэш"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackground"/>
+        -->
+
+    </LinearLayout>
+
+    <!-- Информация о приложении -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="QutyLaunch © 2026"
+        android:textColor="#666666"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:padding="24dp"/>
+
+</LinearLayout>

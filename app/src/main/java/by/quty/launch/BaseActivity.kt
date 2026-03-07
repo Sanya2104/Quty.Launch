@@ -22,12 +22,19 @@ abstract class BaseActivity : AppCompatActivity() {
      * Менеджер конфигурации для работы с настройками приложения
      * Инициализируется в onCreate и доступен во всех дочерних активностях
      */
-    protected lateinit var configManager: ConfigManager
+    private lateinit var _configManager: ConfigManager
+
+    /**
+     * Публичный геттер для ConfigManager
+     * Используется для доступа из фрагментов
+     */
+    val configManager: ConfigManager
+        get() = _configManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Инициализируем менеджер конфигурации при создании активности
-        configManager = ConfigManager(this)
+        _configManager = ConfigManager(this)
     }
 
     /**

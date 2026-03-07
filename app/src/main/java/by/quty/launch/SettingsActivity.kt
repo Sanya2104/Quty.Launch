@@ -2,29 +2,40 @@
 package by.quty.launch
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Base64
-import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
-import by.quty.launch.core.Theme
+import androidx.viewpager2.widget.ViewPager2
 import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.adapters.SettingsPagerAdapter
+import by.quty.launch.core.fragments.DisplaySettingsFragment
+import by.quty.launch.core.fragments.SystemSettingsFragment
+import by.quty.launch.core.fragments.ThemeSettingsFragment
+import by.quty.launch.core.interfaces.SettingsEventListener
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 /**
- * Активность настроек лаунчера
+ * Активность настроек лаунчера с вкладками
  * Позволяет выбирать тему оформления, ориентацию экрана и полноэкранный режим
  */
-class SettingsActivity : BaseActivity() {
+class SettingsActivity : BaseActivity(), SettingsEventListener {
 
-    private lateinit var themeManager: ThemeManager
-    private lateinit var orientationGroup: RadioGroup
-    private lateinit var fullscreenCheckbox: CheckBox
-    private lateinit var themesAdapter: ThemesAdapter
+    // Менеджеры - используем configManager из BaseActivity через геттер
+    lateinit var themeManager: ThemeManager
+
+    // UI компоненты
+    private lateinit var tabLayout: TabLayout
+    private lateinit var viewPager: ViewPager2
     private lateinit var closeButton: Button
+    private lateinit var pagerAdapter: SettingsPagerAdapter
+
+    // Ссылки на фрагменты для обновления
+    private var themeFragment: ThemeSettingsFragment? = null
+    private var displayFragment: DisplaySettingsFragment? = null
+    private var systemFragment: SystemSettingsFragment? = null
 
     // Переменные для отслеживания изменений
     private var originalTheme: String? = null
@@ -38,7 +49,6 @@ class SettingsActivity : BaseActivity() {
 
     companion object {
         const val RESULT_THEME_CHANGED = 1
-        const val EXTRA_THEME_NAME = "theme_name"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +56,7 @@ class SettingsActivity : BaseActivity() {
 
         // Инициализация
         applyOrientation()
-        themeManager = ThemeManager(this, configManager)
+        themeManager = ThemeManager(this, configManager) // configManager из BaseActivity через геттер
 
         // Сохраняем исходные настройки
         originalTheme = configManager.getActiveTheme()
@@ -67,14 +77,12 @@ class SettingsActivity : BaseActivity() {
         window.decorView.findViewById<ViewGroup>(android.R.id.content)
             ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
 
-        orientationGroup = findViewById(R.id.orientation_group)
-        fullscreenCheckbox = findViewById(R.id.fullscreen_checkbox)
+        // Инициализация UI
+        tabLayout = findViewById(R.id.tab_layout)
+        viewPager = findViewById(R.id.view_pager)
         closeButton = findViewById(R.id.close_button)
 
-        setupThemeSelector()
-        setupOrientationSelector()
-        setupFullscreenSelector()
-        setupVersionInfo()
+        setupViewPager()
         setupCloseButton()
         setupBackPressedDispatcher()
 
@@ -82,6 +90,41 @@ class SettingsActivity : BaseActivity() {
         window.decorView.post {
             enableImmersiveMode()
         }
+    }
+
+    /**
+     * Настройка ViewPager2 с TabLayout
+     */
+    private fun setupViewPager() {
+        pagerAdapter = SettingsPagerAdapter(this)
+        viewPager.adapter = pagerAdapter
+
+        // Привязываем TabLayout к ViewPager2
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when (position) {
+                SettingsPagerAdapter.TAB_THEME -> tab.text = getString(R.string.tab_theme)
+                SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
+                SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
+            }
+        }.attach()
+
+        // Сохраняем ссылки на фрагменты при их создании
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                // Обновляем ссылки на фрагменты
+                updateFragmentReferences()
+            }
+        })
+    }
+
+    /**
+     * Обновление ссылок на фрагменты
+     */
+    private fun updateFragmentReferences() {
+        themeFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_THEME}") as? ThemeSettingsFragment
+        displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplaySettingsFragment
+        systemFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SYSTEM}") as? SystemSettingsFragment
     }
 
     /**
@@ -148,164 +191,37 @@ class SettingsActivity : BaseActivity() {
         finish()
     }
 
-    /**
-     * Настройка выбора темы оформления с превью и информацией
-     * Активная тема подсвечивается цветом вместо RadioButton
-     */
-    private fun setupThemeSelector() {
-        val themesList = findViewById<ListView>(R.id.themes_list)
-        val themes = themeManager.getAvailableThemes()
+    // ===== Методы интерфейса SettingsEventListener =====
 
-        themesAdapter = ThemesAdapter(themes)
-        themesList.adapter = themesAdapter
+    override fun onThemeChanged(themeName: String) {
+        currentTheme = themeName
+    }
 
-        themesList.setOnItemClickListener { _, _, position, _ ->
-            val selectedTheme = themes[position]
+    override fun onOrientationChanged(orientation: String) {
+        currentOrientation = orientation
+    }
 
-            // Применяем тему
-            themeManager.setActiveTheme(selectedTheme)
+    override fun onFullscreenChanged(enabled: Boolean) {
+        currentFullscreen = enabled
+    }
 
-            // Обновляем текущую тему
-            currentTheme = selectedTheme.name
-
-            // Обновляем адаптер, чтобы подсветка изменилась
-            themesAdapter.notifyDataSetChanged()
-
-            val message = getString(R.string.theme_applied, selectedTheme.displayName ?: selectedTheme.name)
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-
-            // Возвращаем результат в MainActivity
-            val resultIntent = Intent()
-            resultIntent.putExtra(EXTRA_THEME_NAME, selectedTheme.name)
-            setResult(RESULT_THEME_CHANGED, resultIntent)
-        }
+    override fun onSettingChanged() {
+        // Можем добавить дополнительную логику при любом изменении
     }
 
     /**
-     * Внутренний класс адаптера для тем
-     * Использует актуальное состояние activeTheme из ThemeManager при каждом обновлении
+     * Обновление всех фрагментов (вызывается при необходимости)
      */
-    inner class ThemesAdapter(private val themes: List<Theme>) : BaseAdapter() {
-
-        override fun getCount(): Int = themes.size
-
-        override fun getItem(position: Int): Theme = themes[position]
-
-        override fun getItemId(position: Int): Long = position.toLong()
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = convertView ?: layoutInflater.inflate(R.layout.item_theme, parent, false)
-            val theme = getItem(position)
-
-            val previewView = view.findViewById<ImageView>(R.id.theme_preview)
-            val nameView = view.findViewById<TextView>(R.id.theme_name)
-            val versionView = view.findViewById<TextView>(R.id.theme_version)
-            val authorView = view.findViewById<TextView>(R.id.theme_author)
-
-            // Устанавливаем название
-            nameView.text = theme.displayName ?: theme.name
-
-            // Устанавливаем версию
-            versionView.text = if (!theme.version.isNullOrEmpty()) {
-                "v.${theme.version}"
-            } else {
-                ""
-            }
-
-            // Устанавливаем автора
-            authorView.text = theme.author ?: if (theme.isCustom) {
-                getString(R.string.author_custom)
-            } else {
-                getString(R.string.author_default)
-            }
-
-            // Устанавливаем превью
-            if (!theme.previewBase64.isNullOrEmpty()) {
-                try {
-                    val imageBytes = Base64.decode(theme.previewBase64, Base64.DEFAULT)
-                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                    previewView.setImageBitmap(bitmap)
-                    previewView.visibility = View.VISIBLE
-                } catch (_: Exception) {
-                    previewView.setImageResource(R.drawable.ic_settings)
-                }
-            } else {
-                previewView.setImageResource(R.drawable.ic_settings)
-            }
-
-            // Получаем актуальную активную тему из менеджера
-            val activeTheme = themeManager.getActiveTheme()
-
-            // Подсвечиваем активную тему
-            if (theme.name == activeTheme?.name) {
-                view.setBackgroundColor(getColor(R.color.theme_active_background))
-            } else {
-                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            }
-
-            return view
-        }
+    fun refreshAllFragments() {
+        updateFragmentReferences()
+        themeFragment?.refreshThemes()
+        displayFragment?.refreshSettings()
+        systemFragment?.refreshInfo()
     }
 
-    /**
-     * Настройка выбора ориентации экрана
-     */
-    private fun setupOrientationSelector() {
-        // Используем свойство класса, а не локальную переменную
-        when (currentOrientation) {
-            "portrait" -> orientationGroup.check(R.id.orientation_portrait)
-            "landscape" -> orientationGroup.check(R.id.orientation_landscape)
-            else -> orientationGroup.check(R.id.orientation_sensor)
-        }
-
-        // Устанавливаем текущее значение
-        orientationGroup.setOnCheckedChangeListener { _, checkedId ->
-            val orientation = when (checkedId) {
-                R.id.orientation_portrait -> "portrait"
-                R.id.orientation_landscape -> "landscape"
-                else -> "sensor"
-            }
-            configManager.setOrientation(orientation)
-            currentOrientation = orientation // Обновляем свойство класса
-        }
-    }
-
-    /**
-     * Настройка полноэкранного режима
-     */
-    private fun setupFullscreenSelector() {
-        // Устанавливаем текущее значение из конфига
-        fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
-
-        fullscreenCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            configManager.setFullscreenEnabled(isChecked)
-            currentFullscreen = isChecked // Обновляем текущее значение
-
-            // Показываем сообщение, что изменения вступят после перезапуска
-            Toast.makeText(
-                this,
-                getString(R.string.fullscreen_changed),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    /**
-     * Отображение версии приложения
-     * Получает versionName из PackageManager и форматирует с пробелом
-     */
-    private fun setupVersionInfo() {
-        val versionTextView = findViewById<TextView>(R.id.version_text)
-        val fullVersionName = try {
-            packageManager.getPackageInfo(packageName, 0).versionName
-        } catch (_: PackageManager.NameNotFoundException) {
-            getString(R.string.version_unknown)
-        }
-
-        // Добавляем пробел между цифрами и суффиксом (например, "0.0.3 alpha")
-        val versionText = fullVersionName?.replace(Regex("([0-9.]+)([a-zA-Z].*)"), "$1 $2")
-            ?: getString(R.string.version_unknown)
-
-        versionTextView.text = getString(R.string.version_format, versionText)
+    override fun onResume() {
+        super.onResume()
+        // Обновляем фрагменты при возврате в активность
+        refreshAllFragments()
     }
 }

@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/activity_settings.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -30,126 +31,29 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:text="✕"
             android:textColor="#FFFFFF"
-            android:textSize="24sp"
-            android:onClick="finish" />
+            android:textSize="24sp" />
     </LinearLayout>
 
-    <!-- ScrollView для всего остального -->
-    <ScrollView
+    <!-- TabLayout для вкладок -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:padding="16dp"
-        android:paddingTop="0dp">
+        android:layout_height="wrap_content"
+        android:background="#1E1E1E"
+        app:tabIndicatorColor="@color/tab_indicator"
+        app:tabIndicatorHeight="3dp"
+        app:tabSelectedTextColor="@color/tab_text_selected"
+        app:tabTextColor="@color/tab_text_unselected"
+        app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
+        app:tabPadding="12dp"
+        app:tabMode="fixed"
+        app:tabGravity="fill"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_theme_title"
-                android:textColor="#CCCCCC"
-                android:textSize="16sp"
-                android:padding="16dp"
-                android:paddingTop="8dp"/>
-
-            <ListView
-                android:id="@+id/themes_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#1E1E1E"
-                android:divider="#333333"
-                android:dividerHeight="1dp"
-                android:choiceMode="singleChoice"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_orientation_title"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:padding="16dp"
-                android:paddingTop="24dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#1E1E1E"
-                android:padding="16dp">
-
-                <RadioGroup
-                    android:id="@+id/orientation_group"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <RadioButton
-                        android:id="@+id/orientation_sensor"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/orientation_auto"
-                        android:textColor="#FFFFFF"
-                        android:checked="true"/>
-
-                    <RadioButton
-                        android:id="@+id/orientation_portrait"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/orientation_portrait"
-                        android:textColor="#FFFFFF"/>
-
-                    <RadioButton
-                        android:id="@+id/orientation_landscape"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/orientation_landscape"
-                        android:textColor="#FFFFFF"/>
-
-                </RadioGroup>
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_additional_title"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:padding="16dp"
-                android:paddingTop="24dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#1E1E1E"
-                android:padding="16dp">
-
-                <CheckBox
-                    android:id="@+id/fullscreen_checkbox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/additional_fullscreen"
-                    android:textColor="#FFFFFF"
-                    android:checked="true"
-                    android:enabled="true"/>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/version_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/version_format"
-                android:textColor="#666666"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:padding="16dp"/>
-
-        </LinearLayout>
-    </ScrollView>
+    <!-- ViewPager2 для переключения между вкладками -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>
