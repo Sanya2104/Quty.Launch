@@ -1,6 +1,7 @@
 <!-- res/values/strings.xml -->
 <resources>
 
+    <!-- App name -->
     <string name="app_name">Quty.Launch</string>
 
     <!-- SettingsActivity - заголовки -->
@@ -26,6 +27,34 @@
     <!-- Additional -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
 
+    <!-- System section -->
+    <string name="system_info_title">Информация о системе</string>
+    <string name="check_updates_button">Проверить обновления</string>
+    <string name="checking_updates">Проверка...</string>
+    <string name="update_available">Доступно обновление %s</string>
+    <string name="no_updates">У вас последняя версия</string>
+    <string name="update_error">Ошибка</string>
+    <string name="server_error">Ошибка сервера: %d</string>
+    <string name="copyright">Quty.Launch © 2026</string>
+
+    <!-- Update dialog -->
+    <string name="update_dialog_title">Доступно обновление %s%s</string>
+    <string name="update_dialog_message">%s\n\nРелиз: %s\nРазмер: %s</string>
+    <string name="update_action">Обновить</string>
+    <string name="later">Позже</string>
+    <string name="critical_tag"> ⚠️ КРИТИЧЕСКОЕ</string>
+
+    <!-- Download dialog -->
+    <string name="downloading_title">Скачивание обновления</string>
+    <string name="downloading_prepare">Подготовка...</string>
+    <string name="downloading_progress">Скачивание: %d%%</string>
+    <string name="download_error">Ошибка скачивания</string>
+
+    <!-- Install dialog -->
+    <string name="install_title">Установка обновления</string>
+    <string name="install_message">Обновление скачано. Установить сейчас?</string>
+    <string name="install_action">Установить</string>
+
     <!-- Version -->
     <string name="version_format">Версия: %s</string>
     <string name="version_unknown">Неизвестный</string>
@@ -36,7 +65,7 @@
 
     <!-- Authors -->
     <string name="author_custom">Пользовательская</string>
-    <string name="author_default">Quty</string>
+    <string name="author_default">QutyTeam</string>
 
     <!-- Dialog messages -->
     <string name="dialog_apply_settings_title">Применить настройки</string>

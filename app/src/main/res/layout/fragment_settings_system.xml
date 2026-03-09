@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Информация о системе"
+        android:text="@string/system_info_title"
         android:textColor="#CCCCCC"
         android:textSize="16sp"
         android:padding="16dp"
@@ -52,7 +52,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Проверить обновления"
+                android:text="@string/check_updates_button"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"/>
 
@@ -91,7 +91,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Quty.Launch © 2026"
+        android:text="@string/copyright"
         android:textColor="#666666"
         android:textSize="12sp"
         android:gravity="center"

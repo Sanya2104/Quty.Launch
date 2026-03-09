@@ -79,27 +79,36 @@ class SystemSettingsFragment : Fragment() {
 
     private fun checkForUpdates() {
         updateStatus.visibility = View.VISIBLE
-        updateStatus.text = "Проверка..."
+        updateStatus.text = getString(R.string.checking_updates)
         updateStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
 
         lifecycleScope.launch {
             val result = updateManager.checkForUpdates()
 
             if (result.hasUpdate && result.versionInfo != null) {
-                updateStatus.text = "Доступно обновление ${result.versionInfo.version}"
+                updateStatus.text = getString(R.string.update_available, result.versionInfo.version)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
 
                 showUpdateDialog(result.versionInfo)
             } else if (result.error != null) {
-                updateStatus.text = "Ошибка"
+                updateStatus.text = getString(R.string.update_error)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
-                Toast.makeText(requireContext(), "Ошибка: ${result.error}", Toast.LENGTH_SHORT).show()
+
+                val errorMessage = if (result.error.startsWith("Ошибка сервера:")) {
+                    // Парсим код ошибки если есть
+                    val code = result.error.replace("[^0-9]".toRegex(), "")
+                    getString(R.string.server_error, code.toIntOrNull() ?: 0)
+                } else {
+                    result.error
+                }
+
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
 
                 view?.postDelayed({
                     updateStatus.visibility = View.GONE
                 }, 3000)
             } else {
-                updateStatus.text = "У вас последняя версия"
+                updateStatus.text = getString(R.string.no_updates)
                 updateStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
 
                 view?.postDelayed({
@@ -110,47 +119,50 @@ class SystemSettingsFragment : Fragment() {
     }
 
     private fun showUpdateDialog(versionInfo: VersionInfo) {
-        val criticalTag = if (versionInfo.isCritical) " ⚠️ КРИТИЧЕСКОЕ" else ""
+        val criticalTag = if (versionInfo.isCritical) getString(R.string.critical_tag) else ""
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Доступно обновление ${versionInfo.version}$criticalTag")
-            .setMessage("${versionInfo.changelog}\n\nРелиз: ${versionInfo.releaseDate}\nРазмер: ${versionInfo.size}")
-            .setPositiveButton("Обновить") { _, _ ->
+            .setTitle(getString(R.string.update_dialog_title, versionInfo.version, criticalTag))
+            .setMessage(getString(R.string.update_dialog_message,
+                versionInfo.changelog, versionInfo.releaseDate, versionInfo.size))
+            .setPositiveButton(getString(R.string.update_action)) { _, _ ->
                 downloadAndInstall(versionInfo)
             }
-            .setNegativeButton("Позже", null)
+            .setNegativeButton(getString(R.string.later), null)
             .show()
     }
 
     private fun downloadAndInstall(versionInfo: VersionInfo) {
         val progressDialog = AlertDialog.Builder(requireContext())
-            .setTitle("Скачивание обновления")
-            .setMessage("Подготовка...")
+            .setTitle(getString(R.string.downloading_title))
+            .setMessage(getString(R.string.downloading_prepare))
             .setCancelable(false)
             .show()
 
         lifecycleScope.launch {
             updateManager.downloadApk(versionInfo, object : UpdateManager.DownloadListener {
                 override fun onProgress(percent: Int) {
-                    progressDialog.setMessage("Скачивание: $percent%")
+                    progressDialog.setMessage(getString(R.string.downloading_progress, percent))
                 }
 
                 override fun onSuccess(file: java.io.File) {
                     progressDialog.dismiss()
 
                     AlertDialog.Builder(requireContext())
-                        .setTitle("Установка обновления")
-                        .setMessage("Обновление скачано. Установить сейчас?")
-                        .setPositiveButton("Установить") { _, _ ->
+                        .setTitle(getString(R.string.install_title))
+                        .setMessage(getString(R.string.install_message))
+                        .setPositiveButton(getString(R.string.install_action)) { _, _ ->
                             updateManager.installApk(file)
                         }
-                        .setNegativeButton("Позже", null)
+                        .setNegativeButton(getString(R.string.later), null)
                         .show()
                 }
 
                 override fun onError(message: String) {
                     progressDialog.dismiss()
-                    Toast.makeText(requireContext(), "Ошибка: $message", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(),
+                        getString(R.string.download_error) + ": $message",
+                        Toast.LENGTH_LONG).show()
                 }
             })
         }
