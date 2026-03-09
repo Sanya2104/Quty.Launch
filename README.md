@@ -1,2 +1,2 @@
-# QutyLaunch
-QutyLaunch for Android FYT
+# Quty.Launch
+Quty.Launch for Android FYT

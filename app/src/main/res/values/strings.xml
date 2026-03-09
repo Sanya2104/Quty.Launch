@@ -1,7 +1,7 @@
 <!-- res/values/strings.xml -->
 <resources>
 
-    <string name="app_name">QutyLaunch</string>
+    <string name="app_name">Quty.Launch</string>
 
     <!-- SettingsActivity - заголовки -->
     <string name="settings_title">⚙️ Настройки лаунчера</string>
