@@ -5,6 +5,7 @@ import android.content.Context
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
+import androidx.core.content.edit
 
 @Serializable
 data class LauncherConfig(
@@ -45,7 +46,7 @@ class ConfigManager(private val context: Context) {
 
     // Сохранения активной темы
     fun setActiveTheme(themeId: String) {
-        prefs.edit().putString("active_theme", themeId).apply()
+        prefs.edit { putString("active_theme", themeId) }
     }
 
     // Получение ориентации
@@ -55,7 +56,7 @@ class ConfigManager(private val context: Context) {
 
     // Сохранение ориентации
     fun setOrientation(orientation: String) {
-        prefs.edit().putString("orientation", orientation).apply()
+        prefs.edit { putString("orientation", orientation) }
     }
 
     // Получение полноэкранного режима
@@ -65,6 +66,6 @@ class ConfigManager(private val context: Context) {
 
     // Сохранение полноэкранного режима
     fun setFullscreenEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("fullscreen", enabled).apply()
+        prefs.edit { putBoolean("fullscreen", enabled) }
     }
 }
