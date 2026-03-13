@@ -13,7 +13,7 @@ android {
         applicationId = "by.quty.launch"
         minSdk = 29
         targetSdk = 36
-    versionCode = 9
+    versionCode = 10
     versionName = "0.0.7"
         versionNameSuffix = "Alpha"
     }
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
 }
+
 
 
 

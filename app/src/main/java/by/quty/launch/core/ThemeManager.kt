@@ -247,13 +247,8 @@ class ThemeManager(
     }
 
     fun getActiveThemeIndexHtml(): String {
-        val theme = getActiveTheme() ?: return "file:///android_asset/themes/default/index.html"
-
-        return if (theme.isAsset) {
-            "file:///android_asset/${theme.sourcePath}/index.html"
-        } else {
-            File(activeThemeDir, "index.html").absolutePath.let { "file://$it" }
-        }
+        // Возвращает путь внутри assets (без file://)
+        return "themes/$activeTheme/index.html"
     }
 
     private fun clearActiveDir() {

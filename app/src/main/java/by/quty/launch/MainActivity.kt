@@ -43,10 +43,14 @@ class MainActivity : BaseActivity() {
      * Загрузка активной темы в WebView
      * Получает тему из ThemeManager и загружает соответствующий index.html
      */
+
     private fun loadTheme() {
         val themeToActivate = themeManager.getThemeToActivate()
         themeManager.setActiveTheme(themeToActivate)
-        webView.loadUrl(themeManager.getActiveThemeIndexHtml())
+
+        // Используем themeToActivate.name, а не весь объект
+        val themePath = "themes/${themeToActivate.name}/index.html"
+        webView.loadThemeFromAssets(themePath)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
