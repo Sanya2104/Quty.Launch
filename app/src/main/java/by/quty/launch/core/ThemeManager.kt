@@ -246,11 +246,6 @@ class ThemeManager(
         }
     }
 
-    fun getActiveThemeIndexHtml(): String {
-        // Возвращает путь внутри assets (без file://)
-        return "themes/$activeTheme/index.html"
-    }
-
     private fun clearActiveDir() {
         if (activeThemeDir.exists()) {
             activeThemeDir.deleteRecursively()
