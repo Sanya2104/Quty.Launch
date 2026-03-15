@@ -1,4 +1,4 @@
-﻿// app/build.gradle.kts
+// app/build.gradle.kts
 
 plugins {
     alias(libs.plugins.android.application)
@@ -13,7 +13,7 @@ android {
         applicationId = "by.quty.launch"
         minSdk = 29
         targetSdk = 36
-    versionCode = 11
+    versionCode = 13
     versionName = "0.0.8"
         versionNameSuffix = "Alpha"
     }
@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
 }
+
+
 
 
 
