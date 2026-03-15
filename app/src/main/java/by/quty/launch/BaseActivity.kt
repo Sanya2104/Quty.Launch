@@ -49,38 +49,47 @@ abstract class BaseActivity : AppCompatActivity() {
         // Если полноэкранный режим отключен — выходим
         if (!configManager.isFullscreenEnabled()) return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+
-            WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Защита от NullPointerException на Android 16
+        val currentWindow = window ?: return
+        val decorView = currentWindow.decorView
 
-            window.insetsController?.let { controller ->
-                controller.hide(WindowInsetsCompat.Type.statusBars()
-                        or WindowInsetsCompat.Type.navigationBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Android 11+
+                WindowCompat.setDecorFitsSystemWindows(currentWindow, false)
+
+                currentWindow.insetsController?.let { controller ->
+                    controller.hide(WindowInsetsCompat.Type.statusBars()
+                            or WindowInsetsCompat.Type.navigationBars())
+                    controller.systemBarsBehavior =
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+
+                // Обрабатываем вырез камеры
+                currentWindow.attributes.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+
+            } else {
+                // Android 4.4-10 — старый способ
+                @Suppress("DEPRECATION")
+                decorView.systemUiVisibility = (
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
             }
-
-            // Обрабатываем вырез камеры
-            window.attributes.layoutInDisplayCutoutMode =
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-
-        } else {
-            // Android 4.4-10 — старый способ
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        } catch (e: Exception) {
+            // Логируем ошибку, но не падаем
+            e.printStackTrace()
         }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            window.decorView.post { enableImmersiveMode() }
+            window?.decorView?.post { enableImmersiveMode() }
         }
     }
 

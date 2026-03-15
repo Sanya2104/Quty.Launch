@@ -68,12 +68,10 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         currentOrientation = originalOrientation
         currentFullscreen = originalFullscreen
 
-        // Включаем иммерсив до отрисовки (для Android 10)
-        enableImmersiveMode()
-
+        // УСТАНАВЛИВАЕМ LAYOUT ПЕРЕД ВСЕМИ ОПЕРАЦИЯМИ С UI
         setContentView(R.layout.activity_settings)
 
-        // Принудительно убиваем padding (для Android 13)
+        // Теперь можно безопасно работать с UI
         window.decorView.findViewById<ViewGroup>(android.R.id.content)
             ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
 
@@ -86,7 +84,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         setupCloseButton()
         setupBackPressedDispatcher()
 
-        // Дублируем вызов после отрисовки (для надежности)
+        // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
             enableImmersiveMode()
         }
