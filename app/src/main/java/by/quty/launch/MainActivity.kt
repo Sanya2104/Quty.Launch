@@ -22,7 +22,7 @@ class MainActivity : BaseActivity() {
 
     companion object {
         const val REQUEST_CODE_SETTINGS = 1001
-        private const val DELAY_BEFORE_RECREATE = 300L // Задержка перед перезапуском (мс) - теперь Long
+        private const val DELAY_BEFORE_RECREATE = 300L // Задержка перед перезапуском (мс)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +32,7 @@ class MainActivity : BaseActivity() {
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
         core = Core(this)
         webView = LauncherWebView(this)
-        themeManager = ThemeManager(this, configManager) // configManager из BaseActivity
+        themeManager = ThemeManager(this, configManager)
         webView.addJavascriptInterface(JsBridge(core), "Android")
         loadTheme()
         setContentView(webView)

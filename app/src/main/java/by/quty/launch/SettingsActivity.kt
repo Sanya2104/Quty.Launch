@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.ViewGroup
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -65,7 +64,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
         // Инициализация
         applyOrientation()
-        themeManager = ThemeManager(this, configManager) // configManager из BaseActivity через геттер
+        themeManager = ThemeManager(this, configManager)
 
         // Сохраняем исходные настройки
         originalTheme = configManager.getActiveTheme()
@@ -79,10 +78,6 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
         // УСТАНАВЛИВАЕМ LAYOUT ПЕРЕД ВСЕМИ ОПЕРАЦИЯМИ С UI
         setContentView(R.layout.activity_settings)
-
-        // Теперь можно безопасно работать с UI
-        window.decorView.findViewById<ViewGroup>(android.R.id.content)
-            ?.getChildAt(0)?.setPadding(0, 0, 0, 0)
 
         // Инициализация UI
         tabLayout = findViewById(R.id.tab_layout)

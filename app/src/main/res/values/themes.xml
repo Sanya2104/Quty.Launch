@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Базовая тема для всех активностей -->
     <style name="Theme.QutyLaunch" parent="Theme.AppCompat.NoActionBar">
         <!-- Для Android 11+ обязательно прозрачные бары -->
         <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -7,11 +8,17 @@
 
         <!-- Для Android 13: обрабатываем вырез камеры -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+
+        <!-- Важно! Запрещаем системе добавлять отступы -->
+        <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Растягиваем окно под системные панели -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
-    <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">
+    <!-- Тема для диалогов/попапов - наследуем основную тему -->
+    <style name="Theme.AppCompat.Translucent" parent="Theme.QutyLaunch">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:fitsSystemWindows">false</item>
     </style>
 </resources>
