@@ -28,6 +28,20 @@
             android:background="#1E1E1E"
             android:padding="16dp">
 
+            <!-- Подсказка о блокировке ориентации темой (по умолчанию скрыта) -->
+            <TextView
+                android:id="@+id/orientation_lock_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔒 Ориентация задана темой"
+                android:textColor="#FF9800"
+                android:textSize="14sp"
+                android:padding="8dp"
+                android:background="#332A2A"
+                android:gravity="center"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"/>
+
             <RadioGroup
                 android:id="@+id/orientation_group"
                 android:layout_width="match_parent"

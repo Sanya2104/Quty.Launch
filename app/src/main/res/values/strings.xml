@@ -30,7 +30,7 @@
     <!-- System section -->
     <string name="system_info_title">Информация о системе</string>
     <string name="check_updates_button">Проверить обновления</string>
-    <string name="checking_updates">Проверка...</string>
+    <string name="checking_updates">Проверка…</string>
     <string name="update_available">Доступно обновление %s</string>
     <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
@@ -72,5 +72,9 @@
     <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
     <string name="dialog_restart">Перезапустить</string>
     <string name="dialog_later">Позже</string>
+
+    <!-- Orientation lock hint (добавить новую строку) -->
+    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
+    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
 
 </resources>

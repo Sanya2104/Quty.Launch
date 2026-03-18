@@ -95,20 +95,31 @@ abstract class BaseActivity : AppCompatActivity() {
 
     /**
      * Применение сохраненной ориентации экрана
-     * Читает настройку ориентации из ConfigManager и применяет её
-     * Возможные значения:
-     * - "portrait" - портретная ориентация (вертикальная)
-     * - "landscape" - ландшафтная ориентация (горизонтальная)
-     * - "sensor" - автоматическая ориентация (следует за датчиками)
+     * Сначала проверяет, не задаёт ли тема принудительную ориентацию
+     * Если да - применяет её, иначе использует настройки пользователя
      */
     protected fun applyOrientation() {
-        val orientation = configManager.getOrientation()
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
 
-        requestedOrientation = when (orientation) {
+        // Проверяем, есть ли принудительная ориентация от темы
+        val forcedOrientation = prefs.getString("forced_orientation", null)
+
+        val orientationToApply = when (forcedOrientation) {
             "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+            "sensor" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+            else -> {
+                // Если нет принудительной ориентации - используем настройки пользователя
+                val userOrientation = configManager.getOrientation()
+                when (userOrientation) {
+                    "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                }
+            }
         }
+
+        requestedOrientation = orientationToApply
     }
 
     /**

@@ -3,6 +3,8 @@ package by.quty.launch
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
@@ -33,8 +35,10 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private lateinit var pagerAdapter: SettingsPagerAdapter
 
     // Ссылки на фрагменты для обновления
-    private var themeFragment: ThemeSettingsFragment? = null
-    private var displayFragment: DisplaySettingsFragment? = null
+    var themeFragment: ThemeSettingsFragment? = null
+        private set
+    var displayFragment: DisplaySettingsFragment? = null
+        private set
     private var systemFragment: SystemSettingsFragment? = null
 
     // Переменные для отслеживания изменений
@@ -47,8 +51,13 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var currentOrientation: String? = null
     private var currentFullscreen: Boolean? = null
 
+    // Флаг для предотвращения множественных перезапусков
+    private var isRestarting = false
+
     companion object {
         const val RESULT_THEME_CHANGED = 1
+        const val EXTRA_SELECTED_THEME = "selected_theme"
+        private const val DELAY_BEFORE_RESTART = 500L // Задержка перед перезапуском (мс)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -166,10 +175,14 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Показ диалога с предложением перезапустить приложение
      */
     private fun showRestartDialog() {
+        // Предотвращаем множественные диалоги
+        if (isRestarting) return
+
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_apply_settings_title))
             .setMessage(getString(R.string.dialog_apply_settings_message))
             .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
+                isRestarting = true
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
@@ -180,13 +193,23 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     }
 
     /**
-     * Перезапуск приложения
+     * Перезапуск приложения с задержкой
      */
     private fun restartApp() {
+        // Создаем Intent для MainActivity
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-        finish()
+
+        // Добавляем экстра с выбранной темой, если она изменилась
+        if (currentTheme != originalTheme) {
+            intent.putExtra(EXTRA_SELECTED_THEME, currentTheme)
+        }
+
+        // Запускаем с задержкой, чтобы избежать мерцания
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivity(intent)
+            finish()
+        }, DELAY_BEFORE_RESTART)
     }
 
     // ===== Методы интерфейса SettingsEventListener =====
@@ -221,5 +244,10 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         super.onResume()
         // Обновляем фрагменты при возврате в активность
         refreshAllFragments()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isRestarting = false
     }
 }

@@ -4,6 +4,8 @@ package by.quty.launch.core.fragments
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
@@ -22,8 +24,12 @@ class ThemeSettingsFragment : Fragment() {
     private lateinit var themesAdapter: ThemesAdapter
     private var settingsEventListener: SettingsEventListener? = null
 
+    // Флаг для предотвращения множественных применений темы
+    private var isApplyingTheme = false
+
     companion object {
         const val EXTRA_THEME_NAME = "theme_name"
+        private const val DELAY_BEFORE_UI_UPDATE = 100L // Задержка перед обновлением UI (мс) - теперь Long
     }
 
     override fun onCreateView(
@@ -59,17 +65,31 @@ class ThemeSettingsFragment : Fragment() {
         themesList.adapter = themesAdapter
 
         themesList.setOnItemClickListener { _, _, position, _ ->
+            // Предотвращаем множественные нажатия
+            if (isApplyingTheme) return@setOnItemClickListener
+
             val selectedTheme = themes[position]
+            isApplyingTheme = true
 
             // Применяем тему
             themeManager.setActiveTheme(selectedTheme)
 
-            // Обновляем адаптер, чтобы подсветка изменилась
-            themesAdapter.notifyDataSetChanged()
+            // Обновляем адаптер с задержкой, чтобы избежать мерцания
+            Handler(Looper.getMainLooper()).postDelayed({
+                themesAdapter.notifyDataSetChanged()
+                isApplyingTheme = false
+            }, DELAY_BEFORE_UI_UPDATE)
 
-            // Уведомляем Activity об изменении
+            // Уведомляем Activity об изменении темы
             settingsEventListener?.onThemeChanged(selectedTheme.name)
             settingsEventListener?.onSettingChanged()
+
+            // Обновляем состояние во вкладке "Экран" с задержкой
+            Handler(Looper.getMainLooper()).postDelayed({
+                (activity as? SettingsActivity)?.let { settingsActivity ->
+                    settingsActivity.displayFragment?.updateOrientationLockState()
+                }
+            }, DELAY_BEFORE_UI_UPDATE)
 
             val message = getString(R.string.theme_applied, selectedTheme.displayName ?: selectedTheme.name)
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()

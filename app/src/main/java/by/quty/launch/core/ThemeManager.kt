@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Environment
 import android.util.Base64
+import androidx.core.content.edit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
@@ -25,7 +26,8 @@ data class Theme(
     val isCustom: Boolean = false,
     val version: String? = null,           // версия темы из manifest.json
     val author: String? = null,             // автор темы из manifest.json
-    val previewBase64: String? = null       // превью в base64 для отображения
+    val previewBase64: String? = null,       // превью в base64 для отображения
+    val orientation: String? = null          // ориентация из manifest.json (portrait/landscape/sensor/user)
 )
 
 /**
@@ -36,7 +38,8 @@ data class ThemeManifest(
     val name: String,
     val author: String,
     val version: String,
-    val preview: String? = null              // путь к превью внутри темы
+    val preview: String? = null,              // путь к превью внутри темы
+    val orientation: String? = null            // ориентация темы (portrait/landscape/sensor/user)
 )
 
 class ThemeManager(
@@ -68,6 +71,48 @@ class ThemeManager(
         val themes = getAvailableThemes()
         val activeThemeId = configManager.getActiveTheme()
         activeTheme = themes.find { it.name == activeThemeId }
+
+        // Сохраняем принудительную ориентацию в SharedPreferences, если она есть
+        saveForcedOrientation()
+    }
+
+    /**
+     * Сохраняет принудительную ориентацию текущей темы в SharedPreferences
+     * Если тема не задаёт ориентацию - удаляем ключ forced_orientation
+     */
+    private fun saveForcedOrientation() {
+        val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+        val forcedOrientation = getForcedOrientationFromActiveTheme()
+
+        prefs.edit {
+            if (forcedOrientation != null) {
+                putString("forced_orientation", forcedOrientation)
+            } else {
+                remove("forced_orientation")
+            }
+        }
+    }
+
+    /**
+     * Получить принудительную ориентацию из активной темы
+     * @return String? - "portrait", "landscape", "sensor", "user" или null
+     */
+    fun getForcedOrientationFromActiveTheme(): String? {
+        val theme = getActiveTheme() ?: return null
+        // Проверяем валидность значения
+        return when (val orientation = theme.orientation) {
+            "portrait", "landscape", "sensor", "user" -> orientation
+            else -> null // игнорируем некорректные значения
+        }
+    }
+
+    /**
+     * Проверяет, задаёт ли текущая тема принудительную ориентацию
+     * @return true если тема задаёт portrait или landscape
+     */
+    fun hasForcedOrientation(): Boolean {
+        val forced = getForcedOrientationFromActiveTheme()
+        return forced == "portrait" || forced == "landscape"
     }
 
     /**
@@ -95,7 +140,8 @@ class ThemeManager(
                         isCustom = true,
                         version = manifest?.version,
                         author = manifest?.author,
-                        previewBase64 = previewBase64
+                        previewBase64 = previewBase64,
+                        orientation = manifest?.orientation // Добавляем ориентацию из манифеста
                     )
                 )
             }
@@ -140,7 +186,8 @@ class ThemeManager(
                             isCustom = false,
                             version = manifest?.version,
                             author = manifest?.author,
-                            previewBase64 = previewBase64
+                            previewBase64 = previewBase64,
+                            orientation = manifest?.orientation // Добавляем ориентацию из манифеста
                         )
                     )
                 } catch (_: Exception) {
@@ -236,6 +283,9 @@ class ThemeManager(
 
         // Обновляем в памяти
         activeTheme = theme
+
+        // Сохраняем принудительную ориентацию в SharedPreferences
+        saveForcedOrientation()
 
         // Очищаем директорию активной темы
         clearActiveDir()

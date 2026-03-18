@@ -3,6 +3,8 @@ package by.quty.launch
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import by.quty.launch.core.Core
 import by.quty.launch.core.ThemeManager
 import by.quty.launch.core.webview.JsBridge
@@ -20,6 +22,7 @@ class MainActivity : BaseActivity() {
 
     companion object {
         const val REQUEST_CODE_SETTINGS = 1001
+        private const val DELAY_BEFORE_RECREATE = 300L // Задержка перед перезапуском (мс) - теперь Long
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +37,7 @@ class MainActivity : BaseActivity() {
         loadTheme()
         setContentView(webView)
 
+        // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
             enableImmersiveMode()
         }
@@ -59,8 +63,13 @@ class MainActivity : BaseActivity() {
 
         // Обрабатываем только изменение темы
         if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
-            // Перезагружаем тему
-            loadTheme()
+            // Получаем имя выбранной темы из Intent
+            val selectedTheme = data?.getStringExtra(SettingsActivity.EXTRA_SELECTED_THEME)
+
+            // Перезагружаем тему с задержкой, чтобы избежать мерцания
+            Handler(Looper.getMainLooper()).postDelayed({
+                loadTheme()
+            }, DELAY_BEFORE_RECREATE)
         }
     }
 
@@ -69,11 +78,24 @@ class MainActivity : BaseActivity() {
 
         // Проверяем, не изменилась ли ориентация в настройках
         val savedOrientation = configManager.getOrientation()
-        val currentOrientation = getCurrentOrientationString() // Метод из BaseActivity
+        val currentOrientation = getCurrentOrientationString()
 
-        // Если ориентация изменилась - перезапускаем активность
-        if (savedOrientation != currentOrientation) {
-            recreate()
+        // Получаем принудительную ориентацию из SharedPreferences
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+        val forcedOrientation = prefs.getString("forced_orientation", null)
+
+        // Определяем, какая ориентация должна быть применена
+        val expectedOrientation = when (forcedOrientation) {
+            "portrait" -> "portrait"
+            "landscape" -> "landscape"
+            else -> savedOrientation
+        }
+
+        // Если ориентация изменилась - перезапускаем активность с задержкой
+        if (expectedOrientation != currentOrientation) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                recreate()
+            }, DELAY_BEFORE_RECREATE)
         }
     }
 }

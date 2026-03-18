@@ -7,7 +7,6 @@ import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.SettingsActivity
-import by.quty.launch.MainActivity
 import kotlinx.serialization.builtins.serializer
 
 class LaunchApp(
@@ -28,12 +27,12 @@ class LaunchApp(
                 val intent = Intent(context, SettingsActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-                // Запускаем с ожиданием результата
-                if (context is MainActivity) {
-                    context.startActivityForResult(intent, MainActivity.REQUEST_CODE_SETTINGS)
-                } else {
-                    context.startActivity(intent)
-                }
+                // Запускаем SettingsActivity
+                context.startActivity(intent)
+
+                // Примечание: Для получения результата из SettingsActivity
+                // используется другой механизм в MainActivity через onActivityResult
+                // или можно переделать на Activity Result API
             }
             else -> {
                 // Обычное приложение
