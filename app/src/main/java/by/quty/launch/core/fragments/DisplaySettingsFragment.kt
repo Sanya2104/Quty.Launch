@@ -119,11 +119,11 @@ class DisplaySettingsFragment : Fragment() {
      * @param forcedOrientation принудительная ориентация ("portrait" или "landscape")
      */
     private fun lockOrientationSelector(forcedOrientation: String) {
-        // Устанавливаем текст подсказки в зависимости от ориентации
+        // Устанавливаем текст подсказки из ресурсов в зависимости от ориентации
         val hintText = when (forcedOrientation) {
-            "portrait" -> "🔒 Ориентация задана темой (портретная)"
-            "landscape" -> "🔒 Ориентация задана темой (ландшафтная)"
-            else -> "🔒 Ориентация задана темой"
+            "portrait" -> getString(R.string.orientation_lock_hint_portrait)
+            "landscape" -> getString(R.string.orientation_lock_hint_landscape)
+            else -> getString(R.string.orientation_lock_hint_default)
         }
         orientationLockHint.text = hintText
         orientationLockHint.visibility = View.VISIBLE

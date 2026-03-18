@@ -33,7 +33,7 @@
                 android:id="@+id/orientation_lock_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🔒 Ориентация задана темой"
+                android:text="@string/orientation_lock_hint_default"
                 android:textColor="#FF9800"
                 android:textSize="14sp"
                 android:padding="8dp"

@@ -46,7 +46,7 @@
 
     <!-- Download dialog -->
     <string name="downloading_title">Скачивание обновления</string>
-    <string name="downloading_prepare">Подготовка...</string>
+    <string name="downloading_prepare">Подготовка…</string>
     <string name="downloading_progress">Скачивание: %d%%</string>
     <string name="download_error">Ошибка скачивания</string>
 
@@ -73,8 +73,9 @@
     <string name="dialog_restart">Перезапустить</string>
     <string name="dialog_later">Позже</string>
 
-    <!-- Orientation lock hint (добавить новую строку) -->
+    <!-- Orientation lock hints -->
     <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
     <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
+    <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
 
 </resources>
