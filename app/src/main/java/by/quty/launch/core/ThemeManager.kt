@@ -55,6 +55,9 @@ class ThemeManager(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    // Поддерживаемые расширения тем
+    private val supportedExtensions = listOf("qutytheme", "qt")
+
     init {
         if (!themesDir.exists()) themesDir.mkdirs()
         if (!activeThemeDir.exists()) activeThemeDir.mkdirs()
@@ -99,6 +102,7 @@ class ThemeManager(
      */
     fun getForcedOrientationFromActiveTheme(): String? {
         val theme = getActiveTheme() ?: return null
+
         // Проверяем валидность значения
         return when (val orientation = theme.orientation) {
             "portrait", "landscape", "sensor", "user" -> orientation
@@ -126,7 +130,10 @@ class ThemeManager(
 
         // Кастомные темы из внешней папки
         if (customThemesDir.exists()) {
-            customThemesDir.listFiles { file -> file.extension == "qutytheme" }?.forEach { file ->
+            // Ищем файлы с поддерживаемыми расширениями
+            customThemesDir.listFiles { file ->
+                supportedExtensions.any { ext -> file.extension.equals(ext, ignoreCase = true) }
+            }?.forEach { file ->
                 val manifest = readManifestFromZip(file)
                 val previewBase64 = loadPreviewFromZip(file, manifest?.preview)
 
