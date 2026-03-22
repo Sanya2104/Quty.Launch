@@ -16,7 +16,7 @@ function loadApps() {
     container.innerHTML = "Загрузка...";
 
     try {
-        const response = JSON.parse(Android.call("getInstalledApps", null));
+        const response = JSON.parse(Android.call("getApps", null));
 
         if (!response.success) {
             container.innerHTML = "Ошибка: " + response.error;

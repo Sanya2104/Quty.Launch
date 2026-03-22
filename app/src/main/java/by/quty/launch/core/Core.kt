@@ -19,7 +19,7 @@ class Core(context: Context) {
     /**
      * Выполнение метода по имени.
      *
-     * @param method - имя метода (например, "GetInstalledApps")
+     * @param method - имя метода (например, "GetApps")
      * @param params - JSON параметры метода
      * @return JSON ответ в формате ApiResponse
      */

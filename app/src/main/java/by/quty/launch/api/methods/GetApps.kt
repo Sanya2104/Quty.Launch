@@ -1,4 +1,4 @@
-// *** api/methods/GetInstalledApps.kt *** //
+// *** api/methods/GetApps.kt *** //
 package by.quty.launch.api.methods
 
 import android.content.Context
@@ -19,7 +19,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.createBitmap
 
-class GetInstalledApps(
+class GetApps(
     private val context: Context
 ) : BaseApiMethod<Unit>() {
 
