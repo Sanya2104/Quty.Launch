@@ -9,6 +9,7 @@ data class StatusBarInfo(
     val internetSpeed: String? = null,
     val volume: String? = null,
     val gsmSignal: Int? = null,
+    val wifiSignalLevel: Int? = null,
     val bluetooth: Boolean = false,
     val wifi: Boolean = false,
     val gps: Boolean = false
