@@ -3,6 +3,7 @@ package by.quty.launch.api
 
 import android.content.Context
 import by.quty.launch.api.methods.GetApps
+import by.quty.launch.api.methods.GetStatusBar
 import by.quty.launch.api.methods.GetSystemInfo
 import by.quty.launch.api.methods.LaunchApp
 import by.quty.launch.api.router.ApiRouter
@@ -20,7 +21,8 @@ object ApiInitializer {
         val methods = listOf(
             GetSystemInfo(),
             GetApps(context),
-            LaunchApp(context)
+            LaunchApp(context),
+            GetStatusBar(context)
         )
 
         methods.forEach { ApiRouter.register(it) }
