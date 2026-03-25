@@ -33,10 +33,11 @@ class GetStatusBar(
 
     // Хранилище для усреднения значений
     private val speedHistory = mutableListOf<Double>()
-    private val tempHistory = mutableListOf<String>()
+    private val tempHistory = mutableListOf<Float>()
 
     // Количество значений для усреднения
-    private val historySize = 3
+    private val speedHistorySize = 3      // для скорости интернета
+    private val tempHistorySize = 3       // для температуры CPU
 
     override fun parseParams(jsonString: String) = Unit
 
@@ -61,32 +62,33 @@ class GetStatusBar(
     // ==================== ТЕМПЕРАТУРА CPU ====================
 
     /**
-     * Получение температуры CPU с усреднением
+     * Получение температуры CPU с усреднением (среднее арифметическое)
      */
     private fun getAverageCpuTemp(): String? {
         val currentTemp = getRawCpuTemp()
 
         if (currentTemp != null) {
             tempHistory.add(currentTemp)
-            // Оставляем только последние historySize значений
-            while (tempHistory.size > historySize) {
+            // Оставляем только последние tempHistorySize значений
+            while (tempHistory.size > tempHistorySize) {
                 tempHistory.removeAt(0)
             }
         }
 
         // Если в истории меньше 2 значений, возвращаем текущее
         if (tempHistory.size < 2) {
-            return currentTemp
+            return currentTemp?.let { formatCpuTemp(it) }
         }
 
-        // Усредняем значения (находим наиболее часто встречающееся)
-        return getMostFrequentTemp(tempHistory) ?: currentTemp
+        // Вычисляем среднее арифметическое температур
+        val average = tempHistory.average()
+        return formatCpuTemp(average.toFloat())
     }
 
     /**
      * Получение сырых данных температуры CPU
      */
-    private fun getRawCpuTemp(): String? {
+    private fun getRawCpuTemp(): Float? {
         return try {
             // Пути к файлам температуры (наиболее распространённые)
             val thermalPaths = listOf(
@@ -150,39 +152,30 @@ class GetStatusBar(
             }
 
             // Форматируем результат
-            bestTemp?.let {
-                String.format(Locale.US, "%.0f°C", it)
-            }
+            bestTemp
         } catch (_: Exception) {
             null
         }
     }
 
     /**
-     * Находит наиболее часто встречающуюся температуру в истории
+     * Форматирует температуру в строку с символом градуса
      */
-    private fun getMostFrequentTemp(history: MutableList<String>): String? {
-        if (history.isEmpty()) return null
-
-        val frequency = mutableMapOf<String, Int>()
-        for (temp in history) {
-            frequency[temp] = frequency.getOrDefault(temp, 0) + 1
-        }
-
-        return frequency.maxByOrNull { it.value }?.key
+    private fun formatCpuTemp(temp: Float): String {
+        return String.format(Locale.US, "%.0f°C", temp)
     }
 
     // ==================== СКОРОСТЬ ИНТЕРНЕТА ====================
 
     /**
-     * Получение скорости интернета с усреднением
+     * Получение скорости интернета с усреднением (среднее арифметическое)
      */
     private fun getAverageInternetSpeed(): String? {
         val currentSpeed = getRawInternetSpeed()
 
         if (currentSpeed != null) {
             speedHistory.add(currentSpeed)
-            while (speedHistory.size > historySize) {
+            while (speedHistory.size > speedHistorySize) {
                 speedHistory.removeAt(0)
             }
         }
