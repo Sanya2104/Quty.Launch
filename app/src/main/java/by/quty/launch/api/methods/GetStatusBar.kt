@@ -51,7 +51,8 @@ class GetStatusBar(
             wifiSignalLevel = getWifiSignalLevel(),
             bluetooth = isBluetoothEnabled(),
             wifi = isWifiEnabled(),
-            gps = isGpsEnabled()
+            gps = isGpsEnabled(),
+            usbConnected = isUsbConnected()
         )
 
         json.encodeToString(
@@ -417,6 +418,21 @@ class GetStatusBar(
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    // ==================== USB ====================
+
+    /**
+     * Проверка подключения USB устройств
+     */
+    private fun isUsbConnected(): Boolean {
+        return try {
+            val usbManager = context.getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
+            val deviceList = usbManager.deviceList
+            deviceList.isNotEmpty()  // true если есть подключённые USB устройства
         } catch (_: Exception) {
             false
         }

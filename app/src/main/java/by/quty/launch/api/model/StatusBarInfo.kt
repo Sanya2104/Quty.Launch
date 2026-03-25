@@ -13,5 +13,6 @@ data class StatusBarInfo(
     val wifiSignalLevel: Int? = null,
     val bluetooth: Boolean = false,
     val wifi: Boolean = false,
-    val gps: Boolean = false
+    val gps: Boolean = false,
+    val usbConnected: Boolean = false
 )
