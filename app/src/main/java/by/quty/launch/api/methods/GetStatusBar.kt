@@ -31,12 +31,19 @@ class GetStatusBar(
     private var lastTxBytes = 0L
     private var lastTimestamp = 0L
 
+    // Хранилище для усреднения значений
+    private val speedHistory = mutableListOf<Double>()
+    private val tempHistory = mutableListOf<String>()
+
+    // Количество значений для усреднения
+    private val historySize = 3
+
     override fun parseParams(jsonString: String) = Unit
 
     override suspend fun executeInternal(params: Unit?): String = withContext(Dispatchers.IO) {
         val status = StatusBarInfo(
-            cpuTemp = getCpuTemp(),
-            internetSpeed = getInternetSpeed(),
+            cpuTemp = getAverageCpuTemp(),
+            internetSpeed = getAverageInternetSpeed(),
             volume = getVolume(),
             gsmSignal = getGsmSignal(),
             wifiSignalLevel = getWifiSignalLevel(),
@@ -51,10 +58,35 @@ class GetStatusBar(
         )
     }
 
+    // ==================== ТЕМПЕРАТУРА CPU ====================
+
     /**
-     * Получение температуры CPU через чтение системных файлов
+     * Получение температуры CPU с усреднением
      */
-    private fun getCpuTemp(): String? {
+    private fun getAverageCpuTemp(): String? {
+        val currentTemp = getRawCpuTemp()
+
+        if (currentTemp != null) {
+            tempHistory.add(currentTemp)
+            // Оставляем только последние historySize значений
+            while (tempHistory.size > historySize) {
+                tempHistory.removeAt(0)
+            }
+        }
+
+        // Если в истории меньше 2 значений, возвращаем текущее
+        if (tempHistory.size < 2) {
+            return currentTemp
+        }
+
+        // Усредняем значения (находим наиболее часто встречающееся)
+        return getMostFrequentTemp(tempHistory) ?: currentTemp
+    }
+
+    /**
+     * Получение сырых данных температуры CPU
+     */
+    private fun getRawCpuTemp(): String? {
         return try {
             // Пути к файлам температуры (наиболее распространённые)
             val thermalPaths = listOf(
@@ -127,9 +159,46 @@ class GetStatusBar(
     }
 
     /**
-     * Получение скорости интернета
+     * Находит наиболее часто встречающуюся температуру в истории
      */
-    private fun getInternetSpeed(): String? {
+    private fun getMostFrequentTemp(history: MutableList<String>): String? {
+        if (history.isEmpty()) return null
+
+        val frequency = mutableMapOf<String, Int>()
+        for (temp in history) {
+            frequency[temp] = frequency.getOrDefault(temp, 0) + 1
+        }
+
+        return frequency.maxByOrNull { it.value }?.key
+    }
+
+    // ==================== СКОРОСТЬ ИНТЕРНЕТА ====================
+
+    /**
+     * Получение скорости интернета с усреднением
+     */
+    private fun getAverageInternetSpeed(): String? {
+        val currentSpeed = getRawInternetSpeed()
+
+        if (currentSpeed != null) {
+            speedHistory.add(currentSpeed)
+            while (speedHistory.size > historySize) {
+                speedHistory.removeAt(0)
+            }
+        }
+
+        if (speedHistory.size < 2) {
+            return currentSpeed?.let { formatSpeed(it) }
+        }
+
+        val averageSpeed = speedHistory.average()
+        return formatSpeed(averageSpeed)
+    }
+
+    /**
+     * Получение сырых данных скорости интернета
+     */
+    private fun getRawInternetSpeed(): Double? {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
                 return null
@@ -170,7 +239,7 @@ class GetStatusBar(
             val totalSpeed = rxSpeed + txSpeed
             if (totalSpeed <= 0) return null
 
-            formatSpeed(totalSpeed)
+            totalSpeed
         } catch (_: Exception) {
             null
         }
@@ -195,6 +264,8 @@ class GetStatusBar(
         }
     }
 
+    // ==================== ГРОМКОСТЬ ====================
+
     /**
      * Получение текущей громкости
      */
@@ -215,6 +286,8 @@ class GetStatusBar(
         }
     }
 
+    // ==================== GSM СИГНАЛ ====================
+
     /**
      * Получение уровня GSM сигнала
      */
@@ -230,6 +303,8 @@ class GetStatusBar(
             null
         }
     }
+
+    // ==================== Wi-Fi ====================
 
     /**
      * Получение уровня сигнала Wi-Fi (0-4)
