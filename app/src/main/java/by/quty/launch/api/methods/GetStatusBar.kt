@@ -21,7 +21,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.Locale
-import androidx.core.net.toUri
 
 class GetStatusBar(
     private val context: Context
@@ -177,6 +176,9 @@ class GetStatusBar(
         }
     }
 
+    /**
+     * Форматирует скорость в читаемый вид (B/s, KB/s, MB/s)
+     */
     private fun formatSpeed(bytesPerSecond: Double): String {
         return when {
             bytesPerSecond >= 1024 * 1024 -> {
@@ -194,187 +196,21 @@ class GetStatusBar(
     }
 
     /**
-     * Получение текущей громкости (универсальный вариант для всех устройств)
+     * Получение текущей громкости
      */
     private fun getVolume(): String? {
         return try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
-            // 1. Сначала пробуем специфичные для FYT методы (UIS7862S)
-            android.util.Log.d("GetStatusBar", "Trying FYT methods first...")
-            val fytVolume = getFytVolume()
-            if (fytVolume != null) {
-                android.util.Log.d("GetStatusBar", "✅ FYT volume: $fytVolume%")
-                return fytVolume.toString()
-            }
-
-            // 2. Пробуем стандартные стримы
-            val streamsToTry = listOf(
-                AudioManager.STREAM_MUSIC to "MUSIC",
-                AudioManager.STREAM_SYSTEM to "SYSTEM",
-                AudioManager.STREAM_VOICE_CALL to "VOICE_CALL",
-                AudioManager.STREAM_RING to "RING",
-                AudioManager.STREAM_ALARM to "ALARM",
-                AudioManager.STREAM_NOTIFICATION to "NOTIFICATION"
-            )
-
-            var bestPercent: Int? = null
-            var bestStreamName = ""
-
-            for ((stream, name) in streamsToTry) {
-                try {
-                    val maxVolume = audioManager.getStreamMaxVolume(stream)
-                    val currentVolume = audioManager.getStreamVolume(stream)
-
-                    if (maxVolume > 0) {
-                        val percent = (currentVolume * 100) / maxVolume
-                        if (bestPercent == null && currentVolume > 0) {
-                            bestPercent = percent
-                            bestStreamName = name
-                        }
-                        android.util.Log.d("GetStatusBar", "$name: $currentVolume/$maxVolume = $percent%")
-                    }
-                } catch (_: Exception) { }
-            }
-
-            if (bestPercent != null) {
-                android.util.Log.d("GetStatusBar", "✅ Using stream: $bestStreamName -> $bestPercent%")
-                return bestPercent.toString()
-            }
-
-            // 3. Пробуем через ContentResolver
-            val contentVolume = getContentVolume()
-            if (contentVolume != null) {
-                android.util.Log.d("GetStatusBar", "✅ Content volume: $contentVolume%")
-                return contentVolume.toString()
-            }
-
-            // 4. Пробуем через AudioManager.getParameter
-            val paramVolume = getParameterVolume(audioManager)
-            if (paramVolume != null) {
-                android.util.Log.d("GetStatusBar", "✅ Parameter volume: $paramVolume%")
-                return paramVolume.toString()
-            }
-
-            android.util.Log.d("GetStatusBar", "❌ No volume method found")
-            null
-        } catch (e: Exception) {
-            android.util.Log.e("GetStatusBar", "Error getting volume: ${e.message}")
-            null
-        }
-    }
-
-    /**
-     * Специфичные методы для FYT магнитол (UIS7862S / YL850/YL860)
-     */
-    private fun getFytVolume(): Int? {
-        // Способ 1: FytManager (основной класс для FYT)
-        try {
-            val fytManagerClass = Class.forName("com.fyt.FytManager")
-            val instance = fytManagerClass.getMethod("getInstance").invoke(null)
-            val getVolumeMethod = fytManagerClass.getMethod("getVolume")
-            val volume = getVolumeMethod.invoke(instance) as Int
-            if (volume in 0..100) {
-                android.util.Log.d("GetStatusBar", "✅ FytManager.getVolume: $volume")
-                return volume
-            }
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "FytManager not available: ${e.message}")
-        }
-
-        // Способ 2: через системное свойство persist.sys.volume
-        try {
-            val process = Runtime.getRuntime().exec("getprop persist.sys.volume")
-            val volume = process.inputStream.bufferedReader().readLine()?.toIntOrNull()
-            if (volume != null && volume in 0..100) {
-                android.util.Log.d("GetStatusBar", "✅ persist.sys.volume: $volume")
-                return volume
-            }
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "persist.sys.volume failed: ${e.message}")
-        }
-
-        // Способ 3: через системное свойство sys.volume
-        try {
-            val process = Runtime.getRuntime().exec("getprop sys.volume")
-            val volume = process.inputStream.bufferedReader().readLine()?.toIntOrNull()
-            if (volume != null && volume in 0..100) {
-                android.util.Log.d("GetStatusBar", "✅ sys.volume: $volume")
-                return volume
-            }
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "sys.volume failed: ${e.message}")
-        }
-
-        // Способ 4: через FytSystemProperties
-        try {
-            val fytPropertiesClass = Class.forName("com.fyt.FytSystemProperties")
-            val getIntMethod = fytPropertiesClass.getMethod("getInt", String::class.java, Int::class.java)
-            val volume = getIntMethod.invoke(null, "persist.sys.volume", 0) as Int
-            if (volume in 0..100) {
-                android.util.Log.d("GetStatusBar", "✅ FytSystemProperties: $volume")
-                return volume
-            }
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "FytSystemProperties not available: ${e.message}")
-        }
-
-        return null
-    }
-
-    /**
-     * Получение громкости через ContentResolver (на некоторых FYT)
-     */
-    private fun getContentVolume(): Int? {
-        return try {
-            val cursor = context.contentResolver.query(
-                "content://settings/secure".toUri(),
-                arrayOf("value"),
-                "name = ?",
-                arrayOf("volume_music"),
+            if (maxVolume > 0) {
+                val percent = (currentVolume * 100) / maxVolume
+                percent.toString()
+            } else {
                 null
-            )
-
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val volume = it.getInt(0)
-                    if (volume >= 0) {
-                        // На FYT обычно maxVolume = 30 или 40
-                        val maxVolume = 40
-                        val percent = (volume * 100) / maxVolume
-                        return percent.coerceIn(0, 100)
-                    }
-                }
             }
-            null
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "ContentResolver failed: ${e.message}")
-            null
-        }
-    }
-
-    /**
-     * Получение громкости через AudioManager.getParameter (метод для автомобильных ГУ)
-     */
-    private fun getParameterVolume(audioManager: AudioManager): Int? {
-        return try {
-            val params = listOf("android.intent.extra.NOTIFICATION_VOLUME", "volume", "master_volume")
-
-            for (param in params) {
-                try {
-                    val method = audioManager.javaClass.getMethod("getParameter", String::class.java)
-                    val result = method.invoke(audioManager, param) as? String
-                    if (result != null) {
-                        val volume = result.toIntOrNull()
-                        if (volume != null && volume in 0..100) {
-                            return volume
-                        }
-                    }
-                } catch (_: Exception) { }
-            }
-            null
-        } catch (e: Exception) {
-            android.util.Log.d("GetStatusBar", "getParameter failed: ${e.message}")
+        } catch (_: Exception) {
             null
         }
     }
