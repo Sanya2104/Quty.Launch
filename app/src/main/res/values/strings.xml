@@ -38,11 +38,11 @@
     <string name="copyright">Quty.Launch © 2026</string>
 
     <!-- Update dialog -->
-    <string name="update_dialog_title" formatted="false">Доступно обновление %s%s</string>
+    <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
     <string name="later">Позже</string>
-    <string name="critical_tag"> ⚠️ КРИТИЧЕСКОЕ</string>
+    <string name="critical_tag">\n⚠️ КРИТИЧЕСКОЕ</string>
 
     <!-- Download dialog -->
     <string name="downloading_title">Скачивание обновления</string>
