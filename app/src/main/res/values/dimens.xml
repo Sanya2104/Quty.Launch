@@ -1,0 +1,8 @@
+<!-- res/values/dimens.xml -->
+<resources>
+    <!-- Padding для элемента разрешения -->
+    <dimen name="permission_item_padding">16dp</dimen>
+
+    <!-- Margin между элементами разрешений -->
+    <dimen name="permission_item_margin_bottom">12dp</dimen>
+</resources>

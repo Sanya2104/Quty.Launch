@@ -2,6 +2,7 @@
 package by.quty.launch
 
 import android.content.pm.ActivityInfo
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -33,6 +34,20 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Проверяем, был ли пройден онбординг
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+        val onboardingCompleted = prefs.getBoolean("onboarding_completed", false)
+
+        if (!onboardingCompleted && this !is WelcomeActivity) {
+            // Если онбординг не пройден, а мы не в WelcomeActivity — перенаправляем
+            val intent = Intent(this, WelcomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            return
+        }
+
         // Инициализируем менеджер конфигурации при создании активности
         _configManager = ConfigManager(this)
     }
