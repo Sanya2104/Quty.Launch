@@ -1,6 +1,7 @@
 <!-- res/layout/activity_settings.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -31,7 +32,8 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:text="✕"
             android:textColor="#FFFFFF"
-            android:textSize="24sp" />
+            android:textSize="24sp"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <!-- TabLayout для вкладок -->

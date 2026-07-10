@@ -100,6 +100,7 @@
     <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
 
     <!-- Welcome Activity -->
+    <string name="_0">0%</string>
     <string name="welcome_title">Добро пожаловать в Quty.Launch!</string>
     <string name="welcome_subtitle">Для корректной работы приложения необходимо предоставить доступ к функциям устройства:</string>
 

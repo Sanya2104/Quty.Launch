@@ -88,11 +88,17 @@ class SystemSettingsFragment : Fragment() {
 
     /**
      * Разделяет versionName на основную версию и суффикс
-     * Например: "1.2.0-beta" -> ("1.2.0", "beta")
-     *           "1.2.0" -> ("1.2.0", "")
+     * Например: "0.0.37-Alpha" -> ("0.0.37", "Alpha")
+     *           "0.0.37Alpha" -> ("0.0.37", "Alpha")  <- важно!
+     *           "0.0.37" -> ("0.0.37", "")
      */
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {
-        // Ищем разделитель: дефис, подчёркивание или пробел
+        // Если строка пустая
+        if (fullVersionName.isEmpty()) {
+            return Pair("", "")
+        }
+
+        // 1. Пытаемся найти разделители: дефис, подчёркивание, пробел
         val separators = listOf("-", "_", " ")
         for (separator in separators) {
             val index = fullVersionName.indexOf(separator)
@@ -102,7 +108,20 @@ class SystemSettingsFragment : Fragment() {
                 return Pair(version, suffix)
             }
         }
-        // Если разделитель не найден
+
+        // 2. Если разделитель не найден, пробуем найти границу между цифрами и буквами
+        // Пример: "0.0.37Alpha" -> "0.0.37" + "Alpha"
+        val digitRegex = Regex("^[\\d.]+")
+        val match = digitRegex.find(fullVersionName)
+        if (match != null) {
+            val version = match.value
+            val suffix = fullVersionName.substring(version.length)
+            if (suffix.isNotEmpty()) {
+                return Pair(version, suffix)
+            }
+        }
+
+        // 3. Если ничего не подошло — возвращаем как есть
         return Pair(fullVersionName, "")
     }
 

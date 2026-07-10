@@ -1,5 +1,6 @@
 <!-- res/layout/fragment_settings_display.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212"
@@ -52,23 +53,29 @@
                     android:id="@+id/orientation_sensor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:minHeight="48dp"
                     android:text="@string/orientation_auto"
                     android:textColor="#FFFFFF"
-                    android:checked="true"/>
+                    tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
                     android:id="@+id/orientation_portrait"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/orientation_portrait"
-                    android:textColor="#FFFFFF"/>
+                    android:textColor="#FFFFFF"
+                    tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
                     android:id="@+id/orientation_landscape"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/orientation_landscape"
-                    android:textColor="#FFFFFF"/>
+                    android:textColor="#FFFFFF"
+                    tools:ignore="VisualLintButtonSize" />
 
             </RadioGroup>
         </LinearLayout>
@@ -97,19 +104,23 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:enabled="true"
+                android:minHeight="48dp"
                 android:text="@string/additional_fullscreen"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                tools:ignore="VisualLintButtonSize" />
 
             <CheckBox
                 android:id="@+id/strict_mode_checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/additional_strict_mode"
-                android:textColor="#FFFFFF"
+                android:layout_marginTop="8dp"
+                android:alpha="0.5"
                 android:checked="false"
                 android:enabled="false"
-                android:alpha="0.5"
-                android:layout_marginTop="8dp"/>
+                android:minHeight="48dp"
+                android:text="@string/additional_strict_mode"
+                android:textColor="#FFFFFF"
+                tools:ignore="VisualLintButtonSize" />
 
             <TextView
                 android:id="@+id/strict_mode_hint"
