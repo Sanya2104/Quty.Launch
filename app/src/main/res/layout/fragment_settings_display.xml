@@ -90,14 +90,36 @@
             android:background="#1E1E1E"
             android:padding="16dp">
 
+            <!-- Строгий режим - доступен только при включенном полноэкранном -->
             <CheckBox
                 android:id="@+id/fullscreen_checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/additional_fullscreen"
-                android:textColor="#FFFFFF"
                 android:checked="true"
-                android:enabled="true"/>
+                android:enabled="true"
+                android:text="@string/additional_fullscreen"
+                android:textColor="#FFFFFF" />
+
+            <CheckBox
+                android:id="@+id/strict_mode_checkbox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/additional_strict_mode"
+                android:textColor="#FFFFFF"
+                android:checked="false"
+                android:enabled="false"
+                android:alpha="0.5"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/strict_mode_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/strict_mode_hint"
+                android:textColor="#666666"
+                android:textSize="12sp"
+                android:paddingTop="4dp"
+                android:visibility="gone"/>
 
         </LinearLayout>
 

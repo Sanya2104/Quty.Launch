@@ -25,6 +25,8 @@ class DisplaySettingsFragment : Fragment() {
     private lateinit var themeManager: ThemeManager
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
+    private lateinit var strictModeCheckbox: CheckBox
+    private lateinit var strictModeHint: TextView
     private lateinit var orientationLockHint: TextView // Подсказка о блокировке ориентации
     private var settingsEventListener: SettingsEventListener? = null
 
@@ -53,10 +55,13 @@ class DisplaySettingsFragment : Fragment() {
 
         orientationGroup = view.findViewById(R.id.orientation_group)
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
+        strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
+        strictModeHint = view.findViewById(R.id.strict_mode_hint)
         orientationLockHint = view.findViewById(R.id.orientation_lock_hint)
 
         setupOrientationSelector()
         setupFullscreenSelector()
+        setupStrictModeSelector()
 
         // Обновляем состояние UI в соответствии с текущей темой
         Handler(Looper.getMainLooper()).postDelayed({
@@ -173,6 +178,16 @@ class DisplaySettingsFragment : Fragment() {
         fullscreenCheckbox.setOnCheckedChangeListener { _, isChecked ->
             configManager.setFullscreenEnabled(isChecked)
 
+            // Если полноэкранный режим выключен - отключаем строгий режим
+            if (!isChecked && strictModeCheckbox.isChecked) {
+                strictModeCheckbox.isChecked = false
+                configManager.setStrictModeEnabled(false)
+                updateStrictModeState()
+            }
+
+            // Обновляем доступность строгого режима
+            updateStrictModeState()
+
             // Уведомляем Activity об изменении
             settingsEventListener?.onFullscreenChanged(isChecked)
             settingsEventListener?.onSettingChanged()
@@ -182,6 +197,45 @@ class DisplaySettingsFragment : Fragment() {
                 getString(R.string.fullscreen_changed),
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    /**
+     * Настройка строгого режима
+     */
+    private fun setupStrictModeSelector() {
+        strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
+        updateStrictModeState()
+
+        strictModeCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            configManager.setStrictModeEnabled(isChecked)
+
+            // Уведомляем Activity об изменении
+            settingsEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
+            settingsEventListener?.onSettingChanged()
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.strict_mode_changed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /**
+     * Обновление состояния строгого режима (доступность, видимость подсказки)
+     */
+    private fun updateStrictModeState() {
+        val fullscreenEnabled = fullscreenCheckbox.isChecked
+
+        strictModeCheckbox.isEnabled = fullscreenEnabled
+        strictModeCheckbox.alpha = if (fullscreenEnabled) 1.0f else 0.5f
+
+        // Показываем подсказку только если строгий режим включен
+        strictModeHint.visibility = if (strictModeCheckbox.isChecked && fullscreenEnabled) {
+            View.VISIBLE
+        } else {
+            View.GONE
         }
     }
 
@@ -203,5 +257,7 @@ class DisplaySettingsFragment : Fragment() {
         }
 
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
+        strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
+        updateStrictModeState()
     }
 }

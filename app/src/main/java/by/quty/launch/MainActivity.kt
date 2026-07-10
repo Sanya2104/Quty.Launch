@@ -39,7 +39,8 @@ class MainActivity : BaseActivity() {
 
         // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
-            enableImmersiveMode()
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
         }
     }
 

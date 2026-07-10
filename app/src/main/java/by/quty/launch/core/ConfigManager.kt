@@ -11,7 +11,8 @@ import androidx.core.content.edit
 data class LauncherConfig(
     val defaultTheme: String = "default",
     val defaultOrientation: String = "sensor",
-    val defaultFullscreen: Boolean = true
+    val defaultFullscreen: Boolean = true,
+    val defaultStrictMode: Boolean = false
 )
 
 class ConfigManager(private val context: Context) {
@@ -38,6 +39,7 @@ class ConfigManager(private val context: Context) {
     fun getDefaultTheme(): String = config.defaultTheme
     fun getDefaultOrientation(): String = config.defaultOrientation
     fun getDefaultFullscreen(): Boolean = config.defaultFullscreen
+    fun getDefaultStrictMode(): Boolean = config.defaultStrictMode
 
     // Получения активной темы
     fun getActiveTheme(): String {
@@ -67,5 +69,17 @@ class ConfigManager(private val context: Context) {
     // Сохранение полноэкранного режима
     fun setFullscreenEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("fullscreen", enabled) }
+    }
+
+    // Получение строгого режима
+    fun isStrictModeEnabled(): Boolean {
+        // Строгий режим работает только если включен полноэкранный
+        if (!isFullscreenEnabled()) return false
+        return prefs.getBoolean("strict_mode", getDefaultStrictMode())
+    }
+
+    // Сохранение строгого режима
+    fun setStrictModeEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("strict_mode", enabled) }
     }
 }

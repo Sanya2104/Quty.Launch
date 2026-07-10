@@ -27,6 +27,11 @@
     <!-- Additional -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
 
+    <!-- Строгий режим -->
+    <string name="additional_strict_mode">Строгий режим</string>
+    <string name="strict_mode_hint">При строгом режиме панели не появляются даже при свайпе</string>
+    <string name="strict_mode_changed">Строгий режим изменён</string>
+
     <!-- System section -->
     <string name="system_info_title">Информация о системе</string>
     <string name="check_updates_button">Проверить обновления</string>

@@ -44,11 +44,13 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var originalTheme: String? = null
     private var originalOrientation: String? = null
     private var originalFullscreen: Boolean? = null
+    private var originalStrictMode: Boolean? = null
 
     // Текущие значения (могут меняться)
     private var currentTheme: String? = null
     private var currentOrientation: String? = null
     private var currentFullscreen: Boolean? = null
+    private var currentStrictMode: Boolean? = null
 
     // Флаг для предотвращения множественных перезапусков
     private var isRestarting = false
@@ -70,11 +72,13 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         originalTheme = configManager.getActiveTheme()
         originalOrientation = configManager.getOrientation()
         originalFullscreen = configManager.isFullscreenEnabled()
+        originalStrictMode = configManager.isStrictModeEnabled()
 
         // Копируем в текущие
         currentTheme = originalTheme
         currentOrientation = originalOrientation
         currentFullscreen = originalFullscreen
+        currentStrictMode = originalStrictMode
 
         // УСТАНАВЛИВАЕМ LAYOUT ПЕРЕД ВСЕМИ ОПЕРАЦИЯМИ С UI
         setContentView(R.layout.activity_settings)
@@ -90,7 +94,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
         // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
-            enableImmersiveMode()
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
         }
     }
 
@@ -163,7 +168,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private fun hasSettingsChanged(): Boolean {
         return currentTheme != originalTheme ||
                 currentOrientation != originalOrientation ||
-                currentFullscreen != originalFullscreen
+                currentFullscreen != originalFullscreen ||
+                currentStrictMode != originalStrictMode
     }
 
     /**
@@ -219,6 +225,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     override fun onFullscreenChanged(enabled: Boolean) {
         currentFullscreen = enabled
+        // Если полноэкранный режим изменился, обновляем строгий режим
+        currentStrictMode = configManager.isStrictModeEnabled()
     }
 
     override fun onSettingChanged() {

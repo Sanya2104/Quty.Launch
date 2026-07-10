@@ -55,56 +55,97 @@ abstract class BaseActivity : AppCompatActivity() {
     /**
      * Установка полноэкранного режима
      * Скрывает системные панели (статус бар и навигацию)
-     * Позволяет показать их свайпом от края экрана
      *
-     * Если полноэкранный режим отключен в настройках — ничего не делаем,
-     * системные панели остаются видимыми.
+     * @param strictMode если true - панели не появляются даже при свайпе
      */
-    protected fun enableImmersiveMode() {
+    protected fun enableImmersiveMode(strictMode: Boolean = false) {
         // Если полноэкранный режим отключен — выходим
         if (!configManager.isFullscreenEnabled()) return
 
-        // Защита от NullPointerException на Android 16
         val currentWindow = window ?: return
-        val decorView = currentWindow.decorView
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+
-                WindowCompat.setDecorFitsSystemWindows(currentWindow, false)
-
-                currentWindow.insetsController?.let { controller ->
-                    controller.hide(WindowInsetsCompat.Type.statusBars()
-                            or WindowInsetsCompat.Type.navigationBars())
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-
-                // Обрабатываем вырез камеры
-                currentWindow.attributes.layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-
+                // Android 11+ (API 30+) - используем современный API
+                enableImmersiveModeModern(currentWindow, strictMode)
             } else {
-                // Android 4.4-10 — старый способ
-                @Suppress("DEPRECATION")
-                decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                // Android 10 и ниже (API 29-) - используем старый API
+                enableImmersiveModeLegacy(currentWindow, strictMode)
             }
         } catch (e: Exception) {
-            // Логируем ошибку, но не падаем
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Современный способ для Android 11+ (API 30+)
+     */
+    @Suppress("DEPRECATION")
+    private fun enableImmersiveModeModern(window: android.view.Window, strictMode: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+
+        // Разрешаем окну занимать всю область экрана, включая системные панели
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        val insetsController = window.insetsController
+        if (insetsController != null) {
+            // Скрываем статус бар и навигацию
+            insetsController.hide(WindowInsetsCompat.Type.statusBars()
+                    or WindowInsetsCompat.Type.navigationBars())
+
+            if (strictMode) {
+                // Строгий режим: панели НЕ появляются при свайпе
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    // Android 12+: используем BEHAVIOR_DEFAULT
+                    insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_DEFAULT
+                } else {
+                    // Android 11: используем BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                // Обычный режим: панели появляются при свайпе
+                insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+
+        // Обрабатываем вырез камеры
+        window.attributes.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+    }
+
+    /**
+     * Старый способ для Android 10 и ниже (API 29-)
+     */
+    @Suppress("DEPRECATION")
+    private fun enableImmersiveModeLegacy(window: android.view.Window, strictMode: Boolean) {
+        val decorView = window.decorView
+
+        // Базовые флаги для скрытия панелей
+        var flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+
+        // Добавляем флаг в зависимости от режима
+        flags = if (strictMode) {
+            // Строгий режим: IMMERSIVE (не показывать панели даже при свайпе)
+            flags or View.SYSTEM_UI_FLAG_IMMERSIVE
+        } else {
+            // Обычный режим: IMMERSIVE_STICKY (панели появляются при свайпе)
+            flags or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        }
+
+        decorView.systemUiVisibility = flags
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            window?.decorView?.post { enableImmersiveMode() }
+            window?.decorView?.post {
+                val strictMode = configManager.isStrictModeEnabled()
+                enableImmersiveMode(strictMode)
+            }
         }
     }
 
