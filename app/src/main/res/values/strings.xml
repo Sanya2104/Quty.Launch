@@ -42,12 +42,21 @@
     <string name="server_error">Ошибка сервера: %d</string>
     <string name="copyright">Quty.Launch © 2026</string>
 
+    <!-- Кнопка "Скачать APK" -->
+    <string name="download_apk">📥 Скачать APK</string>
+
+    <!-- Сообщения о завершении загрузки -->
+    <string name="download_complete_title">Загрузка завершена</string>
+    <string name="download_complete">APK сохранён по пути:\n%s</string>
+    <string name="open_folder">📂 Открыть папку</string>
+    <string name="close">Закрыть</string>
+
     <!-- Update dialog -->
     <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
     <string name="later">Позже</string>
-    <string name="critical_tag">\n⚠️ КРИТИЧЕСКОЕ</string>
+    <string name="critical_tag">⚠️ КРИТИЧЕСКОЕ</string>
 
     <!-- Download dialog -->
     <string name="downloading_title">Скачивание обновления</string>
@@ -60,9 +69,16 @@
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
 
-    <!-- Version -->
+    <!-- Version info -->
     <string name="version_format">Версия: %s</string>
+    <string name="version_code_format">Код версии: %s</string>
+    <string name="channel_format">Канал: %s</string>
     <string name="version_unknown">Неизвестный</string>
+
+    <!-- Update dialog version info -->
+    <string name="update_version_info">📦 Новая версия: %s (код: %s)</string>
+    <string name="current_version_info">📱 Текущая версия: %s (код: %s)</string>
+    <string name="current_version_info_with_channel">📱 Текущая версия: %s (код: %s, канал: %s)</string>
 
     <!-- Messages -->
     <string name="theme_applied">Тема \'%s\' применена</string>

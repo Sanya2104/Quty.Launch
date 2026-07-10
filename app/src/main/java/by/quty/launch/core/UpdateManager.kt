@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Environment
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,7 +53,7 @@ class UpdateManager(private val context: Context) {
             packageInfo.longVersionCode.toInt()
         } catch (e: Exception) {
             e.printStackTrace()
-            0 // В случае ошибки возвращаем 0
+            0
         }
     }
 
@@ -86,12 +87,38 @@ class UpdateManager(private val context: Context) {
     }
 
     /**
+     * Получение директории для сохранения APK
+     * Используем стандартную папку Download
+     */
+    @Suppress("DEPRECATION")
+    private fun getDownloadDirectory(): File? {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    }
+
+    /**
      * Скачивание APK
      */
     suspend fun downloadApk(versionInfo: VersionInfo, listener: DownloadListener): Boolean = withContext(Dispatchers.IO) {
         try {
-            val apkFile = File(context.getExternalFilesDir("updates"), "Quty.Launch-${versionInfo.version}.apk")
-            apkFile.parentFile?.mkdirs()
+            val downloadDir = getDownloadDirectory()
+            if (downloadDir == null) {
+                withContext(Dispatchers.Main) {
+                    listener.onError("Не удалось получить доступ к папке Download")
+                }
+                return@withContext false
+            }
+
+            // Создаём папку если её нет
+            if (!downloadDir.exists()) {
+                downloadDir.mkdirs()
+            }
+
+            val apkFile = File(downloadDir, "Quty.Launch-${versionInfo.version}.apk")
+
+            // Если файл уже существует - удаляем старую версию
+            if (apkFile.exists()) {
+                apkFile.delete()
+            }
 
             val connection = URL(versionInfo.downloadUrl).openConnection() as HttpURLConnection
             connection.connect()
