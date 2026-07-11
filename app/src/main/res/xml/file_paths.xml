@@ -3,9 +3,13 @@
     <external-files-path name="updates" path="updates/" />
     <cache-path name="cache" path="/" />
 
-    <!-- Добавляем доступ к папке Download для установки APK -->
+    <!-- Доступ к папке Download для установки APK -->
     <external-path
         name="download"
         path="Download/" />
 
+    <!-- Доступ к внешнему хранилищу -->
+    <external-path
+        name="external"
+        path="." />
 </paths>

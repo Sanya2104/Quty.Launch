@@ -1,12 +1,14 @@
 // *** core/UpdateManager.kt *** //
 package by.quty.launch.core
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import androidx.core.content.FileProvider
+import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -87,46 +89,157 @@ class UpdateManager(private val context: Context) {
     }
 
     /**
-     * Получение директории для сохранения APK
-     * Используем стандартную папку Download
+     * Проверка, существует ли уже скачанный APK файл для указанной версии
+     * @param versionInfo информация о версии
+     * @return Pair(существует ли файл, Uri файла если существует)
      */
-    @Suppress("DEPRECATION")
-    private fun getDownloadDirectory(): File? {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    suspend fun checkIfApkExists(versionInfo: VersionInfo): Pair<Boolean, Uri?> = withContext(Dispatchers.IO) {
+        try {
+            val fileName = "Quty.Launch-${versionInfo.version}.apk"
+
+            // Ищем файл в MediaStore
+            val cursor = context.contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(fileName),
+                null
+            )
+
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
+                    val uri = Uri.withAppendedPath(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        id.toString()
+                    )
+                    return@withContext Pair(true, uri)
+                }
+            }
+
+            // Если не нашли в MediaStore, проверяем через File
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val file = File(downloadsDir, fileName)
+            if (file.exists()) {
+                // Пробуем получить Uri через MediaStore
+                val uri = getUriByFileName(fileName)
+                return@withContext Pair(true, uri)
+            }
+
+            Pair(false, null)
+        } catch (_: Exception) {
+            Pair(false, null)
+        }
     }
 
     /**
-     * Скачивание APK
+     * Получение Uri файла по имени из MediaStore
      */
-    suspend fun downloadApk(versionInfo: VersionInfo, listener: DownloadListener): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val downloadDir = getDownloadDirectory()
-            if (downloadDir == null) {
-                withContext(Dispatchers.Main) {
-                    listener.onError("Не удалось получить доступ к папке Download")
+    private fun getUriByFileName(fileName: String): Uri? {
+        return try {
+            val cursor = context.contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(fileName),
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
+                    return Uri.withAppendedPath(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        id.toString()
+                    )
                 }
-                return@withContext false
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Скачивание APK с проверкой на существование файла
+     * @param versionInfo информация о версии
+     * @param listener слушатель событий
+     * @param forceDownload принудительно скачать даже если файл существует
+     */
+    suspend fun downloadApk(
+        versionInfo: VersionInfo,
+        listener: DownloadListener,
+        forceDownload: Boolean = false
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val fileName = "Quty.Launch-${versionInfo.version}.apk"
+
+            // Проверяем, существует ли уже файл
+            if (!forceDownload) {
+                val (exists, existingUri) = checkIfApkExists(versionInfo)
+                if (exists && existingUri != null) {
+                    // Файл уже существует, возвращаем его Uri
+                    withContext(Dispatchers.Main) {
+                        listener.onSuccess(existingUri)
+                    }
+                    return@withContext true
+                }
             }
 
-            // Создаём папку если её нет
-            if (!downloadDir.exists()) {
-                downloadDir.mkdirs()
+            // Если файла нет или принудительная загрузка - скачиваем
+            downloadViaMediaStore(versionInfo, fileName, listener)
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                listener.onError(e.message ?: "Ошибка скачивания")
             }
+            false
+        }
+    }
 
-            val apkFile = File(downloadDir, "Quty.Launch-${versionInfo.version}.apk")
-
-            // Если файл уже существует - удаляем старую версию
-            if (apkFile.exists()) {
-                apkFile.delete()
-            }
-
+    /**
+     * Скачивание через MediaStore (Android 10+)
+     */
+    private suspend fun downloadViaMediaStore(
+        versionInfo: VersionInfo,
+        fileName: String,
+        listener: DownloadListener
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
             val connection = URL(versionInfo.downloadUrl).openConnection() as HttpURLConnection
             connection.connect()
 
             val fileLength = connection.contentLength
             val inputStream = connection.inputStream
-            val outputStream = apkFile.outputStream()
 
+            // Создаём запись в MediaStore для Downloads
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive")
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+
+            // Проверяем, не существует ли уже такой файл в MediaStore
+            val existingUri = getUriByFileName(fileName)
+            val contentUri = if (existingUri != null) {
+                // Если файл существует, обновляем его
+                context.contentResolver.update(
+                    existingUri,
+                    contentValues,
+                    null,
+                    null
+                )
+                existingUri
+            } else {
+                // Создаём новый файл
+                context.contentResolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    contentValues
+                ) ?: throw Exception("Не удалось создать файл в MediaStore")
+            }
+
+            val outputStream = context.contentResolver.openOutputStream(contentUri)
+                ?: throw Exception("Не удалось открыть поток для записи")
+
+            // Качаем и пишем
             val buffer = ByteArray(4096)
             var bytesRead: Int
             var totalBytesRead = 0
@@ -151,7 +264,7 @@ class UpdateManager(private val context: Context) {
             inputStream.close()
 
             withContext(Dispatchers.Main) {
-                listener.onSuccess(apkFile)
+                listener.onSuccess(contentUri)
             }
             true
         } catch (e: Exception) {
@@ -163,22 +276,15 @@ class UpdateManager(private val context: Context) {
     }
 
     /**
-     * Установка APK
+     * Установка APK из Uri
      */
-    fun installApk(apkFile: File) {
+    fun installApk(uri: Uri) {
         try {
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                apkFile
-            )
-
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-
             context.startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -187,7 +293,7 @@ class UpdateManager(private val context: Context) {
 
     interface DownloadListener {
         fun onProgress(percent: Int)
-        fun onSuccess(file: File)
+        fun onSuccess(uri: Uri)
         fun onError(message: String)
     }
 }

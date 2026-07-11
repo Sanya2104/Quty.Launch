@@ -2,8 +2,11 @@
 package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +19,8 @@ import by.quty.launch.R
 import by.quty.launch.core.UpdateManager
 import by.quty.launch.core.VersionInfo
 import kotlinx.coroutines.launch
-import java.io.File
+import android.provider.MediaStore
+import androidx.core.net.toUri
 
 class SystemSettingsFragment : Fragment() {
 
@@ -274,10 +278,13 @@ class SystemSettingsFragment : Fragment() {
                     progressDialog.setMessage(getString(R.string.downloading_progress, percent))
                 }
 
-                override fun onSuccess(file: File) {
+                override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
 
-                    val message = getString(R.string.download_complete, file.absolutePath)
+                    val fileName = "Quty.Launch-${versionInfo.version}.apk"
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    val message = getString(R.string.download_complete, "$downloadsDir/$fileName")
+
                     AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.download_complete_title))
                         .setMessage(message)
@@ -314,14 +321,14 @@ class SystemSettingsFragment : Fragment() {
                     progressDialog.setMessage(getString(R.string.downloading_progress, percent))
                 }
 
-                override fun onSuccess(file: File) {
+                override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
 
                     AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.install_title))
                         .setMessage(getString(R.string.install_message))
                         .setPositiveButton(getString(R.string.install_action)) { _, _ ->
-                            updateManager.installApk(file)
+                            updateManager.installApk(uri)
                         }
                         .setNegativeButton(getString(R.string.later), null)
                         .show()
@@ -338,31 +345,86 @@ class SystemSettingsFragment : Fragment() {
     }
 
     /**
-     * Открыть папку с загрузками
+     * Открыть папку с загрузками (улучшенная версия для всех Android версий)
      */
     private fun openDownloadsFolder() {
         try {
-            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
-                android.os.Environment.DIRECTORY_DOWNLOADS
-            )
-            if (downloadsDir != null && downloadsDir.exists()) {
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    requireContext(),
-                    "${requireContext().packageName}.fileprovider",
-                    downloadsDir
+            // Способ 1: Найти и открыть последний скачанный APK
+            try {
+                val cursor = requireContext().contentResolver.query(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Downloads._ID),
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf("Quty.Launch-%.apk"),
+                    "${MediaStore.Downloads.DATE_ADDED} DESC LIMIT 1"
                 )
-                intent.setDataAndType(uri, "resource/folder")
-                intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                startActivity(intent)
-            } else {
-                Toast.makeText(requireContext(), "Папка с загрузками не найдена", Toast.LENGTH_SHORT).show()
+
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
+                        val uri = Uri.withAppendedPath(
+                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                            id.toString()
+                        )
+
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "application/vnd.android.package-archive")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startActivity(intent)
+                        return
+                    }
+                }
+            } catch (_: Exception) {
+                // Пробуем следующий способ
             }
-        } catch (_: Exception) {
-            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
-                android.os.Environment.DIRECTORY_DOWNLOADS
+
+            // Способ 2: Открыть папку Download через DocumentsUI
+            try {
+                val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "vnd.android.document/root")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(intent)
+                return
+            } catch (_: Exception) {
+                // Пробуем следующий способ
+            }
+
+            // Способ 3: Использовать ACTION_OPEN_DOCUMENT_TREE
+            try {
+                val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                    setDataAndType(uri, "vnd.android.document/root")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(intent)
+                return
+            } catch (_: Exception) {
+                // Пробуем следующий способ
+            }
+
+            // Способ 4: Показать Toast с путём
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
             )
-            Toast.makeText(requireContext(), "APK сохранён в: ${downloadsDir?.absolutePath}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                requireContext(),
+                "✅ APK сохранён в:\n${downloadsDir?.absolutePath}",
+                Toast.LENGTH_LONG
+            ).show()
+
+        } catch (_: Exception) {
+            // В случае любой ошибки показываем Toast
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            )
+            Toast.makeText(
+                requireContext(),
+                "✅ APK сохранён в:\n${downloadsDir?.absolutePath}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
