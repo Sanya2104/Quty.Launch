@@ -34,13 +34,27 @@
 
     <!-- System section -->
     <string name="system_info_title">Информация о системе</string>
-    <string name="check_updates_button">Проверить обновления</string>
+    <string name="update_info_title">Обновление системы</string>
+    <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
     <string name="update_available">Доступно обновление %s</string>
     <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
     <string name="server_error">Ошибка сервера: %d</string>
     <string name="copyright">Quty.Launch © 2026</string>
+
+    <!-- Локальная установка -->
+    <string name="install_from_file">Локальное обновление из файла</string>
+    <string name="select_apk_title">Выберите APK файл</string>
+    <string name="invalid_apk">Выбранный файл не является APK</string>
+    <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
+    <string name="apk_validated_success">APK проверен. Версия: %s</string>
+    <string name="install_local_apk">Установить локальный APK</string>
+    <string name="install_local_message">Вы уверены, что хотите установить APK версии %s?</string>
+
+    <!-- Ошибки -->
+    <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
+    <string name="install_error">Не удалось запустить установку</string>
 
     <!-- Кнопка "Скачать APK" -->
     <string name="download_apk">📥 Скачать APK</string>
@@ -76,9 +90,9 @@
     <string name="version_unknown">Неизвестный</string>
 
     <!-- Update dialog version info -->
-    <string name="update_version_info">📦 Новая версия: %s (код: %s)</string>
-    <string name="current_version_info">📱 Текущая версия: %s (код: %s)</string>
-    <string name="current_version_info_with_channel">📱 Текущая версия: %s (код: %s, канал: %s)</string>
+    <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
+    <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
+    <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s (код: %s, канал: %s)</string>
 
     <!-- Messages -->
     <string name="theme_applied">Тема \'%s\' применена</string>

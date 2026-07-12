@@ -1,5 +1,6 @@
 <!-- res/layout/fragment_settings_system.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -13,7 +14,8 @@
         android:textColor="#CCCCCC"
         android:textSize="16sp"
         android:padding="16dp"
-        android:paddingTop="8dp"/>
+        android:paddingTop="8dp"
+        tools:ignore="VisualLintSystemUi" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -56,6 +58,53 @@
             android:paddingBottom="12dp"
             android:visibility="gone"/>
 
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/update_info_title"
+        android:textColor="#CCCCCC"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:paddingTop="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1E1E1E"
+        android:padding="16dp">
+
+        <!-- Кнопка установки из файла -->
+        <LinearLayout
+            android:id="@+id/install_from_file_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/install_from_file"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/install_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#4CAF50"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+
         <!-- Разделитель -->
         <View
             android:layout_width="match_parent"
@@ -77,7 +126,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/check_updates_button"
+                android:text="@string/check_updates_online_button"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"/>
 
@@ -102,6 +151,6 @@
         android:padding="24dp"
         android:text="@string/copyright"
         android:textColor="#78909C"
-        android:textSize="12sp" />
+        android:textSize="14sp" />
 
 </LinearLayout>

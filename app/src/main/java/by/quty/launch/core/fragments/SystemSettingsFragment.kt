@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
@@ -21,6 +22,8 @@ import by.quty.launch.core.VersionInfo
 import kotlinx.coroutines.launch
 import android.provider.MediaStore
 import androidx.core.net.toUri
+import android.content.pm.PackageInfo
+import java.io.File
 
 class SystemSettingsFragment : Fragment() {
 
@@ -28,8 +31,24 @@ class SystemSettingsFragment : Fragment() {
     private lateinit var versionCodeTextView: TextView
     private lateinit var channelTextView: TextView
     private lateinit var updateStatus: TextView
+    private lateinit var installStatus: TextView
     private lateinit var checkUpdateButton: View
+    private lateinit var installFromFileButton: View
     private lateinit var updateManager: UpdateManager
+
+    // Регистрируем ActivityResult для выбора файла (замена startActivityForResult)
+    private val selectApkLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                installStatus.visibility = View.VISIBLE
+                installStatus.text = getString(R.string.checking_updates)
+                installStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                validateAndInstallApk(uri)
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,12 +65,15 @@ class SystemSettingsFragment : Fragment() {
         versionCodeTextView = view.findViewById(R.id.version_code_text)
         channelTextView = view.findViewById(R.id.channel_text)
         updateStatus = view.findViewById(R.id.update_status)
+        installStatus = view.findViewById(R.id.install_status)
         checkUpdateButton = view.findViewById(R.id.check_update_button)
+        installFromFileButton = view.findViewById(R.id.install_from_file_button)
 
         updateManager = UpdateManager(requireContext())
 
         setupVersionInfo()
         setupUpdateCheck()
+        setupInstallFromFile()
     }
 
     private fun setupVersionInfo() {
@@ -156,6 +178,157 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
+    private fun setupInstallFromFile() {
+        installFromFileButton.setOnClickListener {
+            selectApkFile()
+        }
+    }
+
+    private fun selectApkFile() {
+        try {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/vnd.android.package-archive"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/vnd.android.package-archive"))
+            }
+            selectApkLauncher.launch(intent)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.error_open_file_manager, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun validateAndInstallApk(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val packageInfo = getPackageInfoFromUri(uri)
+
+                if (packageInfo == null) {
+                    installStatus.text = getString(R.string.invalid_apk)
+                    installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    view?.postDelayed({
+                        installStatus.visibility = View.GONE
+                    }, 3000)
+                    return@launch
+                }
+
+                if (packageInfo.packageName != requireContext().packageName) {
+                    installStatus.text = getString(R.string.apk_validation_failed)
+                    installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    view?.postDelayed({
+                        installStatus.visibility = View.GONE
+                    }, 3000)
+                    return@launch
+                }
+
+                val apkVersion = packageInfo.versionName ?: getString(R.string.version_unknown)
+                installStatus.text = getString(R.string.apk_validated_success, apkVersion)
+                installStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+
+                view?.postDelayed({
+                    installStatus.visibility = View.GONE
+                }, 3000)
+
+                showConfirmInstallDialog(uri, apkVersion)
+
+            } catch (_: Exception) {
+                installStatus.text = getString(R.string.invalid_apk)
+                installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                view?.postDelayed({
+                    installStatus.visibility = View.GONE
+                }, 3000)
+            }
+        }
+    }
+
+    private fun getPackageInfoFromUri(uri: Uri): PackageInfo? {
+        return try {
+            val pm = requireContext().packageManager
+            val file = getFileFromUri(uri)
+            if (file != null && file.exists()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    pm.getPackageArchiveInfo(file.absolutePath, PackageManager.PackageInfoFlags.of(0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    pm.getPackageArchiveInfo(file.absolutePath, 0)
+                }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun getFileFromUri(uri: Uri): File? {
+        return try {
+            val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val dataIndex = it.getColumnIndex(MediaStore.MediaColumns.DATA)
+                    val displayNameIndex = it.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+
+                    if (dataIndex >= 0) {
+                        val path = it.getString(dataIndex)
+                        if (!path.isNullOrEmpty()) {
+                            return File(path)
+                        }
+                    }
+
+                    if (displayNameIndex >= 0) {
+                        val fileName = it.getString(displayNameIndex)
+                        if (!fileName.isNullOrEmpty()) {
+                            return File(requireContext().cacheDir, fileName).apply {
+                                requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                                    outputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun showConfirmInstallDialog(uri: Uri, version: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.install_local_apk))
+            .setMessage(getString(R.string.install_local_message, version))
+            .setPositiveButton(getString(R.string.install_action)) { _, _ ->
+                installApk(uri)
+            }
+            .setNegativeButton(getString(R.string.later), null)
+            .show()
+    }
+
+    private fun installApk(uri: Uri) {
+        try {
+            requireContext().contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(
+                requireContext(),
+                "${getString(R.string.install_error)}: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     private fun checkForUpdates() {
         updateStatus.visibility = View.VISIBLE
         updateStatus.text = getString(R.string.checking_updates)
@@ -167,28 +340,23 @@ class SystemSettingsFragment : Fragment() {
             if (result.hasUpdate && result.versionInfo != null) {
                 updateStatus.text = getString(R.string.update_available, result.versionInfo.version)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-
                 showUpdateDialog(result.versionInfo)
             } else if (result.error != null) {
                 updateStatus.text = getString(R.string.update_error)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
-
                 val errorMessage = if (result.error.startsWith("Ошибка сервера:")) {
                     val code = result.error.replace("[^0-9]".toRegex(), "")
                     getString(R.string.server_error, code.toIntOrNull() ?: 0)
                 } else {
                     result.error
                 }
-
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
-
                 view?.postDelayed({
                     updateStatus.visibility = View.GONE
                 }, 3000)
             } else {
                 updateStatus.text = getString(R.string.no_updates)
                 updateStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
-
                 view?.postDelayed({
                     updateStatus.visibility = View.GONE
                 }, 3000)
@@ -280,7 +448,6 @@ class SystemSettingsFragment : Fragment() {
 
                 override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
-
                     val fileName = "Quty.Launch-${versionInfo.version}.apk"
                     val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                     val message = getString(R.string.download_complete, "$downloadsDir/$fileName")
@@ -323,7 +490,6 @@ class SystemSettingsFragment : Fragment() {
 
                 override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
-
                     AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.install_title))
                         .setMessage(getString(R.string.install_message))
@@ -431,5 +597,6 @@ class SystemSettingsFragment : Fragment() {
     fun refreshInfo() {
         setupVersionInfo()
         updateStatus.visibility = View.GONE
+        installStatus.visibility = View.GONE
     }
 }
