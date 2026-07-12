@@ -16,6 +16,7 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.core.content.edit
 
 @Serializable
 data class VersionInfo(
@@ -39,6 +40,9 @@ class UpdateManager(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val versionUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/updates/version.json"
+
+    // SharedPreferences для меток завершённых загрузок
+    private val prefs = context.getSharedPreferences("update_prefs", Context.MODE_PRIVATE)
 
     /**
      * Получение текущей версии приложения через PackageManager
@@ -89,6 +93,52 @@ class UpdateManager(private val context: Context) {
     }
 
     /**
+     * Сохраняет информацию об успешно скачанном файле
+     */
+    private fun markDownloadComplete(versionCode: Int) {
+        prefs.edit { putBoolean("download_complete_$versionCode", true) }
+    }
+
+    /**
+     * Проверяет, был ли файл успешно скачан
+     */
+    private fun isDownloadComplete(versionCode: Int): Boolean {
+        return prefs.getBoolean("download_complete_$versionCode", false)
+    }
+
+    /**
+     * Очищает метку о загрузке
+     */
+    private fun clearDownloadMark(versionCode: Int) {
+        prefs.edit { remove("download_complete_$versionCode") }
+    }
+
+    /**
+     * Удаляет файл по имени из Download
+     */
+    private fun deleteFileIfExists(fileName: String) {
+        try {
+            val cursor = context.contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(fileName),
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
+                    val uri = Uri.withAppendedPath(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        id.toString()
+                    )
+                    context.contentResolver.delete(uri, null, null)
+                }
+            }
+        } catch (_: Exception) { }
+    }
+
+    /**
      * Проверка, существует ли уже скачанный APK файл для указанной версии
      * @param versionInfo информация о версии
      * @return Pair(существует ли файл, Uri файла если существует)
@@ -97,10 +147,21 @@ class UpdateManager(private val context: Context) {
         try {
             val fileName = "Quty.Launch-${versionInfo.version}.apk"
 
-            // Ищем файл в MediaStore
+            // 1. Проверяем метку о завершении загрузки
+            if (!isDownloadComplete(versionInfo.versionCode)) {
+                // Если загрузка не была завершена — файл невалидный
+                // Удаляем битый файл, если он есть
+                deleteFileIfExists(fileName)
+                return@withContext Pair(false, null)
+            }
+
+            // 2. Ищем файл в MediaStore с проверкой размера
             val cursor = context.contentResolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Downloads._ID),
+                arrayOf(
+                    MediaStore.Downloads._ID,
+                    MediaStore.Downloads.SIZE
+                ),
                 "${MediaStore.Downloads.DISPLAY_NAME} = ?",
                 arrayOf(fileName),
                 null
@@ -109,21 +170,48 @@ class UpdateManager(private val context: Context) {
             cursor?.use {
                 if (it.moveToFirst()) {
                     val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
-                    val uri = Uri.withAppendedPath(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        id.toString()
-                    )
-                    return@withContext Pair(true, uri)
+                    val size = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads.SIZE))
+
+                    // Проверяем, что файл не пустой (хотя бы 1 байт)
+                    if (size > 0) {
+                        val uri = Uri.withAppendedPath(
+                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                            id.toString()
+                        )
+                        return@withContext Pair(true, uri)
+                    } else {
+                        // Файл пустой/битый — удаляем
+                        val uri = Uri.withAppendedPath(
+                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                            id.toString()
+                        )
+                        context.contentResolver.delete(uri, null, null)
+                        clearDownloadMark(versionInfo.versionCode)
+                        return@withContext Pair(false, null)
+                    }
                 }
             }
 
             // Если не нашли в MediaStore, проверяем через File
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val file = File(downloadsDir, fileName)
-            if (file.exists()) {
+            if (file.exists() && file.length() > 0) {
                 // Пробуем получить Uri через MediaStore
                 val uri = getUriByFileName(fileName)
-                return@withContext Pair(true, uri)
+                if (uri != null) {
+                    return@withContext Pair(true, uri)
+                } else {
+                    // Если не получилось получить Uri, удаляем файл
+                    file.delete()
+                    clearDownloadMark(versionInfo.versionCode)
+                    return@withContext Pair(false, null)
+                }
+            }
+
+            // Если файл есть, но метки нет или файл пустой — удаляем
+            if (file.exists()) {
+                file.delete()
+                clearDownloadMark(versionInfo.versionCode)
             }
 
             Pair(false, null)
@@ -177,7 +265,7 @@ class UpdateManager(private val context: Context) {
             if (!forceDownload) {
                 val (exists, existingUri) = checkIfApkExists(versionInfo)
                 if (exists && existingUri != null) {
-                    // Файл уже существует, возвращаем его Uri
+                    // Файл уже существует и валидный, возвращаем его Uri
                     withContext(Dispatchers.Main) {
                         listener.onSuccess(existingUri)
                     }
@@ -263,11 +351,18 @@ class UpdateManager(private val context: Context) {
             outputStream.close()
             inputStream.close()
 
+            // Отмечаем загрузку как завершённую
+            markDownloadComplete(versionInfo.versionCode)
+
             withContext(Dispatchers.Main) {
                 listener.onSuccess(contentUri)
             }
             true
         } catch (e: Exception) {
+            // При ошибке удаляем метку о завершении и удаляем файл
+            clearDownloadMark(versionInfo.versionCode)
+            deleteFileIfExists(fileName)
+
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: "Ошибка скачивания")
             }

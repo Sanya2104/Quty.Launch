@@ -36,7 +36,7 @@ class SystemSettingsFragment : Fragment() {
     private lateinit var installFromFileButton: View
     private lateinit var updateManager: UpdateManager
 
-    // Регистрируем ActivityResult для выбора файла (замена startActivityForResult)
+    // Регистрируем ActivityResult для выбора файла
     private val selectApkLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -47,6 +47,8 @@ class SystemSettingsFragment : Fragment() {
                 installStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
                 validateAndInstallApk(uri)
             }
+        } else {
+            installStatus.visibility = View.GONE
         }
     }
 
@@ -91,13 +93,11 @@ class SystemSettingsFragment : Fragment() {
             val fullVersionName = packageInfo.versionName ?: getString(R.string.version_unknown)
             val versionCode = packageInfo.longVersionCode
 
-            // Разделяем versionName на основную версию и суффикс
             val (versionName, suffix) = splitVersionName(fullVersionName)
 
             versionTextView.text = getString(R.string.version_format, versionName)
             versionCodeTextView.text = getString(R.string.version_code_format, versionCode.toString())
 
-            // Отображаем канал, если есть суффикс
             if (suffix.isNotEmpty()) {
                 channelTextView.text = getString(R.string.channel_format, suffix)
                 channelTextView.visibility = View.VISIBLE
@@ -112,19 +112,11 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    /**
-     * Разделяет versionName на основную версию и суффикс
-     * Например: "0.0.37-Alpha" -> ("0.0.37", "Alpha")
-     *           "0.0.37Alpha" -> ("0.0.37", "Alpha")  <- важно!
-     *           "0.0.37" -> ("0.0.37", "")
-     */
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {
-        // Если строка пустая
         if (fullVersionName.isEmpty()) {
             return Pair("", "")
         }
 
-        // 1. Пытаемся найти разделители: дефис, подчёркивание, пробел
         val separators = listOf("-", "_", " ")
         for (separator in separators) {
             val index = fullVersionName.indexOf(separator)
@@ -135,8 +127,6 @@ class SystemSettingsFragment : Fragment() {
             }
         }
 
-        // 2. Если разделитель не найден, пробуем найти границу между цифрами и буквами
-        // Пример: "0.0.37Alpha" -> "0.0.37" + "Alpha"
         val digitRegex = Regex("^[\\d.]+")
         val match = digitRegex.find(fullVersionName)
         if (match != null) {
@@ -147,13 +137,9 @@ class SystemSettingsFragment : Fragment() {
             }
         }
 
-        // 3. Если ничего не подошло — возвращаем как есть
         return Pair(fullVersionName, "")
     }
 
-    /**
-     * Получение названия текущей версии через PackageManager
-     */
     private fun getCurrentVersionName(): String {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -180,8 +166,29 @@ class SystemSettingsFragment : Fragment() {
 
     private fun setupInstallFromFile() {
         installFromFileButton.setOnClickListener {
-            selectApkFile()
+            showInstallOptionsDialog()
         }
+    }
+
+    /**
+     * Показывает диалог с выбором способа установки
+     */
+    private fun showInstallOptionsDialog() {
+        val options = arrayOf(
+            getString(R.string.install_option_file_manager),
+            getString(R.string.install_option_downloads)
+        )
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.install_option_title))
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> selectApkFile()
+                    1 -> selectApkFromDownloads()
+                }
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
     }
 
     private fun selectApkFile() {
@@ -192,8 +199,73 @@ class SystemSettingsFragment : Fragment() {
                 putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/vnd.android.package-archive"))
             }
             selectApkLauncher.launch(intent)
-        } catch (_: Exception) {
-            Toast.makeText(requireContext(), R.string.error_open_file_manager, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            selectApkAlternative()
+        }
+    }
+
+    private fun selectApkAlternative() {
+        try {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/vnd.android.package-archive"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/vnd.android.package-archive"))
+            }
+            selectApkLauncher.launch(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(requireContext(), getString(R.string.error_open_file_manager), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun selectApkFromDownloads() {
+        try {
+            val cursor = requireContext().contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(
+                    MediaStore.Downloads._ID,
+                    MediaStore.Downloads.DISPLAY_NAME
+                ),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf("%.apk"),
+                "${MediaStore.Downloads.DISPLAY_NAME} ASC"
+            )
+
+            val apkList = mutableListOf<Pair<String, Uri>>()
+            cursor?.use {
+                while (it.moveToNext()) {
+                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
+                    val name = it.getString(it.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME))
+                    val uri = Uri.withAppendedPath(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        id.toString()
+                    )
+                    apkList.add(Pair(name, uri))
+                }
+            }
+
+            if (apkList.isEmpty()) {
+                Toast.makeText(requireContext(), getString(R.string.no_apk_found), Toast.LENGTH_LONG).show()
+                return
+            }
+
+            val names = apkList.map { it.first }.toTypedArray()
+            AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.select_apk_title))
+                .setItems(names) { _, which ->
+                    val uri = apkList[which].second
+                    installStatus.visibility = View.VISIBLE
+                    installStatus.text = getString(R.string.checking_updates)
+                    installStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                    validateAndInstallApk(uri)
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(requireContext(), getString(R.string.error_open_file_manager), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -364,18 +436,12 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    /**
-     * Показ диалога обновления с кнопкой "Скачать APK"
-     */
     private fun showUpdateDialog(versionInfo: VersionInfo) {
         val criticalTag = if (versionInfo.isCritical) getString(R.string.critical_tag) else ""
-
-        // Получаем текущий versionCode для отображения
         val currentVersionCode = getCurrentVersionCode()
         val currentFullVersionName = getCurrentVersionName()
         val (currentVersionName, currentSuffix) = splitVersionName(currentFullVersionName)
 
-        // Формируем сообщение с информацией о версиях
         val messageWithVersionInfo = buildString {
             append(getString(R.string.update_dialog_message,
                 versionInfo.changelog, versionInfo.releaseDate, versionInfo.size))
@@ -383,7 +449,6 @@ class SystemSettingsFragment : Fragment() {
             append(getString(R.string.update_version_info,
                 versionInfo.version, versionInfo.versionCode.toString()))
             append("\n")
-            // Показываем текущую версию с каналом, если есть
             if (currentSuffix.isNotEmpty()) {
                 append(getString(R.string.current_version_info_with_channel,
                     currentVersionName, currentVersionCode.toString(), currentSuffix))
@@ -401,7 +466,6 @@ class SystemSettingsFragment : Fragment() {
             }
             .setNegativeButton(getString(R.string.later), null)
 
-        // Добавляем нейтральную кнопку "Скачать APK"
         dialogBuilder.setNeutralButton(getString(R.string.download_apk)) { _, _ ->
             downloadApkOnly(versionInfo)
         }
@@ -409,9 +473,6 @@ class SystemSettingsFragment : Fragment() {
         dialogBuilder.show()
     }
 
-    /**
-     * Получение текущего versionCode
-     */
     private fun getCurrentVersionCode(): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -430,9 +491,6 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    /**
-     * Скачать APK без автоматической установки
-     */
     private fun downloadApkOnly(versionInfo: VersionInfo) {
         val progressDialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.downloading_title))
@@ -472,9 +530,6 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    /**
-     * Скачать и установить APK
-     */
     private fun downloadAndInstall(versionInfo: VersionInfo) {
         val progressDialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.downloading_title))
@@ -510,12 +565,8 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    /**
-     * Открыть папку с загрузками (улучшенная версия для всех Android версий)
-     */
     private fun openDownloadsFolder() {
         try {
-            // Способ 1: Найти и открыть последний скачанный APK
             try {
                 val cursor = requireContext().contentResolver.query(
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI,
@@ -541,11 +592,8 @@ class SystemSettingsFragment : Fragment() {
                         return
                     }
                 }
-            } catch (_: Exception) {
-                // Пробуем следующий способ
-            }
+            } catch (_: Exception) { }
 
-            // Способ 2: Открыть папку Download через DocumentsUI
             try {
                 val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
                 val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -554,11 +602,8 @@ class SystemSettingsFragment : Fragment() {
                 }
                 startActivity(intent)
                 return
-            } catch (_: Exception) {
-                // Пробуем следующий способ
-            }
+            } catch (_: Exception) { }
 
-            // Способ 3: Использовать ACTION_OPEN_DOCUMENT_TREE
             try {
                 val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
@@ -567,11 +612,8 @@ class SystemSettingsFragment : Fragment() {
                 }
                 startActivity(intent)
                 return
-            } catch (_: Exception) {
-                // Пробуем следующий способ
-            }
+            } catch (_: Exception) { }
 
-            // Способ 4: Показать Toast с путём
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )
@@ -582,7 +624,6 @@ class SystemSettingsFragment : Fragment() {
             ).show()
 
         } catch (_: Exception) {
-            // В случае любой ошибки показываем Toast
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )

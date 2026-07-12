@@ -52,6 +52,13 @@
     <string name="install_local_apk">Установить локальный APK</string>
     <string name="install_local_message">Вы уверены, что хотите установить APK версии %s?</string>
 
+    <!-- Установка из файла -->
+    <string name="install_option_title">Выберите способ установки</string>
+    <string name="install_option_file_manager">📂 Через файловый менеджер</string>
+    <string name="install_option_downloads">📁 Из папки Download</string>
+    <string name="no_apk_found">APK файлы не найдены в папке Download</string>
+    <string name="cancel">Отмена</string>
+
     <!-- Ошибки -->
     <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
     <string name="install_error">Не удалось запустить установку</string>
