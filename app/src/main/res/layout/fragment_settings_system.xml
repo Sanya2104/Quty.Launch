@@ -1,156 +1,163 @@
 <!-- res/layout/fragment_settings_system.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#121212"
+    android:fillViewport="true"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/system_info_title"
-        android:textColor="#CCCCCC"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:paddingTop="8dp"
-        tools:ignore="VisualLintSystemUi" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/version_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/version_format"
-            android:textColor="#FFFFFF"
+            android:text="@string/system_info_title"
+            android:textColor="#CCCCCC"
             android:textSize="16sp"
-            android:padding="12dp"/>
+            android:padding="16dp"
+            android:paddingTop="8dp"
+            tools:ignore="VisualLintSystemUi" />
 
-        <!-- Код версии -->
-        <TextView
-            android:id="@+id/version_code_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/version_code_format"
-            android:textColor="#AAAAAA"
-            android:textSize="14sp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="4dp"/>
-
-        <!-- Канал (versionNameSuffix) -->
-        <TextView
-            android:id="@+id/channel_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/channel_format"
-            android:textColor="#AAAAAA"
-            android:textSize="14sp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="12dp"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/update_info_title"
-        android:textColor="#CCCCCC"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:paddingTop="8dp"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp">
-
-        <!-- Кнопка установки из файла -->
         <LinearLayout
-            android:id="@+id/install_from_file_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp">
 
             <TextView
-                android:layout_width="0dp"
+                android:id="@+id/version_text"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/install_from_file"
+                android:text="@string/version_format"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:padding="12dp"/>
 
+            <!-- Код версии -->
             <TextView
-                android:id="@+id/install_status"
-                android:layout_width="wrap_content"
+                android:id="@+id/version_code_text"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#4CAF50"
+                android:text="@string/version_code_format"
+                android:textColor="#AAAAAA"
                 android:textSize="14sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp"/>
+
+            <!-- Канал (versionNameSuffix) -->
+            <TextView
+                android:id="@+id/channel_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/channel_format"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="12dp"
                 android:visibility="gone"/>
 
         </LinearLayout>
 
-        <!-- Разделитель -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#333333"
-            android:layout_marginVertical="8dp"/>
-
-        <!-- Кнопка проверки обновлений -->
-        <LinearLayout
-            android:id="@+id/check_update_button"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center_vertical">
+            android:text="@string/update_info_title"
+            android:textColor="#CCCCCC"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:paddingTop="8dp"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/check_updates_online_button"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/update_status"
-                android:layout_width="wrap_content"
+            <!-- Кнопка установки из файла -->
+            <LinearLayout
+                android:id="@+id/install_from_file_button"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#4CAF50"
-                android:textSize="14sp"
-                android:visibility="gone"/>
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/install_from_file"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/install_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#4CAF50"
+                    android:textSize="14sp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <!-- Разделитель -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginVertical="8dp"/>
+
+            <!-- Кнопка проверки обновлений -->
+            <LinearLayout
+                android:id="@+id/check_update_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/check_updates_online_button"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/update_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#4CAF50"
+                    android:textSize="14sp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
+        <!-- Информация о приложении -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/copyright"
+            android:textColor="#78909C"
+            android:textSize="14sp" />
+
     </LinearLayout>
 
-    <!-- Информация о приложении -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="24dp"
-        android:text="@string/copyright"
-        android:textColor="#78909C"
-        android:textSize="14sp" />
-
-</LinearLayout>
+</ScrollView>
