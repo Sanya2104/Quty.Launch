@@ -549,7 +549,8 @@ class SystemSettingsFragment : Fragment() {
                         .setTitle(getString(R.string.install_title))
                         .setMessage(getString(R.string.install_message))
                         .setPositiveButton(getString(R.string.install_action)) { _, _ ->
-                            updateManager.installApk(uri)
+                            // Передаём versionCode для очистки метки
+                            updateManager.installApk(uri, versionInfo.versionCode)
                         }
                         .setNegativeButton(getString(R.string.later), null)
                         .show()

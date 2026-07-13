@@ -54,6 +54,20 @@ class ThemeSettingsFragment : Fragment() {
         setupThemeSelector(view)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Сбрасываем флаг при возврате во вкладку
+        isApplyingTheme = false
+        // Обновляем список
+        themesAdapter.notifyDataSetChanged()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Сбрасываем флаг при уходе с вкладки
+        isApplyingTheme = false
+    }
+
     /**
      * Настройка выбора темы оформления с превью и информацией
      */
@@ -170,6 +184,7 @@ class ThemeSettingsFragment : Fragment() {
      * Обновление списка тем (вызывается из Activity при необходимости)
      */
     fun refreshThemes() {
+        isApplyingTheme = false
         themesAdapter.notifyDataSetChanged()
     }
 }

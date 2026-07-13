@@ -15,7 +15,7 @@
         android:layout_height="48dp"
         android:contentDescription="TODO"
         android:scaleType="centerCrop"
-        android:background="#333333"
+        android:background="@android:color/transparent"
         android:src="@drawable/ic_settings"
         tools:ignore="ContentDescription,HardcodedText" />
 
@@ -66,8 +66,5 @@
             android:ellipsize="end"
             android:layout_marginTop="2dp" />
     </LinearLayout>
-
-    <!-- Индикатор активной темы (просто точку или галочку, если хотите) -->
-    <!-- Можно оставить пустым, мы будем подсвечивать фоном -->
 
 </LinearLayout>
