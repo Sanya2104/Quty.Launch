@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 158
-    versionName = "0.0.53"
+    versionCode = 169
+    versionName = "0.0.56"
         versionNameSuffix = "Alpha"
     }
 
@@ -59,6 +59,17 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

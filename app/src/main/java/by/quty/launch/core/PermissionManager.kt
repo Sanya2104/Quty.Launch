@@ -14,15 +14,8 @@ object PermissionManager {
         Manifest.permission.READ_PHONE_STATE,
         Manifest.permission.ACCESS_NETWORK_STATE,
         Manifest.permission.ACCESS_WIFI_STATE,
-    )
-
-    // Опциональные разрешения
-    private val OPTIONAL_PERMISSIONS = listOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
     )
-
-    private val ALL_PERMISSIONS = REQUIRED_PERMISSIONS + OPTIONAL_PERMISSIONS
 
     fun hasAllRequiredPermissions(context: Context): Boolean {
         return REQUIRED_PERMISSIONS.all { permission ->
@@ -47,38 +40,4 @@ object PermissionManager {
         }
         return (granted * 100) / REQUIRED_PERMISSIONS.size
     }
-
-    fun getPermissionInfo(permission: String): PermissionInfo {
-        return when (permission) {
-            Manifest.permission.READ_PHONE_STATE -> PermissionInfo(
-                id = "phone",
-                isRequired = true
-            )
-            Manifest.permission.ACCESS_NETWORK_STATE -> PermissionInfo(
-                id = "network",
-                isRequired = true
-            )
-            Manifest.permission.ACCESS_WIFI_STATE -> PermissionInfo(
-                id = "wifi",
-                isRequired = true
-            )
-            Manifest.permission.ACCESS_FINE_LOCATION -> PermissionInfo(
-                id = "location",
-                isRequired = false
-            )
-            Manifest.permission.READ_EXTERNAL_STORAGE -> PermissionInfo(
-                id = "storage",
-                isRequired = false
-            )
-            else -> PermissionInfo(
-                id = "unknown",
-                isRequired = false
-            )
-        }
-    }
-
-    data class PermissionInfo(
-        val id: String,
-        val isRequired: Boolean
-    )
 }

@@ -126,26 +126,22 @@
     <string name="welcome_subtitle">Для корректной работы приложения необходимо предоставить доступ к функциям устройства:</string>
 
     <!-- Обязательные разрешения -->
-    <string name="welcome_permission_phone">📱 Информация о телефоне</string>
+    <string name="welcome_permission_phone">Информация о телефоне</string>
     <string name="welcome_permission_phone_desc">Для отображения уровня сигнала и типа сети (2G/3G/4G/5G)</string>
-    <string name="welcome_permission_network">📶 Состояние сети</string>
+    <string name="welcome_permission_network">Состояние сети</string>
     <string name="welcome_permission_network_desc">Для отображения скорости интернета</string>
-    <string name="welcome_permission_wifi">📶 Wi-Fi</string>
+    <string name="welcome_permission_wifi">Wi-Fi</string>
     <string name="welcome_permission_wifi_desc">Для отображения уровня сигнала Wi-Fi</string>
-
-    <!-- Опциональные разрешения -->
-    <string name="welcome_permission_location">📍 Геолокация (опционально)</string>
+    <string name="welcome_permission_location">Геолокация</string>
     <string name="welcome_permission_location_desc">Для отображения статуса GPS.</string>
-    <string name="welcome_permission_storage">💾 Хранилище (опционально)</string>
+    <string name="welcome_permission_storage">Хранилище</string>
     <string name="welcome_permission_storage_desc">Для установки кастомных тем.</string>
 
     <!-- Кнопки и подписи -->
-    <string name="welcome_button_grant">✅ Предоставить доступ</string>
-    <string name="welcome_button_retry">🔄 Повторить запрос</string>
-    <string name="welcome_button_settings">⚙️ Открыть настройки</string>
+    <string name="welcome_button_grant">Предоставить доступ</string>
+    <string name="welcome_button_retry">Повторить запрос</string>
+    <string name="welcome_button_settings">Открыть настройки</string>
     <string name="welcome_all_required">Все разрешения обязательны для работы лаунчера</string>
-    <string name="welcome_optional_note">ℹ️ Разрешения с пометкой (опционально) можно пропустить</string>
-    <string name="welcome_required_note">⚠️ Обязательные разрешения (📱, 📶) необходимы для работы</string>
     <string name="welcome_required_done">✅ Все обязательные разрешения получены!</string>
     <string name="welcome_button_start">🚀 Начать</string>
 
@@ -153,5 +149,9 @@
     <string name="welcome_permission_denied_title">Разрешения не предоставлены</string>
     <string name="welcome_permission_denied_message">Для корректной работы лаунчера необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
     <string name="welcome_permission_denied_button">Открыть настройки приложения</string>
+
+    <!-- Статусы разрешений -->
+    <string name="permission_granted">Разрешено</string>
+    <string name="permission_denied">Не разрешено</string>
 
 </resources>
