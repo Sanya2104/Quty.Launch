@@ -10,21 +10,23 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import java.io.File
+import java.io.FileInputStream
 import java.net.URLConnection
-import androidx.core.net.toUri
 
 @Suppress("DEPRECATION")
 @SuppressLint("SetJavaScriptEnabled")
 class LauncherWebView(context: Context) : WebView(context) {
+
+    private val activeThemeDir = File(context.filesDir, "themes/active")
 
     init {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
 
         // ВАЖНО: Отключаем старый опасный доступ к файлам
-        settings.allowFileAccess = false
-        settings.allowFileAccessFromFileURLs = false
-        settings.allowUniversalAccessFromFileURLs = false
+        settings.allowFileAccess = true
+        settings.allowFileAccessFromFileURLs = true
+        settings.allowUniversalAccessFromFileURLs = true
 
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
@@ -61,31 +63,42 @@ class LauncherWebView(context: Context) : WebView(context) {
 
             private fun handleQutyScheme(url: String): WebResourceResponse? {
                 return try {
-                    // Формат: quty://themes/active/assets/js/app.js
+                    // Формат: quty://themes/active/index.html
                     val path = url.replace("quty://", "")
 
-                    // Определяем, откуда грузить: из активной темы или из assets
-                    val file = when {
-                        path.startsWith("themes/active/") -> {
-                            // Активная тема (распакованная)
-                            val themePath = path.replace("themes/active/", "")
-                            File(context.filesDir, "themes/active/$themePath")
+                    // Ищем файл в активной теме
+                    val file = File(activeThemeDir, path)
+
+                    // Если файл не найден по прямому пути, пробуем найти в папке с именем темы
+                    if (!file.exists()) {
+                        val subDirs = activeThemeDir.listFiles { it.isDirectory }
+                        subDirs?.forEach { dir ->
+                            val candidateFile = File(dir, path)
+                            if (candidateFile.exists()) {
+                                val mimeType = URLConnection.guessContentTypeFromName(candidateFile.name)
+                                    ?: "text/plain"
+                                return WebResourceResponse(mimeType, "UTF-8", FileInputStream(candidateFile))
+                            }
                         }
-                        path.startsWith("themes/builtin/") -> {
-                            // Встроенная тема (запасной вариант)
-                            val themePath = path.replace("themes/builtin/", "")
-                            context.assets.open("themes/$themePath")
-                            return assetLoader.shouldInterceptRequest(
-                                "https://appassets.androidplatform.net/assets/themes/$themePath".toUri()
-                            )
-                        }
-                        else -> null
                     }
 
-                    if (file != null && file.exists()) {
+                    if (file.exists() && file.isFile) {
                         val mimeType = URLConnection.guessContentTypeFromName(file.name)
                             ?: "text/plain"
-                        return WebResourceResponse(mimeType, "UTF-8", file.inputStream())
+                        return WebResourceResponse(mimeType, "UTF-8", FileInputStream(file))
+                    }
+
+                    // Если файл не найден, пробуем загрузить из assets (запасной вариант)
+                    if (path.startsWith("themes/")) {
+                        val assetPath = path.replace("themes/", "")
+                        try {
+                            val inputStream = context.assets.open(assetPath)
+                            val mimeType = URLConnection.guessContentTypeFromName(file.name)
+                                ?: "text/plain"
+                            return WebResourceResponse(mimeType, "UTF-8", inputStream)
+                        } catch (_: Exception) {
+                            // Файла нет в assets
+                        }
                     }
 
                     null // 404 Not Found
@@ -93,6 +106,16 @@ class LauncherWebView(context: Context) : WebView(context) {
                     e.printStackTrace()
                     null
                 }
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                errorCode: Int,
+                description: String?,
+                failingUrl: String?
+            ) {
+                super.onReceivedError(view, errorCode, description, failingUrl)
+                android.util.Log.e("LauncherWebView", "Error: $failingUrl - $description")
             }
         }
     }
@@ -106,7 +129,8 @@ class LauncherWebView(context: Context) : WebView(context) {
         val url = if (isAsset) {
             "https://appassets.androidplatform.net/assets/themes/$themeName/index.html"
         } else {
-            "quty://themes/active/$themeName/index.html"
+            // Для кастомных тем используем quty:// схему
+            "quty://themes/active/index.html"
         }
         loadUrl(url)
     }

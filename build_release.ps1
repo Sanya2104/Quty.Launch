@@ -3,6 +3,9 @@
 # Устанавливаем кодировку UTF-8 для консоли
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Флаг для отслеживания ошибок
+$hasError = $false
+
 Write-Host "=========================================="
 Write-Host "🚀 Начинаем процесс сборки и публикации Quty.Launch..."
 Write-Host "=========================================="
@@ -23,6 +26,11 @@ function Print-Warning {
 
 function Print-Error {
     Write-Host "❌ $args" -ForegroundColor Red
+    $script:hasError = $true
+}
+
+function Print-Info {
+    Write-Host "ℹ️ $args" -ForegroundColor Cyan
 }
 
 # ============================================
@@ -33,7 +41,7 @@ Print-Step "Чтение текущей версии из build.gradle.kts..."
 # Проверяем существование файла
 if (-not (Test-Path "app/build.gradle.kts")) {
     Print-Error "Файл app/build.gradle.kts не найден!"
-    exit 1
+    return
 }
 
 $gradleFile = Get-Content "app/build.gradle.kts" -Raw -Encoding UTF8
@@ -132,10 +140,12 @@ Print-Step "Запуск сборки release версии..."
 # Проверяем наличие gradlew
 if (-not (Test-Path "gradlew.bat") -and -not (Test-Path "gradlew")) {
     Print-Error "gradlew не найден!"
-    exit 1
+    return
 }
 
-# Запускаем gradlew
+# Запускаем gradlew с выводом всех ошибок
+Print-Info "Запуск gradlew... (это может занять несколько минут)"
+
 if (Test-Path "gradlew.bat") {
     .\gradlew.bat clean assembleRelease
 } else {
@@ -143,8 +153,9 @@ if (Test-Path "gradlew.bat") {
 }
 
 if ($LASTEXITCODE -ne 0) {
-    Print-Error "Сборка failed!"
-    exit 1
+    Print-Error "Сборка завершилась с ошибкой (код: $LASTEXITCODE)"
+    Print-Info "Проверьте вывод выше для поиска ошибки"
+    return
 }
 
 Print-Success "Сборка успешно завершена!"
@@ -161,7 +172,7 @@ $destApk = Join-Path $destDir $apkFilename
 
 if (-not (Test-Path $sourceApk)) {
     Print-Error "APK файл не найден: $sourceApk"
-    exit 1
+    return
 }
 
 # Создаем директорию назначения
@@ -216,7 +227,7 @@ Print-Success "version.json создан: $versionJson"
 # CRITICAL ОБНОВЛЕНИЕ
 # ============================================
 Write-Host ""
-Print-Warning "Это критическое обновление? (y/n) [n]:"
+Print-Warning "Это критическое обновление? (y/N) [N]:"
 $isCritical = Read-Host "> "
 
 if ($isCritical -eq "y" -or $isCritical -eq "Y") {
@@ -295,6 +306,17 @@ Write-Host "$changelog"
 Write-Host "📁 APK: $destApk"
 Write-Host "📄 JSON: $versionJson"
 Write-Host "==========================================" -ForegroundColor Cyan
+
+# ============================================
+# ВЫХОД
+# ============================================
+
+if ($hasError) {
+    Write-Host ""
+    Write-Host "==========================================" -ForegroundColor Red
+    Print-Error "ПРОЦЕСС ЗАВЕРШЕН С ОШИБКАМИ!"
+    Write-Host "==========================================" -ForegroundColor Red
+}
 
 # Пауза, чтобы увидеть результат
 Read-Host "`nНажмите Enter для выхода"

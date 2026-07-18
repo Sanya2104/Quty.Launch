@@ -15,6 +15,16 @@
     <!-- Theme settings -->
     <string name="settings_theme_title">Выберите тему оформления:</string>
 
+    <!-- Установка темы из файла -->
+    <string name="install_theme_from_file">Установить тему из файла</string>
+    <string name="select_theme_title">Выберите файл темы</string>
+    <string name="invalid_theme">Выбранный файл не является темой Quty.Launch</string>
+    <string name="theme_install_success" formatted="false">Тема "%s" успешно установлена!</string>
+    <string name="theme_install_error">Ошибка установки темы</string>
+    <string name="theme_install_confirm">Установить тему</string>
+    <string name="theme_install_confirm_message" formatted="false">Вы уверены, что хотите установить тему "%s" версии %s?</string>
+    <string name="theme_already_exists" formatted="false">Тема "%s" уже существует. Перезаписать?</string>
+
     <!-- Display settings -->
     <string name="settings_orientation_title">Ориентация экрана</string>
     <string name="settings_additional_title">Дополнительные настройки</string>
@@ -37,10 +47,10 @@
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
-    <string name="update_available">Доступно обновление %s</string>
+    <string name="update_available" formatted="false">Доступно обновление %s</string>
     <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
-    <string name="server_error">Ошибка сервера: %d</string>
+    <string name="server_error" formatted="false">Ошибка сервера: %d</string>
     <string name="copyright">Quty.Launch © 2026</string>
 
     <!-- Локальная установка -->
@@ -48,9 +58,9 @@
     <string name="select_apk_title">Выберите APK файл</string>
     <string name="invalid_apk">Выбранный файл не является APK</string>
     <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
-    <string name="apk_validated_success">APK проверен. Версия: %s</string>
+    <string name="apk_validated_success" formatted="false">APK проверен. Версия: %s</string>
     <string name="install_local_apk">Установить локальный APK</string>
-    <string name="install_local_message">Вы уверены, что хотите установить APK версии %s?</string>
+    <string name="install_local_message" formatted="false">Вы уверены, что хотите установить APK версии %s?</string>
 
     <!-- Установка из файла -->
     <string name="install_option_title">Выберите способ установки</string>
@@ -68,7 +78,7 @@
 
     <!-- Сообщения о завершении загрузки -->
     <string name="download_complete_title">Загрузка завершена</string>
-    <string name="download_complete">APK сохранён по пути:\n%s</string>
+    <string name="download_complete" formatted="false">APK сохранён по пути:\n%s</string>
     <string name="open_folder">📂 Открыть папку</string>
     <string name="close">Закрыть</string>
 
@@ -82,7 +92,7 @@
     <!-- Download dialog -->
     <string name="downloading_title">Скачивание обновления</string>
     <string name="downloading_prepare">Подготовка…</string>
-    <string name="downloading_progress">Скачивание: %d%%</string>
+    <string name="downloading_progress" formatted="false">Скачивание: %d%%</string>
     <string name="download_error">Ошибка скачивания</string>
 
     <!-- Install dialog -->
@@ -91,9 +101,9 @@
     <string name="install_action">Установить</string>
 
     <!-- Version info -->
-    <string name="version_format">Версия: %s</string>
-    <string name="version_code_format">Код версии: %s</string>
-    <string name="channel_format">Канал: %s</string>
+    <string name="version_format" formatted="false">Версия: %s</string>
+    <string name="version_code_format" formatted="false">Код версии: %s</string>
+    <string name="channel_format" formatted="false">Канал: %s</string>
     <string name="version_unknown">Неизвестный</string>
 
     <!-- Update dialog version info -->
@@ -102,7 +112,7 @@
     <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s (код: %s, канал: %s)</string>
 
     <!-- Messages -->
-    <string name="theme_applied">Тема \'%s\' применена</string>
+    <string name="theme_applied" formatted="false">Тема %s применена</string>
     <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
     <!-- Authors -->

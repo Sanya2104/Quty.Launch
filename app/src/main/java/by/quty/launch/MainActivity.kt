@@ -9,6 +9,7 @@ import by.quty.launch.core.Core
 import by.quty.launch.core.ThemeManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
+import java.io.File
 
 /**
  * Главная активность лаунчера
@@ -34,7 +35,10 @@ class MainActivity : BaseActivity() {
         webView = LauncherWebView(this)
         themeManager = ThemeManager(this, configManager)
         webView.addJavascriptInterface(JsBridge(core), "Android")
+
+        // Загружаем тему
         loadTheme()
+
         setContentView(webView)
 
         // Включаем иммерсивный режим ПОСЛЕ того, как View создан
@@ -52,7 +56,15 @@ class MainActivity : BaseActivity() {
         val themeToActivate = themeManager.getThemeToActivate()
         themeManager.setActiveTheme(themeToActivate)
 
-        // Загружаем тему через новый единый метод
+        // Для кастомных тем проверяем, распакована ли она
+        if (!themeToActivate.isAsset) {
+            val extractDir = File(filesDir, "themes/active/${themeToActivate.name}")
+            if (!extractDir.exists() || !File(extractDir, "index.html").exists()) {
+                // Если не распакована — распаковываем
+                themeManager.setActiveTheme(themeToActivate)
+            }
+        }
+
         webView.loadTheme(
             themeName = themeToActivate.name,
             isAsset = themeToActivate.isAsset

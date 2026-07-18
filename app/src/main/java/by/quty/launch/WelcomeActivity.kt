@@ -14,15 +14,17 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import by.quty.launch.core.PermissionManager
 
 class WelcomeActivity : BaseActivity() {
 
     private val permissionRequestCode = 100
+    private val storageRequestCode = 101
 
     // UI элементы
     private lateinit var progressBar: ProgressBar
@@ -38,6 +40,14 @@ class WelcomeActivity : BaseActivity() {
 
     // Флаг, что мы уже запрашивали разрешения
     private var isRequestingPermissions = false
+
+    // Регистрируем ActivityResult для запроса доступа к хранилищу (замена startActivityForResult)
+    private val storagePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        // Обновляем UI после возврата из настроек
+        updatePermissionsUI()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -391,6 +401,46 @@ class WelcomeActivity : BaseActivity() {
         } catch (_: Exception) {
             val intent = Intent(Settings.ACTION_SETTINGS)
             startActivity(intent)
+        }
+    }
+
+    /**
+     * Проверяет, есть ли доступ к хранилищу
+     * Вызывается из ThemeSettingsFragment
+     */
+    @Suppress("unused")
+    fun hasStoragePermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            android.os.Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    /**
+     * Запрашивает доступ к хранилищу
+     * Вызывается из ThemeSettingsFragment
+     */
+    @Suppress("unused")
+    fun requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.data = "package:$packageName".toUri()
+                storagePermissionLauncher.launch(intent)
+            } catch (_: Exception) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                storagePermissionLauncher.launch(intent)
+            }
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                storageRequestCode
+            )
         }
     }
 

@@ -9,7 +9,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Theme selection colors -->
-    <color name="theme_active_background">#2a2a5a</color>
+    <color name="theme_active_background">#009688</color>
 
     <!-- TabLayout colors -->
     <color name="tab_indicator">#009688</color>
