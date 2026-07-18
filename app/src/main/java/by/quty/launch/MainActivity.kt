@@ -76,9 +76,6 @@ class MainActivity : BaseActivity() {
 
         // Обрабатываем только изменение темы
         if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
-            // Получаем имя выбранной темы из Intent
-            val selectedTheme = data?.getStringExtra(SettingsActivity.EXTRA_SELECTED_THEME)
-
             // Перезагружаем тему с задержкой, чтобы избежать мерцания
             Handler(Looper.getMainLooper()).postDelayed({
                 loadTheme()

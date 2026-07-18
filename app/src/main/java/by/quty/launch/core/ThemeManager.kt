@@ -28,10 +28,6 @@ data class Theme(
     val author: String? = null,             // автор темы из manifest.json
     val previewBase64: String? = null,       // превью в base64 для отображения
     val orientation: String? = null          // ориентация из manifest.json (portrait/landscape/sensor/user)
-    val version: String? = null,
-    val author: String? = null,
-    val previewBase64: String? = null,
-    val orientation: String? = null
 )
 
 /**
@@ -44,8 +40,6 @@ data class ThemeManifest(
     val version: String,
     val preview: String? = null,              // путь к превью внутри темы
     val orientation: String? = null            // ориентация темы (portrait/landscape/sensor/user)
-    val preview: String? = null,
-    val orientation: String? = null
 )
 
 class ThemeManager(
@@ -343,13 +337,5 @@ class ThemeManager(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    /**
-     * Проверяет, распакована ли тема
-     */
-    fun isThemeExtracted(themeName: String): Boolean {
-        val themeDir = File(activeThemeDir, themeName)
-        return themeDir.exists() && File(themeDir, "index.html").exists()
     }
 }

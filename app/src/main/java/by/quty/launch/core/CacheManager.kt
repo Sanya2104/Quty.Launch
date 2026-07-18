@@ -122,13 +122,4 @@ object CacheManager {
         return System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
     }
 
-    /**
-     * Очистить весь кэш (память и диск)
-     * Полезно при выходе из системы или принудительной очистке
-     * @param context контекст приложения
-     */
-    fun clearCache(context: Context) {
-        memoryCache = null
-        File(context.cacheDir, CACHE_FILE_NAME).delete()
-    }
 }

@@ -4,6 +4,7 @@ package by.quty.launch.core.webview
 import android.webkit.JavascriptInterface
 import kotlinx.coroutines.*
 import by.quty.launch.core.Core
+import kotlin.time.Duration.Companion.seconds
 
 class JsBridge(
     private val core: Core
@@ -13,7 +14,7 @@ class JsBridge(
     fun call(method: String, params: String?): String {
         return runBlocking(Dispatchers.IO) {
             try {
-                withTimeout(10_000) {
+                withTimeout(10.seconds) {
                     core.execute(method, params)
                 }
             } catch (e: Exception) {

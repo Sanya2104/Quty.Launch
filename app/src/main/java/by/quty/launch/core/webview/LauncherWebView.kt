@@ -46,6 +46,7 @@ class LauncherWebView(context: Context) : WebView(context) {
             .build()
 
         webViewClient = object : WebViewClient() {
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest
@@ -108,6 +109,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                 }
             }
 
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView?,
                 errorCode: Int,
