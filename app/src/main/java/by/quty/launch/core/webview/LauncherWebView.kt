@@ -63,23 +63,33 @@ class LauncherWebView(context: Context) : WebView(context) {
             }
 
             private fun handleQutyScheme(url: String): WebResourceResponse? {
-                return try {
-                    // Формат: quty://themes/active/index.html
+                try {
                     val path = url.replace("quty://", "")
 
-                    // Ищем файл в активной теме
-                    val file = File(activeThemeDir, path)
+                    // Ищем папку темы (первая подпапка в active/)
+                    val themeDirs = activeThemeDir.listFiles { it.isDirectory }
 
-                    // Если файл не найден по прямому пути, пробуем найти в папке с именем темы
+                    if (themeDirs.isNullOrEmpty()) {
+                        return null
+                    }
+
+                    val themeDir = themeDirs[0]
+
+                    // Пытаемся найти файл в папке темы
+                    var file = File(themeDir, path)
+
+                    // Если файл не найден и путь начинается с themes/active/,
+                    // пробуем убрать этот префикс
+                    if (!file.exists() && path.startsWith("themes/active/")) {
+                        val relativePath = path.replace("themes/active/", "")
+                        file = File(themeDir, relativePath)
+                    }
+
+                    // Если всё ещё не найден, пробуем найти файл в подпапках темы
                     if (!file.exists()) {
-                        val subDirs = activeThemeDir.listFiles { it.isDirectory }
-                        subDirs?.forEach { dir ->
-                            val candidateFile = File(dir, path)
-                            if (candidateFile.exists()) {
-                                val mimeType = URLConnection.guessContentTypeFromName(candidateFile.name)
-                                    ?: "text/plain"
-                                return WebResourceResponse(mimeType, "UTF-8", FileInputStream(candidateFile))
-                            }
+                        val foundFile = findFileRecursively(themeDir, File(path).name)
+                        if (foundFile != null) {
+                            file = foundFile
                         }
                     }
 
@@ -94,19 +104,45 @@ class LauncherWebView(context: Context) : WebView(context) {
                         val assetPath = path.replace("themes/", "")
                         try {
                             val inputStream = context.assets.open(assetPath)
-                            val mimeType = URLConnection.guessContentTypeFromName(file.name)
-                                ?: "text/plain"
+                            val mimeType = URLConnection.guessContentTypeFromName(File(assetPath).name)
+                                ?: "text/html"
                             return WebResourceResponse(mimeType, "UTF-8", inputStream)
                         } catch (_: Exception) {
                             // Файла нет в assets
                         }
                     }
 
-                    null // 404 Not Found
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    null
+                    return null
+                } catch (_: Exception) {
+                    return null
                 }
+            }
+
+            private fun findFileRecursively(dir: File, fileName: String): File? {
+                val files = dir.listFiles()
+                files?.forEach { file ->
+                    if (file.isFile && file.name == fileName) {
+                        return file
+                    }
+                    if (file.isDirectory) {
+                        val found = findFileRecursively(file, fileName)
+                        if (found != null) {
+                            return found
+                        }
+                    }
+                }
+                return null
+            }
+
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                val url = request?.url.toString()
+                if (url.startsWith("quty://")) {
+                    return false
+                }
+                return super.shouldOverrideUrlLoading(view, request)
             }
 
             @Suppress("OVERRIDE_DEPRECATION")
@@ -117,7 +153,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                 failingUrl: String?
             ) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
-                android.util.Log.e("LauncherWebView", "Error: $failingUrl - $description")
+                android.util.Log.e("LauncherWebView", "Error loading: $failingUrl - $description")
             }
         }
     }

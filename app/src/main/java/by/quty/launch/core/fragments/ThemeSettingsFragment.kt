@@ -263,9 +263,11 @@ class ThemeSettingsFragment : Fragment() {
             selectThemeLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(requireContext(),
+            Toast.makeText(
+                requireContext(),
                 getString(R.string.error_open_file_manager),
-                Toast.LENGTH_SHORT).show()
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -275,19 +277,22 @@ class ThemeSettingsFragment : Fragment() {
     private fun installThemeFromUri(uri: Uri) {
         try {
             val fileName = getFileNameFromUri(uri)
-            if (fileName == null ||
-                !(fileName.endsWith(".qutytheme") || fileName.endsWith(".qt"))) {
-                Toast.makeText(requireContext(),
+            if (fileName == null || !fileName.endsWith(ThemeManager.THEME_EXTENSION_WITH_DOT)) {
+                Toast.makeText(
+                    requireContext(),
                     getString(R.string.invalid_theme),
-                    Toast.LENGTH_LONG).show()
+                    Toast.LENGTH_LONG
+                ).show()
                 return
             }
 
             val themeInfo = validateTheme(uri)
             if (themeInfo == null) {
-                Toast.makeText(requireContext(),
+                Toast.makeText(
+                    requireContext(),
                     getString(R.string.invalid_theme),
-                    Toast.LENGTH_LONG).show()
+                    Toast.LENGTH_LONG
+                ).show()
                 return
             }
 
@@ -295,9 +300,11 @@ class ThemeSettingsFragment : Fragment() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(requireContext(),
+            Toast.makeText(
+                requireContext(),
                 getString(R.string.theme_install_error),
-                Toast.LENGTH_LONG).show()
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -388,7 +395,7 @@ class ThemeSettingsFragment : Fragment() {
                 themesDir.mkdirs()
             }
 
-            val fileName = "$themeName.qt"
+            val fileName = "$themeName${ThemeManager.THEME_EXTENSION_WITH_DOT}"
             val destFile = File(themesDir, fileName)
 
             if (destFile.exists()) {

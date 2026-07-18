@@ -36,8 +36,8 @@ data class Theme(
 @Serializable
 data class ThemeManifest(
     val name: String,
-    val author: String,
-    val version: String,
+    val author: String = "",
+    val version: String = "1.0.0",
     val preview: String? = null,              // путь к превью внутри темы
     val orientation: String? = null            // ориентация темы (portrait/landscape/sensor/user)
 )
@@ -46,6 +46,13 @@ class ThemeManager(
     private val context: Context,
     private val configManager: ConfigManager
 ) {
+
+    companion object {
+        /** Расширение файла темы (без точки) */
+        const val THEME_EXTENSION = "qutytheme"
+        /** Расширение файла темы (с точкой) */
+        const val THEME_EXTENSION_WITH_DOT = ".qutytheme"
+    }
 
     private val themesDir = File(context.filesDir, "themes")
     private val activeThemeDir = File(themesDir, "active")
@@ -56,7 +63,7 @@ class ThemeManager(
     private val json = Json { ignoreUnknownKeys = true }
 
     // Поддерживаемые расширения тем
-    private val supportedExtensions = listOf("qutytheme", "qt")
+    private val supportedExtensions = listOf(THEME_EXTENSION)
 
     init {
         if (!themesDir.exists()) themesDir.mkdirs()
@@ -132,7 +139,9 @@ class ThemeManager(
         if (customThemesDir.exists()) {
             // Ищем файлы с поддерживаемыми расширениями
             customThemesDir.listFiles { file ->
-                supportedExtensions.any { ext -> file.extension.equals(ext, ignoreCase = true) }
+                supportedExtensions.any { ext ->
+                    file.extension.equals(ext, ignoreCase = true)
+                }
             }?.forEach { file ->
                 val manifest = readManifestFromZip(file)
                 val previewBase64 = loadPreviewFromZip(file, manifest?.preview)

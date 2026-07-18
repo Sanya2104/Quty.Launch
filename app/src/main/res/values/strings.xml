@@ -17,8 +17,8 @@
 
     <!-- Установка темы из файла -->
     <string name="install_theme_from_file">Установить тему из файла</string>
-    <string name="select_theme_title">Выберите файл темы</string>
-    <string name="invalid_theme">Выбранный файл не является темой Quty.Launch</string>
+    <string name="select_theme_title">Выберите файл темы (.qutytheme)</string>
+    <string name="invalid_theme">Выбранный файл не является темой Quty.Launch (требуется .qutytheme)</string>
     <string name="theme_install_success" formatted="false">Тема "%s" успешно установлена!</string>
     <string name="theme_install_error">Ошибка установки темы</string>
     <string name="theme_install_confirm">Установить тему</string>
