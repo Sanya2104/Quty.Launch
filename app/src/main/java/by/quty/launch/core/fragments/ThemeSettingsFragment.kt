@@ -144,42 +144,43 @@ class ThemeSettingsFragment : Fragment() {
 
         themesAdapter = ThemesAdapter(themes)
         themesList.adapter = themesAdapter
+    }
 
-        themesList.setOnItemClickListener { _, _, position, _ ->
-            // Предотвращаем множественные нажатия
-            if (isApplyingTheme) return@setOnItemClickListener
+    /**
+     * Внутренний метод применения темы (используется и при клике, и из меню)
+     */
+    private fun applyThemeInternal(theme: Theme) {
+        if (isApplyingTheme) return
 
-            val selectedTheme = themes[position]
-            isApplyingTheme = true
+        isApplyingTheme = true
 
-            // Применяем тему
-            themeManager.setActiveTheme(selectedTheme)
+        // Применяем тему
+        themeManager.setActiveTheme(theme)
 
-            // Обновляем адаптер с задержкой, чтобы избежать мерцания
-            Handler(Looper.getMainLooper()).postDelayed({
-                themesAdapter.notifyDataSetChanged()
-                isApplyingTheme = false
-            }, DELAY_BEFORE_UI_UPDATE)
+        // Обновляем адаптер с задержкой, чтобы избежать мерцания
+        Handler(Looper.getMainLooper()).postDelayed({
+            themesAdapter.notifyDataSetChanged()
+            isApplyingTheme = false
+        }, DELAY_BEFORE_UI_UPDATE)
 
-            // Уведомляем Activity об изменении темы
-            settingsEventListener?.onThemeChanged(selectedTheme.name)
-            settingsEventListener?.onSettingChanged()
+        // Уведомляем Activity об изменении темы
+        settingsEventListener?.onThemeChanged(theme.name)
+        settingsEventListener?.onSettingChanged()
 
-            // Обновляем состояние во вкладке "Экран" с задержкой
-            Handler(Looper.getMainLooper()).postDelayed({
-                (activity as? SettingsActivity)?.let { settingsActivity ->
-                    settingsActivity.displayFragment?.updateOrientationLockState()
-                }
-            }, DELAY_BEFORE_UI_UPDATE)
+        // Обновляем состояние во вкладке "Экран" с задержкой
+        Handler(Looper.getMainLooper()).postDelayed({
+            (activity as? SettingsActivity)?.let { settingsActivity ->
+                settingsActivity.displayFragment?.updateOrientationLockState()
+            }
+        }, DELAY_BEFORE_UI_UPDATE)
 
-            val message = getString(R.string.theme_applied, selectedTheme.displayName ?: selectedTheme.name)
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        val message = getString(R.string.theme_applied, theme.displayName ?: theme.name)
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
-            // Возвращаем результат в MainActivity
-            val resultIntent = Intent()
-            resultIntent.putExtra(EXTRA_THEME_NAME, selectedTheme.name)
-            requireActivity().setResult(SettingsActivity.RESULT_THEME_CHANGED, resultIntent)
-        }
+        // Возвращаем результат в MainActivity
+        val resultIntent = Intent()
+        resultIntent.putExtra(EXTRA_THEME_NAME, theme.name)
+        requireActivity().setResult(SettingsActivity.RESULT_THEME_CHANGED, resultIntent)
     }
 
     private fun setupInstallButton(view: View) {
@@ -442,15 +443,17 @@ class ThemeSettingsFragment : Fragment() {
             val nameView = view.findViewById<TextView>(R.id.theme_name)
             val versionView = view.findViewById<TextView>(R.id.theme_version)
             val authorView = view.findViewById<TextView>(R.id.theme_author)
+            val menuButton = view.findViewById<ImageButton>(R.id.theme_menu_button)
 
             // Устанавливаем название
             nameView.text = theme.displayName ?: theme.name
 
-            // Устанавливаем версию
-            versionView.text = if (!theme.version.isNullOrEmpty()) {
-                "v.${theme.version}"
+            // Устанавливаем версию (показываем только если есть)
+            if (!theme.version.isNullOrEmpty()) {
+                versionView.text = getString(R.string.theme_version_with_label, theme.version)
+                versionView.visibility = View.VISIBLE
             } else {
-                ""
+                versionView.visibility = View.GONE
             }
 
             // Устанавливаем автора
@@ -478,13 +481,206 @@ class ThemeSettingsFragment : Fragment() {
             val activeTheme = themeManager.getActiveTheme()
 
             // Подсвечиваем активную тему
-            if (theme.name == activeTheme?.name) {
+            val isActive = theme.name == activeTheme?.name
+            if (isActive) {
                 view.setBackgroundColor(resources.getColor(R.color.theme_active_background, null))
             } else {
                 view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
 
+            // Устанавливаем клик на всю строку (кроме кнопки меню)
+            view.setOnClickListener {
+                // Предотвращаем множественные нажатия
+                if (isApplyingTheme) return@setOnClickListener
+
+                // Проверяем, не активна ли уже тема
+                if (theme.name == activeTheme?.name) {
+                    Toast.makeText(requireContext(), "Тема уже активна", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                applyThemeInternal(theme)
+            }
+
+            // Настройка кнопки меню (передаём флаг isActive)
+            setupThemeMenuButton(menuButton, theme, isActive)
+
             return view
+        }
+
+        /**
+         * Настройка кнопки меню для темы
+         * @param isActive true если тема уже активна
+         */
+        private fun setupThemeMenuButton(menuButton: ImageButton, theme: Theme, isActive: Boolean) {
+            menuButton.setOnClickListener { view ->
+                // Останавливаем распространение события, чтобы не сработал клик по строке
+                view.parent.requestDisallowInterceptTouchEvent(true)
+                showThemeMenu(view, theme, isActive)
+            }
+        }
+
+        /**
+         * Показывает выпадающее меню для управления темой
+         * @param isActive true если тема уже активна
+         */
+        private fun showThemeMenu(anchor: View, theme: Theme, isActive: Boolean) {
+            val popupMenu = PopupMenu(requireContext(), anchor)
+
+            // Создаём меню
+            val menu = popupMenu.menu
+
+            // Пункт "Применить" - показываем только если тема НЕ активна
+            if (!isActive) {
+                menu.add(0, 1, 0, getString(R.string.theme_menu_apply))
+            }
+
+            // Пункт "Информация" - всегда доступен
+            menu.add(0, 2, 0, getString(R.string.theme_menu_info))
+
+            // Для кастомных тем добавляем "Удалить" и "Поделиться"
+            if (theme.isCustom) {
+                menu.add(0, 3, 0, getString(R.string.theme_menu_delete))
+                menu.add(0, 4, 0, getString(R.string.theme_menu_share))
+            }
+
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    1 -> applyThemeInternal(theme)
+                    2 -> showThemeInfo(theme)
+                    3 -> deleteTheme(theme)
+                    4 -> shareTheme(theme)
+                }
+                true // Всегда возвращаем true, чтобы меню закрылось
+            }
+
+            popupMenu.show()
+        }
+
+        /**
+         * Показать информацию о теме
+         */
+        private fun showThemeInfo(theme: Theme): Boolean {
+            val type = if (theme.isCustom) {
+                getString(R.string.theme_type_custom)
+            } else {
+                getString(R.string.theme_type_builtin)
+            }
+
+            val version = theme.version ?: "—"
+            val author = theme.author ?: if (theme.isCustom) {
+                getString(R.string.author_custom)
+            } else {
+                getString(R.string.author_default)
+            }
+
+            val message = getString(
+                R.string.theme_info_message,
+                theme.displayName ?: theme.name,
+                version,
+                author,
+                type
+            )
+
+            AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.theme_info_title, theme.displayName ?: theme.name))
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+
+            return true
+        }
+
+        /**
+         * Удалить кастомную тему
+         */
+        private fun deleteTheme(theme: Theme): Boolean {
+            // Проверяем, что тему можно удалить
+            if (!theme.isCustom) {
+                Toast.makeText(requireContext(), getString(R.string.theme_cant_delete_default), Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверяем, не активна ли тема
+            val activeTheme = themeManager.getActiveTheme()
+            if (theme.name == activeTheme?.name) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.theme_cant_delete_active),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return false
+            }
+
+            // Диалог подтверждения
+            AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.theme_delete_confirm))
+                .setMessage(getString(R.string.theme_delete_message, theme.displayName ?: theme.name))
+                .setPositiveButton(getString(R.string.delete)) { _, _ ->
+                    performDeleteTheme(theme)
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+
+            return true
+        }
+
+        /**
+         * Выполнить удаление темы
+         */
+        private fun performDeleteTheme(theme: Theme) {
+            try {
+                val themeFile = File(theme.sourcePath)
+                if (themeFile.exists()) {
+                    themeFile.delete()
+                }
+
+                // Обновляем список тем
+                refreshThemes()
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.theme_delete_success, theme.displayName ?: theme.name),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), getString(R.string.theme_delete_error), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        /**
+         * Поделиться темой (отправить файл)
+         */
+        private fun shareTheme(theme: Theme): Boolean {
+            try {
+                val themeFile = File(theme.sourcePath)
+                if (!themeFile.exists()) {
+                    Toast.makeText(requireContext(), getString(R.string.theme_file_not_found), Toast.LENGTH_SHORT).show()
+                    return false
+                }
+
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    themeFile
+                )
+
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/zip"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.theme_share_title)))
+                return true
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), getString(R.string.theme_share_error), Toast.LENGTH_SHORT).show()
+                return false
+            }
         }
     }
 
@@ -504,7 +700,7 @@ class ThemeSettingsFragment : Fragment() {
     data class ThemeManifest(
         val name: String,
         val author: String = "",
-        val version: String = "1.0.0",
+        val version: String = "0.0.1",
         val preview: String? = null,
         val orientation: String? = null
     )

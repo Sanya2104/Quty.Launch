@@ -25,6 +25,29 @@
     <string name="theme_install_confirm_message" formatted="false">Вы уверены, что хотите установить тему "%s" версии %s?</string>
     <string name="theme_already_exists" formatted="false">Тема "%s" уже существует. Перезаписать?</string>
 
+    <!-- Меню темы -->
+    <string name="delete">Удалить</string>
+    <string name="theme_menu_description">Меню темы</string>
+    <string name="theme_menu_apply">Применить</string>
+    <string name="theme_menu_delete">Удалить</string>
+    <string name="theme_menu_share">Поделиться</string>
+    <string name="theme_menu_info">Информация</string>
+    <string name="theme_delete_confirm">Удалить тему?</string>
+    <string name="theme_delete_message" formatted="false">Вы уверены, что хотите удалить тему "%s"?</string>
+    <string name="theme_delete_success" formatted="false">Тема "%s" удалена</string>
+    <string name="theme_delete_error">Ошибка при удалении темы</string>
+    <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
+    <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
+    <string name="theme_info_message" formatted="false">Название: %s\nВерсия: %s\nАвтор: %s\nТип: %s</string>
+    <string name="theme_type_builtin">Встроенная</string>
+    <string name="theme_type_custom">Пользовательская</string>
+
+    <string name="theme_version_with_label" formatted="false">Версия: %s</string>
+    <string name="theme_cant_delete_active">Нельзя удалить активную тему. Сначала примените другую.</string>
+    <string name="theme_file_not_found">Файл темы не найден</string>
+    <string name="theme_share_title">Поделиться темой</string>
+    <string name="theme_share_error">Ошибка при отправке файла</string>
+
     <!-- Display settings -->
     <string name="settings_orientation_title">Ориентация экрана</string>
     <string name="settings_additional_title">Дополнительные настройки</string>
