@@ -24,10 +24,11 @@ data class Theme(
     val isAsset: Boolean = false,
     val displayName: String? = null,
     val isCustom: Boolean = false,
-    val version: String? = null,           // версия темы из manifest.json
+    val version: String? = null,            // версия темы из manifest.json
     val author: String? = null,             // автор темы из manifest.json
-    val previewBase64: String? = null,       // превью в base64 для отображения
-    val orientation: String? = null          // ориентация из manifest.json (portrait/landscape/sensor/user)
+    val previewBase64: String? = null,      // превью в base64 для отображения
+    val orientation: String? = null,        // ориентация из manifest.json (portrait/landscape/sensor/user)
+    val repoUrl: String? = null             // ссылка на репозиторий из manifest.json
 )
 
 /**
@@ -37,9 +38,10 @@ data class Theme(
 data class ThemeManifest(
     val name: String,
     val author: String = "",
-    val version: String = "1.0.0",
-    val preview: String? = null,              // путь к превью внутри темы
-    val orientation: String? = null            // ориентация темы (portrait/landscape/sensor/user)
+    val version: String = "0.0.1",
+    val preview: String? = null,            // путь к превью внутри темы
+    val orientation: String? = null,        // ориентация темы (portrait/landscape/sensor/user)
+    val repoUrl: String? = null             // ссылка на репозиторий
 )
 
 class ThemeManager(
@@ -157,7 +159,8 @@ class ThemeManager(
                         version = manifest?.version,
                         author = manifest?.author,
                         previewBase64 = previewBase64,
-                        orientation = manifest?.orientation // Добавляем ориентацию из манифеста
+                        orientation = manifest?.orientation,
+                        repoUrl = manifest?.repoUrl // <-- ДОБАВЛЕНО
                     )
                 )
             }
@@ -203,7 +206,8 @@ class ThemeManager(
                             version = manifest?.version,
                             author = manifest?.author,
                             previewBase64 = previewBase64,
-                            orientation = manifest?.orientation // Добавляем ориентацию из манифеста
+                            orientation = manifest?.orientation,
+                            repoUrl = manifest?.repoUrl // <-- ДОБАВЛЕНО
                         )
                     )
                 } catch (_: Exception) {
@@ -283,6 +287,19 @@ class ThemeManager(
             isAsset = true,
             displayName = "Стандартная"
         )
+    }
+
+    /**
+     * Принудительно перезагружает активную тему из файла
+     * Используется после обновления темы
+     */
+    fun reloadActiveTheme() {
+        val themes = getAvailableThemes()
+        val activeThemeId = configManager.getActiveTheme()
+        activeTheme = themes.find { it.name == activeThemeId }
+
+        // Сохраняем принудительную ориентацию в SharedPreferences, если она есть
+        saveForcedOrientation()
     }
 
     fun getActiveTheme(): Theme? {

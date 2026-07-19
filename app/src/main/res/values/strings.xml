@@ -41,12 +41,33 @@
     <string name="theme_info_message" formatted="false">Название: %s\nВерсия: %s\nАвтор: %s\nТип: %s</string>
     <string name="theme_type_builtin">Встроенная</string>
     <string name="theme_type_custom">Пользовательская</string>
-
     <string name="theme_version_with_label" formatted="false">Версия: %s</string>
     <string name="theme_cant_delete_active">Нельзя удалить активную тему. Сначала примените другую.</string>
     <string name="theme_file_not_found">Файл темы не найден</string>
     <string name="theme_share_title">Поделиться темой</string>
     <string name="theme_share_error">Ошибка при отправке файла</string>
+
+    <!-- Theme update -->
+    <string name="theme_menu_check_updates">Проверить обновления</string>
+    <string name="theme_update_available">Доступно обновление</string>
+    <string name="theme_update_not_found">Обновлений не найдено</string>
+    <string name="theme_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
+    <string name="theme_update_downloading">Скачивание обновления…</string>
+    <string name="theme_update_success">Тема обновлена до версии %s</string>
+    <string name="theme_update_confirm_title">Обновление темы</string>
+    <string name="theme_update_confirm_message" formatted="false">Доступна новая версия темы!\n\nТекущая: %s\nНовая: %s\n\nЧто нового:\n%s</string>
+
+    <!-- Theme update strings -->
+    <string name="theme_update_checking">Проверка обновлений</string>
+    <string name="theme_update_checking_message">Проверка…</string>
+    <string name="theme_update_available_message">Доступно обновление темы!</string>
+    <string name="theme_update_current_version" formatted="false">Текущая версия: %s</string>
+    <string name="theme_update_new_version" formatted="false">Новая версия: %s</string>
+    <string name="theme_update_changelog" formatted="false">Что нового:\n%s</string>
+    <string name="theme_update_size" formatted="false">Размер: %s</string>
+    <string name="theme_update_install">Обновить</string>
+    <string name="theme_update_preparing">Подготовка…</string>
+    <string name="theme_update_progress" formatted="false">Скачивание: %d%%</string>
 
     <!-- Display settings -->
     <string name="settings_orientation_title">Ориентация экрана</string>

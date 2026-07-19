@@ -20,11 +20,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.Theme
 import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.ThemeRepoInfo
+import by.quty.launch.core.ThemeUpdateManager
 import by.quty.launch.core.interfaces.SettingsEventListener
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -527,21 +531,25 @@ class ThemeSettingsFragment : Fragment() {
         private fun showThemeMenu(anchor: View, theme: Theme, isActive: Boolean) {
             val popupMenu = PopupMenu(requireContext(), anchor)
 
-            // Создаём меню
             val menu = popupMenu.menu
 
-            // Пункт "Применить" - показываем только если тема НЕ активна
+            // Пункт "Применить" - только если не активна
             if (!isActive) {
                 menu.add(0, 1, 0, getString(R.string.theme_menu_apply))
             }
 
-            // Пункт "Информация" - всегда доступен
+            // Пункт "Информация"
             menu.add(0, 2, 0, getString(R.string.theme_menu_info))
 
             // Для кастомных тем добавляем "Удалить" и "Поделиться"
             if (theme.isCustom) {
                 menu.add(0, 3, 0, getString(R.string.theme_menu_delete))
                 menu.add(0, 4, 0, getString(R.string.theme_menu_share))
+
+                // Если есть repoUrl - добавляем "Проверить обновления"
+                if (!theme.repoUrl.isNullOrEmpty()) {
+                    menu.add(0, 5, 0, getString(R.string.theme_menu_check_updates))
+                }
             }
 
             popupMenu.setOnMenuItemClickListener { menuItem ->
@@ -550,11 +558,109 @@ class ThemeSettingsFragment : Fragment() {
                     2 -> showThemeInfo(theme)
                     3 -> deleteTheme(theme)
                     4 -> shareTheme(theme)
+                    5 -> checkThemeUpdates(theme)
                 }
-                true // Всегда возвращаем true, чтобы меню закрылось
+                true
             }
 
             popupMenu.show()
+        }
+
+        /**
+         * Проверка обновлений для темы
+         */
+        private fun checkThemeUpdates(theme: Theme) {
+            val updateManager = ThemeUpdateManager(requireContext())
+
+            // Показываем диалог с прогрессом
+            val progressDialog = AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.theme_update_checking))
+                .setMessage(getString(R.string.theme_update_checking_message))
+                .setCancelable(false)
+                .show()
+
+            lifecycleScope.launch {
+                val updateInfo = updateManager.checkForUpdate(theme)
+                progressDialog.dismiss()
+
+                if (updateInfo == null) {
+                    Toast.makeText(requireContext(), getString(R.string.theme_update_not_found), Toast.LENGTH_SHORT).show()
+                } else {
+                    showUpdateConfirmDialog(theme, updateInfo)
+                }
+            }
+        }
+
+        /**
+         * Диалог подтверждения обновления
+         */
+        private fun showUpdateConfirmDialog(theme: Theme, updateInfo: ThemeRepoInfo) {
+            val message = buildString {
+                append(getString(R.string.theme_update_available_message))
+                append("\n\n")
+                append(getString(R.string.theme_update_current_version, theme.version ?: "—"))
+                append("\n")
+                append(getString(R.string.theme_update_new_version, updateInfo.version))
+                if (updateInfo.changelog.isNotEmpty()) {
+                    append("\n\n")
+                    append(getString(R.string.theme_update_changelog, updateInfo.changelog))
+                }
+                if (updateInfo.fileSize.isNotEmpty()) {
+                    append("\n\n")
+                    append(getString(R.string.theme_update_size, updateInfo.fileSize))
+                }
+            }
+
+            AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.theme_update_confirm_title))
+                .setMessage(message)
+                .setPositiveButton(getString(R.string.theme_update_install)) { _, _ ->
+                    downloadThemeUpdate(updateInfo)
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+        }
+
+        /**
+         * Скачивание и установка обновления темы
+         */
+        private fun downloadThemeUpdate(updateInfo: ThemeRepoInfo) {
+            val updateManager = ThemeUpdateManager(requireContext())
+
+            val progressDialog = AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.theme_update_downloading))
+                .setMessage(getString(R.string.theme_update_preparing))
+                .setCancelable(false)
+                .show()
+
+            lifecycleScope.launch {
+                updateManager.downloadThemeUpdate(updateInfo, object : ThemeUpdateManager.DownloadListener {
+                    override fun onProgress(percent: Int) {
+                        progressDialog.setMessage(getString(R.string.theme_update_progress, percent))
+                    }
+
+                    override fun onSuccess() {
+                        progressDialog.dismiss()
+
+                        // Принудительно перезагружаем активную тему из файла
+                        themeManager.reloadActiveTheme()
+
+                        // Обновляем список тем
+                        refreshThemes()
+
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.theme_update_success, updateInfo.version),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    override fun onError(message: String) {
+                        progressDialog.dismiss()
+                        Toast.makeText(requireContext(), getString(R.string.theme_update_error, message), Toast.LENGTH_LONG).show()
+                    }
+                })
+            }
         }
 
         /**
@@ -702,6 +808,7 @@ class ThemeSettingsFragment : Fragment() {
         val author: String = "",
         val version: String = "0.0.1",
         val preview: String? = null,
-        val orientation: String? = null
+        val orientation: String? = null,
+        val repoUrl: String? = null
     )
 }
