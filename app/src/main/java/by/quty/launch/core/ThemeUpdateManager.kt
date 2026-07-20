@@ -45,8 +45,12 @@ class ThemeUpdateManager(private val context: Context) {
             connection.readTimeout = 5000
 
             if (connection.responseCode == 200) {
-                val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
-                val repoInfo = json.decodeFromString<ThemeRepoInfo>(jsonString)
+                 val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
+
+                // Убираем BOM символ, если он есть
+                val cleanJson = jsonString.trimStart('\uFEFF')
+
+                val repoInfo = json.decodeFromString<ThemeRepoInfo>(cleanJson) // ← ИСПОЛЬЗУЕМ cleanJson!
 
                 // Сравниваем версии
                 val currentVersion = theme.version ?: "0.0.0"
