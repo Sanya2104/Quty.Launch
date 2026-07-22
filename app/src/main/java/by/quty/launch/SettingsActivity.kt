@@ -112,6 +112,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 SettingsPagerAdapter.TAB_THEME -> tab.text = getString(R.string.tab_theme)
                 SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
                 SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
+                SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
             }
         }.attach()
 

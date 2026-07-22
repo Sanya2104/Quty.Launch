@@ -11,6 +11,7 @@
     <string name="tab_theme">Оформление</string>
     <string name="tab_display">Экран</string>
     <string name="tab_system">Система</string>
+    <string name="tab_developer">DevMode</string>
 
     <!-- Theme settings -->
     <string name="settings_theme_title">Выберите тему оформления:</string>
@@ -95,6 +96,15 @@
 
     <!-- System section -->
     <string name="system_info_title">Информация о системе</string>
+    <string name="version_label">Версия</string>
+    <string name="version_code_label">Код версии</string>
+    <string name="channel_label">Канал</string>
+    <string name="version_unknown">Неизвестный</string>
+
+    <!-- Пустая строка и неизвестный код для TextView -->
+    <string name="empty"> </string>
+    <string name="unknown_code">\?</string>
+
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
@@ -151,12 +161,6 @@
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
 
-    <!-- Version info -->
-    <string name="version_format" formatted="false">Версия: %s</string>
-    <string name="version_code_format" formatted="false">Код версии: %s</string>
-    <string name="channel_format" formatted="false">Канал: %s</string>
-    <string name="version_unknown">Неизвестный</string>
-
     <!-- Update dialog version info -->
     <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
     <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
@@ -183,6 +187,7 @@
 
     <!-- Welcome Activity -->
     <string name="_0">0%</string>
+    <string name="version_format" formatted="false">Версия: %s</string>
     <string name="welcome_title">Добро пожаловать в Quty.Launch!</string>
     <string name="welcome_subtitle">Для корректной работы приложения необходимо предоставить доступ к функциям устройства:</string>
 
@@ -214,5 +219,9 @@
     <!-- Статусы разрешений -->
     <string name="permission_granted">Разрешено</string>
     <string name="permission_denied">Не разрешено</string>
+
+    <!-- Режим разработчика -->
+    <string name="developer_mode_title">Режим разработчика</string>
+    <string name="developer_mode_subtitle">Здесь будут инструменты для разработчиков</string>
 
 </resources>

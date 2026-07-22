@@ -2,6 +2,7 @@
 package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -14,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
@@ -30,13 +32,21 @@ class SystemSettingsFragment : Fragment() {
     private lateinit var versionTextView: TextView
     private lateinit var versionCodeTextView: TextView
     private lateinit var channelTextView: TextView
+    private lateinit var channelContainer: View
+    private lateinit var channelDivider: View
     private lateinit var updateStatus: TextView
     private lateinit var installStatus: TextView
     private lateinit var checkUpdateButton: View
     private lateinit var installFromFileButton: View
     private lateinit var updateManager: UpdateManager
 
-    // Регистрируем ActivityResult для выбора файла
+    private var versionClickCount = 0
+    private var lastClickTime = 0L
+    private val clickTimeoutMs = 2000L
+    private val clicksToActivate = 5
+
+    private var progressToast: Toast? = null
+
     private val selectApkLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -66,6 +76,8 @@ class SystemSettingsFragment : Fragment() {
         versionTextView = view.findViewById(R.id.version_text)
         versionCodeTextView = view.findViewById(R.id.version_code_text)
         channelTextView = view.findViewById(R.id.channel_text)
+        channelContainer = view.findViewById(R.id.channel_container)
+        channelDivider = view.findViewById(R.id.channel_divider)
         updateStatus = view.findViewById(R.id.update_status)
         installStatus = view.findViewById(R.id.install_status)
         checkUpdateButton = view.findViewById(R.id.check_update_button)
@@ -95,21 +107,78 @@ class SystemSettingsFragment : Fragment() {
 
             val (versionName, suffix) = splitVersionName(fullVersionName)
 
-            versionTextView.text = getString(R.string.version_format, versionName)
-            versionCodeTextView.text = getString(R.string.version_code_format, versionCode.toString())
+            versionTextView.text = versionName
+            versionCodeTextView.text = versionCode.toString()
 
             if (suffix.isNotEmpty()) {
-                channelTextView.text = getString(R.string.channel_format, suffix)
-                channelTextView.visibility = View.VISIBLE
+                channelTextView.text = suffix
+                channelContainer.visibility = View.VISIBLE
+                channelDivider.visibility = View.VISIBLE
             } else {
-                channelTextView.visibility = View.GONE
+                channelContainer.visibility = View.GONE
+                channelDivider.visibility = View.GONE
             }
+
+            versionTextView.isClickable = true
+            versionTextView.isFocusable = true
+            versionTextView.setOnClickListener {
+                handleVersionClick()
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
-            versionTextView.text = getString(R.string.version_format, getString(R.string.version_unknown))
-            versionCodeTextView.text = getString(R.string.version_code_format, "?")
-            channelTextView.visibility = View.GONE
+            versionTextView.text = getString(R.string.version_unknown)
+            versionCodeTextView.text = "?"
+            channelContainer.visibility = View.GONE
+            channelDivider.visibility = View.GONE
         }
+    }
+
+    private fun handleVersionClick() {
+        val currentTime = System.currentTimeMillis()
+
+        if (currentTime - lastClickTime > clickTimeoutMs) {
+            versionClickCount = 0
+        }
+
+        lastClickTime = currentTime
+        versionClickCount++
+
+        val remaining = clicksToActivate - versionClickCount
+
+        if (versionClickCount >= clicksToActivate) {
+            progressToast?.cancel()
+            progressToast = null
+            versionClickCount = 0
+            toggleDeveloperMode()
+        } else {
+            showProgressToast(remaining)
+        }
+    }
+
+    private fun showProgressToast(remaining: Int) {
+        progressToast?.cancel()
+        progressToast = Toast.makeText(
+            requireContext(),
+            "Осталось нажатий: $remaining",
+            Toast.LENGTH_SHORT
+        )
+        progressToast?.show()
+    }
+
+    private fun toggleDeveloperMode() {
+        val prefs = requireContext().getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
+        val isCurrentlyEnabled = prefs.getBoolean("developer_mode", false)
+
+        if (isCurrentlyEnabled) {
+            prefs.edit { putBoolean("developer_mode", false) }
+            Toast.makeText(requireContext(), "Режим разработчика деактивирован", Toast.LENGTH_SHORT).show()
+        } else {
+            prefs.edit { putBoolean("developer_mode", true) }
+            Toast.makeText(requireContext(), "Режим разработчика активирован!", Toast.LENGTH_LONG).show()
+        }
+
+        requireActivity().recreate()
     }
 
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {
