@@ -40,7 +40,7 @@
     <string name="theme_delete_error">Ошибка при удалении темы</string>
     <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
     <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
-    <string name="theme_info_message" formatted="false">Название: %1$s\nВерсия: %2$s\nАвтор: %3$s\nТип: %4$s\nТребуется лаунчер: %5$s</string>
+    <string name="theme_info_message" formatted="false">Название: %1$s\n\nВерсия: %2$s\n\nАвтор: %3$s\n\nТип: %4$s\n\nТребуется лаунчер: %5$s</string>
     <string name="theme_type_builtin">Встроенная</string>
     <string name="theme_type_custom">Пользовательская</string>
     <string name="theme_version_with_label" formatted="false">Версия: %s</string>
