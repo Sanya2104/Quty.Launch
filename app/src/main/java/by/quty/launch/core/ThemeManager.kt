@@ -28,7 +28,8 @@ data class Theme(
     val author: String? = null,             // автор темы из manifest.json
     val previewBase64: String? = null,      // превью в base64 для отображения
     val orientation: String? = null,        // ориентация из manifest.json (portrait/landscape/sensor/user)
-    val repoUrl: String? = null             // ссылка на репозиторий из manifest.json
+    val repoUrl: String? = null,            // ссылка на репозиторий из manifest.json
+    val minLauncherVersion: String? = null  // минимальная версия лаунчера из manifest.json
 )
 
 /**
@@ -41,7 +42,8 @@ data class ThemeManifest(
     val version: String = "0.0.1",
     val preview: String? = null,            // путь к превью внутри темы
     val orientation: String? = null,        // ориентация темы (portrait/landscape/sensor/user)
-    val repoUrl: String? = null             // ссылка на репозиторий
+    val repoUrl: String? = null,            // ссылка на репозиторий
+    val minLauncherVersion: String? = null  // минимальная версия лаунчера
 )
 
 class ThemeManager(
@@ -160,7 +162,8 @@ class ThemeManager(
                         author = manifest?.author,
                         previewBase64 = previewBase64,
                         orientation = manifest?.orientation,
-                        repoUrl = manifest?.repoUrl // <-- ДОБАВЛЕНО
+                        repoUrl = manifest?.repoUrl,
+                        minLauncherVersion = manifest?.minLauncherVersion
                     )
                 )
             }
@@ -207,7 +210,8 @@ class ThemeManager(
                             author = manifest?.author,
                             previewBase64 = previewBase64,
                             orientation = manifest?.orientation,
-                            repoUrl = manifest?.repoUrl // <-- ДОБАВЛЕНО
+                            repoUrl = manifest?.repoUrl,
+                            minLauncherVersion = manifest?.minLauncherVersion
                         )
                     )
                 } catch (_: Exception) {

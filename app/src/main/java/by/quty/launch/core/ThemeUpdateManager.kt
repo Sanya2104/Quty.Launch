@@ -2,6 +2,8 @@
 package by.quty.launch.core
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -17,7 +19,8 @@ data class ThemeRepoInfo(
     val version: String,
     val downloadUrl: String,
     val changelog: String = "",
-    val fileSize: String = ""
+    val fileSize: String = "",
+    val minLauncherVersion: String? = null  // минимальная версия лаунчера из theme.json
 )
 
 class ThemeUpdateManager(private val context: Context) {
@@ -45,12 +48,17 @@ class ThemeUpdateManager(private val context: Context) {
             connection.readTimeout = 5000
 
             if (connection.responseCode == 200) {
-                 val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
+                val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
 
                 // Убираем BOM символ, если он есть
                 val cleanJson = jsonString.trimStart('\uFEFF')
 
-                val repoInfo = json.decodeFromString<ThemeRepoInfo>(cleanJson) // ← ИСПОЛЬЗУЕМ cleanJson!
+                val repoInfo = json.decodeFromString<ThemeRepoInfo>(cleanJson)
+
+                // Проверяем, поддерживает ли лаунчер эту тему
+                if (!isLauncherCompatible(repoInfo.minLauncherVersion)) {
+                    return@withContext null  // Лаунчер слишком старый для этой темы
+                }
 
                 // Сравниваем версии
                 val currentVersion = theme.version ?: "0.0.0"
@@ -68,24 +76,68 @@ class ThemeUpdateManager(private val context: Context) {
     }
 
     /**
+     * Проверяет, совместима ли тема с текущей версией лаунчера
+     * @param minVersion минимальная версия лаунчера, требуемая темой
+     * @return true если лаунчер совместим
+     */
+    private fun isLauncherCompatible(minVersion: String?): Boolean {
+        if (minVersion.isNullOrEmpty()) return true  // Если не указано — совместима
+
+        val currentLauncherVersion = getCurrentLauncherVersion()
+        if (currentLauncherVersion.isEmpty()) return true  // Не удалось получить версию
+
+        return compareVersions(currentLauncherVersion, minVersion) >= 0
+    }
+
+    /**
+     * Получает текущую версию лаунчера
+     */
+    private fun getCurrentLauncherVersion(): String {
+        return try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            packageInfo.versionName ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * Сравнивает две версии (формат x.y.z)
+     * @return 1 если v1 > v2, 0 если равны, -1 если v1 < v2
+     */
+    private fun compareVersions(v1: String, v2: String): Int {
+        return try {
+            val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
+            val parts2 = v2.split(".").map { it.toIntOrNull() ?: 0 }
+
+            for (i in 0 until maxOf(parts1.size, parts2.size)) {
+                val p1 = parts1.getOrElse(i) { 0 }
+                val p2 = parts2.getOrElse(i) { 0 }
+
+                when {
+                    p1 > p2 -> return 1
+                    p1 < p2 -> return -1
+                }
+            }
+            0
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    /**
      * Сравнивает версии (формат x.y.z)
      */
     private fun isNewerVersion(newVersion: String, currentVersion: String): Boolean {
-        return try {
-            val newParts = newVersion.split(".").map { it.toIntOrNull() ?: 0 }
-            val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
-
-            for (i in 0 until maxOf(newParts.size, currentParts.size)) {
-                val newPart = newParts.getOrElse(i) { 0 }
-                val currentPart = currentParts.getOrElse(i) { 0 }
-
-                if (newPart > currentPart) return true
-                if (newPart < currentPart) return false
-            }
-            false
-        } catch (_: Exception) {
-            false
-        }
+        return compareVersions(newVersion, currentVersion) > 0
     }
 
     /**

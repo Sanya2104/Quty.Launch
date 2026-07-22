@@ -295,13 +295,13 @@ class ThemeSettingsFragment : Fragment() {
             if (themeInfo == null) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.invalid_theme),
+                    getString(R.string.theme_incompatible),
                     Toast.LENGTH_LONG
                 ).show()
                 return
             }
 
-            showConfirmInstallDialog(uri, themeInfo.first, themeInfo.second)
+            showConfirmInstallDialog(uri, themeInfo.first, themeInfo.second, themeInfo.third)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -334,9 +334,9 @@ class ThemeSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет валидность темы и возвращает название и версию.
+     * Проверяет валидность темы и возвращает название, версию и минимальную версию лаунчера.
      */
-    private fun validateTheme(uri: Uri): Pair<String, String>? {
+    private fun validateTheme(uri: Uri): Triple<String, String, String?>? {
         return try {
             val tempFile = File(requireContext().cacheDir, "temp_theme.zip")
             requireContext().contentResolver.openInputStream(uri)?.use { input ->
@@ -356,7 +356,13 @@ class ThemeSettingsFragment : Fragment() {
                 val manifest = json.decodeFromString<ThemeManifest>(manifestContent)
 
                 tempFile.delete()
-                return Pair(manifest.name, manifest.version)
+
+                // Проверяем совместимость с лаунчером
+                if (!isLauncherCompatible(manifest.minLauncherVersion)) {
+                    return null  // Лаунчер слишком старый для этой темы
+                }
+
+                return Triple(manifest.name, manifest.version, manifest.minLauncherVersion)
             }
         } catch (_: Exception) {
             null
@@ -364,17 +370,79 @@ class ThemeSettingsFragment : Fragment() {
     }
 
     /**
+     * Проверяет, совместима ли тема с текущей версией лаунчера
+     */
+    private fun isLauncherCompatible(minVersion: String?): Boolean {
+        if (minVersion.isNullOrEmpty()) return true
+
+        val currentVersion = getCurrentLauncherVersion()
+        if (currentVersion.isEmpty()) return true
+
+        return compareVersions(currentVersion, minVersion) >= 0
+    }
+
+    /**
+     * Получает текущую версию лаунчера
+     */
+    private fun getCurrentLauncherVersion(): String {
+        return try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireContext().packageManager.getPackageInfo(
+                    requireContext().packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+            }
+            packageInfo.versionName ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * Сравнивает две версии (формат x.y.z)
+     */
+    private fun compareVersions(v1: String, v2: String): Int {
+        return try {
+            val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
+            val parts2 = v2.split(".").map { it.toIntOrNull() ?: 0 }
+
+            for (i in 0 until maxOf(parts1.size, parts2.size)) {
+                val p1 = parts1.getOrElse(i) { 0 }
+                val p2 = parts2.getOrElse(i) { 0 }
+
+                when {
+                    p1 > p2 -> return 1
+                    p1 < p2 -> return -1
+                }
+            }
+            0
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    /**
      * Показывает диалог подтверждения установки.
      */
-    private fun showConfirmInstallDialog(uri: Uri, themeName: String, themeVersion: String) {
+    private fun showConfirmInstallDialog(uri: Uri, themeName: String, themeVersion: String, minLauncherVersion: String?) {
         val existingTheme = themeManager.getAvailableThemes().find {
             it.displayName == themeName || it.name == themeName
         }
 
-        val message = if (existingTheme != null) {
-            getString(R.string.theme_already_exists, themeName)
+        // Добавляем информацию о совместимости
+        val compatibilityInfo = if (!minLauncherVersion.isNullOrEmpty()) {
+            "\n\n${getString(R.string.theme_min_launcher_version, minLauncherVersion)}"
         } else {
-            getString(R.string.theme_install_confirm_message, themeName, themeVersion)
+            ""
+        }
+
+        val message = if (existingTheme != null) {
+            getString(R.string.theme_already_exists, themeName) + compatibilityInfo
+        } else {
+            getString(R.string.theme_install_confirm_message, themeName, themeVersion) + compatibilityInfo
         }
 
         AlertDialog.Builder(requireContext())
@@ -595,12 +663,29 @@ class ThemeSettingsFragment : Fragment() {
          * Диалог подтверждения обновления
          */
         private fun showUpdateConfirmDialog(theme: Theme, updateInfo: ThemeRepoInfo) {
+            // Проверяем совместимость при обновлении
+            if (!isLauncherCompatible(updateInfo.minLauncherVersion)) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle(getString(R.string.theme_update_incompatible_title))
+                    .setMessage(getString(R.string.theme_update_incompatible_message, updateInfo.version))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+                return
+            }
+
             val message = buildString {
                 append(getString(R.string.theme_update_available_message))
                 append("\n\n")
                 append(getString(R.string.theme_update_current_version, theme.version ?: "—"))
                 append("\n")
                 append(getString(R.string.theme_update_new_version, updateInfo.version))
+
+                // Добавляем информацию о минимальной версии лаунчера
+                if (!updateInfo.minLauncherVersion.isNullOrEmpty()) {
+                    append("\n")
+                    append(getString(R.string.theme_update_min_launcher, updateInfo.minLauncherVersion))
+                }
+
                 if (updateInfo.changelog.isNotEmpty()) {
                     append("\n\n")
                     append(getString(R.string.theme_update_changelog, updateInfo.changelog))
@@ -680,12 +765,18 @@ class ThemeSettingsFragment : Fragment() {
                 getString(R.string.author_default)
             }
 
+            // Добавляем информацию о минимальной версии лаунчера
+            val minVersion = theme.minLauncherVersion?.let {
+                getString(R.string.theme_info_min_version, it)
+            } ?: getString(R.string.theme_info_min_version_not_specified)
+
             val message = getString(
                 R.string.theme_info_message,
                 theme.displayName ?: theme.name,
                 version,
                 author,
-                type
+                type,
+                minVersion
             )
 
             AlertDialog.Builder(requireContext())
@@ -809,6 +900,7 @@ class ThemeSettingsFragment : Fragment() {
         val version: String = "0.0.1",
         val preview: String? = null,
         val orientation: String? = null,
-        val repoUrl: String? = null
+        val repoUrl: String? = null,
+        val minLauncherVersion: String? = null
     )
 }

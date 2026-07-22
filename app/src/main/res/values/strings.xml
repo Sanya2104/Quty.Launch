@@ -24,6 +24,8 @@
     <string name="theme_install_confirm">Установить тему</string>
     <string name="theme_install_confirm_message" formatted="false">Вы уверены, что хотите установить тему "%s" версии %s?</string>
     <string name="theme_already_exists" formatted="false">Тема "%s" уже существует. Перезаписать?</string>
+    <string name="theme_incompatible">Тема несовместима с текущей версией лаунчера</string>
+    <string name="theme_min_launcher_version" formatted="false">Требуется лаунчер версии: %s</string>
 
     <!-- Меню темы -->
     <string name="delete">Удалить</string>
@@ -38,7 +40,7 @@
     <string name="theme_delete_error">Ошибка при удалении темы</string>
     <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
     <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
-    <string name="theme_info_message" formatted="false">Название: %s\nВерсия: %s\nАвтор: %s\nТип: %s</string>
+    <string name="theme_info_message" formatted="false">Название: %1$s\nВерсия: %2$s\nАвтор: %3$s\nТип: %4$s\nТребуется лаунчер: %5$s</string>
     <string name="theme_type_builtin">Встроенная</string>
     <string name="theme_type_custom">Пользовательская</string>
     <string name="theme_version_with_label" formatted="false">Версия: %s</string>
@@ -46,6 +48,8 @@
     <string name="theme_file_not_found">Файл темы не найден</string>
     <string name="theme_share_title">Поделиться темой</string>
     <string name="theme_share_error">Ошибка при отправке файла</string>
+    <string name="theme_info_min_version" formatted="false">Версии %s</string>
+    <string name="theme_info_min_version_not_specified">Не указано</string>
 
     <!-- Theme update -->
     <string name="theme_menu_check_updates">Проверить обновления</string>
@@ -68,6 +72,9 @@
     <string name="theme_update_install">Обновить</string>
     <string name="theme_update_preparing">Подготовка…</string>
     <string name="theme_update_progress" formatted="false">Скачивание: %d%%</string>
+    <string name="theme_update_min_launcher" formatted="false">Требуется лаунчер версии: %s</string>
+    <string name="theme_update_incompatible_title">Тема несовместима</string>
+    <string name="theme_update_incompatible_message" formatted="false">Обновление темы требует лаунчер версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
 
     <!-- Display settings -->
     <string name="settings_orientation_title">Ориентация экрана</string>
