@@ -5,7 +5,7 @@
     <string name="app_name">Quty.Launch</string>
 
     <!-- SettingsActivity - заголовки -->
-    <string name="settings_title">⚙️ Настройки лаунчера</string>
+    <string name="settings_title">Настройки лаунчера</string>
 
     <!-- Tab titles -->
     <string name="tab_theme">Оформление</string>
@@ -41,7 +41,7 @@
     <string name="theme_delete_error">Ошибка при удалении темы</string>
     <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
     <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
-    <string name="theme_info_message" formatted="false">Название: %1$s\n\nВерсия: %2$s\n\nАвтор: %3$s\n\nТип: %4$s\n\nТребуется лаунчер: %5$s</string>
+    <string name="theme_info_message" formatted="false">\n\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется лаунчер: %5$s</string>
     <string name="theme_type_builtin">Встроенная</string>
     <string name="theme_type_custom">Пользовательская</string>
     <string name="theme_version_with_label" formatted="false">Версия: %s</string>
@@ -60,7 +60,7 @@
     <string name="theme_update_downloading">Скачивание обновления…</string>
     <string name="theme_update_success">Тема обновлена до версии %s</string>
     <string name="theme_update_confirm_title">Обновление темы</string>
-    <string name="theme_update_confirm_message" formatted="false">Доступна новая версия темы!\n\nТекущая: %s\nНовая: %s\n\nЧто нового:\n%s</string>
+    <string name="theme_update_confirm_message" formatted="false">Доступна новая версия темы!\n\n Текущая: %s\n\n Новая: %s\n\n Что нового:\n%s</string>
 
     <!-- Theme update strings -->
     <string name="theme_update_checking">Проверка обновлений</string>
@@ -220,8 +220,72 @@
     <string name="permission_granted">Разрешено</string>
     <string name="permission_denied">Не разрешено</string>
 
-    <!-- Режим разработчика -->
-    <string name="developer_mode_title">Режим разработчика</string>
-    <string name="developer_mode_subtitle">Здесь будут инструменты для разработчиков</string>
+    <!-- ===== Режим разработчика ===== -->
+
+    <!-- Заголовки разделов -->
+    <string name="dev_section_webview">📊 Отладка WebView</string>
+    <string name="dev_section_theme">🎨 Информация о теме</string>
+    <string name="dev_section_system">📱 Системная информация</string>
+    <string name="dev_section_data">🗄️ Управление данными</string>
+    <string name="dev_section_tools">🎯 Тестовые инструменты</string>
+    <string name="dev_section_experimental">🔧 Экспериментальные функции</string>
+
+    <!-- 1. Отладка WebView -->
+    <string name="dev_webview_debug">Отладка WebView</string>
+    <string name="dev_webview_debug_desc">Подключение к Chrome DevTools</string>
+    <string name="dev_webview_clear_cache">Очистить кэш WebView</string>
+    <string name="dev_webview_clear_cache_success">Кэш WebView очищен</string>
+    <string name="dev_webview_borders">Показать границы WebView</string>
+    <string name="dev_webview_fps">Показать FPS</string>
+
+    <!-- 2. Информация о теме -->
+    <string name="dev_theme_path">Путь к активной теме</string>
+    <string name="dev_theme_path_title">Путь к активной теме</string>
+    <string name="dev_theme_manifest">Показать manifest.json</string>
+    <string name="dev_theme_manifest_title">manifest.json</string>
+    <string name="dev_theme_manifest_not_found">manifest.json не найден</string>
+    <string name="dev_theme_reload">Перезагрузить тему</string>
+    <string name="dev_theme_reload_success">Тема перезагружена</string>
+    <string name="dev_theme_assets_only">Режим "Только assets"</string>
+
+    <!-- 3. Системная информация -->
+    <string name="dev_device_model">Модель устройства</string>
+    <string name="dev_android_version">Версия Android</string>
+    <string name="dev_sdk_level">SDK уровень</string>
+    <string name="dev_app_version">Версия приложения</string>
+    <string name="dev_app_code">Код версии</string>
+    <string name="dev_app_channel">Канал сборки</string>
+
+    <!-- 4. Управление данными -->
+    <string name="dev_data_path">Путь к данным</string>
+    <string name="dev_data_path_title">Путь к данным</string>
+    <string name="dev_themes_path">Путь к темам</string>
+    <string name="dev_themes_path_title">Путь к темам</string>
+    <string name="dev_cache_size">Размер кэша</string>
+    <string name="dev_cache_size_title">Размер кэша</string>
+    <string name="dev_export_logs">Экспорт логов</string>
+    <string name="dev_export_logs_success">Логи сохранены в:\n%s</string>
+    <string name="dev_clear_data">Очистить данные</string>
+    <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
+    <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
+
+    <!-- 5. Тестовые инструменты -->
+    <string name="dev_test_notification">Тестовое уведомление</string>
+    <string name="dev_test_notification_message">🔔 Тестовое уведомление!</string>
+    <string name="dev_test_error">Симулировать ошибку</string>
+    <string name="dev_test_error_title">Тестовая ошибка</string>
+    <string name="dev_test_error_message">Это тестовое сообщение об ошибке для проверки обработки исключений.</string>
+    <string name="dev_restart_app">Перезапустить приложение</string>
+    <string name="dev_reset_onboarding">Сброс онбординга</string>
+    <string name="dev_reset_onboarding_success">Онбординг сброшен. Приложение будет перезапущено.</string>
+
+    <!-- 6. Экспериментальные функции -->
+    <string name="dev_experimental_api">Экспериментальный API</string>
+    <string name="dev_enable_animations">Включить анимации</string>
+
+    <!-- Общие -->
+    <string name="dev_error">Ошибка: %s</string>
+    <string name="dev_unknown">Неизвестно</string>
+    <string name="dev_not_implemented">Функция в разработке</string>
 
 </resources>
