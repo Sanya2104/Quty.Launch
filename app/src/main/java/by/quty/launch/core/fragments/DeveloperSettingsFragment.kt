@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ import by.quty.launch.core.ThemeManager
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.File
+import java.util.Locale
 
 class DeveloperSettingsFragment : Fragment() {
 
@@ -49,6 +51,7 @@ class DeveloperSettingsFragment : Fragment() {
         setupWebViewDebug(view)
         setupThemeInfo(view)
         setupSystemInfo(view)
+        setupDataManagement(view)
         setupTools(view)
     }
 
@@ -223,7 +226,103 @@ class DeveloperSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // 4. ИНСТРУМЕНТЫ
+    // 4. УПРАВЛЕНИЕ ДАННЫМИ
+    // ============================================================
+
+    private fun setupDataManagement(view: View) {
+        val cacheSizeView = view.findViewById<TextView>(R.id.dev_cache_size_value)
+        val themesSizeView = view.findViewById<TextView>(R.id.dev_themes_size_value)
+        val clearDataBtn = view.findViewById<Button>(R.id.dev_clear_data)
+
+        // Обновляем размеры
+        updateCacheSize(cacheSizeView)
+        updateThemesSize(themesSizeView)
+
+        // Кнопка обновления размера кэша (по клику на строку)
+        val cacheSizeRow = view.findViewById<View>(R.id.dev_cache_size_row)
+        cacheSizeRow?.setOnClickListener {
+            updateCacheSize(cacheSizeView)
+            Toast.makeText(requireContext(), "Размер кэша обновлён", Toast.LENGTH_SHORT).show()
+        }
+
+        // Кнопка обновления размера тем (по клику на строку)
+        val themesSizeRow = view.findViewById<View>(R.id.dev_themes_size_row)
+        themesSizeRow?.setOnClickListener {
+            updateThemesSize(themesSizeView)
+            Toast.makeText(requireContext(), "Размер тем обновлён", Toast.LENGTH_SHORT).show()
+        }
+
+        // 4.1 Очистить данные
+        clearDataBtn.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.dev_clear_data)
+                .setMessage(R.string.dev_clear_data_confirm)
+                .setPositiveButton("Очистить") { _, _ ->
+                    clearAppData()
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
+        }
+    }
+
+    private fun updateCacheSize(textView: TextView) {
+        val size = getCacheSize()
+        textView.text = formatSize(size)
+    }
+
+    private fun updateThemesSize(textView: TextView) {
+        val size = getThemesSize()
+        textView.text = formatSize(size)
+    }
+
+    private fun getCacheSize(): Long {
+        var size = 0L
+        val cacheDir = requireContext().cacheDir
+        if (cacheDir.exists()) {
+            cacheDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
+        }
+        return size
+    }
+
+    private fun getThemesSize(): Long {
+        var size = 0L
+        val themesDir = File(Environment.getExternalStorageDirectory(), "QutyThemes")
+        if (themesDir.exists()) {
+            themesDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
+        }
+        return size
+    }
+
+    private fun formatSize(size: Long): String {
+        val locale = Locale.US
+        return when {
+            size >= 1024 * 1024 * 1024 -> String.format(locale, "%.2f GB", size / (1024.0 * 1024.0 * 1024.0))
+            size >= 1024 * 1024 -> String.format(locale, "%.2f MB", size / (1024.0 * 1024.0))
+            size >= 1024 -> String.format(locale, "%.2f KB", size / 1024.0)
+            else -> "$size B"
+        }
+    }
+
+    private fun clearAppData() {
+        try {
+            requireContext().cacheDir.deleteRecursively()
+            val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+            prefs.edit { clear() }
+            val themesDir = File(Environment.getExternalStorageDirectory(), "QutyThemes")
+            if (themesDir.exists()) {
+                themesDir.deleteRecursively()
+            }
+            Toast.makeText(requireContext(), R.string.dev_clear_data_success, Toast.LENGTH_LONG).show()
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                restartApp()
+            }, 1500)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ============================================================
+    // 5. ИНСТРУМЕНТЫ
     // ============================================================
 
     private fun setupTools(view: View) {

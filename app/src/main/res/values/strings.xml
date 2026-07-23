@@ -226,6 +226,7 @@
     <string name="dev_section_webview">Отладка WebView</string>
     <string name="dev_section_theme">Информация о теме</string>
     <string name="dev_section_system">Системная информация</string>
+    <string name="dev_section_data">Управление данными</string>
     <string name="dev_section_tools">Инструменты</string>
 
     <!-- 1. Отладка WebView -->
@@ -248,7 +249,16 @@
     <string name="dev_app_code">Код версии</string>
     <string name="dev_app_channel">Канал сборки</string>
 
-    <!-- 4. Инструменты -->
+    <!-- 4. Управление данными -->
+    <string name="dev_cache_size">Размер кэша</string>
+    <string name="dev_themes_size">Размер тем оформления</string>
+    <string name="dev_cache_size_value">0 B</string>
+    <string name="dev_themes_size_value">0 B</string>
+    <string name="dev_clear_data">Очистить данные</string>
+    <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
+    <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
+
+    <!-- 5. Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
 
     <!-- Общие -->

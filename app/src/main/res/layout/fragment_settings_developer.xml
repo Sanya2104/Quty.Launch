@@ -259,7 +259,112 @@
 
         </LinearLayout>
 
-        <!-- ===== 4. ИНСТРУМЕНТЫ ===== -->
+        <!-- ===== 4. УПРАВЛЕНИЕ ДАННЫМИ ===== -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:paddingTop="24dp"
+            android:text="@string/dev_section_data"
+            android:textColor="#CCCCCC"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#1E1E1E"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- Размер кэша -->
+            <LinearLayout
+                android:id="@+id/dev_cache_size_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dev_cache_size"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/dev_cache_size_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dev_cache_size_value"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textAlignment="viewEnd" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Размер тем -->
+            <LinearLayout
+                android:id="@+id/dev_themes_size_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dev_themes_size"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/dev_themes_size_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dev_themes_size_value"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textAlignment="viewEnd" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Очистить данные -->
+            <Button
+                android:id="@+id/dev_clear_data"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="#D32F2F"
+                android:text="@string/dev_clear_data"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- ===== 5. ИНСТРУМЕНТЫ ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
