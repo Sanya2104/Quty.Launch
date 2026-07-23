@@ -38,24 +38,6 @@
                 android:text="@string/dev_webview_debug"
                 android:textColor="#FFFFFF" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/dev_webview_borders"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:text="@string/dev_webview_borders"
-                android:textColor="#FFFFFF" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/dev_webview_fps"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:text="@string/dev_webview_fps"
-                android:textColor="#FFFFFF" />
-
             <Button
                 android:id="@+id/dev_clear_cache"
                 android:layout_width="match_parent"
@@ -87,15 +69,6 @@
             android:padding="8dp">
 
             <Button
-                android:id="@+id/dev_theme_path"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_theme_path"
-                android:textColor="#FFFFFF" />
-
-            <Button
                 android:id="@+id/dev_theme_manifest"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -111,15 +84,6 @@
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#FF9800"
                 android:text="@string/dev_theme_reload"
-                android:textColor="#FFFFFF" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/dev_theme_assets_only"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:text="@string/dev_theme_assets_only"
                 android:textColor="#FFFFFF" />
 
         </LinearLayout>
@@ -295,73 +259,7 @@
 
         </LinearLayout>
 
-        <!-- ===== 4. УПРАВЛЕНИЕ ДАННЫМИ ===== -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_data"
-            android:textColor="#CCCCCC"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#1E1E1E"
-            android:orientation="vertical"
-            android:padding="8dp">
-
-            <Button
-                android:id="@+id/dev_data_path"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_data_path"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_themes_path"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_themes_path"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_cache_size"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_cache_size"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_export_logs"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_export_logs"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_clear_data"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#D32F2F"
-                android:text="@string/dev_clear_data"
-                android:textColor="#FFFFFF" />
-
-        </LinearLayout>
-
-        <!-- ===== 5. ТЕСТОВЫЕ ИНСТРУМЕНТЫ ===== -->
+        <!-- ===== 4. ИНСТРУМЕНТЫ ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -380,33 +278,6 @@
             android:padding="8dp">
 
             <Button
-                android:id="@+id/dev_test_notification"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_test_notification"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_test_error"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_test_error"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/dev_reset_onboarding"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_reset_onboarding"
-                android:textColor="#FFFFFF" />
-
-            <Button
                 android:id="@+id/dev_restart_app"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -414,45 +285,6 @@
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#FF9800"
                 android:text="@string/dev_restart_app"
-                android:textColor="#FFFFFF" />
-
-        </LinearLayout>
-
-        <!-- ===== 6. ЭКСПЕРИМЕНТАЛЬНЫЕ ФУНКЦИИ ===== -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_experimental"
-            android:textColor="#CCCCCC"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#1E1E1E"
-            android:orientation="vertical"
-            android:padding="8dp">
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/dev_experimental_api"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:text="@string/dev_experimental_api"
-                android:textColor="#FFFFFF" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/dev_enable_animations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:paddingBottom="8dp"
-                android:text="@string/dev_enable_animations"
                 android:textColor="#FFFFFF" />
 
         </LinearLayout>

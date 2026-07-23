@@ -18,7 +18,7 @@ object ApiRouter {
         val method = methods[methodName]
             ?: return json.encodeToString(
                 ApiResponse.serializer(Unit.serializer()),
-                ApiResponse(success = false, error = "Method not found")
+                ApiResponse(success = false, error = "Method not found: $methodName")
             )
         return method.execute(params)
     }

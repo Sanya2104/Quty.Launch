@@ -64,7 +64,11 @@ class LauncherWebView(context: Context) : WebView(context) {
 
             private fun handleQutyScheme(url: String): WebResourceResponse? {
                 try {
-                    val path = url.replace("quty://", "")
+                    var path = url.replace("quty://", "")
+
+                    if (path.startsWith("./")) {
+                        path = path.substring(2)
+                    }
 
                     // Ищем папку темы (первая подпапка в active/)
                     val themeDirs = activeThemeDir.listFiles { it.isDirectory }
