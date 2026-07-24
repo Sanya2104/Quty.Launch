@@ -3,45 +3,24 @@
 # Устанавливаем кодировку UTF-8 для консоли
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Флаг для отслеживания ошибок
-$hasError = $false
-
-Write-Host "=========================================="
-Write-Host "🚀 Начинаем процесс сборки и публикации Quty.Launch..."
-Write-Host "=========================================="
 Write-Host ""
-
-# Функции
-function Print-Step {
-    Write-Host "➡️ $args" -ForegroundColor Blue
-}
-
-function Print-Success {
-    Write-Host "✅ $args" -ForegroundColor Green
-}
-
-function Print-Warning {
-    Write-Host "⚠️ $args" -ForegroundColor Yellow
-}
-
-function Print-Error {
-    Write-Host "❌ $args" -ForegroundColor Red
-    $script:hasError = $true
-}
-
-function Print-Info {
-    Write-Host "ℹ️ $args" -ForegroundColor Cyan
-}
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "  🚀 СБОРКА И ПУБЛИКАЦИЯ Quty.Launch" -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host ""
 
 # ============================================
 # ПОЛУЧАЕМ ТЕКУЩУЮ ВЕРСИЮ
 # ============================================
-Print-Step "Чтение текущей версии из build.gradle.kts..."
+Write-Host "➡️ Чтение текущей версии из build.gradle.kts..." -ForegroundColor Blue
 
 # Проверяем существование файла
 if (-not (Test-Path "app/build.gradle.kts")) {
-    Print-Error "Файл app/build.gradle.kts не найден!"
-    return
+    Write-Host "❌ Файл app/build.gradle.kts не найден!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
 }
 
 $gradleFile = Get-Content "app/build.gradle.kts" -Raw -Encoding UTF8
@@ -63,34 +42,34 @@ foreach ($line in $gradleFile -split "`n") {
     }
 }
 
-Print-Success "Текущая версия: $currentVersionName $currentVersionSuffix (code: $currentVersionCode)"
+Write-Host "✅ Текущая версия: $currentVersionName $currentVersionSuffix (code: $currentVersionCode)" -ForegroundColor Green
 
 # ============================================
 # СПРАШИВАЕМ НОВУЮ ВЕРСИЮ
 # ============================================
 Write-Host ""
-Print-Warning "Введите новый номер версии (сейчас $currentVersionName):"
+Write-Host "⚠️ Введите новый номер версии (сейчас $currentVersionName):" -ForegroundColor Yellow
 $newVersionName = Read-Host "> "
 
 if ([string]::IsNullOrEmpty($newVersionName)) {
     $newVersionName = $currentVersionName
-    Print-Warning "Оставлена текущая версия: $newVersionName"
+    Write-Host "⚠️ Оставлена текущая версия: $newVersionName" -ForegroundColor Yellow
 } else {
-    Print-Success "Новая версия: $newVersionName"
+    Write-Host "✅ Новая версия: $newVersionName" -ForegroundColor Green
 }
 
 # ============================================
 # УВЕЛИЧИВАЕМ versionCode
 # ============================================
 $newVersionCode = $currentVersionCode + 1
-Print-Success "Новый versionCode: $newVersionCode (был $currentVersionCode)"
+Write-Host "✅ Новый versionCode: $newVersionCode (был $currentVersionCode)" -ForegroundColor Green
 
 # ============================================
 # ЗАПРАШИВАЕМ CHANGELOG
 # ============================================
 Write-Host ""
-Print-Warning "Введите описание изменений (changelog) для этой версии:"
-Print-Warning "(несколько строк, для окончания введите пустую строку)"
+Write-Host "⚠️ Введите описание изменений (changelog) для этой версии:" -ForegroundColor Yellow
+Write-Host "   (несколько строк, для окончания введите пустую строку)" -ForegroundColor Gray
 Write-Host ""
 
 $changelog = ""
@@ -108,13 +87,14 @@ while ($true) {
 
 if ([string]::IsNullOrEmpty($changelog)) {
     $changelog = "Исправление багов и улучшение производительности"
-    Print-Warning "Использован стандартный changelog"
+    Write-Host "⚠️ Использован стандартный changelog" -ForegroundColor Yellow
 }
 
 # ============================================
 # ОБНОВЛЯЕМ build.gradle.kts
 # ============================================
-Print-Step "Обновление build.gradle.kts..."
+Write-Host ""
+Write-Host "➡️ Обновление build.gradle.kts..." -ForegroundColor Blue
 
 $newContent = @()
 foreach ($line in ($gradleFile -split "`n")) {
@@ -127,24 +107,32 @@ foreach ($line in ($gradleFile -split "`n")) {
     }
 }
 
-# Сохраняем с правильной кодировкой
-$newContent -join "`n" | Set-Content "app/build.gradle.kts" -Encoding UTF8
-
-Print-Success "build.gradle.kts обновлен"
+try {
+    $newContent -join "`n" | Set-Content "app/build.gradle.kts" -Encoding UTF8 -ErrorAction Stop
+    Write-Host "✅ build.gradle.kts обновлен" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Не удалось сохранить build.gradle.kts: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
+}
 
 # ============================================
 # СБОРКА
 # ============================================
-Print-Step "Запуск сборки release версии..."
+Write-Host ""
+Write-Host "➡️ Запуск сборки release версии..." -ForegroundColor Blue
+Write-Host "ℹ️ Запуск gradlew... (это может занять несколько минут)" -ForegroundColor Cyan
 
 # Проверяем наличие gradlew
 if (-not (Test-Path "gradlew.bat") -and -not (Test-Path "gradlew")) {
-    Print-Error "gradlew не найден!"
-    return
+    Write-Host "❌ gradlew не найден!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
 }
-
-# Запускаем gradlew с выводом всех ошибок
-Print-Info "Запуск gradlew... (это может занять несколько минут)"
 
 if (Test-Path "gradlew.bat") {
     .\gradlew.bat clean assembleRelease
@@ -153,17 +141,23 @@ if (Test-Path "gradlew.bat") {
 }
 
 if ($LASTEXITCODE -ne 0) {
-    Print-Error "Сборка завершилась с ошибкой (код: $LASTEXITCODE)"
-    Print-Info "Проверьте вывод выше для поиска ошибки"
-    return
+    Write-Host ""
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host "❌ СБОРКА НЕ УДАЛАСЬ! Код ошибки: $LASTEXITCODE" -ForegroundColor Red
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
 }
 
-Print-Success "Сборка успешно завершена!"
+Write-Host "✅ Сборка успешно завершена!" -ForegroundColor Green
 
 # ============================================
 # КОПИРОВАНИЕ APK
 # ============================================
-Print-Step "Копирование APK файла..."
+Write-Host ""
+Write-Host "➡️ Копирование APK файла..." -ForegroundColor Blue
 
 $apkFilename = "Quty.Launch-$newVersionName.apk"
 $sourceApk = "app\build\outputs\apk\release\app-release.apk"
@@ -171,17 +165,35 @@ $destDir = "..\Quty.Launch.Server\updates\apk\"
 $destApk = Join-Path $destDir $apkFilename
 
 if (-not (Test-Path $sourceApk)) {
-    Print-Error "APK файл не найден: $sourceApk"
-    return
+    Write-Host "❌ APK файл не найден: $sourceApk" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
 }
 
 # Создаем директорию назначения
-New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+try {
+    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+} catch {
+    Write-Host "❌ Не удалось создать директорию $destDir" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
+}
 
 # Копируем файл
-Copy-Item $sourceApk $destApk -Force
-
-Print-Success "APK скопирован в: $destApk"
+try {
+    Copy-Item $sourceApk $destApk -Force -ErrorAction Stop
+    Write-Host "✅ APK скопирован в: $destApk" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Не удалось скопировать APK: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
+}
 
 # ============================================
 # РАЗМЕР APK
@@ -194,12 +206,13 @@ $apkSizeHuman = if ($apkSize -gt 1MB) {
 } else {
     "{0} B" -f $apkSize
 }
-Print-Success "Размер APK: $apkSizeHuman"
+Write-Host "✅ Размер APK: $apkSizeHuman" -ForegroundColor Green
 
 # ============================================
 # СОЗДАНИЕ version.json
 # ============================================
-Print-Step "Создание version.json..."
+Write-Host ""
+Write-Host "➡️ Создание version.json..." -ForegroundColor Blue
 
 $versionJson = "..\Quty.Launch.Server\updates\version.json"
 $jsonChangelog = $changelog -replace "`n", "\n"
@@ -216,77 +229,85 @@ $jsonContent = @"
 }
 "@
 
-# Удаляем BOM если он есть и сохраняем в UTF-8 without BOM
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-$bytes = $utf8NoBom.GetBytes($jsonContent)
-[System.IO.File]::WriteAllBytes($versionJson, $bytes)
-
-Print-Success "version.json создан: $versionJson"
+try {
+    # Удаляем BOM если он есть и сохраняем в UTF-8 without BOM
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    $bytes = $utf8NoBom.GetBytes($jsonContent)
+    [System.IO.File]::WriteAllBytes($versionJson, $bytes)
+    Write-Host "✅ version.json создан: $versionJson" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Не удалось создать version.json: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Нажмите Enter для выхода..." -ForegroundColor Yellow
+    Read-Host
+    exit 1
+}
 
 # ============================================
 # CRITICAL ОБНОВЛЕНИЕ
 # ============================================
 Write-Host ""
-Print-Warning "Это критическое обновление? (y/N) [N]:"
+Write-Host "⚠️ Это критическое обновление? (y/N) [N]:" -ForegroundColor Yellow
 $isCritical = Read-Host "> "
 
 if ($isCritical -eq "y" -or $isCritical -eq "Y") {
-    # Читаем файл
-    $jsonContent = [System.IO.File]::ReadAllText($versionJson)
-    # Заменяем флаг
-    $jsonContent = $jsonContent -replace '"isCritical": false', '"isCritical": true'
-    # Сохраняем без BOM
-    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    $bytes = $utf8NoBom.GetBytes($jsonContent)
-    [System.IO.File]::WriteAllBytes($versionJson, $bytes)
-    Print-Warning "Обновление помечено как КРИТИЧЕСКОЕ"
+    try {
+        $jsonContent = [System.IO.File]::ReadAllText($versionJson)
+        $jsonContent = $jsonContent -replace '"isCritical": false', '"isCritical": true'
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        $bytes = $utf8NoBom.GetBytes($jsonContent)
+        [System.IO.File]::WriteAllBytes($versionJson, $bytes)
+        Write-Host "⚠️ Обновление помечено как КРИТИЧЕСКОЕ" -ForegroundColor Yellow
+    } catch {
+        Write-Host "❌ Не удалось обновить version.json" -ForegroundColor Red
+    }
 }
 
 # ============================================
 # GIT PUSH
 # ============================================
-Print-Step "Отправка изменений в GitHub..."
+Write-Host ""
+Write-Host "➡️ Отправка изменений в GitHub..." -ForegroundColor Blue
 
 # Проверяем существование папки репозитория
 if (-not (Test-Path "..\Quty.Launch.Server\.git")) {
-    Print-Warning "Папка ..\Quty.Launch.Server не является Git репозиторием!"
-    Print-Warning "Пропускаем Git push"
+    Write-Host "⚠️ Папка ..\Quty.Launch.Server не является Git репозиторием!" -ForegroundColor Yellow
+    Write-Host "⚠️ Пропускаем Git push" -ForegroundColor Yellow
 } else {
-    Push-Location "..\Quty.Launch.Server"
+    Push-Location "..\Quty.Launch.Server" -ErrorAction SilentlyContinue
 
     git add .
     git commit -m "Release $newVersionName"
     git push origin main
 
     if ($LASTEXITCODE -eq 0) {
-        Print-Success "Изменения отправлены в GitHub"
+        Write-Host "✅ Изменения отправлены в GitHub" -ForegroundColor Green
     } else {
-        Print-Error "Ошибка отправки в GitHub"
+        Write-Host "❌ Ошибка отправки в GitHub (код: $LASTEXITCODE)" -ForegroundColor Red
     }
 
     Pop-Location
 }
 
 # ============================================
-# GIT TAG (опционально) - ДЛЯ РЕПОЗИТОРИЯ СЕРВЕРА
+# GIT TAG (опционально)
 # ============================================
 Write-Host ""
-Print-Warning "Создать Git tag для этого релиза в Quty.Launch.Server? (y/N) [N]:"
+Write-Host "⚠️ Создать Git tag для этого релиза в Quty.Launch.Server? (y/N) [N]:" -ForegroundColor Yellow
 $createTag = Read-Host "> "
 
 if ($createTag -eq "y" -or $createTag -eq "Y") {
-    Print-Step "Создание Git tag в Quty.Launch.Server..."
+    Write-Host "➡️ Создание Git tag в Quty.Launch.Server..." -ForegroundColor Blue
 
-    # Переходим в папку сервера
-    Push-Location "..\Quty.Launch.Server"
+    Push-Location "..\Quty.Launch.Server" -ErrorAction SilentlyContinue
 
     git tag -a "v$newVersionName" -m "Release $newVersionName"
     git push origin "v$newVersionName"
 
     if ($LASTEXITCODE -eq 0) {
-        Print-Success "Tag v$newVersionName создан и отправлен в Quty.Launch.Server"
+        Write-Host "✅ Tag v$newVersionName создан и отправлен в Quty.Launch.Server" -ForegroundColor Green
     } else {
-        Print-Error "Ошибка создания tag"
+        Write-Host "❌ Ошибка создания tag (код: $LASTEXITCODE)" -ForegroundColor Red
     }
 
     Pop-Location
@@ -297,8 +318,9 @@ if ($createTag -eq "y" -or $createTag -eq "Y") {
 # ============================================
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Cyan
-Print-Success "ПРОЦЕСС ЗАВЕРШЕН УСПЕШНО!"
+Write-Host "  ✅ ПРОЦЕСС ЗАВЕРШЕН УСПЕШНО!" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host ""
 Write-Host "📦 Версия: $newVersionName $currentVersionSuffix"
 Write-Host "🔢 Version code: $newVersionCode"
 Write-Host "📄 Changelog:"
@@ -308,15 +330,9 @@ Write-Host "📄 JSON: $versionJson"
 Write-Host "==========================================" -ForegroundColor Cyan
 
 # ============================================
-# ВЫХОД
+# ВЫХОД С ОЖИДАНИЕМ НАЖАТИЯ КНОПКИ
 # ============================================
-
-if ($hasError) {
-    Write-Host ""
-    Write-Host "==========================================" -ForegroundColor Red
-    Print-Error "ПРОЦЕСС ЗАВЕРШЕН С ОШИБКАМИ!"
-    Write-Host "==========================================" -ForegroundColor Red
-}
-
-# Пауза, чтобы увидеть результат
-Read-Host "`nНажмите Enter для выхода"
+Write-Host ""
+Write-Host "Нажмите Enter для выхода..." -ForegroundColor Cyan
+Read-Host
+exit 0

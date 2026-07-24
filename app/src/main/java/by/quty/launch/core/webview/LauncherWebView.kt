@@ -20,6 +20,9 @@ class LauncherWebView(context: Context) : WebView(context) {
 
     private val activeThemeDir = File(context.filesDir, "themes/active")
 
+    // Храним имя активной темы для корректной загрузки
+    private var activeThemeName: String? = null
+
     init {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
@@ -71,14 +74,15 @@ class LauncherWebView(context: Context) : WebView(context) {
                         path = path.substring(2)
                     }
 
-                    // Ищем папку темы (первая подпапка в active/)
-                    val themeDirs = activeThemeDir.listFiles { it.isDirectory }
-
-                    if (themeDirs.isNullOrEmpty()) {
+                    // Определяем папку темы по имени активной темы
+                    val themeDir = getActiveThemeDir()
+                    if (themeDir == null) {
+                        android.util.Log.e(
+                            "LauncherWebView",
+                            context.getString(R.string.webview_dir_theme_not_found)
+                        )
                         return null
                     }
-
-                    val themeDir = themeDirs[0]
 
                     // Пытаемся найти файл в папке темы
                     var file = File(themeDir, path)
@@ -121,6 +125,28 @@ class LauncherWebView(context: Context) : WebView(context) {
                 } catch (_: Exception) {
                     return null
                 }
+            }
+
+            /**
+             * Возвращает директорию активной темы по имени
+             * Использует сохранённое имя активной темы для точного поиска
+             */
+            private fun getActiveThemeDir(): File? {
+                // Если есть сохранённое имя активной темы — ищем конкретную папку
+                activeThemeName?.let { themeName ->
+                    val themeDir = File(activeThemeDir, themeName)
+                    if (themeDir.exists() && themeDir.isDirectory) {
+                        return themeDir
+                    }
+                }
+
+                // Если имя не сохранено или папка не найдена — ищем первую папку
+                val themeDirs = activeThemeDir.listFiles { it.isDirectory }
+                if (!themeDirs.isNullOrEmpty()) {
+                    return themeDirs[0]
+                }
+
+                return null
             }
 
             private fun findFileRecursively(dir: File, fileName: String): File? {
@@ -168,10 +194,13 @@ class LauncherWebView(context: Context) : WebView(context) {
 
     /**
      * Загружает тему
-     * @param themeName путь к теме (например, "default" или "custom_theme")
+     * @param themeName имя темы (например, "default" или "custom_theme")
      * @param isAsset true если тема из assets, false если кастомная
      */
     fun loadTheme(themeName: String, isAsset: Boolean = true) {
+        // Сохраняем имя активной темы для корректной загрузки ресурсов
+        activeThemeName = themeName
+
         val url = if (isAsset) {
             "https://appassets.androidplatform.net/assets/themes/$themeName/index.html"
         } else {

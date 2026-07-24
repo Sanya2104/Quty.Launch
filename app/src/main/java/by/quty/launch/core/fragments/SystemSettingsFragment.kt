@@ -522,12 +522,21 @@ class SystemSettingsFragment : Fragment() {
             } else if (result.error != null) {
                 updateStatus.text = getString(R.string.update_error)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
-                val errorMessage = if (result.error.startsWith("Ошибка сервера:")) {
-                    val code = result.error.replace("[^0-9]".toRegex(), "")
-                    getString(R.string.server_error, code.toIntOrNull() ?: 0)
-                } else {
-                    result.error
+
+                // Определяем тип ошибки и показываем понятное сообщение
+                val errorMessage = when {
+                    result.error.contains("UnknownHostException") ||
+                            result.error.contains("ConnectException") ||
+                            result.error.contains("SocketTimeoutException") ||
+                            result.error.contains("Network") ->
+                        getString(R.string.no_internet_connection)
+                    result.error.startsWith(getString(R.string.server_error_prefix) + ":") -> {
+                        val code = result.error.replace("[^0-9]".toRegex(), "")
+                        getString(R.string.server_error, code.toIntOrNull() ?: 0)
+                    }
+                    else -> result.error
                 }
+
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
                 view?.postDelayed({
                     updateStatus.visibility = View.GONE

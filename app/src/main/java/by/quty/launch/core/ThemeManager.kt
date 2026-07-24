@@ -6,10 +6,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Environment
 import android.util.Base64
+import android.widget.Toast
 import androidx.core.content.edit
-import by.quty.launch.R
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import by.quty.launch.R
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -85,10 +86,63 @@ class ThemeManager(
     private fun loadActiveThemeFromConfig() {
         val themes = getAvailableThemes()
         val activeThemeId = configManager.getActiveTheme()
-        activeTheme = themes.find { it.name == activeThemeId }
+
+        // Проверяем, существует ли тема в списке доступных
+        val foundTheme = themes.find { it.name == activeThemeId }
+
+        if (foundTheme != null) {
+            activeTheme = foundTheme
+        } else {
+            // Тема не найдена — восстанавливаем Default
+            restoreDefaultTheme()
+        }
 
         // Сохраняем принудительную ориентацию в SharedPreferences, если она есть
         saveForcedOrientation()
+    }
+
+    /**
+     * Восстанавливает тему по умолчанию, если активная тема не найдена
+     */
+    private fun restoreDefaultTheme() {
+        val themes = getAvailableThemes()
+
+        // Ищем тему по умолчанию
+        var defaultTheme = themes.find { it.isDefault }
+
+        // Если тема по умолчанию не найдена, ищем по имени "default"
+        if (defaultTheme == null) {
+            defaultTheme = themes.find { it.name == "default" }
+        }
+
+        // Если всё ещё не найдена, берём первую доступную тему
+        if (defaultTheme == null) {
+            defaultTheme = themes.firstOrNull()
+        }
+
+        // Если совсем нет тем — создаём базовую тему
+        if (defaultTheme == null) {
+            defaultTheme = Theme(
+                name = "default",
+                isDefault = true,
+                sourcePath = "themes/default",
+                isAsset = true,
+                displayName = context.getString(R.string.theme_default_name)
+            )
+        }
+
+        // Сохраняем тему по умолчанию как активную
+        activeTheme = defaultTheme
+        configManager.setActiveTheme(defaultTheme.name)
+
+        // Показываем уведомление о восстановлении
+        val message = context.getString(R.string.theme_active_not_found) + "\n" +
+                context.getString(R.string.theme_restored_default, defaultTheme.displayName ?: defaultTheme.name)
+
+        // Используем Handler для показа Toast в UI потоке
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
     }
 
     /**

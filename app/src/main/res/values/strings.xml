@@ -155,7 +155,9 @@
     <string name="update_available" formatted="false">Доступно обновление %s</string>
     <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
+    <string name="server_error_prefix">Ошибка сервера</string>
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
+    <string name="no_internet_connection">Отсутствует подключение к интернету</string>
 
     <!-- Локальная установка -->
     <string name="install_from_file">Локальное обновление из файла</string>
@@ -313,6 +315,9 @@
     <!-- Название темы по умолчанию -->
     <string name="theme_default_name">Стандартная</string>
 
+    <string name="theme_active_not_found">Ранее активная тема не найдена или была удалена</string>
+    <string name="theme_restored_default" formatted="false">Система изменила тему на "%s"</string>
+
     <!-- ============================================================ -->
     <!-- ==================== UPDATE MANAGER ========================= -->
     <!-- ============================================================ -->
@@ -334,6 +339,8 @@
     <!-- ============================================================ -->
 
     <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
+    <string name="webview_dir_theme_not_found">Директория активной темы не найдена</string>
+
 
     <!-- ============================================================ -->
     <!-- ==================== API METHODS ============================ -->
