@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.os.Environment
 import android.util.Base64
 import androidx.core.content.edit
+import by.quty.launch.R
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
@@ -202,7 +203,7 @@ class ThemeManager(
                             sourcePath = "themes/$themeFolder",
                             isAsset = true,
                             displayName = manifest?.name ?: when (themeFolder) {
-                                "default" -> "Стандартная"
+                                "default" -> context.getString(R.string.theme_default_name)
                                 else -> themeFolder.replaceFirstChar { it.uppercase() }
                             },
                             isCustom = false,
@@ -289,7 +290,7 @@ class ThemeManager(
             isDefault = true,
             sourcePath = "themes/default",
             isAsset = true,
-            displayName = "Стандартная"
+            displayName = context.getString(R.string.theme_default_name)
         )
     }
 

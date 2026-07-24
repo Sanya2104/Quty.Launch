@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -93,7 +94,7 @@ class UpdateManager(private val context: Context) {
                     versionInfo = if (hasUpdate) versionInfo else null
                 )
             } else {
-                UpdateCheckResult(hasUpdate = false, error = "Ошибка сервера: ${connection.responseCode}")
+                UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.server_error, connection.responseCode))
             }
         } catch (e: Exception) {
             UpdateCheckResult(hasUpdate = false, error = e.message)
@@ -305,7 +306,7 @@ class UpdateManager(private val context: Context) {
             downloadViaMediaStore(versionInfo, fileName, listener)
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                listener.onError(e.message ?: "Ошибка скачивания")
+                listener.onError(e.message ?: context.getString(R.string.download_error))
             }
             false
         }
@@ -392,7 +393,7 @@ class UpdateManager(private val context: Context) {
             deleteFileIfExists(fileName)
 
             withContext(Dispatchers.Main) {
-                listener.onError(e.message ?: "Ошибка скачивания")
+                listener.onError(e.message ?: context.getString(R.string.download_error))
             }
             false
         }

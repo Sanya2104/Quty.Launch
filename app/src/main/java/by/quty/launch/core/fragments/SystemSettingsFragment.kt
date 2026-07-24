@@ -128,7 +128,7 @@ class SystemSettingsFragment : Fragment() {
         } catch (e: Exception) {
             e.printStackTrace()
             versionTextView.text = getString(R.string.version_unknown)
-            versionCodeTextView.text = "?"
+            versionCodeTextView.text = getString(R.string.unknown_code)
             channelContainer.visibility = View.GONE
             channelDivider.visibility = View.GONE
         }
@@ -160,7 +160,7 @@ class SystemSettingsFragment : Fragment() {
         progressToast?.cancel()
         progressToast = Toast.makeText(
             requireContext(),
-            "Осталось нажатий: $remaining",
+            getString(R.string.dev_mode_click_count, remaining),
             Toast.LENGTH_SHORT
         )
         progressToast?.show()
@@ -172,10 +172,10 @@ class SystemSettingsFragment : Fragment() {
 
         if (isCurrentlyEnabled) {
             prefs.edit { putBoolean("developer_mode", false) }
-            Toast.makeText(requireContext(), "Режим разработчика деактивирован", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.dev_mode_deactivated, Toast.LENGTH_SHORT).show()
         } else {
             prefs.edit { putBoolean("developer_mode", true) }
-            Toast.makeText(requireContext(), "Режим разработчика активирован!", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), R.string.dev_mode_activated, Toast.LENGTH_LONG).show()
         }
 
         requireActivity().recreate()
@@ -443,7 +443,7 @@ class SystemSettingsFragment : Fragment() {
             .setPositiveButton(getString(R.string.install_action)) { _, _ ->
                 installApk(uri)
             }
-            .setNegativeButton(getString(R.string.later), null)
+            .setNegativeButton(getString(R.string.dialog_later), null)
             .show()
     }
 
@@ -533,7 +533,7 @@ class SystemSettingsFragment : Fragment() {
             .setPositiveButton(getString(R.string.update_action)) { _, _ ->
                 downloadAndInstall(versionInfo)
             }
-            .setNegativeButton(getString(R.string.later), null)
+            .setNegativeButton(getString(R.string.dialog_later), null)
 
         dialogBuilder.setNeutralButton(getString(R.string.download_apk)) { _, _ ->
             downloadApkOnly(versionInfo)
@@ -575,9 +575,8 @@ class SystemSettingsFragment : Fragment() {
 
                 override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
-                    val fileName = "Quty.Launch-${versionInfo.version}.apk"
                     val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    val message = getString(R.string.download_complete, "$downloadsDir/$fileName")
+                    val message = getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: "")
 
                     AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.download_complete_title))
@@ -621,7 +620,7 @@ class SystemSettingsFragment : Fragment() {
                             // Передаём versionCode для очистки метки
                             updateManager.installApk(uri, versionInfo.versionCode)
                         }
-                        .setNegativeButton(getString(R.string.later), null)
+                        .setNegativeButton(getString(R.string.dialog_later), null)
                         .show()
                 }
 
@@ -689,7 +688,7 @@ class SystemSettingsFragment : Fragment() {
             )
             Toast.makeText(
                 requireContext(),
-                "✅ APK сохранён в:\n${downloadsDir?.absolutePath}",
+                getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: ""),
                 Toast.LENGTH_LONG
             ).show()
 
@@ -699,7 +698,7 @@ class SystemSettingsFragment : Fragment() {
             )
             Toast.makeText(
                 requireContext(),
-                "✅ APK сохранён в:\n${downloadsDir?.absolutePath}",
+                getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: ""),
                 Toast.LENGTH_LONG
             ).show()
         }

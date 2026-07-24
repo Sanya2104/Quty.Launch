@@ -277,7 +277,6 @@ class WelcomeActivity : BaseActivity() {
 
         container.addView(rowLayout)
 
-
         return container
     }
 

@@ -92,7 +92,7 @@ class ThemeSettingsFragment : Fragment() {
         } else {
             Toast.makeText(
                 requireContext(),
-                "Для установки тем необходимо разрешить доступ к хранилищу",
+                R.string.storage_permission_denied,
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -235,12 +235,12 @@ class ThemeSettingsFragment : Fragment() {
             pendingThemeName = themeName
 
             AlertDialog.Builder(requireContext())
-                .setTitle("Доступ к хранилищу")
-                .setMessage("Для установки тем необходимо разрешить доступ к файлам")
-                .setPositiveButton("Разрешить") { _, _ ->
+                .setTitle(R.string.storage_permission_title)
+                .setMessage(R.string.storage_permission_message)
+                .setPositiveButton(R.string.storage_permission_allow) { _, _ ->
                     requestStoragePermission()
                 }
-                .setNegativeButton("Отмена") { _, _ ->
+                .setNegativeButton(R.string.cancel) { _, _ ->
                     pendingThemeUri = null
                     pendingThemeName = null
                 }
@@ -301,21 +301,15 @@ class ThemeSettingsFragment : Fragment() {
      */
     private fun showFileManagerSuggestion() {
         AlertDialog.Builder(requireContext())
-            .setTitle("Файловый менеджер не найден")
-            .setMessage(
-                "Для установки тем необходимо приложение-файловый менеджер.\n\n" +
-                        "Рекомендуем:\n" +
-                        "• Material Files (бесплатно, без рекламы)\n" +
-                        "• Total Commander (мощный, бесплатный)\n" +
-                        "• CX File Explorer (простой, бесплатный)"
-            )
-            .setPositiveButton("Установить Material Files") { _, _ ->
+            .setTitle(R.string.file_manager_not_found)
+            .setMessage(R.string.file_manager_suggestion)
+            .setPositiveButton(R.string.install_material_files) { _, _ ->
                 openPlayStore("me.zhanghai.android.files")
             }
-            .setNeutralButton("Другой файловый менеджер") { _, _ ->
+            .setNeutralButton(R.string.other_file_manager) { _, _ ->
                 openPlayStore("com.ghisler.android.TotalCommander")
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -333,7 +327,7 @@ class ThemeSettingsFragment : Fragment() {
             } catch (_: Exception) {
                 Toast.makeText(
                     requireContext(),
-                    "Не удалось открыть Google Play.\n Установите файловый менеджер вручную.",
+                    R.string.cannot_open_play_store,
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -631,7 +625,7 @@ class ThemeSettingsFragment : Fragment() {
 
                 // Проверяем, не активна ли уже тема
                 if (theme.name == activeTheme?.name) {
-                    Toast.makeText(requireContext(), "Тема уже активна", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.theme_already_active, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 

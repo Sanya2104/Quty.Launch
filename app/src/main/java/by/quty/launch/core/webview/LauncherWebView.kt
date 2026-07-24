@@ -9,6 +9,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
+import by.quty.launch.R
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
@@ -157,7 +158,10 @@ class LauncherWebView(context: Context) : WebView(context) {
                 failingUrl: String?
             ) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
-                android.util.Log.e("LauncherWebView", "Error loading: $failingUrl - $description")
+                android.util.Log.e(
+                    "LauncherWebView",
+                    context.getString(R.string.webview_error_loading, failingUrl ?: "unknown", description ?: "unknown")
+                )
             }
         }
     }

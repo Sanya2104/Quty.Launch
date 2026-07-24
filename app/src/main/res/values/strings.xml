@@ -1,8 +1,29 @@
 <!-- res/values/strings.xml -->
 <resources>
 
+    <!-- ============================================================ -->
+    <!-- ==================== ОБЩИЕ СТРОКИ =========================== -->
+    <!-- ============================================================ -->
+
     <!-- App name -->
     <string name="app_name">Quty.Launch</string>
+
+    <!-- Общие кнопки -->
+    <string name="cancel">Отмена</string>
+    <string name="close">Закрыть</string>
+    <string name="delete">Удалить</string>
+    <string name="empty"> </string>
+    <string name="unknown_code">\?</string>
+
+    <!-- Общие статусы -->
+    <string name="permission_granted">Разрешено</string>
+    <string name="permission_denied">Не разрешено</string>
+    <string name="version_unknown">Неизвестный</string>
+    <string name="unknown">Неизвестно</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== SETTINGS ACTIVITY ====================== -->
+    <!-- ============================================================ -->
 
     <!-- SettingsActivity - заголовки -->
     <string name="settings_title">Настройки лаунчера</string>
@@ -13,7 +34,16 @@
     <string name="tab_system">Система</string>
     <string name="tab_developer">DevMode</string>
 
-    <!-- Theme settings -->
+    <!-- Dialog messages -->
+    <string name="dialog_apply_settings_title">Применить настройки</string>
+    <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
+    <string name="dialog_restart">Перезапустить</string>
+    <string name="dialog_later">Позже</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== THEME SETTINGS ========================= -->
+    <!-- ============================================================ -->
+
     <string name="settings_theme_title">Выберите тему оформления:</string>
 
     <!-- Установка темы из файла -->
@@ -29,31 +59,36 @@
     <string name="theme_min_launcher_version" formatted="false">Требуется лаунчер версии: %s</string>
 
     <!-- Меню темы -->
-    <string name="delete">Удалить</string>
     <string name="theme_menu_description">Меню темы</string>
     <string name="theme_menu_apply">Применить</string>
     <string name="theme_menu_delete">Удалить</string>
     <string name="theme_menu_share">Поделиться</string>
     <string name="theme_menu_info">Информация</string>
+    <string name="theme_menu_check_updates">Проверить обновления</string>
+
+    <!-- Удаление темы -->
     <string name="theme_delete_confirm">Удалить тему?</string>
     <string name="theme_delete_message" formatted="false">Вы уверены, что хотите удалить тему "%s"?</string>
     <string name="theme_delete_success" formatted="false">Тема "%s" удалена</string>
     <string name="theme_delete_error">Ошибка при удалении темы</string>
     <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
+    <string name="theme_cant_delete_active">Нельзя удалить активную тему. Сначала примените другую.</string>
+
+    <!-- Информация о теме -->
     <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
     <string name="theme_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется лаунчер: %5$s</string>
     <string name="theme_type_builtin">Встроенная</string>
     <string name="theme_type_custom">Пользовательская</string>
     <string name="theme_version_with_label" formatted="false">Версия: %s</string>
-    <string name="theme_cant_delete_active">Нельзя удалить активную тему. Сначала примените другую.</string>
-    <string name="theme_file_not_found">Файл темы не найден</string>
-    <string name="theme_share_title">Поделиться темой</string>
-    <string name="theme_share_error">Ошибка при отправке файла</string>
     <string name="theme_info_min_version" formatted="false">Версии %s</string>
     <string name="theme_info_min_version_not_specified">Не указано</string>
 
-    <!-- Theme update -->
-    <string name="theme_menu_check_updates">Проверить обновления</string>
+    <!-- Шаринг темы -->
+    <string name="theme_share_title">Поделиться темой</string>
+    <string name="theme_share_error">Ошибка при отправке файла</string>
+    <string name="theme_file_not_found">Файл темы не найден</string>
+
+    <!-- Обновление темы -->
     <string name="theme_update_available">Доступно обновление</string>
     <string name="theme_update_not_found">Обновлений не найдено</string>
     <string name="theme_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
@@ -61,8 +96,6 @@
     <string name="theme_update_success">Тема обновлена до версии %s</string>
     <string name="theme_update_confirm_title">Обновление темы</string>
     <string name="theme_update_confirm_message" formatted="false">Доступна новая версия темы!\n\n Текущая: %s\n\n Новая: %s\n\n Что нового:\n%s</string>
-
-    <!-- Theme update strings -->
     <string name="theme_update_checking">Проверка обновлений</string>
     <string name="theme_update_checking_message">Проверка…</string>
     <string name="theme_update_available_message">Доступно обновление темы!</string>
@@ -77,7 +110,17 @@
     <string name="theme_update_incompatible_title">Тема несовместима</string>
     <string name="theme_update_incompatible_message" formatted="false">Обновление темы требует лаунчер версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
 
-    <!-- Display settings -->
+    <!-- Файловый менеджер -->
+    <string name="file_manager_not_found">Файловый менеджер не найден</string>
+    <string name="file_manager_suggestion" formatted="false">Для установки тем необходимо приложение-файловый менеджер.\n\nРекомендуем:\n• Material Files (бесплатно, без рекламы)\n• Total Commander (мощный, бесплатный)\n• CX File Explorer (простой, бесплатный)</string>
+    <string name="install_material_files">Установить Material Files</string>
+    <string name="other_file_manager">Другой файловый менеджер</string>
+    <string name="cannot_open_play_store">Не удалось открыть Google Play.\n Установите файловый менеджер вручную.</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== DISPLAY SETTINGS ======================= -->
+    <!-- ============================================================ -->
+
     <string name="settings_orientation_title">Ориентация экрана</string>
     <string name="settings_additional_title">Дополнительные настройки</string>
 
@@ -88,22 +131,23 @@
 
     <!-- Additional -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
-
-    <!-- Строгий режим -->
     <string name="additional_strict_mode">Строгий режим</string>
     <string name="strict_mode_hint">При строгом режиме панели не появляются даже при свайпе</string>
     <string name="strict_mode_changed">Строгий режим изменён</string>
 
-    <!-- System section -->
+    <!-- Orientation lock hints -->
+    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
+    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
+    <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== SYSTEM SETTINGS ======================== -->
+    <!-- ============================================================ -->
+
     <string name="system_info_title">Информация о системе</string>
     <string name="version_label">Версия</string>
     <string name="version_code_label">Код версии</string>
     <string name="channel_label">Канал</string>
-    <string name="version_unknown">Неизвестный</string>
-
-    <!-- Пустая строка и неизвестный код для TextView -->
-    <string name="empty"> </string>
-    <string name="unknown_code">\?</string>
 
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
@@ -112,6 +156,8 @@
     <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
+
+    <!-- Копирайт -->
     <string name="copyright">Quty.Launch © 2026</string>
 
     <!-- Локальная установка -->
@@ -123,69 +169,45 @@
     <string name="install_local_apk">Установить локальный APK</string>
     <string name="install_local_message" formatted="false">Вы уверены, что хотите установить APK версии %s?</string>
 
-    <!-- Установка из файла -->
     <string name="install_option_title">Выберите способ установки</string>
     <string name="install_option_file_manager">📂 Через файловый менеджер</string>
     <string name="install_option_downloads">📁 Из папки Download</string>
     <string name="no_apk_found">APK файлы не найдены в папке Download</string>
-    <string name="cancel">Отмена</string>
-
-    <!-- Ошибки -->
     <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
     <string name="install_error">Не удалось запустить установку</string>
 
-    <!-- Кнопка "Скачать APK" -->
+    <!-- Скачивание APK -->
     <string name="download_apk">📥 Скачать APK</string>
-
-    <!-- Сообщения о завершении загрузки -->
     <string name="download_complete_title">Загрузка завершена</string>
     <string name="download_complete" formatted="false">APK сохранён по пути:\n%s</string>
     <string name="open_folder">📂 Открыть папку</string>
-    <string name="close">Закрыть</string>
+    <string name="download_error">Ошибка скачивания</string>
 
     <!-- Update dialog -->
     <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
-    <string name="later">Позже</string>
     <string name="critical_tag">\n ⚠️ КРИТИЧЕСКОЕ</string>
+    <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
+    <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
+    <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s \n (код: %s, канал: %s)</string>
 
     <!-- Download dialog -->
     <string name="downloading_title">Скачивание обновления</string>
     <string name="downloading_prepare">Подготовка…</string>
     <string name="downloading_progress" formatted="false">Скачивание: %d%%</string>
-    <string name="download_error">Ошибка скачивания</string>
 
     <!-- Install dialog -->
     <string name="install_title">Установка обновления</string>
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
 
-    <!-- Update dialog version info -->
-    <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
-    <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
-    <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s \n (код: %s, канал: %s)</string>
+    <string name="apk_saved_to">✅ APK сохранён в:\n%s</string>
 
-    <!-- Messages -->
-    <string name="theme_applied" formatted="false">Тема %s применена</string>
-    <string name="fullscreen_changed">Полноэкранный режим изменён</string>
+    <!-- ============================================================ -->
+    <!-- ==================== WELCOME ACTIVITY ======================= -->
+    <!-- ============================================================ -->
 
-    <!-- Authors -->
-    <string name="author_custom">Пользовательская</string>
-    <string name="author_default">QutyTeam</string>
-
-    <!-- Dialog messages -->
-    <string name="dialog_apply_settings_title">Применить настройки</string>
-    <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
-    <string name="dialog_restart">Перезапустить</string>
-    <string name="dialog_later">Позже</string>
-
-    <!-- Orientation lock hints -->
-    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
-    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
-    <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
-
-    <!-- Welcome Activity -->
     <string name="_0">0%</string>
     <string name="version_format" formatted="false">Версия: %s</string>
     <string name="welcome_title">Добро пожаловать в Quty.Launch!</string>
@@ -216,11 +238,9 @@
     <string name="welcome_permission_denied_message">Для корректной работы лаунчера необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
     <string name="welcome_permission_denied_button">Открыть настройки приложения</string>
 
-    <!-- Статусы разрешений -->
-    <string name="permission_granted">Разрешено</string>
-    <string name="permission_denied">Не разрешено</string>
-
-    <!-- ===== Режим разработчика ===== -->
+    <!-- ============================================================ -->
+    <!-- ==================== DEVELOPER SETTINGS ===================== -->
+    <!-- ============================================================ -->
 
     <!-- Заголовки разделов -->
     <string name="dev_section_webview">Отладка WebView</string>
@@ -231,6 +251,8 @@
 
     <!-- 1. Отладка WebView -->
     <string name="dev_webview_debug">Отладка WebView</string>
+    <string name="dev_webview_debug_enabled">Отладка WebView включена\nПодключитесь через Chrome DevTools</string>
+    <string name="dev_webview_debug_disabled">Отладка WebView выключена</string>
     <string name="dev_webview_clear_cache">Очистить кэш WebView</string>
     <string name="dev_webview_clear_cache_success">Кэш WebView очищен</string>
 
@@ -240,6 +262,8 @@
     <string name="dev_theme_manifest_not_found">manifest.json не найден</string>
     <string name="dev_theme_reload">Перезагрузить тему</string>
     <string name="dev_theme_reload_success">Тема перезагружена</string>
+    <string name="dev_theme_not_found">Активная тема не найдена</string>
+    <string name="dev_error">Ошибка: %s</string>
 
     <!-- 3. Системная информация -->
     <string name="dev_device_model">Модель устройства</string>
@@ -254,6 +278,7 @@
     <string name="dev_themes_size">Размер тем оформления</string>
     <string name="dev_cache_size_value">0 B</string>
     <string name="dev_themes_size_value">0 B</string>
+    <string name="dev_cache_size_updated">Размер кэша обновлён</string>
     <string name="dev_clear_data">Очистить данные</string>
     <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
     <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
@@ -261,9 +286,67 @@
     <!-- 5. Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
 
-    <!-- Общие -->
-    <string name="dev_error">Ошибка: %s</string>
-    <string name="dev_unknown">Неизвестно</string>
-    <string name="dev_theme_not_found">Активная тема не найдена</string>
+    <!-- Активация DevMode -->
+    <string name="dev_mode_activated">Режим разработчика активирован!</string>
+    <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
+    <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
+
+    <string name="dev_unknown_error">Неизвестная ошибка</string>
+    <string name="dev_truncated">\n\n … (обрезано)</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== THEME MANAGER ========================== -->
+    <!-- ============================================================ -->
+
+    <!-- Авторы -->
+    <string name="author_custom">Пользовательская</string>
+    <string name="author_default">QutyTeam</string>
+
+    <!-- Сообщения -->
+    <string name="theme_applied" formatted="false">Тема %s применена</string>
+    <string name="theme_already_active">Тема уже активна</string>
+    <string name="fullscreen_changed">Полноэкранный режим изменён</string>
+
+    <!-- Доступ к хранилищу -->
+    <string name="storage_permission_title">Доступ к хранилищу</string>
+    <string name="storage_permission_message">Для установки тем необходимо разрешить доступ к файлам</string>
+    <string name="storage_permission_allow">Разрешить</string>
+    <string name="storage_permission_denied">Для установки тем необходимо разрешить доступ к хранилищу</string>
+
+    <!-- Название темы по умолчанию -->
+    <string name="theme_default_name">Стандартная</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== UPDATE MANAGER ========================= -->
+    <!-- ============================================================ -->
+
+    <string name="update_check_failed" formatted="false">Ошибка проверки обновлений: %s</string>
+    <string name="update_install_failed" formatted="false">Не удалось установить обновление: %s</string>
+    <string name="apk_not_found">APK файл не найден</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== JsBridge =============================== -->
+    <!-- ============================================================ -->
+
+    <string name="js_bridge_method_not_found" formatted="false">Метод не найден: %s</string>
+    <string name="js_bridge_execution_error" formatted="false">Ошибка выполнения: %s</string>
+    <string name="js_bridge_timeout">Время выполнения истекло</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== LAUNCHER WEBVIEW ======================= -->
+    <!-- ============================================================ -->
+
+    <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== API METHODS ============================ -->
+    <!-- ============================================================ -->
+
+    <!-- GetApps -->
+    <string name="api_getapps_settings_name">Настройки лаунчера</string>
+
+    <!-- LaunchApp -->
+    <string name="api_launchapp_package_required">Требуется имя пакета</string>
+    <string name="api_launchapp_not_found">Приложение не найдено</string>
 
 </resources>

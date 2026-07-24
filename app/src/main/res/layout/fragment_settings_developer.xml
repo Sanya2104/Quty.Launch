@@ -124,7 +124,7 @@
                     android:id="@+id/dev_device_model_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -148,7 +148,7 @@
                     android:id="@+id/dev_android_version_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -172,7 +172,7 @@
                     android:id="@+id/dev_sdk_level_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -202,7 +202,7 @@
                     android:id="@+id/dev_app_version_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -226,7 +226,7 @@
                     android:id="@+id/dev_app_code_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -251,7 +251,7 @@
                     android:id="@+id/dev_app_channel_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_unknown"
+                    android:text="@string/unknown"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 

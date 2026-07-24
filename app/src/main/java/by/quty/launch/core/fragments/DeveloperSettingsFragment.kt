@@ -71,10 +71,10 @@ class DeveloperSettingsFragment : Fragment() {
             prefs.edit { putBoolean("webview_debug", isChecked) }
             if (isChecked) {
                 WebView.setWebContentsDebuggingEnabled(true)
-                Toast.makeText(requireContext(), "Отладка WebView включена\nПодключитесь через Chrome DevTools", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), R.string.dev_webview_debug_enabled, Toast.LENGTH_LONG).show()
             } else {
                 WebView.setWebContentsDebuggingEnabled(false)
-                Toast.makeText(requireContext(), "Отладка WebView выключена", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.dev_webview_debug_disabled, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -94,7 +94,7 @@ class DeveloperSettingsFragment : Fragment() {
             webView.clearSslPreferences()
             Toast.makeText(requireContext(), R.string.dev_webview_clear_cache_success, Toast.LENGTH_SHORT).show()
         } catch (_: Exception) {
-            Toast.makeText(requireContext(), R.string.dev_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.dev_error, getString(R.string.dev_unknown_error)), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -145,7 +145,7 @@ class DeveloperSettingsFragment : Fragment() {
                 val parsed = json.decodeFromString<JsonObject>(content)
                 val formatted = json.encodeToString(parsed)
                 val displayText = if (formatted.length > 5000) {
-                    formatted.take(5000) + "\n\n... (обрезано)"
+                    formatted.take(5000) + "\n\n" + getString(R.string.dev_truncated)
                 } else {
                     formatted
                 }
@@ -162,7 +162,7 @@ class DeveloperSettingsFragment : Fragment() {
                     .show()
             }
         } catch (_: Exception) {
-            Toast.makeText(requireContext(), R.string.dev_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.dev_error, getString(R.string.dev_unknown_error)), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -199,7 +199,7 @@ class DeveloperSettingsFragment : Fragment() {
                 requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
             }
 
-            val versionName = packageInfo.versionName ?: getString(R.string.dev_unknown)
+            val versionName = packageInfo.versionName ?: getString(R.string.unknown)
             val versionCode = packageInfo.longVersionCode
 
             // 3.4 Версия приложения
@@ -219,9 +219,9 @@ class DeveloperSettingsFragment : Fragment() {
             channelView.text = channel
 
         } catch (_: Exception) {
-            appVersionView.text = getString(R.string.dev_unknown)
-            appCodeView.text = getString(R.string.dev_unknown)
-            channelView.text = getString(R.string.dev_unknown)
+            appVersionView.text = getString(R.string.unknown)
+            appCodeView.text = getString(R.string.unknown)
+            channelView.text = getString(R.string.unknown)
         }
     }
 
@@ -242,14 +242,14 @@ class DeveloperSettingsFragment : Fragment() {
         val cacheSizeRow = view.findViewById<View>(R.id.dev_cache_size_row)
         cacheSizeRow?.setOnClickListener {
             updateCacheSize(cacheSizeView)
-            Toast.makeText(requireContext(), "Размер кэша обновлён", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
         // Кнопка обновления размера тем (по клику на строку)
         val themesSizeRow = view.findViewById<View>(R.id.dev_themes_size_row)
         themesSizeRow?.setOnClickListener {
             updateThemesSize(themesSizeView)
-            Toast.makeText(requireContext(), "Размер тем обновлён", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
         // 4.1 Очистить данные
@@ -257,10 +257,10 @@ class DeveloperSettingsFragment : Fragment() {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dev_clear_data)
                 .setMessage(R.string.dev_clear_data_confirm)
-                .setPositiveButton("Очистить") { _, _ ->
+                .setPositiveButton(R.string.delete) { _, _ ->
                     clearAppData()
                 }
-                .setNegativeButton("Отмена", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show()
         }
     }
@@ -317,7 +317,7 @@ class DeveloperSettingsFragment : Fragment() {
                 restartApp()
             }, 1500)
         } catch (_: Exception) {
-            Toast.makeText(requireContext(), R.string.dev_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.dev_error, getString(R.string.dev_unknown_error)), Toast.LENGTH_SHORT).show()
         }
     }
 

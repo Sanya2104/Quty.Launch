@@ -4,6 +4,7 @@ package by.quty.launch.core
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -207,7 +208,7 @@ class ThemeUpdateManager(private val context: Context) {
 
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                listener.onError(e.message ?: "Ошибка скачивания")
+                listener.onError(e.message ?: context.getString(R.string.download_error))
             }
             false
         }

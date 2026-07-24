@@ -3,6 +3,7 @@ package by.quty.launch.api.methods
 
 import android.content.Context
 import android.content.Intent
+import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
@@ -19,7 +20,7 @@ class LaunchApp(
 
     override suspend fun executeInternal(params: LaunchAppParams?): String {
         val packageName = params?.packageName
-            ?: throw IllegalArgumentException("Package name required")
+            ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_package_required))
 
         when (packageName) {
             "by.quty.launch.settings" -> {
@@ -38,7 +39,7 @@ class LaunchApp(
                 // Обычное приложение
                 val intent = context.packageManager
                     .getLaunchIntentForPackage(packageName)
-                    ?: throw IllegalArgumentException("App not found")
+                    ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_not_found))
 
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)

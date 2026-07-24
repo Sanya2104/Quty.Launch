@@ -72,7 +72,7 @@ class GetApps(
         // Добавляем кастомное приложение "Настройки" в начало списка
         val customApps = listOf(
             AppInfo(
-                name = "Настройки лаунчера",
+                name = context.getString(R.string.api_getapps_settings_name),
                 packageName = "by.quty.launch.settings",
                 isCustom = true,
                 iconBase64 = settingsIconBase64  // иконка из ресурсов
