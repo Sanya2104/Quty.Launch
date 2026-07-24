@@ -9,8 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -181,7 +179,7 @@ class SystemSettingsFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.dev_mode_activated, Toast.LENGTH_LONG).show()
         }
 
-        // Обновляем UI без перезапуска активности
+        // Обновляем UI без перезапуска активности (без моргания!)
         refreshActivityWithoutRestart()
     }
 
@@ -197,28 +195,10 @@ class SystemSettingsFragment : Fragment() {
             return
         }
 
-        // Получаем текущую позицию вкладки
-        val currentPosition = (activity as? SettingsActivity)?.getCurrentTabPosition() ?: 2
-
         // Обновляем адаптер ViewPager2 через SettingsActivity
         (activity as? SettingsActivity)?.let { settingsActivity ->
             // Обновляем адаптер (пересоздаём фрагменты)
             settingsActivity.refreshPagerAdapter()
-
-            // Восстанавливаем позицию после обновления с небольшой задержкой
-            // чтобы адаптер успел перестроиться
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (!activity.isFinishing && !activity.isDestroyed) {
-                    // Устанавливаем позицию через Intent для корректного восстановления
-                    val intent = Intent(activity, activity::class.java)
-                    intent.putExtra("restore_tab_position", currentPosition)
-                    activity.finish()
-                    activity.startActivity(intent)
-                    // Используем suppress для deprecated метода
-                    @Suppress("DEPRECATION")
-                    activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                }
-            }, 50)
         }
     }
 
