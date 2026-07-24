@@ -16,6 +16,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import androidx.core.content.edit
 
 @Serializable
@@ -96,8 +99,24 @@ class UpdateManager(private val context: Context) {
             } else {
                 UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.server_error, connection.responseCode))
             }
+        } catch (_: UnknownHostException) {
+            // Нет подключения к интернету
+            UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.no_internet_connection))
+        } catch (_: ConnectException) {
+            // Не удалось подключиться к серверу
+            UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.no_internet_connection))
+        } catch (_: SocketTimeoutException) {
+            // Таймаут подключения
+            UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.no_internet_connection))
         } catch (e: Exception) {
-            UpdateCheckResult(hasUpdate = false, error = e.message)
+            // Другие ошибки
+            val errorMessage = when {
+                e.message?.contains("Network") == true -> context.getString(R.string.no_internet_connection)
+                e.message?.contains("Unable to resolve host") == true -> context.getString(R.string.no_internet_connection)
+                e.message?.contains("hostname") == true -> context.getString(R.string.no_internet_connection)
+                else -> e.message ?: context.getString(R.string.update_error)
+            }
+            UpdateCheckResult(hasUpdate = false, error = errorMessage)
         }
     }
 
@@ -350,11 +369,11 @@ class UpdateManager(private val context: Context) {
                 context.contentResolver.insert(
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                     contentValues
-                ) ?: throw Exception("Не удалось создать файл в MediaStore")
+                ) ?: throw Exception(context.getString(R.string.update_manager_media_store_create_failed))
             }
 
             val outputStream = context.contentResolver.openOutputStream(contentUri)
-                ?: throw Exception("Не удалось открыть поток для записи")
+                ?: throw Exception(context.getString(R.string.update_manager_media_store_open_failed))
 
             // Качаем и пишем
             val buffer = ByteArray(4096)

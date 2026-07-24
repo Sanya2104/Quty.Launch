@@ -132,7 +132,6 @@
     <!-- Additional -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
     <string name="additional_strict_mode">Строгий режим</string>
-    <string name="strict_mode_hint">При строгом режиме панели не появляются даже при свайпе</string>
     <string name="strict_mode_changed">Строгий режим изменён</string>
 
     <!-- Orientation lock hints -->
@@ -325,6 +324,8 @@
     <string name="update_check_failed" formatted="false">Ошибка проверки обновлений: %s</string>
     <string name="update_install_failed" formatted="false">Не удалось установить обновление: %s</string>
     <string name="apk_not_found">APK файл не найден</string>
+    <string name="update_manager_media_store_create_failed">Не удалось создать файл в MediaStore</string>
+    <string name="update_manager_media_store_open_failed">Не удалось открыть поток для записи</string>
 
     <!-- ============================================================ -->
     <!-- ==================== JsBridge =============================== -->

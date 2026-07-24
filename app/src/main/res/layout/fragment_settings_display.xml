@@ -122,16 +122,6 @@
                 android:textColor="#FFFFFF"
                 tools:ignore="VisualLintButtonSize" />
 
-            <TextView
-                android:id="@+id/strict_mode_hint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/strict_mode_hint"
-                android:textColor="#666666"
-                android:textSize="12sp"
-                android:paddingTop="4dp"
-                android:visibility="gone"/>
-
         </LinearLayout>
 
     </LinearLayout>
