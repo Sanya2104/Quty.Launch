@@ -253,6 +253,8 @@ class ThemeSettingsFragment : Fragment() {
 
     /**
      * Открывает файловый менеджер для выбора темы.
+     * Сначала пробует ACTION_OPEN_DOCUMENT, затем ACTION_GET_CONTENT,
+     * при ошибке предлагает установить альтернативный файловый менеджер.
      */
     private fun selectThemeFile() {
         try {
@@ -268,11 +270,73 @@ class ThemeSettingsFragment : Fragment() {
             selectThemeLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.error_open_file_manager),
-                Toast.LENGTH_SHORT
-            ).show()
+            // Пробуем альтернативный способ
+            selectThemeAlternative()
+        }
+    }
+
+    /**
+     * Альтернативный способ выбора файла через ACTION_GET_CONTENT
+     */
+    private fun selectThemeAlternative() {
+        try {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                    "application/zip",
+                    "application/octet-stream"
+                ))
+            }
+            selectThemeLauncher.launch(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Если и это не работает — предлагаем установить файловый менеджер
+            showFileManagerSuggestion()
+        }
+    }
+
+    /**
+     * Показывает диалог с предложением установить файловый менеджер
+     */
+    private fun showFileManagerSuggestion() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Файловый менеджер не найден")
+            .setMessage(
+                "Для установки тем необходимо приложение-файловый менеджер.\n\n" +
+                        "Рекомендуем:\n" +
+                        "• Material Files (бесплатно, без рекламы)\n" +
+                        "• Total Commander (мощный, бесплатный)\n" +
+                        "• CX File Explorer (простой, бесплатный)"
+            )
+            .setPositiveButton("Установить Material Files") { _, _ ->
+                openPlayStore("me.zhanghai.android.files")
+            }
+            .setNeutralButton("Другой файловый менеджер") { _, _ ->
+                openPlayStore("com.ghisler.android.TotalCommander")
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    /**
+     * Открывает Google Play для установки приложения
+     */
+    private fun openPlayStore(packageName: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri())
+            startActivity(intent)
+        } catch (_: Exception) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$packageName".toUri())
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    "Не удалось открыть Google Play.\n Установите файловый менеджер вручную.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 
