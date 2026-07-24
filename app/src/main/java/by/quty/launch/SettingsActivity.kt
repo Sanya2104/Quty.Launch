@@ -17,7 +17,6 @@ import by.quty.launch.core.fragments.ThemeSettingsFragment
 import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import androidx.core.content.edit
 
 /**
  * Активность настроек лаунчера с вкладками
@@ -60,6 +59,9 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         const val RESULT_THEME_CHANGED = 1
         const val EXTRA_SELECTED_THEME = "selected_theme"
         private const val DELAY_BEFORE_RESTART = 500L // Задержка перед перезапуском (мс)
+
+        // Индексы вкладок
+        private const val TAB_THEME = 0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -124,8 +126,6 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 super.onPageSelected(position)
                 // Обновляем ссылки на фрагменты
                 updateFragmentReferences()
-                // Сохраняем позицию вкладки
-                saveTabPosition(position)
             }
         })
     }
@@ -138,43 +138,24 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     }
 
     /**
-     * Сохраняет позицию вкладки в SharedPreferences
-     */
-    fun saveTabPosition(position: Int) {
-        val prefs = getSharedPreferences("settings_prefs", MODE_PRIVATE)
-        prefs.edit { putInt("last_tab_position", position) }
-    }
-
-    /**
-     * Восстанавливает позицию вкладки из SharedPreferences или Intent
+     * Восстанавливает позицию вкладки из Intent
+     * При обычном запуске — открывает "Оформление" (индекс 0)
+     * При переключении DevMode — открывает "Система" (индекс 2) через Intent
      */
     fun restoreTabPosition() {
-        // Проверяем, есть ли позиция в Intent (для перезапуска через Intent)
+        // Проверяем Intent (для переключения DevMode)
         val intentPosition = intent.getIntExtra("restore_tab_position", -1)
 
         if (intentPosition >= 0 && intentPosition < pagerAdapter.itemCount) {
-            // Восстанавливаем из Intent
+            // Переключение DevMode — открываем "Система"
             viewPager.setCurrentItem(intentPosition, false)
             // Очищаем, чтобы не мешать при следующем запуске
             intent.removeExtra("restore_tab_position")
             return
         }
 
-        // Проверяем сохранённую позицию из SharedPreferences (для recreate)
-        val prefs = getSharedPreferences("settings_prefs", MODE_PRIVATE)
-        val savedPosition = prefs.getInt("restore_tab_position", -1)
-
-        if (savedPosition >= 0 && savedPosition < pagerAdapter.itemCount) {
-            viewPager.setCurrentItem(savedPosition, false)
-            // Очищаем сохранённую позицию
-            prefs.edit { remove("restore_tab_position") }
-            return
-        }
-
-        // Если ничего нет — остаёмся на вкладке "Система" (индекс 2)
-        if (viewPager.currentItem != 2) {
-            viewPager.setCurrentItem(2, false)
-        }
+        // Обычный запуск — всегда открываем "Оформление" (индекс 0)
+        viewPager.setCurrentItem(TAB_THEME, false)
     }
 
     /**

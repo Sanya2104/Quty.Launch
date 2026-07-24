@@ -26,7 +26,6 @@ class DisplaySettingsFragment : Fragment() {
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
-    private lateinit var strictModeHint: TextView
     private lateinit var orientationLockHint: TextView // Подсказка о блокировке ориентации
     private var settingsEventListener: SettingsEventListener? = null
 
@@ -56,7 +55,6 @@ class DisplaySettingsFragment : Fragment() {
         orientationGroup = view.findViewById(R.id.orientation_group)
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
         strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
-        strictModeHint = view.findViewById(R.id.strict_mode_hint)
         orientationLockHint = view.findViewById(R.id.orientation_lock_hint)
 
         setupOrientationSelector()
@@ -230,13 +228,6 @@ class DisplaySettingsFragment : Fragment() {
 
         strictModeCheckbox.isEnabled = fullscreenEnabled
         strictModeCheckbox.alpha = if (fullscreenEnabled) 1.0f else 0.5f
-
-        // Показываем подсказку только если строгий режим включен
-        strictModeHint.visibility = if (strictModeCheckbox.isChecked && fullscreenEnabled) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
     }
 
     /**

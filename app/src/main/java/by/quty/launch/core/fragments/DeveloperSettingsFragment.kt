@@ -286,7 +286,10 @@ class DeveloperSettingsFragment : Fragment() {
 
     private fun getThemesSize(): Long {
         var size = 0L
-        val themesDir = File(Environment.getExternalStorageDirectory(), "QutyThemes")
+        // Новая структура: Quty.Launch/Themes/
+        val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
+        val themesDir = File(appDir, "Themes")
+
         if (themesDir.exists()) {
             themesDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
         }
@@ -308,10 +311,13 @@ class DeveloperSettingsFragment : Fragment() {
             requireContext().cacheDir.deleteRecursively()
             val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
             prefs.edit { clear() }
-            val themesDir = File(Environment.getExternalStorageDirectory(), "QutyThemes")
-            if (themesDir.exists()) {
-                themesDir.deleteRecursively()
+
+            // Новая структура: Quty.Launch/Themes/
+            val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
+            if (appDir.exists()) {
+                appDir.deleteRecursively()
             }
+
             Toast.makeText(requireContext(), R.string.dev_clear_data_success, Toast.LENGTH_LONG).show()
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 restartApp()

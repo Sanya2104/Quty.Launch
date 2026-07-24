@@ -62,7 +62,10 @@ class ThemeManager(
 
     private val themesDir = File(context.filesDir, "themes")
     private val activeThemeDir = File(themesDir, "active")
-    private val customThemesDir = File(Environment.getExternalStorageDirectory(), "QutyThemes")
+
+    // Новая структура: Quty.Launch/Themes/
+    private val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
+    private val customThemesDir = File(appDir, "Themes")
 
     private var activeTheme: Theme? = null
 
@@ -74,6 +77,7 @@ class ThemeManager(
     init {
         if (!themesDir.exists()) themesDir.mkdirs()
         if (!activeThemeDir.exists()) activeThemeDir.mkdirs()
+        if (!appDir.exists()) appDir.mkdirs()
         if (!customThemesDir.exists()) customThemesDir.mkdirs()
 
         // При инициализации загружаем активную тему из настроек
@@ -194,7 +198,7 @@ class ThemeManager(
         // Встроенные темы из assets
         themes.addAll(getBuiltInThemes())
 
-        // Кастомные темы из внешней папки
+        // Кастомные темы из внешней папки (Quty.Launch/Themes/)
         if (customThemesDir.exists()) {
             // Ищем файлы с поддерживаемыми расширениями
             customThemesDir.listFiles { file ->

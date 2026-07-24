@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
@@ -199,7 +200,7 @@ class ThemeSettingsFragment : Fragment() {
      */
     private fun hasStoragePermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            android.os.Environment.isExternalStorageManager()
+            Environment.isExternalStorageManager()
         } else {
             ContextCompat.checkSelfPermission(
                 requireContext(),
@@ -518,10 +519,13 @@ class ThemeSettingsFragment : Fragment() {
      */
     private fun performThemeInstall(uri: Uri, themeName: String) {
         try {
-            val themesDir = File(
-                android.os.Environment.getExternalStorageDirectory(),
-                "QutyThemes"
-            )
+            // Новая структура: Quty.Launch/Themes/
+            val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
+            val themesDir = File(appDir, "Themes")
+
+            if (!appDir.exists()) {
+                appDir.mkdirs()
+            }
             if (!themesDir.exists()) {
                 themesDir.mkdirs()
             }

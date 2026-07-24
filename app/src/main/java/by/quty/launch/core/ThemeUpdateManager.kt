@@ -4,6 +4,7 @@ package by.quty.launch.core
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Environment
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -182,11 +183,13 @@ class ThemeUpdateManager(private val context: Context) {
             outputStream.close()
             inputStream.close()
 
-            // Копируем файл в папку QutyThemes
-            val themesDir = File(
-                android.os.Environment.getExternalStorageDirectory(),
-                "QutyThemes"
-            )
+            // Копируем файл в папку Quty.Launch/Themes/
+            val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
+            val themesDir = File(appDir, "Themes")
+
+            if (!appDir.exists()) {
+                appDir.mkdirs()
+            }
             if (!themesDir.exists()) {
                 themesDir.mkdirs()
             }

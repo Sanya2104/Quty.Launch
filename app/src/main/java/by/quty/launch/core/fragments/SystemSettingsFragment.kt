@@ -202,9 +202,6 @@ class SystemSettingsFragment : Fragment() {
 
         // Обновляем адаптер ViewPager2 через SettingsActivity
         (activity as? SettingsActivity)?.let { settingsActivity ->
-            // Сохраняем позицию перед обновлением
-            settingsActivity.saveTabPosition(currentPosition)
-
             // Обновляем адаптер (пересоздаём фрагменты)
             settingsActivity.refreshPagerAdapter()
 
@@ -212,7 +209,14 @@ class SystemSettingsFragment : Fragment() {
             // чтобы адаптер успел перестроиться
             Handler(Looper.getMainLooper()).postDelayed({
                 if (!activity.isFinishing && !activity.isDestroyed) {
-                    settingsActivity.restoreTabPosition()
+                    // Устанавливаем позицию через Intent для корректного восстановления
+                    val intent = Intent(activity, activity::class.java)
+                    intent.putExtra("restore_tab_position", currentPosition)
+                    activity.finish()
+                    activity.startActivity(intent)
+                    // Используем suppress для deprecated метода
+                    @Suppress("DEPRECATION")
+                    activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
                 }
             }, 50)
         }
