@@ -157,9 +157,6 @@
     <string name="update_error">Ошибка</string>
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
 
-    <!-- Копирайт -->
-    <string name="copyright">Quty.Launch © 2026</string>
-
     <!-- Локальная установка -->
     <string name="install_from_file">Локальное обновление из файла</string>
     <string name="select_apk_title">Выберите APK файл</string>
@@ -187,7 +184,7 @@
     <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
-    <string name="critical_tag">\n ⚠️ КРИТИЧЕСКОЕ</string>
+    <string name="critical_tag">  ⚠️ КРИТИЧЕСКОЕ</string>
     <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
     <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
     <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s \n (код: %s, канал: %s)</string>

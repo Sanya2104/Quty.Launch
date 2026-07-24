@@ -209,16 +209,6 @@
 
         </LinearLayout>
 
-        <!-- Информация о приложении -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/copyright"
-            android:textColor="#78909C"
-            android:textSize="14sp" />
-
     </LinearLayout>
 
 </ScrollView>

@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +21,7 @@ import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
+import by.quty.launch.SettingsActivity
 import by.quty.launch.core.UpdateManager
 import by.quty.launch.core.VersionInfo
 import kotlinx.coroutines.launch
@@ -42,7 +45,7 @@ class SystemSettingsFragment : Fragment() {
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
-    private val clickTimeoutMs = 2000L
+    private val clickTimeoutMs = 3000L
     private val clicksToActivate = 5
 
     private var progressToast: Toast? = null
@@ -178,7 +181,41 @@ class SystemSettingsFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.dev_mode_activated, Toast.LENGTH_LONG).show()
         }
 
-        requireActivity().recreate()
+        // Обновляем UI без перезапуска активности
+        refreshActivityWithoutRestart()
+    }
+
+    /**
+     * Обновляет UI без перезапуска активности - без мерцания!
+     * Просто обновляем адаптер ViewPager2 и остаёмся на текущей вкладке
+     */
+    private fun refreshActivityWithoutRestart() {
+        val activity = requireActivity()
+
+        // Проверяем, что активность не уничтожена
+        if (activity.isFinishing || activity.isDestroyed) {
+            return
+        }
+
+        // Получаем текущую позицию вкладки
+        val currentPosition = (activity as? SettingsActivity)?.getCurrentTabPosition() ?: 2
+
+        // Обновляем адаптер ViewPager2 через SettingsActivity
+        (activity as? SettingsActivity)?.let { settingsActivity ->
+            // Сохраняем позицию перед обновлением
+            settingsActivity.saveTabPosition(currentPosition)
+
+            // Обновляем адаптер (пересоздаём фрагменты)
+            settingsActivity.refreshPagerAdapter()
+
+            // Восстанавливаем позицию после обновления с небольшой задержкой
+            // чтобы адаптер успел перестроиться
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    settingsActivity.restoreTabPosition()
+                }
+            }, 50)
+        }
     }
 
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {

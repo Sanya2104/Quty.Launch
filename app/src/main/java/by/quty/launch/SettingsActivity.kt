@@ -17,6 +17,7 @@ import by.quty.launch.core.fragments.ThemeSettingsFragment
 import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import androidx.core.content.edit
 
 /**
  * Активность настроек лаунчера с вкладками
@@ -91,6 +92,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         setupViewPager()
         setupCloseButton()
         setupBackPressedDispatcher()
+        restoreTabPosition()
 
         // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
@@ -122,8 +124,86 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 super.onPageSelected(position)
                 // Обновляем ссылки на фрагменты
                 updateFragmentReferences()
+                // Сохраняем позицию вкладки
+                saveTabPosition(position)
             }
         })
+    }
+
+    /**
+     * Получить текущую позицию вкладки
+     */
+    fun getCurrentTabPosition(): Int {
+        return viewPager.currentItem
+    }
+
+    /**
+     * Сохраняет позицию вкладки в SharedPreferences
+     */
+    fun saveTabPosition(position: Int) {
+        val prefs = getSharedPreferences("settings_prefs", MODE_PRIVATE)
+        prefs.edit { putInt("last_tab_position", position) }
+    }
+
+    /**
+     * Восстанавливает позицию вкладки из SharedPreferences или Intent
+     */
+    fun restoreTabPosition() {
+        // Проверяем, есть ли позиция в Intent (для перезапуска через Intent)
+        val intentPosition = intent.getIntExtra("restore_tab_position", -1)
+
+        if (intentPosition >= 0 && intentPosition < pagerAdapter.itemCount) {
+            // Восстанавливаем из Intent
+            viewPager.setCurrentItem(intentPosition, false)
+            // Очищаем, чтобы не мешать при следующем запуске
+            intent.removeExtra("restore_tab_position")
+            return
+        }
+
+        // Проверяем сохранённую позицию из SharedPreferences (для recreate)
+        val prefs = getSharedPreferences("settings_prefs", MODE_PRIVATE)
+        val savedPosition = prefs.getInt("restore_tab_position", -1)
+
+        if (savedPosition >= 0 && savedPosition < pagerAdapter.itemCount) {
+            viewPager.setCurrentItem(savedPosition, false)
+            // Очищаем сохранённую позицию
+            prefs.edit { remove("restore_tab_position") }
+            return
+        }
+
+        // Если ничего нет — остаёмся на вкладке "Система" (индекс 2)
+        if (viewPager.currentItem != 2) {
+            viewPager.setCurrentItem(2, false)
+        }
+    }
+
+    /**
+     * Обновляет адаптер ViewPager2 (пересоздаёт фрагменты)
+     * Используется при переключении DevMode без перезапуска активности
+     */
+    fun refreshPagerAdapter() {
+        // Сохраняем текущую позицию
+        val currentPosition = viewPager.currentItem
+
+        // Создаём новый адаптер
+        pagerAdapter = SettingsPagerAdapter(this)
+        viewPager.adapter = pagerAdapter
+
+        // Перепривязываем TabLayout
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when (position) {
+                SettingsPagerAdapter.TAB_THEME -> tab.text = getString(R.string.tab_theme)
+                SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
+                SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
+                SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
+            }
+        }.attach()
+
+        // Восстанавливаем позицию
+        viewPager.setCurrentItem(currentPosition, false)
+
+        // Обновляем ссылки на фрагменты
+        updateFragmentReferences()
     }
 
     /**
