@@ -5,7 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -235,6 +235,68 @@ object Logger {
             sb.append(" (${entry.source})")
             sb.append("\n")
         }
+        return sb.toString()
+    }
+
+    /**
+     * Сохраняет все логи в файл
+     * @return путь к сохранённому файлу или null в случае ошибки
+     */
+    fun saveLogsToFile(): String? {
+        return try {
+            // Создаём директорию Quty.Launch/Logs/
+            val appDir = File(android.os.Environment.getExternalStorageDirectory(), "Quty.Launch")
+            val logsDir = File(appDir, "Logs")
+
+            if (!appDir.exists()) {
+                appDir.mkdirs()
+            }
+            if (!logsDir.exists()) {
+                logsDir.mkdirs()
+            }
+
+            // Формируем имя файла: log_YYYY-MM-DD_HH-MM-SS.txt
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
+            val fileName = "log_${dateFormat.format(Date())}.txt"
+            val logFile = File(logsDir, fileName)
+
+            // Форматируем логи для записи
+            val content = formatLogsForFile()
+
+            // Записываем в файл
+            logFile.writeText(content)
+
+            // Возвращаем путь к файлу
+            logFile.absolutePath
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Форматирует все логи в строку для записи в файл
+     * @return строку с логами
+     */
+    fun formatLogsForFile(): String {
+        val sb = StringBuilder()
+        sb.append("═══════════════════════════════════════════════════════════\n")
+        sb.append("  Quty.Launch Log File\n")
+        sb.append("  Date: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())}\n")
+        sb.append("  Total logs: ${getLogCount()}\n")
+        sb.append("═══════════════════════════════════════════════════════════\n\n")
+
+        getLogs().forEach { entry ->
+            sb.append("[${entry.getFormattedTime()}] ")
+            sb.append("${entry.level.name}/${entry.tag}: ")
+            sb.append(entry.message)
+            sb.append(" (${entry.source})")
+            sb.append("\n")
+        }
+
+        sb.append("\n═══════════════════════════════════════════════════════════\n")
+        sb.append("  End of log file\n")
+        sb.append("═══════════════════════════════════════════════════════════\n")
+
         return sb.toString()
     }
 }

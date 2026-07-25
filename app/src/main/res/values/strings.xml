@@ -371,13 +371,16 @@
     <string name="logger_empty">Логов пока нет</string>
 
     <!-- Статус -->
-    <string name="logger_status" formatted="false">📊 Всего: %d логов</string>
+    <string name="logger_status" formatted="false">Всего логов: %d</string>
     <string name="logger_copied">Логи скопированы в буфер обмена</string>
     <string name="logger_cleared">Логи очищены</string>
     <string name="logger_paused">Сбор логов приостановлен</string>
     <string name="logger_resumed">Сбор логов возобновлён</string>
     <string name="logger_source_kotlin">Kotlin</string>
     <string name="logger_source_webview">WebView</string>
+    <string name="logger_save">Сохранить логи</string>
+    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
+    <string name="logger_save_error">Ошибка сохранения логов</string>
 
     <!-- Уровни -->
     <string name="logger_level_debug">DEBUG</string>

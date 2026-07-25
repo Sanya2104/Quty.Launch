@@ -28,6 +28,7 @@ class LoggerActivity : BaseActivity() {
     private lateinit var tvPauseIndicator: TextView
     private lateinit var btnPause: ImageButton
     private lateinit var btnCopy: ImageButton
+    private lateinit var btnSave: ImageButton
     private lateinit var btnClear: ImageButton
     private lateinit var btnClose: ImageButton
 
@@ -95,6 +96,7 @@ class LoggerActivity : BaseActivity() {
         tvPauseIndicator = findViewById(R.id.tv_pause_indicator)
         btnPause = findViewById(R.id.btn_pause)
         btnCopy = findViewById(R.id.btn_copy)
+        btnSave = findViewById(R.id.btn_save)
         btnClear = findViewById(R.id.btn_clear)
         btnClose = findViewById(R.id.btn_close)
     }
@@ -113,6 +115,8 @@ class LoggerActivity : BaseActivity() {
     }
 
     private fun setupButtons() {
+
+        // Кнопка "Пауза"
         btnPause.setOnClickListener {
             if (Logger.isPaused()) {
                 Logger.resume()
@@ -127,6 +131,7 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
+        // Кнопка "Копировать логи"
         btnCopy.setOnClickListener {
             val logsText = Logger.formatLogsForCopy()
             if (logsText.isNotEmpty()) {
@@ -139,11 +144,23 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
+        // Кнопка "Сохранить логи в файл"
+        btnSave.setOnClickListener {
+            val filePath = Logger.saveLogsToFile()
+            if (filePath != null) {
+                Toast.makeText(this, getString(R.string.logger_saved, filePath), Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, R.string.logger_save_error, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Кнопка "Очистить логи"
         btnClear.setOnClickListener {
             Logger.clear()
             Toast.makeText(this, R.string.logger_cleared, Toast.LENGTH_SHORT).show()
         }
 
+        // Кнопка "Закрыть"
         btnClose.setOnClickListener {
             finish()
         }
