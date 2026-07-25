@@ -3,6 +3,8 @@ package by.quty.launch.core.webview
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -10,6 +12,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import by.quty.launch.R
+import by.quty.launch.core.logger.Logger
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
@@ -41,6 +44,40 @@ class LauncherWebView(context: Context) : WebView(context) {
 
         // Настраиваем WebViewAssetLoader
         setupAssetLoader()
+
+        // Настраиваем WebChromeClient для перехвата console.log() из JavaScript
+        setupWebChromeClient()
+    }
+
+    /**
+     * Настройка WebChromeClient для перехвата логов из JavaScript
+     * Все console.log(), console.error(), console.warn() и т.д.
+     * отправляются в Logger
+     */
+    private fun setupWebChromeClient() {
+        webChromeClient = object : WebChromeClient() {
+            // Современный метод для Android 8.0+ (API 26+)
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                // Перехватываем все логи из JavaScript
+                val level = consoleMessage.messageLevel().name
+                val message = consoleMessage.message()
+                val sourceId = consoleMessage.sourceId() ?: "unknown"
+
+                // Отправляем в наш логгер
+                Logger.fromWebView(level, "[$sourceId] $message")
+
+                // Возвращаем true, чтобы сообщение не дублировалось в системном логе
+                return true
+            }
+
+            // Для обратной совместимости с Android < 8.0 (API < 26)
+            @Suppress("DEPRECATION")
+            @Deprecated("Use onConsoleMessage(ConsoleMessage) instead")
+            override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
+                // Отправляем в наш логгер
+                Logger.fromWebView("log", "[$sourceID:$lineNumber] $message")
+            }
+        }
     }
 
     private fun setupAssetLoader() {
@@ -77,7 +114,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                     // Определяем папку темы по имени активной темы
                     val themeDir = getActiveThemeDir()
                     if (themeDir == null) {
-                        android.util.Log.e(
+                        Logger.e(
                             "LauncherWebView",
                             context.getString(R.string.webview_dir_theme_not_found)
                         )
@@ -184,7 +221,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                 failingUrl: String?
             ) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
-                android.util.Log.e(
+                Logger.e(
                     "LauncherWebView",
                     context.getString(R.string.webview_error_loading, failingUrl ?: "unknown", description ?: "unknown")
                 )

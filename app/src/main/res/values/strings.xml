@@ -354,4 +354,37 @@
     <string name="api_launchapp_package_required">Требуется имя пакета</string>
     <string name="api_launchapp_not_found">Приложение не найдено</string>
 
+    <!-- ============================================================ -->
+    <!-- ==================== ЛОГГЕР (DEV MODE) ===================== -->
+    <!-- ============================================================ -->
+
+    <!-- Название -->
+    <string name="logger_app_name">Логгер</string>
+    <string name="logger_title">🐞 Логгер</string>
+
+    <!-- Кнопки -->
+    <string name="logger_clear">Очистить</string>
+    <string name="logger_copy">Копировать</string>
+    <string name="logger_pause">Пауза</string>
+    <string name="logger_resume">Старт</string>
+    <string name="logger_close">Закрыть</string>
+    <string name="logger_empty">Логов пока нет</string>
+
+    <!-- Статус -->
+    <string name="logger_status" formatted="false">📊 Всего: %d логов</string>
+    <string name="logger_copied">Логи скопированы в буфер обмена</string>
+    <string name="logger_cleared">Логи очищены</string>
+    <string name="logger_paused">Сбор логов приостановлен</string>
+    <string name="logger_resumed">Сбор логов возобновлён</string>
+    <string name="logger_source_kotlin">Kotlin</string>
+    <string name="logger_source_webview">WebView</string>
+
+    <!-- Уровни -->
+    <string name="logger_level_debug">DEBUG</string>
+    <string name="logger_level_info">INFO</string>
+    <string name="logger_level_warn">WARN</string>
+    <string name="logger_level_error">ERROR</string>
+
+    <string name="logger_devmode_required">Режим разработчика не активирован</string>
+
 </resources>

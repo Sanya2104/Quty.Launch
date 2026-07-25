@@ -8,15 +8,15 @@ plugins {
 android {
     namespace = "by.quty.launch"
     //noinspection GradleDependency
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "by.quty.launch"
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 228
-    versionName = "0.0.86"
+    versionCode = 231
+    versionName = "0.0.88"
         versionNameSuffix = "Alpha"
     }
 
@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
 }
+
+
+
 
 
 

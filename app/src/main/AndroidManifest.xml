@@ -67,6 +67,14 @@
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
+        <!-- Логгер (DevMode) -->
+        <activity
+            android:name=".LoggerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.QutyLaunch">
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -1,0 +1,75 @@
+<!-- res/layout/item_log.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="#1A1A1A"
+    android:layout_marginBottom="4dp">
+
+    <!-- Верхняя строка: Уровень + Время + Тег -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Уровень -->
+        <TextView
+            android:id="@+id/tv_log_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_log_level_debug"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Время -->
+        <TextView
+            android:id="@+id/tv_log_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#666666"
+            android:textSize="11sp"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Тег -->
+        <TextView
+            android:id="@+id/tv_log_tag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Источник -->
+        <TextView
+            android:id="@+id/tv_log_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#666666"
+            android:textSize="11sp"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Сообщение -->
+    <TextView
+        android:id="@+id/tv_log_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:maxLines="5"
+        android:ellipsize="end" />
+
+</LinearLayout>

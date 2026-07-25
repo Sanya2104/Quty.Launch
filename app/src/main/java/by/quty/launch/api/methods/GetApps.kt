@@ -69,17 +69,36 @@ class GetApps(
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
-        // Добавляем кастомное приложение "Настройки" в начало списка
-        val customApps = listOf(
+        // Кастомные приложения
+        val customApps = mutableListOf<AppInfo>()
+
+        // 1. Настройки лаунчера
+        customApps.add(
             AppInfo(
                 name = context.getString(R.string.api_getapps_settings_name),
                 packageName = "by.quty.launch.settings",
                 isCustom = true,
                 iconBase64 = settingsIconBase64  // иконка из ресурсов
             )
-            // Здесь можно добавить другие кастомные приложения в будущем
-            // AppInfo(...)
         )
+
+        // 2. Логгер (только в DevMode)
+        val prefs = context.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
+        val isDevMode = prefs.getBoolean("developer_mode", false)
+
+        if (isDevMode) {
+            val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_logger)
+            val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
+
+            customApps.add(
+                AppInfo(
+                    name = context.getString(R.string.logger_app_name),
+                    packageName = "by.quty.launch.logger",
+                    isCustom = true,
+                    iconBase64 = loggerIconBase64
+                )
+            )
+        }
 
         // Объединяем: сначала кастомные, потом обычные
         customApps + realApps
