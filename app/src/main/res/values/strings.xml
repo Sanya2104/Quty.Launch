@@ -281,7 +281,23 @@
     <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
     <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
 
-    <!-- 5. Инструменты -->
+    <!-- 5. Управление логами -->
+    <string name="dev_section_logs">Управление логами</string>
+    <string name="dev_logs_clear">Очистить логи</string>
+    <string name="dev_logs_show">Показать логи</string>
+    <string name="dev_logs_clear_confirm">Вы уверены, что хотите удалить все файлы логов?</string>
+    <string name="dev_logs_cleared">Логи очищены</string>
+    <string name="dev_logs_clear_error">Ошибка при очистке логов</string>
+    <string name="dev_logs_empty">Логи не найдены</string>
+    <string name="dev_logs_title">Файлы логов</string>
+    <string name="dev_logs_delete">Удалить</string>
+    <string name="dev_logs_delete_confirm" formatted="false">Удалить файл %s?</string>
+    <string name="dev_logs_deleted">Файл удалён</string>
+    <string name="dev_logs_delete_error">Ошибка при удалении файла</string>
+    <string name="dev_logs_file_truncated" formatted="false">\n\n … (файл обрезан, размер: %s)</string>
+    <string name="dev_logs_file_title" formatted="false">📄 %s</string>
+
+    <!-- 6. Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
 
     <!-- Активация DevMode -->

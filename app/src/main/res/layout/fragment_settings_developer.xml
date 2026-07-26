@@ -364,7 +364,48 @@
 
         </LinearLayout>
 
-        <!-- ===== 5. ИНСТРУМЕНТЫ ===== -->
+        <!-- ===== 5. УПРАВЛЕНИЕ ЛОГАМИ ===== -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:paddingTop="24dp"
+            android:text="@string/dev_section_logs"
+            android:textColor="#CCCCCC"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#1E1E1E"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- Кнопка "Показать логи" -->
+            <Button
+                android:id="@+id/dev_logs_show"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#4A4A4A"
+                android:text="@string/dev_logs_show"
+                android:textColor="#FFFFFF" />
+
+            <!-- Кнопка "Очистить логи" -->
+            <Button
+                android:id="@+id/dev_logs_clear"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="#D32F2F"
+                android:text="@string/dev_logs_clear"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- ===== 6. ИНСТРУМЕНТЫ ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

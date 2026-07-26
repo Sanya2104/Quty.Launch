@@ -52,6 +52,7 @@ class DeveloperSettingsFragment : Fragment() {
         setupThemeInfo(view)
         setupSystemInfo(view)
         setupDataManagement(view)
+        setupLogsManagement(view)
         setupTools(view)
     }
 
@@ -328,7 +329,165 @@ class DeveloperSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // 5. ИНСТРУМЕНТЫ
+    // 5. УПРАВЛЕНИЕ ЛОГАМИ
+    // ============================================================
+
+    private fun setupLogsManagement(view: View) {
+        val logsShowBtn = view.findViewById<Button>(R.id.dev_logs_show)
+        val logsClearBtn = view.findViewById<Button>(R.id.dev_logs_clear)
+
+        // Кнопка "Показать логи"
+        logsShowBtn.setOnClickListener {
+            showLogsDialog()
+        }
+
+        // Кнопка "Очистить логи"
+        logsClearBtn.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.dev_logs_clear)
+                .setMessage(R.string.dev_logs_clear_confirm)
+                .setPositiveButton(R.string.delete) { _, _ ->
+                    clearLogs()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
+    }
+
+    /**
+     * Показывает диалог со списком файлов логов
+     */
+    private fun showLogsDialog() {
+        val logsDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch/Logs")
+
+        if (!logsDir.exists() || logsDir.listFiles()?.isEmpty() == true) {
+            Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val logFiles = logsDir.listFiles()?.filter { it.isFile && it.extension == "txt" }?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+        if (logFiles.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Формируем список имён файлов с размерами
+        val fileNames = logFiles.map { file ->
+            val size = formatSize(file.length())
+            "${file.name} ($size)"
+        }.toTypedArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.dev_logs_title)
+            .setItems(fileNames) { _, which ->
+                val selectedFile = logFiles[which]
+                showLogFileActionsDialog(selectedFile)
+            }
+            .setNegativeButton(R.string.close, null)
+            .show()
+    }
+
+    /**
+     * Показывает диалог с действиями для выбранного файла лога
+     */
+    private fun showLogFileActionsDialog(file: File) {
+        val options = arrayOf(
+            getString(R.string.theme_menu_info),      // Просмотр содержимого
+            getString(R.string.dev_logs_delete)       // Удалить
+        )
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(file.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showLogFileContent(file)
+                    1 -> confirmDeleteLogFile(file)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Показывает содержимое файла лога
+     */
+    private fun showLogFileContent(file: File) {
+        try {
+            val content = file.readText()
+            // Если файл слишком большой, обрезаем
+            val displayContent = if (content.length > 5000) {
+                content.take(5000) + getString(R.string.dev_logs_file_truncated, formatSize(file.length()))
+            } else {
+                content
+            }
+
+            AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.dev_logs_file_title, file.name))
+                .setMessage(displayContent)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNeutralButton(R.string.dev_logs_delete) { _, _ ->
+                    confirmDeleteLogFile(file)
+                }
+                .show()
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_logs_delete_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Подтверждение удаления файла лога
+     */
+    private fun confirmDeleteLogFile(file: File) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.dev_logs_delete)
+            .setMessage(getString(R.string.dev_logs_delete_confirm, file.name))
+            .setPositiveButton(R.string.delete) { _, _ ->
+                deleteLogFile(file)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Удаляет файл лога
+     */
+    private fun deleteLogFile(file: File) {
+        try {
+            if (file.exists() && file.delete()) {
+                Toast.makeText(requireContext(), R.string.dev_logs_deleted, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), R.string.dev_logs_delete_error, Toast.LENGTH_SHORT).show()
+            }
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_logs_delete_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Очищает все файлы логов
+     */
+    private fun clearLogs() {
+        try {
+            val logsDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch/Logs")
+
+            if (logsDir.exists()) {
+                logsDir.listFiles()?.forEach { file ->
+                    if (file.isFile) {
+                        file.delete()
+                    }
+                }
+                Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+            }
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_logs_clear_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ============================================================
+    // 6. ИНСТРУМЕНТЫ
     // ============================================================
 
     private fun setupTools(view: View) {
