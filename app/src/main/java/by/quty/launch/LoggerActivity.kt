@@ -5,10 +5,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,7 +28,7 @@ class LoggerActivity : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: LoggerAdapter
     private lateinit var tvStatus: TextView
-    private lateinit var tvPauseIndicator: TextView
+    private lateinit var pausePanel: LinearLayout
     private lateinit var btnPause: ImageButton
     private lateinit var btnCopy: ImageButton
     private lateinit var btnShare: ImageButton
@@ -34,20 +36,24 @@ class LoggerActivity : BaseActivity() {
     private lateinit var btnClear: ImageButton
     private lateinit var btnClose: ImageButton
 
+    // Фильтры
+    private lateinit var spinnerLevel: Spinner
+    private lateinit var spinnerSource: Spinner
+    private var selectedLevel: String = ""
+    private var selectedSource: String = ""
+
     // Слушатель для обновления UI при добавлении логов
     private val logListener = object : Logger.LogListener {
         override fun onLogAdded(entry: LogEntry) {
             runOnUiThread {
-                adapter.addLog(entry)
-                updateStatus()
+                applyFilters()
                 recyclerView.scrollToPosition(adapter.itemCount - 1)
             }
         }
 
         override fun onLogsCleared() {
             runOnUiThread {
-                adapter.clearLogs()
-                updateStatus()
+                applyFilters()
             }
         }
     }
@@ -65,6 +71,10 @@ class LoggerActivity : BaseActivity() {
             return
         }
 
+        // Инициализируем значения фильтров после получения Context
+        selectedLevel = getString(R.string.logger_filter_all)
+        selectedSource = getString(R.string.logger_filter_all)
+
         setContentView(R.layout.activity_logger)
 
         // Применяем ориентацию
@@ -75,6 +85,9 @@ class LoggerActivity : BaseActivity() {
 
         // Настройка RecyclerView
         setupRecyclerView()
+
+        // Настройка фильтров
+        setupFilters()
 
         // Настройка кнопок
         setupButtons()
@@ -95,26 +108,67 @@ class LoggerActivity : BaseActivity() {
     private fun initViews() {
         recyclerView = findViewById(R.id.recycler_logs)
         tvStatus = findViewById(R.id.tv_status)
-        tvPauseIndicator = findViewById(R.id.tv_pause_indicator)
+        pausePanel = findViewById(R.id.pause_panel)
         btnPause = findViewById(R.id.btn_pause)
         btnCopy = findViewById(R.id.btn_copy)
         btnShare = findViewById(R.id.btn_share)
         btnSave = findViewById(R.id.btn_save)
         btnClear = findViewById(R.id.btn_clear)
         btnClose = findViewById(R.id.btn_close)
+        spinnerLevel = findViewById(R.id.spinner_level)
+        spinnerSource = findViewById(R.id.spinner_source)
     }
 
     private fun setupRecyclerView() {
         adapter = LoggerAdapter()
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
-        adapter.submitList(Logger.getLogs())
+        applyFilters()
+    }
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (adapter.itemCount > 0) {
-                recyclerView.scrollToPosition(adapter.itemCount - 1)
+    /**
+     * Настройка фильтров (Spinner)
+     */
+    private fun setupFilters() {
+        // Фильтр по уровню
+        val levelAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.logger_levels,
+            android.R.layout.simple_spinner_item
+        )
+        levelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerLevel.adapter = levelAdapter
+
+        spinnerLevel.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedLevel = parent?.getItemAtPosition(position) as String
+                applyFilters()
             }
-        }, 100)
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Ничего не делаем
+            }
+        }
+
+        // Фильтр по источнику
+        val sourceAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.logger_sources,
+            android.R.layout.simple_spinner_item
+        )
+        sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerSource.adapter = sourceAdapter
+
+        spinnerSource.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedSource = parent?.getItemAtPosition(position) as String
+                applyFilters()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Ничего не делаем
+            }
+        }
     }
 
     private fun setupButtons() {
@@ -123,12 +177,12 @@ class LoggerActivity : BaseActivity() {
             if (Logger.isPaused()) {
                 Logger.resume()
                 btnPause.setImageResource(R.drawable.ic_pause)
-                tvPauseIndicator.visibility = View.GONE
+                pausePanel.visibility = View.GONE
                 Toast.makeText(this, R.string.logger_resumed, Toast.LENGTH_SHORT).show()
             } else {
                 Logger.pause()
                 btnPause.setImageResource(R.drawable.ic_play)
-                tvPauseIndicator.visibility = View.VISIBLE
+                pausePanel.visibility = View.VISIBLE
                 Toast.makeText(this, R.string.logger_paused, Toast.LENGTH_SHORT).show()
             }
         }
@@ -183,9 +237,34 @@ class LoggerActivity : BaseActivity() {
         }
     }
 
-    private fun updateStatus() {
-        val count = Logger.getLogCount()
-        tvStatus.text = getString(R.string.logger_status, count)
+    /**
+     * Применяет фильтры к списку логов
+     */
+    private fun applyFilters() {
+        val allLogs = Logger.getLogs()
+        val allText = getString(R.string.logger_filter_all)
+
+        val filtered = allLogs.filter { entry ->
+            // Фильтр по уровню
+            (selectedLevel == allText || entry.level.name == selectedLevel) &&
+                    // Фильтр по источнику
+                    (selectedSource == allText || entry.source == selectedSource)
+        }
+
+        adapter.submitList(filtered)
+        updateStatus(filtered.size, allLogs.size)
+    }
+
+    /**
+     * Обновляет статус с количеством логов
+     * @param filteredCount количество отфильтрованных логов
+     * @param totalCount общее количество логов
+     */
+    private fun updateStatus(filteredCount: Int = 0, totalCount: Int = 0) {
+        val count = if (totalCount > 0) totalCount else Logger.getLogCount()
+        // Показываем реальное количество отфильтрованных логов (даже если 0)
+        val filtered = filteredCount
+        tvStatus.text = getString(R.string.logger_filter_status, filtered, count)
     }
 
     override fun onDestroy() {
@@ -195,15 +274,15 @@ class LoggerActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        adapter.submitList(Logger.getLogs())
-        updateStatus()
+        applyFilters()
 
+        // Восстанавливаем состояние паузы
         if (Logger.isPaused()) {
             btnPause.setImageResource(R.drawable.ic_play)
-            tvPauseIndicator.visibility = View.VISIBLE
+            pausePanel.visibility = View.VISIBLE
         } else {
             btnPause.setImageResource(R.drawable.ic_pause)
-            tvPauseIndicator.visibility = View.GONE
+            pausePanel.visibility = View.GONE
         }
     }
 }

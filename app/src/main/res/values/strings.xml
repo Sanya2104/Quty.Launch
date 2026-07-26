@@ -407,6 +407,28 @@
     <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
     <string name="logger_save_error">Ошибка сохранения логов</string>
 
+    <!-- Фильтры -->
+    <string name="logger_filter_all">Все</string>
+    <string name="logger_filter_level">Уровень</string>
+    <string name="logger_filter_source">Источник</string>
+    <string name="logger_filter_source_kotlin">Kotlin</string>
+    <string name="logger_filter_source_webview">WebView</string>
+    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
+
+    <string-array name="logger_levels">
+        <item>Все</item>
+        <item>DEBUG</item>
+        <item>INFO</item>
+        <item>WARN</item>
+        <item>ERROR</item>
+    </string-array>
+
+    <string-array name="logger_sources">
+        <item>Все</item>
+        <item>Kotlin</item>
+        <item>WebView</item>
+    </string-array>
+
     <!-- Уровни -->
     <string name="logger_level_debug">DEBUG</string>
     <string name="logger_level_info">INFO</string>
