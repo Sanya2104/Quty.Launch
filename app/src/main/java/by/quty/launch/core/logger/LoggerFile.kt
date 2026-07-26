@@ -3,7 +3,6 @@ package by.quty.launch.core.logger
 
 import android.content.Context
 import android.os.Environment
-import android.util.Log
 import by.quty.launch.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -139,7 +138,7 @@ object LoggerFile {
 
         } catch (_: Exception) {
             // Ошибки записи не должны крашить приложение
-            Log.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
+            Logger.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
         }
     }
 
@@ -236,7 +235,7 @@ object LoggerFile {
             // Создаём новый активный файл
             prepareCurrentLogFile()
         } catch (_: Exception) {
-            Log.e("LoggerFile", appContext.getString(R.string.logger_file_clear_error))
+            Logger.e("LoggerFile", appContext.getString(R.string.logger_file_clear_error))
         }
     }
 

@@ -67,7 +67,7 @@ object Logger {
             restoreLogsFromFile()
         }
 
-        Log.d("Logger", appContext.getString(R.string.logger_initialized))
+        d("Logger", appContext.getString(R.string.logger_initialized))
     }
 
     /**
@@ -100,9 +100,9 @@ object Logger {
                 }
             }
 
-            Log.d("Logger", appContext.getString(R.string.logger_restored_from_file, restoredLogs.size))
+            d("Logger", appContext.getString(R.string.logger_restored_from_file, restoredLogs.size))
         } catch (_: Exception) {
-            Log.e("Logger", appContext.getString(R.string.logger_restore_error))
+            e("Logger", appContext.getString(R.string.logger_restore_error))
         }
     }
 

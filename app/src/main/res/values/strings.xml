@@ -284,6 +284,11 @@
     <string name="dev_cache_size_value">0 B</string>
     <string name="dev_themes_size_value">0 B</string>
     <string name="dev_cache_size_updated">Размер кэша обновлён</string>
+    <string name="dev_logs_size">Размер логов</string>
+    <string name="dev_logs_size_value">0 B</string>
+    <string name="dev_clear_apps_cache">Сбросить кэш приложений</string>
+    <string name="dev_clear_apps_cache_confirm">Вы уверены, что хотите очистить кэш списка приложений?\n\nПри следующей загрузке список будет обновлён.</string>
+    <string name="dev_clear_apps_cache_success">Кэш приложений очищен</string>
     <string name="dev_clear_data">Очистить данные</string>
     <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
     <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
@@ -307,7 +312,32 @@
     <string name="dev_logs_share_error">Ошибка при отправке файла</string>
     <string name="dev_logs_share_title">Поделиться логами</string>
 
-    <!-- 6. Инструменты -->
+    <!-- 6. Управление сохранением логов -->
+    <string name="dev_logs_persist">Сохранять логи в файл</string>
+    <string name="dev_logs_max_files">Максимум файлов</string>
+    <string name="dev_logs_max_size">Максимум на файл</string>
+    <string name="dev_logs_reset">Сбросить настройки</string>
+    <string name="dev_logs_reset_confirm">Сбросить настройки логов к значениям по умолчанию?</string>
+    <string name="dev_logs_reset_success">Настройки логов сброшены</string>
+    <string name="dev_logs_persist_enabled">Сохранение логов включено</string>
+    <string name="dev_logs_persist_disabled">Сохранение логов выключено</string>
+    <string name="dev_logs_restored">Логи восстановлены из файла</string>
+    <string name="dev_logs_applied">Настройки логов применены</string>
+
+    <!-- Массивы для Spinner -->
+    <string-array name="dev_logs_files_count">
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+    </string-array>
+
+    <string-array name="dev_logs_file_size">
+        <item>3 MB</item>
+        <item>5 MB</item>
+        <item>10 MB</item>
+    </string-array>
+
+    <!-- 7. Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
 
     <!-- Активация DevMode -->
@@ -335,6 +365,31 @@
     <string name="logger_save">Сохранить логи</string>
     <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
     <string name="logger_save_error">Ошибка сохранения логов</string>
+    <string name="logger_share">Поделиться логами</string>
+    <string name="logger_share_error">Ошибка при отправке логов</string>
+    <string name="logger_share_title">Поделиться логами</string>
+
+    <!-- Фильтры -->
+    <string name="logger_filter_all">Все</string>
+    <string name="logger_filter_level">Уровень</string>
+    <string name="logger_filter_source">Источник</string>
+    <string name="logger_filter_source_kotlin">Kotlin</string>
+    <string name="logger_filter_source_webview">WebView</string>
+    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
+
+    <string-array name="logger_levels">
+        <item>Все</item>
+        <item>DEBUG</item>
+        <item>INFO</item>
+        <item>WARN</item>
+        <item>ERROR</item>
+    </string-array>
+
+    <string-array name="logger_sources">
+        <item>Все</item>
+        <item>Kotlin</item>
+        <item>WebView</item>
+    </string-array>
 
     <!-- Статус -->
     <string name="logger_status" formatted="false">Всего логов: %d</string>
