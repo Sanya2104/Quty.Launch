@@ -25,25 +25,26 @@
     <!-- ==================== SETTINGS ACTIVITY ====================== -->
     <!-- ============================================================ -->
 
-    <!-- SettingsActivity - заголовки -->
+    <!-- Заголовки -->
     <string name="settings_title">Настройки лаунчера</string>
 
-    <!-- Tab titles -->
+    <!-- Названия вкладок -->
     <string name="tab_theme">Оформление</string>
     <string name="tab_display">Экран</string>
     <string name="tab_system">Система</string>
     <string name="tab_developer">DevMode</string>
 
-    <!-- Dialog messages -->
+    <!-- Диалоги -->
     <string name="dialog_apply_settings_title">Применить настройки</string>
     <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
     <string name="dialog_restart">Перезапустить</string>
     <string name="dialog_later">Позже</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== THEME SETTINGS ========================= -->
+    <!-- ==================== ТЕМЫ ОФОРМЛЕНИЯ ======================== -->
     <!-- ============================================================ -->
 
+    <!-- Заголовок -->
     <string name="settings_theme_title">Выберите тему оформления:</string>
 
     <!-- Установка темы из файла -->
@@ -118,36 +119,38 @@
     <string name="cannot_open_play_store">Не удалось открыть Google Play.\n Установите файловый менеджер вручную.</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== DISPLAY SETTINGS ======================= -->
+    <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
     <!-- ============================================================ -->
 
     <string name="settings_orientation_title">Ориентация экрана</string>
     <string name="settings_additional_title">Дополнительные настройки</string>
 
-    <!-- Orientation options -->
+    <!-- Ориентация -->
     <string name="orientation_auto">Авто (следовать за системой)</string>
     <string name="orientation_portrait">Портретная (вертикальная)</string>
     <string name="orientation_landscape">Ландшафтная (горизонтальная)</string>
 
-    <!-- Additional -->
+    <!-- Режимы -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
     <string name="additional_strict_mode">Строгий режим</string>
     <string name="strict_mode_changed">Строгий режим изменён</string>
 
-    <!-- Orientation lock hints -->
+    <!-- Блокировка ориентации -->
     <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
     <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
     <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== SYSTEM SETTINGS ======================== -->
+    <!-- ==================== СИСТЕМА И ОБНОВЛЕНИЯ =================== -->
     <!-- ============================================================ -->
 
+    <!-- Информация о системе -->
     <string name="system_info_title">Информация о системе</string>
     <string name="version_label">Версия</string>
     <string name="version_code_label">Код версии</string>
     <string name="channel_label">Канал</string>
 
+    <!-- Обновление системы -->
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
@@ -158,7 +161,10 @@
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
     <string name="no_internet_connection">Отсутствует подключение к интернету</string>
 
-    <!-- Локальная установка -->
+    <!-- Копирайт -->
+    <string name="copyright">Quty.Launch © 2026</string>
+
+    <!-- Локальная установка APK -->
     <string name="install_from_file">Локальное обновление из файла</string>
     <string name="select_apk_title">Выберите APK файл</string>
     <string name="invalid_apk">Выбранный файл не является APK</string>
@@ -181,7 +187,7 @@
     <string name="open_folder">📂 Открыть папку</string>
     <string name="download_error">Ошибка скачивания</string>
 
-    <!-- Update dialog -->
+    <!-- Диалог обновления -->
     <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
@@ -190,12 +196,12 @@
     <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
     <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s \n (код: %s, канал: %s)</string>
 
-    <!-- Download dialog -->
+    <!-- Диалог загрузки -->
     <string name="downloading_title">Скачивание обновления</string>
     <string name="downloading_prepare">Подготовка…</string>
     <string name="downloading_progress" formatted="false">Скачивание: %d%%</string>
 
-    <!-- Install dialog -->
+    <!-- Диалог установки -->
     <string name="install_title">Установка обновления</string>
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
@@ -203,7 +209,7 @@
     <string name="apk_saved_to">✅ APK сохранён в:\n%s</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== WELCOME ACTIVITY ======================= -->
+    <!-- ==================== ПРИВЕТСТВИЕ (ONBOARDING) ============== -->
     <!-- ============================================================ -->
 
     <string name="_0">0%</string>
@@ -211,7 +217,7 @@
     <string name="welcome_title">Добро пожаловать в Quty.Launch!</string>
     <string name="welcome_subtitle">Для корректной работы приложения необходимо предоставить доступ к функциям устройства:</string>
 
-    <!-- Обязательные разрешения -->
+    <!-- Разрешения -->
     <string name="welcome_permission_phone">Информация о телефоне</string>
     <string name="welcome_permission_phone_desc">Для отображения уровня сигнала и типа сети (2G/3G/4G/5G)</string>
     <string name="welcome_permission_network">Состояние сети</string>
@@ -223,7 +229,7 @@
     <string name="welcome_permission_storage">Хранилище</string>
     <string name="welcome_permission_storage_desc">Для установки кастомных тем.</string>
 
-    <!-- Кнопки и подписи -->
+    <!-- Кнопки -->
     <string name="welcome_button_grant">Предоставить доступ</string>
     <string name="welcome_button_retry">Повторить запрос</string>
     <string name="welcome_button_settings">Открыть настройки</string>
@@ -231,13 +237,13 @@
     <string name="welcome_required_done">✅ Все обязательные разрешения получены!</string>
     <string name="welcome_button_start">🚀 Начать</string>
 
-    <!-- Сообщения об ошибках -->
+    <!-- Ошибки -->
     <string name="welcome_permission_denied_title">Разрешения не предоставлены</string>
     <string name="welcome_permission_denied_message">Для корректной работы лаунчера необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
     <string name="welcome_permission_denied_button">Открыть настройки приложения</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== DEVELOPER SETTINGS ===================== -->
+    <!-- ==================== РЕЖИМ РАЗРАБОТЧИКА ===================== -->
     <!-- ============================================================ -->
 
     <!-- Заголовки разделов -->
@@ -245,6 +251,7 @@
     <string name="dev_section_theme">Информация о теме</string>
     <string name="dev_section_system">Системная информация</string>
     <string name="dev_section_data">Управление данными</string>
+    <string name="dev_section_logs">Управление логами</string>
     <string name="dev_section_tools">Инструменты</string>
 
     <!-- 1. Отладка WebView -->
@@ -277,14 +284,11 @@
     <string name="dev_cache_size_value">0 B</string>
     <string name="dev_themes_size_value">0 B</string>
     <string name="dev_cache_size_updated">Размер кэша обновлён</string>
-    <string name="dev_logs_size">Размер логов</string>
-    <string name="dev_logs_size_value">0 B</string>
     <string name="dev_clear_data">Очистить данные</string>
     <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
     <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
 
     <!-- 5. Управление логами -->
-    <string name="dev_section_logs">Управление логами</string>
     <string name="dev_logs_clear">Очистить логи</string>
     <string name="dev_logs_show">Показать логи</string>
     <string name="dev_logs_clear_confirm">Вы уверены, что хотите удалить все файлы логов?</string>
@@ -310,12 +314,51 @@
     <string name="dev_mode_activated">Режим разработчика активирован!</string>
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
-
     <string name="dev_unknown_error">Неизвестная ошибка</string>
     <string name="dev_truncated">\n\n … (обрезано)</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== THEME MANAGER ========================== -->
+    <!-- ==================== ЛОГГЕР ================================ -->
+    <!-- ============================================================ -->
+
+    <!-- Название -->
+    <string name="logger_app_name">Логгер</string>
+    <string name="logger_title">🐞 Логгер</string>
+
+    <!-- Кнопки -->
+    <string name="logger_clear">Очистить</string>
+    <string name="logger_copy">Копировать</string>
+    <string name="logger_pause">Пауза</string>
+    <string name="logger_resume">Старт</string>
+    <string name="logger_close">Закрыть</string>
+    <string name="logger_empty">Логов пока нет</string>
+    <string name="logger_save">Сохранить логи</string>
+    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
+    <string name="logger_save_error">Ошибка сохранения логов</string>
+
+    <!-- Статус -->
+    <string name="logger_status" formatted="false">Всего логов: %d</string>
+    <string name="logger_copied">Логи скопированы в буфер обмена</string>
+    <string name="logger_cleared">Логи очищены</string>
+    <string name="logger_paused">Сбор логов приостановлен</string>
+    <string name="logger_resumed">Сбор логов возобновлён</string>
+    <string name="logger_source_kotlin">Kotlin</string>
+    <string name="logger_source_webview">WebView</string>
+    <string name="logger_level_debug">DEBUG</string>
+    <string name="logger_level_info">INFO</string>
+    <string name="logger_level_warn">WARN</string>
+    <string name="logger_level_error">ERROR</string>
+
+    <!-- Ошибки -->
+    <string name="logger_devmode_required">Режим разработчика не активирован</string>
+    <string name="logger_initialized">Logger инициализирован</string>
+    <string name="logger_restored_from_file" formatted="false">Восстановлено %d логов из файла</string>
+    <string name="logger_restore_error">Ошибка восстановления логов из файла</string>
+    <string name="logger_file_write_error">Ошибка записи лога в файл</string>
+    <string name="logger_file_clear_error">Ошибка очистки файлов логов</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== МЕНЕДЖЕР ТЕМ =========================== -->
     <!-- ============================================================ -->
 
     <!-- Авторы -->
@@ -333,14 +376,13 @@
     <string name="storage_permission_allow">Разрешить</string>
     <string name="storage_permission_denied">Для установки тем необходимо разрешить доступ к хранилищу</string>
 
-    <!-- Название темы по умолчанию -->
+    <!-- Названия -->
     <string name="theme_default_name">Стандартная</string>
-
     <string name="theme_active_not_found">Ранее активная тема не найдена или была удалена</string>
     <string name="theme_restored_default" formatted="false">Система изменила тему на "%s"</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== UPDATE MANAGER ========================= -->
+    <!-- ==================== МЕНЕДЖЕР ОБНОВЛЕНИЙ ==================== -->
     <!-- ============================================================ -->
 
     <string name="update_check_failed" formatted="false">Ошибка проверки обновлений: %s</string>
@@ -364,9 +406,8 @@
     <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
     <string name="webview_dir_theme_not_found">Директория активной темы не найдена</string>
 
-
     <!-- ============================================================ -->
-    <!-- ==================== API METHODS ============================ -->
+    <!-- ==================== API МЕТОДЫ ============================= -->
     <!-- ============================================================ -->
 
     <!-- GetApps -->
@@ -375,66 +416,5 @@
     <!-- LaunchApp -->
     <string name="api_launchapp_package_required">Требуется имя пакета</string>
     <string name="api_launchapp_not_found">Приложение не найдено</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== ЛОГГЕР (DEV MODE) ===================== -->
-    <!-- ============================================================ -->
-
-    <!-- Название -->
-    <string name="logger_app_name">Логгер</string>
-    <string name="logger_title">🐞 Логгер</string>
-
-    <!-- Кнопки -->
-    <string name="logger_clear">Очистить</string>
-    <string name="logger_copy">Копировать</string>
-    <string name="logger_pause">Пауза</string>
-    <string name="logger_resume">Старт</string>
-    <string name="logger_close">Закрыть</string>
-    <string name="logger_empty">Логов пока нет</string>
-    <string name="logger_share">Поделиться логами</string>
-    <string name="logger_share_error">Ошибка при отправке логов</string>
-    <string name="logger_share_title">Поделиться логами</string>
-
-    <!-- Статус -->
-    <string name="logger_status" formatted="false">Всего логов: %d</string>
-    <string name="logger_copied">Логи скопированы в буфер обмена</string>
-    <string name="logger_cleared">Логи очищены</string>
-    <string name="logger_paused">Сбор логов приостановлен</string>
-    <string name="logger_resumed">Сбор логов возобновлён</string>
-    <string name="logger_source_kotlin">Kotlin</string>
-    <string name="logger_source_webview">WebView</string>
-    <string name="logger_save">Сохранить логи</string>
-    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
-    <string name="logger_save_error">Ошибка сохранения логов</string>
-
-    <!-- Фильтры -->
-    <string name="logger_filter_all">Все</string>
-    <string name="logger_filter_level">Уровень</string>
-    <string name="logger_filter_source">Источник</string>
-    <string name="logger_filter_source_kotlin">Kotlin</string>
-    <string name="logger_filter_source_webview">WebView</string>
-    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
-
-    <string-array name="logger_levels">
-        <item>Все</item>
-        <item>DEBUG</item>
-        <item>INFO</item>
-        <item>WARN</item>
-        <item>ERROR</item>
-    </string-array>
-
-    <string-array name="logger_sources">
-        <item>Все</item>
-        <item>Kotlin</item>
-        <item>WebView</item>
-    </string-array>
-
-    <!-- Уровни -->
-    <string name="logger_level_debug">DEBUG</string>
-    <string name="logger_level_info">INFO</string>
-    <string name="logger_level_warn">WARN</string>
-    <string name="logger_level_error">ERROR</string>
-
-    <string name="logger_devmode_required">Режим разработчика не активирован</string>
 
 </resources>

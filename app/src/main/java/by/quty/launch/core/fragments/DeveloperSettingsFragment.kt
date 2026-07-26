@@ -3,16 +3,20 @@ package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
@@ -23,6 +27,7 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.ConfigManager
 import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.logger.LoggerFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.File
@@ -32,6 +37,17 @@ class DeveloperSettingsFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var themeManager: ThemeManager
+
+    // Элементы управления логами
+    private lateinit var switchPersist: SwitchCompat
+    private lateinit var spinnerMaxFiles: Spinner
+    private lateinit var spinnerMaxSize: Spinner
+    private lateinit var btnLogsShow: Button
+    private lateinit var btnLogsClear: Button
+    private lateinit var btnLogsReset: Button
+
+    // Флаг загрузки настроек (чтобы не триггерить apply при инициализации)
+    private var isLoadingSettings = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -236,6 +252,7 @@ class DeveloperSettingsFragment : Fragment() {
         val themesSizeView = view.findViewById<TextView>(R.id.dev_themes_size_value)
         val logsSizeView = view.findViewById<TextView>(R.id.dev_logs_size_value)
         val clearDataBtn = view.findViewById<Button>(R.id.dev_clear_data)
+        val clearAppsCacheBtn = view.findViewById<Button>(R.id.dev_clear_apps_cache)
 
         // Обновляем размеры
         updateCacheSize(cacheSizeView)
@@ -256,13 +273,26 @@ class DeveloperSettingsFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
-        // 4.1 Очистить данные
+        // Кнопка обновления размера логов (по клику на строку)
         val logsSizeRow = view.findViewById<View>(R.id.dev_logs_size_row)
         logsSizeRow?.setOnClickListener {
             updateLogsSize(logsSizeView)
             Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
+        // 4.2 Очистить кэш приложений
+        clearAppsCacheBtn.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.dev_clear_apps_cache)
+                .setMessage(R.string.dev_clear_apps_cache_confirm)
+                .setPositiveButton(R.string.delete) { _, _ ->
+                    clearAppsCache()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
+
+        // 4.1 Очистить данные
         clearDataBtn.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dev_clear_data)
@@ -272,6 +302,24 @@ class DeveloperSettingsFragment : Fragment() {
                 }
                 .setNegativeButton(R.string.cancel, null)
                 .show()
+        }
+    }
+
+    /**
+     * Очищает кэш списка приложений
+     */
+    private fun clearAppsCache() {
+        try {
+            // Очищаем кэш приложений
+            by.quty.launch.core.CacheManager.clearCache(requireContext())
+
+            // Обновляем размер кэша в UI
+            val cacheSizeView = view?.findViewById<TextView>(R.id.dev_cache_size_value)
+            cacheSizeView?.let { updateCacheSize(it) }
+
+            Toast.makeText(requireContext(), R.string.dev_clear_apps_cache_success, Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), getString(R.string.dev_error, getString(R.string.dev_unknown_error)), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -344,7 +392,7 @@ class DeveloperSettingsFragment : Fragment() {
             }
 
             Toast.makeText(requireContext(), R.string.dev_clear_data_success, Toast.LENGTH_LONG).show()
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            Handler(Looper.getMainLooper()).postDelayed({
                 restartApp()
             }, 1500)
         } catch (_: Exception) {
@@ -357,16 +405,79 @@ class DeveloperSettingsFragment : Fragment() {
     // ============================================================
 
     private fun setupLogsManagement(view: View) {
-        val logsShowBtn = view.findViewById<Button>(R.id.dev_logs_show)
-        val logsClearBtn = view.findViewById<Button>(R.id.dev_logs_clear)
+        switchPersist = view.findViewById(R.id.dev_logs_persist)
+        spinnerMaxFiles = view.findViewById(R.id.dev_logs_max_files)
+        spinnerMaxSize = view.findViewById(R.id.dev_logs_max_size)
+        btnLogsShow = view.findViewById(R.id.dev_logs_show)
+        btnLogsClear = view.findViewById(R.id.dev_logs_clear)
+        btnLogsReset = view.findViewById(R.id.dev_logs_reset)
 
-        // Кнопка "Показать логи"
-        logsShowBtn.setOnClickListener {
+        // 1. Сначала создаём адаптеры и устанавливаем их
+        // 5.2 Количество файлов — создаём адаптер
+        val filesAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.dev_logs_files_count,
+            android.R.layout.simple_spinner_item
+        )
+        filesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerMaxFiles.adapter = filesAdapter
+
+        // 5.3 Размер файла — создаём адаптер
+        val sizeAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.dev_logs_file_size,
+            android.R.layout.simple_spinner_item
+        )
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerMaxSize.adapter = sizeAdapter
+
+        // 2. Загружаем сохранённые настройки (БЕЗ триггера слушателей)
+        loadLogsSettingsWithoutTrigger()
+
+        // 3. Теперь устанавливаем слушатели
+        // 5.2 Количество файлов — слушатель
+        spinnerMaxFiles.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (isLoadingSettings) return
+                val value = parent?.getItemAtPosition(position).toString().toIntOrNull() ?: 5
+                applyLogsSettings(maxFiles = value)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // 5.3 Размер файла — слушатель
+        spinnerMaxSize.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (isLoadingSettings) return
+                val value = parent?.getItemAtPosition(position).toString().replace(" MB", "").toIntOrNull() ?: 5
+                applyLogsSettings(maxSizeMB = value)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // 5.1 Переключатель сохранения логов
+        switchPersist.setOnCheckedChangeListener { _, isChecked ->
+            val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putBoolean("persist_enabled", isChecked) }
+
+            LoggerFile.setPersistEnabled(isChecked)
+
+            if (isChecked) {
+                Toast.makeText(requireContext(), R.string.dev_logs_persist_enabled, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), R.string.dev_logs_persist_disabled, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 5.4 Показать логи
+        btnLogsShow.setOnClickListener {
             showLogsDialog()
         }
 
-        // Кнопка "Очистить логи"
-        logsClearBtn.setOnClickListener {
+        // 5.5 Очистить логи
+        btnLogsClear.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dev_logs_clear)
                 .setMessage(R.string.dev_logs_clear_confirm)
@@ -376,7 +487,119 @@ class DeveloperSettingsFragment : Fragment() {
                 .setNegativeButton(R.string.cancel, null)
                 .show()
         }
+
+        // 5.6 Сбросить настройки
+        btnLogsReset.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.dev_logs_reset)
+                .setMessage(R.string.dev_logs_reset_confirm)
+                .setPositiveButton(R.string.delete) { _, _ ->
+                    resetLogsSettings()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
     }
+
+    /**
+     * Загружает настройки логов из SharedPreferences БЕЗ триггера слушателей
+     */
+    private fun loadLogsSettingsWithoutTrigger() {
+        isLoadingSettings = true
+
+        val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
+
+        val persistEnabled = prefs.getBoolean("persist_enabled", true)
+        val maxFiles = prefs.getInt("max_files", 5)
+        val maxSizeMB = prefs.getInt("max_size_mb", 5)
+
+        switchPersist.isChecked = persistEnabled
+
+        val filesPos = when (maxFiles) {
+            3 -> 0
+            5 -> 1
+            10 -> 2
+            else -> 1
+        }
+        spinnerMaxFiles.setSelection(filesPos, false)
+
+        val sizePos = when (maxSizeMB) {
+            3 -> 0
+            5 -> 1
+            10 -> 2
+            else -> 1
+        }
+        spinnerMaxSize.setSelection(sizePos, false)
+
+        isLoadingSettings = false
+    }
+
+    /**
+     * Применяет настройки логов
+     */
+    private var applyHandler: Handler? = null
+    private var applyRunnable: Runnable? = null
+
+    private fun applyLogsSettings(maxFiles: Int = -1, maxSizeMB: Int = -1) {
+        // Если идёт загрузка настроек — пропускаем
+        if (isLoadingSettings) return
+
+        // Отменяем предыдущий запрос
+        applyRunnable?.let { applyHandler?.removeCallbacks(it) }
+
+        applyRunnable = Runnable {
+            val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
+
+            val currentMaxFiles = if (maxFiles > 0) maxFiles else prefs.getInt("max_files", 5)
+            val currentMaxSizeMB = if (maxSizeMB > 0) maxSizeMB else prefs.getInt("max_size_mb", 5)
+
+            prefs.edit {
+                putInt("max_files", currentMaxFiles)
+                putInt("max_size_mb", currentMaxSizeMB)
+            }
+
+            LoggerFile.reconfigure(currentMaxFiles, currentMaxSizeMB)
+
+            // Обновляем размер логов в UI
+            val logsSizeView = view?.findViewById<TextView>(R.id.dev_logs_size_value)
+            logsSizeView?.let { updateLogsSize(it) }
+
+            Toast.makeText(requireContext(), R.string.dev_logs_applied, Toast.LENGTH_SHORT).show()
+        }
+
+        applyHandler = Handler(Looper.getMainLooper())
+        applyHandler?.postDelayed(applyRunnable!!, 300)
+    }
+
+    /**
+     * Сбрасывает настройки логов к значениям по умолчанию
+     */
+    private fun resetLogsSettings() {
+        val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
+
+        // Сбрасываем настройки
+        prefs.edit {
+            putBoolean("persist_enabled", true)
+            putInt("max_files", 5)
+            putInt("max_size_mb", 5)
+        }
+
+        // Обновляем UI БЕЗ триггера слушателей
+        isLoadingSettings = true
+        switchPersist.isChecked = true
+        spinnerMaxFiles.setSelection(1, false)  // 5
+        spinnerMaxSize.setSelection(1, false)   // 5 MB
+        isLoadingSettings = false
+
+        // Применяем в LoggerFile
+        LoggerFile.init(requireContext(), 5, 5, true)
+
+        Toast.makeText(requireContext(), R.string.dev_logs_reset_success, Toast.LENGTH_SHORT).show()
+    }
+
+    // ============================================================
+    // 5.7 ДИАЛОГИ УПРАВЛЕНИЯ ЛОГАМИ
+    // ============================================================
 
     /**
      * Показывает диалог со списком файлов логов
@@ -389,7 +612,10 @@ class DeveloperSettingsFragment : Fragment() {
             return
         }
 
-        val logFiles = logsDir.listFiles()?.filter { it.isFile && it.extension == "txt" }?.sortedByDescending { it.lastModified() } ?: emptyList()
+        val logFiles = logsDir.listFiles()
+            ?.filter { it.isFile && it.extension == "json" }
+            ?.sortedByDescending { it.lastModified() }
+            ?: emptyList()
 
         if (logFiles.isEmpty()) {
             Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
@@ -472,13 +698,13 @@ class DeveloperSettingsFragment : Fragment() {
                 file
             )
 
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            startActivity(Intent.createChooser(shareIntent, getString(R.string.dev_logs_share_title)))
+            startActivity(android.content.Intent.createChooser(shareIntent, getString(R.string.dev_logs_share_title)))
         } catch (_: Exception) {
             Toast.makeText(requireContext(), R.string.dev_logs_share_error, Toast.LENGTH_SHORT).show()
         }
@@ -553,8 +779,8 @@ class DeveloperSettingsFragment : Fragment() {
     // ============================================================
 
     private fun restartApp() {
-        val intent = Intent(requireContext(), MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val intent = android.content.Intent(requireContext(), MainActivity::class.java)
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         requireActivity().finish()
     }

@@ -122,4 +122,22 @@ object CacheManager {
         return System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
     }
 
+    /**
+     * Очищает кэш приложений (in-memory и disk)
+     * @param context контекст приложения
+     */
+    fun clearCache(context: Context) {
+        // Очищаем in-memory кэш
+        memoryCache = null
+
+        // Удаляем файл кэша с диска
+        try {
+            val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
+            if (cacheFile.exists()) {
+                cacheFile.delete()
+            }
+        } catch (_: Exception) {
+            // Игнорируем ошибки
+        }
+    }
 }

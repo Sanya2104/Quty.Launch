@@ -388,6 +388,24 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp" />
 
+            <!-- Очистить кэш приложений -->
+            <Button
+                android:id="@+id/dev_clear_apps_cache"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#FF6F00"
+                android:text="@string/dev_clear_apps_cache"
+                android:textColor="#FFFFFF" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp" />
+
             <!-- Очистить данные -->
             <Button
                 android:id="@+id/dev_clear_data"
@@ -419,12 +437,108 @@
             android:orientation="vertical"
             android:padding="8dp">
 
+            <!-- Сохранять логи в файл -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/dev_logs_persist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:text="@string/dev_logs_persist"
+                android:textColor="#FFFFFF"
+                android:checked="true" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Максимум файлов -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:padding="0dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dev_logs_max_files"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <Spinner
+                    android:id="@+id/dev_logs_max_files"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="100dp"
+                    android:background="@drawable/spinner_bg"
+                    android:popupBackground="#1E1E1E"
+                    android:spinnerMode="dropdown" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Максимум на файл -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:padding="0dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dev_logs_max_size"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <Spinner
+                    android:id="@+id/dev_logs_max_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="100dp"
+                    android:background="@drawable/spinner_bg"
+                    android:popupBackground="#1E1E1E"
+                    android:spinnerMode="dropdown" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#333333"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp" />
+
             <!-- Кнопка "Показать логи" -->
             <Button
                 android:id="@+id/dev_logs_show"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:backgroundTint="#4A4A4A"
                 android:text="@string/dev_logs_show"
                 android:textColor="#FFFFFF" />
@@ -435,9 +549,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
                 android:backgroundTint="#D32F2F"
                 android:text="@string/dev_logs_clear"
+                android:textColor="#FFFFFF" />
+
+            <!-- Кнопка "Сбросить настройки" -->
+            <Button
+                android:id="@+id/dev_logs_reset"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:backgroundTint="#FF9800"
+                android:text="@string/dev_logs_reset"
                 android:textColor="#FFFFFF" />
 
         </LinearLayout>

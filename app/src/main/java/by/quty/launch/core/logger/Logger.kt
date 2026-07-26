@@ -1,10 +1,12 @@
 // *** core/logger/Logger.kt *** //
 package by.quty.launch.core.logger
 
+import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import by.quty.launch.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -23,7 +25,7 @@ object Logger {
     // Максимальное количество логов в памяти
     private const val MAX_LOGS = 1000
 
-    // Список всех логов
+    // Список всех логов (новые в начале)
     private val logs = mutableListOf<LogEntry>()
 
     // Флаг паузы (если true — логи не собираются)
@@ -32,12 +34,76 @@ object Logger {
     // Слушатели для обновления UI
     private val listeners = mutableListOf<LogListener>()
 
+    // Контекст для доступа к ресурсам
+    private lateinit var appContext: Context
+
     /**
      * Интерфейс для уведомления об изменениях в логах
      */
     interface LogListener {
         fun onLogAdded(entry: LogEntry)
         fun onLogsCleared()
+    }
+
+    /**
+     * Инициализация логгера
+     * Вызывается при запуске приложения
+     * @param context контекст приложения
+     */
+    fun init(context: Context) {
+        appContext = context.applicationContext
+
+        // Загружаем настройки сохранения в файл
+        val prefs = context.getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
+        val persistEnabled = prefs.getBoolean("persist_enabled", true)
+        val maxFiles = prefs.getInt("max_files", 5)
+        val maxSizeMB = prefs.getInt("max_size_mb", 5)
+
+        // Инициализируем файловое ядро
+        LoggerFile.init(context, maxFiles, maxSizeMB, persistEnabled)
+
+        // Если сохранение включено — восстанавливаем логи из файла
+        if (persistEnabled) {
+            restoreLogsFromFile()
+        }
+
+        Log.d("Logger", appContext.getString(R.string.logger_initialized))
+    }
+
+    /**
+     * Восстанавливает логи из файла в память
+     */
+    private fun restoreLogsFromFile() {
+        try {
+            val logFiles = LoggerFile.getLogFiles()
+            if (logFiles.isEmpty()) return
+
+            // Берём самый свежий файл (первый в списке)
+            val latestFile = logFiles.firstOrNull() ?: return
+            val restoredLogs = LoggerFile.readLogsFromFile(latestFile)
+
+            // Добавляем в память (новые сверху)
+            synchronized(logs) {
+                logs.clear()
+                logs.addAll(restoredLogs)
+                // Ограничиваем количество
+                while (logs.size > MAX_LOGS) {
+                    logs.removeAt(logs.size - 1)
+                }
+            }
+
+            // Уведомляем слушателей
+            CoroutineScope(Dispatchers.Main).launch {
+                listeners.forEach { it.onLogsCleared() }
+                restoredLogs.forEach { entry ->
+                    listeners.forEach { it.onLogAdded(entry) }
+                }
+            }
+
+            Log.d("Logger", appContext.getString(R.string.logger_restored_from_file, restoredLogs.size))
+        } catch (_: Exception) {
+            Log.e("Logger", appContext.getString(R.string.logger_restore_error))
+        }
     }
 
     /**
@@ -75,6 +141,7 @@ object Logger {
      * @param tag тег (обычно имя класса)
      * @param message сообщение
      */
+    @Suppress("unused")
     fun d(tag: String, message: String) {
         addLog(LogLevel.DEBUG, tag, message)
     }
@@ -84,6 +151,7 @@ object Logger {
      * @param tag тег (обычно имя класса)
      * @param message сообщение
      */
+    @Suppress("unused")
     fun i(tag: String, message: String) {
         addLog(LogLevel.INFO, tag, message)
     }
@@ -93,6 +161,7 @@ object Logger {
      * @param tag тег (обычно имя класса)
      * @param message сообщение
      */
+    @Suppress("unused")
     fun w(tag: String, message: String) {
         addLog(LogLevel.WARN, tag, message)
     }
@@ -150,12 +219,15 @@ object Logger {
             source = source
         )
 
-        // Добавляем в список
+        // 1. Записываем в файл (всегда, если включено)
+        LoggerFile.write(level, tag, message, source)
+
+        // 2. Добавляем в память (для UI) — новые в начало списка
         synchronized(logs) {
-            logs.add(entry)
-            // Если превышен лимит — удаляем самые старые
+            logs.add(0, entry)
+            // Если превышен лимит — удаляем самые старые (в конце)
             while (logs.size > MAX_LOGS) {
-                logs.removeAt(0)
+                logs.removeAt(logs.size - 1)
             }
         }
 
@@ -174,7 +246,7 @@ object Logger {
     }
 
     /**
-     * Возвращает копию списка всех логов
+     * Возвращает копию списка всех логов (новые сверху)
      */
     fun getLogs(): List<LogEntry> {
         return synchronized(logs) {
@@ -198,6 +270,10 @@ object Logger {
         synchronized(logs) {
             logs.clear()
         }
+
+        // Очищаем файлы
+        LoggerFile.clearAll()
+
         CoroutineScope(Dispatchers.Main).launch {
             notifyLogsCleared()
         }
@@ -223,7 +299,7 @@ object Logger {
     fun isPaused(): Boolean = isPaused
 
     /**
-     * Форматирует все логи в строку для копирования
+     * Форматирует все логи в строку для копирования (новые сверху)
      * @return строку с логами
      */
     fun formatLogsForCopy(): String {
@@ -239,7 +315,7 @@ object Logger {
     }
 
     /**
-     * Форматирует все логи в строку для отправки (без заголовка)
+     * Форматирует все логи в строку для отправки (новые сверху)
      * @return строку с логами
      */
     fun formatLogsForShare(): String {
@@ -260,20 +336,16 @@ object Logger {
      */
     fun saveLogsToFile(): String? {
         return try {
-            // Создаём директорию Quty.Launch/Logs/
+            // Формируем имя файла: log_YYYY-MM-DD_HH-MM-SS.json
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
+            val fileName = "log_${dateFormat.format(Date())}.json"
+
             val appDir = File(android.os.Environment.getExternalStorageDirectory(), "Quty.Launch")
             val logsDir = File(appDir, "Logs")
 
-            if (!appDir.exists()) {
-                appDir.mkdirs()
-            }
-            if (!logsDir.exists()) {
-                logsDir.mkdirs()
-            }
+            if (!appDir.exists()) appDir.mkdirs()
+            if (!logsDir.exists()) logsDir.mkdirs()
 
-            // Формируем имя файла: log_YYYY-MM-DD_HH-MM-SS.txt
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
-            val fileName = "log_${dateFormat.format(Date())}.txt"
             val logFile = File(logsDir, fileName)
 
             // Форматируем логи для записи

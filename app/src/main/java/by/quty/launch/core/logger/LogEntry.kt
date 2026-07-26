@@ -1,10 +1,13 @@
 // *** core/logger/LogEntry.kt *** //
 package by.quty.launch.core.logger
 
+import kotlinx.serialization.Serializable
+
 /**
  * Модель записи лога
  * Содержит всю информацию о одном лог-сообщении
  */
+@Serializable
 data class LogEntry(
     val timestamp: Long,                    // время в миллисекундах
     val level: LogLevel,                    // уровень (DEBUG, INFO, WARN, ERROR)

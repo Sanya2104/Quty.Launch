@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import by.quty.launch.core.Core
 import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 import java.io.File
@@ -28,6 +29,9 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Инициализация логгера
+        Logger.init(this)
 
         // Инициализация
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
