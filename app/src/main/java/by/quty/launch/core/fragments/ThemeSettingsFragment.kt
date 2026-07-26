@@ -341,10 +341,10 @@ class ThemeSettingsFragment : Fragment() {
     private fun installThemeFromUri(uri: Uri) {
         try {
             val fileName = getFileNameFromUri(uri)
-            if (fileName == null || !fileName.endsWith(ThemeManager.THEME_EXTENSION_WITH_DOT)) {
+            if (fileName == null || !ThemeManager.THEME_EXTENSIONS_WITH_DOT.any { fileName.endsWith(it, ignoreCase = true) }) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.invalid_theme),
+                    getString(R.string.invalid_theme_extensions),
                     Toast.LENGTH_LONG
                 ).show()
                 return

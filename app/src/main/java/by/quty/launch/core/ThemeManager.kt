@@ -54,10 +54,24 @@ class ThemeManager(
 ) {
 
     companion object {
-        /** Расширение файла темы (без точки) */
+        /** Основное расширение файла темы (без точки) */
         const val THEME_EXTENSION = "qutytheme"
-        /** Расширение файла темы (с точкой) */
+        /** Основное расширение файла темы (с точкой) */
         const val THEME_EXTENSION_WITH_DOT = ".qutytheme"
+
+        /** Дополнительные расширения файлов тем (без точки) */
+        val THEME_EXTENSIONS = listOf(
+            "qutytheme",    // основное
+            "qtp",          // сокращённое
+            "qutythemepack" // альтернативное
+        )
+
+        /** Дополнительные расширения файлов тем (с точкой) */
+        val THEME_EXTENSIONS_WITH_DOT = listOf(
+            ".qutytheme",
+            ".qtp",
+            ".qutythemepack"
+        )
     }
 
     private val themesDir = File(context.filesDir, "themes")
@@ -72,7 +86,7 @@ class ThemeManager(
     private val json = Json { ignoreUnknownKeys = true }
 
     // Поддерживаемые расширения тем
-    private val supportedExtensions = listOf(THEME_EXTENSION)
+    private val supportedExtensions = THEME_EXTENSIONS
 
     init {
         if (!themesDir.exists()) themesDir.mkdirs()

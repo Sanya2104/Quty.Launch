@@ -194,6 +194,7 @@ class ThemeUpdateManager(private val context: Context) {
                 themesDir.mkdirs()
             }
 
+            // Сохраняем с основным расширением .qutytheme
             val fileName = "${repoInfo.name}${ThemeManager.THEME_EXTENSION_WITH_DOT}"
             val destFile = File(themesDir, fileName)
 
