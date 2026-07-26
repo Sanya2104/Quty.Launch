@@ -44,6 +44,16 @@
             android:contentDescription="@string/logger_copy"
             android:padding="12dp" />
 
+        <!-- Кнопка "Поделиться" -->
+        <ImageButton
+            android:id="@+id/btn_share"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_share"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/logger_share"
+            android:padding="12dp" />
+
         <!-- Кнопка "Сохранить" -->
         <ImageButton
             android:id="@+id/btn_save"
@@ -105,7 +115,7 @@
             android:layout_weight="1"
             android:text="@string/logger_status"
             android:textColor="#888888"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
 
         <!-- Индикатор паузы -->
         <TextView
@@ -114,7 +124,7 @@
             android:layout_height="wrap_content"
             android:text="@string/logger_paused"
             android:textColor="#FF9800"
-            android:textSize="14sp"
+            android:textSize="12sp"
             android:visibility="gone" />
 
     </LinearLayout>

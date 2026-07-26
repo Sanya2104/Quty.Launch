@@ -239,6 +239,22 @@ object Logger {
     }
 
     /**
+     * Форматирует все логи в строку для отправки (без заголовка)
+     * @return строку с логами
+     */
+    fun formatLogsForShare(): String {
+        val sb = StringBuilder()
+        getLogs().forEach { entry ->
+            sb.append("[${entry.getFormattedTime()}] ")
+            sb.append("${entry.level.name}/${entry.tag}: ")
+            sb.append(entry.message)
+            sb.append(" (${entry.source})")
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
+
+    /**
      * Сохраняет все логи в файл
      * @return путь к сохранённому файлу или null в случае ошибки
      */

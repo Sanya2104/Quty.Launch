@@ -3,6 +3,7 @@ package by.quty.launch
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -28,6 +29,7 @@ class LoggerActivity : BaseActivity() {
     private lateinit var tvPauseIndicator: TextView
     private lateinit var btnPause: ImageButton
     private lateinit var btnCopy: ImageButton
+    private lateinit var btnShare: ImageButton
     private lateinit var btnSave: ImageButton
     private lateinit var btnClear: ImageButton
     private lateinit var btnClose: ImageButton
@@ -96,6 +98,7 @@ class LoggerActivity : BaseActivity() {
         tvPauseIndicator = findViewById(R.id.tv_pause_indicator)
         btnPause = findViewById(R.id.btn_pause)
         btnCopy = findViewById(R.id.btn_copy)
+        btnShare = findViewById(R.id.btn_share)
         btnSave = findViewById(R.id.btn_save)
         btnClear = findViewById(R.id.btn_clear)
         btnClose = findViewById(R.id.btn_close)
@@ -115,8 +118,7 @@ class LoggerActivity : BaseActivity() {
     }
 
     private fun setupButtons() {
-
-        // Кнопка "Пауза"
+        // Кнопка "Пауза/Старт"
         btnPause.setOnClickListener {
             if (Logger.isPaused()) {
                 Logger.resume()
@@ -131,7 +133,7 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
-        // Кнопка "Копировать логи"
+        // Кнопка "Копировать"
         btnCopy.setOnClickListener {
             val logsText = Logger.formatLogsForCopy()
             if (logsText.isNotEmpty()) {
@@ -144,7 +146,22 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
-        // Кнопка "Сохранить логи в файл"
+        // Кнопка "Поделиться"
+        btnShare.setOnClickListener {
+            val logsText = Logger.formatLogsForShare()
+            if (logsText.isNotEmpty()) {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, logsText)
+                    putExtra(Intent.EXTRA_SUBJECT, "Quty.Launch Logs")
+                }
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.logger_share_title)))
+            } else {
+                Toast.makeText(this, R.string.logger_empty, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Кнопка "Сохранить"
         btnSave.setOnClickListener {
             val filePath = Logger.saveLogsToFile()
             if (filePath != null) {
@@ -154,7 +171,7 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
-        // Кнопка "Очистить логи"
+        // Кнопка "Очистить"
         btnClear.setOnClickListener {
             Logger.clear()
             Toast.makeText(this, R.string.logger_cleared, Toast.LENGTH_SHORT).show()

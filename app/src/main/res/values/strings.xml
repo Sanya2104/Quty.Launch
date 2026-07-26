@@ -391,6 +391,9 @@
     <string name="logger_resume">Старт</string>
     <string name="logger_close">Закрыть</string>
     <string name="logger_empty">Логов пока нет</string>
+    <string name="logger_share">Поделиться логами</string>
+    <string name="logger_share_error">Ошибка при отправке логов</string>
+    <string name="logger_share_title">Поделиться логами</string>
 
     <!-- Статус -->
     <string name="logger_status" formatted="false">Всего логов: %d</string>
