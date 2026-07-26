@@ -3,6 +3,7 @@ package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -233,11 +234,13 @@ class DeveloperSettingsFragment : Fragment() {
     private fun setupDataManagement(view: View) {
         val cacheSizeView = view.findViewById<TextView>(R.id.dev_cache_size_value)
         val themesSizeView = view.findViewById<TextView>(R.id.dev_themes_size_value)
+        val logsSizeView = view.findViewById<TextView>(R.id.dev_logs_size_value)
         val clearDataBtn = view.findViewById<Button>(R.id.dev_clear_data)
 
         // Обновляем размеры
         updateCacheSize(cacheSizeView)
         updateThemesSize(themesSizeView)
+        updateLogsSize(logsSizeView)
 
         // Кнопка обновления размера кэша (по клику на строку)
         val cacheSizeRow = view.findViewById<View>(R.id.dev_cache_size_row)
@@ -254,6 +257,12 @@ class DeveloperSettingsFragment : Fragment() {
         }
 
         // 4.1 Очистить данные
+        val logsSizeRow = view.findViewById<View>(R.id.dev_logs_size_row)
+        logsSizeRow?.setOnClickListener {
+            updateLogsSize(logsSizeView)
+            Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
+        }
+
         clearDataBtn.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dev_clear_data)
@@ -276,6 +285,11 @@ class DeveloperSettingsFragment : Fragment() {
         textView.text = formatSize(size)
     }
 
+    private fun updateLogsSize(textView: TextView) {
+        val size = getLogsSize()
+        textView.text = formatSize(size)
+    }
+
     private fun getCacheSize(): Long {
         var size = 0L
         val cacheDir = requireContext().cacheDir
@@ -293,6 +307,16 @@ class DeveloperSettingsFragment : Fragment() {
 
         if (themesDir.exists()) {
             themesDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
+        }
+        return size
+    }
+
+    private fun getLogsSize(): Long {
+        var size = 0L
+        val logsDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch/Logs")
+
+        if (logsDir.exists()) {
+            logsDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
         }
         return size
     }
@@ -393,8 +417,9 @@ class DeveloperSettingsFragment : Fragment() {
      */
     private fun showLogFileActionsDialog(file: File) {
         val options = arrayOf(
-            getString(R.string.theme_menu_info),      // Просмотр содержимого
-            getString(R.string.dev_logs_delete)       // Удалить
+            getString(R.string.dev_logs_view),       // Просмотр
+            getString(R.string.dev_logs_share),      // Поделиться
+            getString(R.string.dev_logs_delete)      // Удалить
         )
 
         AlertDialog.Builder(requireContext())
@@ -402,7 +427,8 @@ class DeveloperSettingsFragment : Fragment() {
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> showLogFileContent(file)
-                    1 -> confirmDeleteLogFile(file)
+                    1 -> shareLogFile(file)
+                    2 -> confirmDeleteLogFile(file)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -432,6 +458,29 @@ class DeveloperSettingsFragment : Fragment() {
                 .show()
         } catch (_: Exception) {
             Toast.makeText(requireContext(), R.string.dev_logs_delete_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Открывает диалог для отправки файла лога
+     */
+    private fun shareLogFile(file: File) {
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                file
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.dev_logs_share_title)))
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_logs_share_error, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -504,8 +553,8 @@ class DeveloperSettingsFragment : Fragment() {
     // ============================================================
 
     private fun restartApp() {
-        val intent = android.content.Intent(requireContext(), MainActivity::class.java)
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         requireActivity().finish()
     }
