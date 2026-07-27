@@ -88,6 +88,7 @@
     <string name="shell_share_title">Поделиться оболочкой</string>
     <string name="shell_share_error">Ошибка при отправке файла</string>
     <string name="shell_file_not_found">Файл оболочки не найден</string>
+    <string name="shell_share_unavailable">Невозможно поделиться этой оболочкой</string>
 
     <!-- Обновление оболочки -->
     <string name="shell_update_available">Доступно обновление</string>

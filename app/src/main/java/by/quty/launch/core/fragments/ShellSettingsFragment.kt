@@ -677,18 +677,20 @@ class ShellSettingsFragment : Fragment() {
                 menu.add(0, 1, 0, getString(R.string.shell_menu_apply))
             }
 
-            // Пункт "Информация"
+            // Пункт "Информация" - ВСЕГДА
             menu.add(0, 2, 0, getString(R.string.shell_menu_info))
 
-            // Для кастомных оболочек добавляем "Удалить" и "Поделиться"
+            // "Удалить" — только для кастомных оболочек
             if (shell.isCustom) {
                 menu.add(0, 3, 0, getString(R.string.shell_menu_delete))
-                menu.add(0, 4, 0, getString(R.string.shell_menu_share))
+            }
 
-                // Если есть repoUrl - добавляем "Проверить обновления"
-                if (!shell.repoUrl.isNullOrEmpty()) {
-                    menu.add(0, 5, 0, getString(R.string.shell_menu_check_updates))
-                }
+            // Пункт "Поделиться" - ВСЕГДА
+            menu.add(0, 4, 0, getString(R.string.shell_menu_share))
+
+            // "Проверить обновления" — если есть repoUrl (для ЛЮБЫХ оболочек)
+            if (!shell.repoUrl.isNullOrEmpty()) {
+                menu.add(0, 5, 0, getString(R.string.shell_menu_check_updates))
             }
 
             popupMenu.setOnMenuItemClickListener { menuItem ->
