@@ -5,8 +5,6 @@ import android.content.pm.ActivityInfo
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -34,10 +32,8 @@ abstract class BaseActivity : AppCompatActivity() {
     val configManager: ConfigManager
         get() = _configManager
 
-    // Для постоянного контроля панелей в строгом режиме
-    private val strictModeHandler = Handler(Looper.getMainLooper())
-    private var strictModeRunnable: Runnable? = null
-    private var isStrictModeLoopRunning = false
+    // Флаг, что слушатель активен
+    private var isListenerAttached = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,7 +83,6 @@ abstract class BaseActivity : AppCompatActivity() {
     /**
      * Современный способ для Android 11+ (API 30+)
      */
-    @Suppress("DEPRECATION")
     private fun enableImmersiveModeModern(window: android.view.Window, strictMode: Boolean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -113,6 +108,13 @@ abstract class BaseActivity : AppCompatActivity() {
                 // Обычный режим: панели появляются при свайпе
                 insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
+
+            // Настраиваем слушатель для строгого режима (без цикла!)
+            if (strictMode) {
+                setupStrictModeListenerModern(window, insetsController)
+            } else {
+                removeStrictModeListenerModern(window)
+            }
         }
 
         // Обрабатываем вырез камеры
@@ -121,7 +123,58 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     /**
+     * Настраивает слушатель для строгого режима (Android 11+)
+     * Использует OnApplyWindowInsetsListener вместо устаревшего OnSystemUiVisibilityChangeListener
+     */
+    private fun setupStrictModeListenerModern(
+        window: android.view.Window,
+        insetsController: WindowInsetsController
+    ) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+
+        // Удаляем старый слушатель, если был
+        removeStrictModeListenerModern(window)
+
+        val decorView = window.decorView
+
+        // Используем OnApplyWindowInsetsListener для отслеживания изменений
+        decorView.setOnApplyWindowInsetsListener { view, insets ->
+            // Проверяем, что строгий режим всё ещё активен
+            if (configManager.isStrictModeEnabled() && configManager.isFullscreenEnabled()) {
+                // Проверяем, видимы ли системные панели
+                val isStatusBarVisible = insets.isVisible(WindowInsetsCompat.Type.statusBars())
+                val isNavBarVisible = insets.isVisible(WindowInsetsCompat.Type.navigationBars())
+
+                // Если панели появились — скрываем их снова
+                if (isStatusBarVisible || isNavBarVisible) {
+                    insetsController.hide(WindowInsetsCompat.Type.statusBars()
+                            or WindowInsetsCompat.Type.navigationBars())
+                }
+            }
+
+            // Возвращаем оригинальный инсет для дальнейшей обработки
+            view.onApplyWindowInsets(insets)
+        }
+
+        isListenerAttached = true
+    }
+
+    /**
+     * Удаляет слушатель (Android 11+)
+     */
+    private fun removeStrictModeListenerModern(window: android.view.Window) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+
+        val decorView = window.decorView
+        if (isListenerAttached) {
+            decorView.setOnApplyWindowInsetsListener(null)
+            isListenerAttached = false
+        }
+    }
+
+    /**
      * Старый способ для Android 10 и ниже (API 29-)
+     * Использует устаревшие API, но они всё ещё работают на этих версиях
      */
     @Suppress("DEPRECATION")
     private fun enableImmersiveModeLegacy(window: android.view.Window, strictMode: Boolean) {
@@ -144,6 +197,50 @@ abstract class BaseActivity : AppCompatActivity() {
         }
 
         decorView.systemUiVisibility = flags
+
+        // Настраиваем слушатель для строгого режима (без цикла!)
+        if (strictMode) {
+            setupStrictModeListenerLegacy(decorView)
+        } else {
+            removeStrictModeListenerLegacy(decorView)
+        }
+    }
+
+    /**
+     * Настраивает слушатель для строгого режима (Android 10 и ниже)
+     */
+    @Suppress("DEPRECATION")
+    private fun setupStrictModeListenerLegacy(decorView: View) {
+        // Удаляем старый слушатель, если был
+        removeStrictModeListenerLegacy(decorView)
+
+        // Используем устаревший, но единственный доступный на Android 10- слушатель
+        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+            // Проверяем, что строгий режим всё ещё активен
+            if (!configManager.isStrictModeEnabled() || !configManager.isFullscreenEnabled()) {
+                return@setOnSystemUiVisibilityChangeListener
+            }
+
+            // Если панели появились (флаг FULLSCREEN снят) — скрываем их снова
+            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                decorView.systemUiVisibility = (
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                                View.SYSTEM_UI_FLAG_IMMERSIVE
+                        )
+            }
+        }
+    }
+
+    /**
+     * Удаляет слушатель (Android 10 и ниже)
+     */
+    @Suppress("DEPRECATION")
+    private fun removeStrictModeListenerLegacy(decorView: View) {
+        decorView.setOnSystemUiVisibilityChangeListener(null)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -152,80 +249,8 @@ abstract class BaseActivity : AppCompatActivity() {
             window?.decorView?.post {
                 val strictMode = configManager.isStrictModeEnabled()
                 enableImmersiveMode(strictMode)
-
-                // Запускаем постоянный контроль панелей в строгом режиме
-                if (strictMode) {
-                    startStrictModeLoop()
-                } else {
-                    stopStrictModeLoop()
-                }
-            }
-        } else {
-            // При потере фокуса останавливаем цикл
-            stopStrictModeLoop()
-        }
-    }
-
-    /**
-     * Запускает постоянный контроль скрытия панелей в строгом режиме
-     * Каждые 300 мс проверяет и скрывает панели, если они появились
-     */
-    private fun startStrictModeLoop() {
-        if (isStrictModeLoopRunning) return
-        if (!configManager.isStrictModeEnabled()) return
-
-        isStrictModeLoopRunning = true
-
-        strictModeRunnable = object : Runnable {
-            override fun run() {
-                try {
-                    // Если строгий режим всё ещё активен
-                    if (configManager.isStrictModeEnabled() && configManager.isFullscreenEnabled()) {
-                        // Принудительно скрываем панели
-                        val currentWindow = window ?: return
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            val insetsController = currentWindow.insetsController
-                            insetsController?.hide(WindowInsetsCompat.Type.statusBars()
-                                    or WindowInsetsCompat.Type.navigationBars())
-                        } else {
-                            @Suppress("DEPRECATION")
-                            currentWindow.decorView.systemUiVisibility = (
-                                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                                            View.SYSTEM_UI_FLAG_FULLSCREEN or
-                                            View.SYSTEM_UI_FLAG_IMMERSIVE
-                                    )
-                        }
-                    }
-
-                    // Продолжаем цикл, если строгий режим активен
-                    if (configManager.isStrictModeEnabled()) {
-                        strictModeHandler.postDelayed(this, 100)
-                    } else {
-                        isStrictModeLoopRunning = false
-                    }
-                } catch (_: Exception) {
-                    // При ошибке останавливаем цикл
-                    isStrictModeLoopRunning = false
-                }
             }
         }
-
-        strictModeHandler.postDelayed(strictModeRunnable!!, 100)
-    }
-
-    /**
-     * Останавливает постоянный контроль панелей
-     */
-    private fun stopStrictModeLoop() {
-        isStrictModeLoopRunning = false
-        strictModeRunnable?.let {
-            strictModeHandler.removeCallbacks(it)
-        }
-        strictModeRunnable = null
     }
 
     /**
@@ -269,24 +294,13 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        // Останавливаем цикл при уходе в фон
-        stopStrictModeLoop()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Перезапускаем цикл при возврате, если строгий режим активен
-        if (configManager.isStrictModeEnabled()) {
-            window?.decorView?.post {
-                startStrictModeLoop()
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        stopStrictModeLoop()
+        // Удаляем слушатели при уничтожении активности
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window?.let { removeStrictModeListenerModern(it) }
+        } else {
+            window?.decorView?.let { removeStrictModeListenerLegacy(it) }
+        }
     }
 }

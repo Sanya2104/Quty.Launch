@@ -1,24 +1,109 @@
 // *** core/webview/JsBridge.kt *** //
 package by.quty.launch.core.webview
 
+import android.content.Context
 import android.webkit.JavascriptInterface
+import by.quty.launch.R
 import by.quty.launch.core.Core
+import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.*
-import kotlin.time.Duration.Companion.seconds
+import java.lang.ref.WeakReference
+import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Мост между JavaScript и Kotlin
+ * Обрабатывает вызовы API из WebView
+ */
 class JsBridge(
-    private val core: Core
+    private val core: Core,
+    private val context: Context
 ) {
 
+    // WeakReference для предотвращения утечки памяти
+    private var webViewRef: WeakReference<LauncherWebView>? = null
+
+    // Тайм-аут выполнения метода (10 секунд)
+    private val timeoutMs = 10000L
+
+    /**
+     * Устанавливает ссылку на WebView для отправки результатов обратно в JS
+     * @param webView экземпляр LauncherWebView
+     */
+    fun setWebView(webView: LauncherWebView) {
+        webViewRef = WeakReference(webView)
+    }
+
+    /**
+     * Вызов API метода из JavaScript (АСИНХРОННЫЙ)
+     * @param method имя метода (например, "GetApps")
+     * @param params JSON строка с параметрами
+     * @param callbackId уникальный идентификатор для ответа в JS
+     *
+     * Результат отправляется в JavaScript через callback
+     */
     @JavascriptInterface
-    fun call(method: String, params: String?): String {
-        return runBlocking(Dispatchers.IO) {
+    fun call(method: String, params: String?, callbackId: String) {
+        // Запускаем выполнение в фоновом потоке
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                withTimeout(10.seconds) {
+                // Выполняем метод с таймаутом
+                val result = withTimeout(timeoutMs.milliseconds) {
                     core.execute(method, params)
                 }
+
+                // Отправляем результат обратно в JavaScript
+                sendResultToJs(callbackId, result, null)
+
+            } catch (e: TimeoutCancellationException) {
+                // Тайм-аут выполнения
+                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout)}"}"""
+                sendResultToJs(callbackId, error, e)
+
+            } catch (e: CancellationException) {
+                // Отмена выполнения
+                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled)}"}"""
+                sendResultToJs(callbackId, error, e)
+
             } catch (e: Exception) {
-                """{"success": false, "error": "${e.message}"}"""
+                // Любая другая ошибка
+                val error = """{"success": false, "error": "${e.message}"}"""
+                sendResultToJs(callbackId, error, e)
+            }
+        }
+    }
+
+    /**
+     * Отправляет результат выполнения в JavaScript
+     * @param callbackId идентификатор callback в JS
+     * @param result JSON строка с результатом
+     * @param error исключение (если было)
+     */
+    private fun sendResultToJs(callbackId: String, result: String, error: Throwable?) {
+        // Получаем WebView из WeakReference
+        val webView = webViewRef?.get()
+        if (webView == null) {
+            // WebView уничтожен — логируем через Logger
+            if (error != null) {
+                Logger.e("JsBridge", context.getString(R.string.js_bridge_webview_null, error.message))
+            }
+            return
+        }
+
+        // Формируем JavaScript код для вызова callback
+        val jsCode = if (error == null) {
+            // Успешное выполнение
+            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId']($result);"
+        } else {
+            // Ошибка выполнения
+            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId'](null, '${error.message}');"
+        }
+
+        // Выполняем JavaScript в UI потоке
+        webView.post {
+            try {
+                webView.evaluateJavascript(jsCode, null)
+            } catch (e: Exception) {
+                Logger.e("JsBridge", context.getString(R.string.js_bridge_send_error, e.message))
             }
         }
     }

@@ -29,7 +29,9 @@ import by.quty.launch.core.ShellManager
 import by.quty.launch.core.ShellRepoInfo
 import by.quty.launch.core.ShellUpdateManager
 import by.quty.launch.core.interfaces.SettingsEventListener
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -153,39 +155,46 @@ class ShellSettingsFragment : Fragment() {
 
     /**
      * Внутренний метод применения оболочки (используется и при клике, и из меню)
+     * - Применение оболочки теперь в корутине
+     * - setActiveShell() - suspend функция, не блокирует UI
      */
     private fun applyShellInternal(shell: Shell) {
         if (isApplyingShell) return
 
         isApplyingShell = true
 
-        // Применяем оболочку
-        shellManager.setActiveShell(shell)
+        // Применяем оболочку в фоновом потоке
+        lifecycleScope.launch {
+            shellManager.setActiveShell(shell)
 
-        // Обновляем адаптер с задержкой, чтобы избежать мерцания
-        Handler(Looper.getMainLooper()).postDelayed({
-            shellsAdapter.notifyDataSetChanged()
-            isApplyingShell = false
-        }, DELAY_BEFORE_UI_UPDATE)
+            // Обновляем UI в главном потоке после завершения
+            withContext(Dispatchers.Main) {
+                // Обновляем адаптер с задержкой, чтобы избежать мерцания
+                Handler(Looper.getMainLooper()).postDelayed({
+                    shellsAdapter.notifyDataSetChanged()
+                    isApplyingShell = false
+                }, DELAY_BEFORE_UI_UPDATE)
 
-        // Уведомляем Activity об изменении оболочки
-        settingsEventListener?.onShellChanged(shell.name)
-        settingsEventListener?.onSettingChanged()
+                // Уведомляем Activity об изменении оболочки
+                settingsEventListener?.onShellChanged(shell.name)
+                settingsEventListener?.onSettingChanged()
 
-        // Обновляем состояние во вкладке "Экран" с задержкой
-        Handler(Looper.getMainLooper()).postDelayed({
-            (activity as? SettingsActivity)?.let { settingsActivity ->
-                settingsActivity.displayFragment?.updateOrientationLockState()
+                // Обновляем состояние во вкладке "Экран" с задержкой
+                Handler(Looper.getMainLooper()).postDelayed({
+                    (activity as? SettingsActivity)?.let { settingsActivity ->
+                        settingsActivity.displayFragment?.updateOrientationLockState()
+                    }
+                }, DELAY_BEFORE_UI_UPDATE)
+
+                val message = getString(R.string.shell_applied, shell.displayName ?: shell.name)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+                // Возвращаем результат в MainActivity
+                val resultIntent = Intent()
+                resultIntent.putExtra(EXTRA_SHELL_NAME, shell.name)
+                requireActivity().setResult(SettingsActivity.RESULT_SHELL_CHANGED, resultIntent)
             }
-        }, DELAY_BEFORE_UI_UPDATE)
-
-        val message = getString(R.string.shell_applied, shell.displayName ?: shell.name)
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-
-        // Возвращаем результат в MainActivity
-        val resultIntent = Intent()
-        resultIntent.putExtra(EXTRA_SHELL_NAME, shell.name)
-        requireActivity().setResult(SettingsActivity.RESULT_SHELL_CHANGED, resultIntent)
+        }
     }
 
     private fun setupInstallButton(view: View) {

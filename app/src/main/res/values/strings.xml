@@ -453,6 +453,9 @@
     <string name="js_bridge_method_not_found" formatted="false">Метод не найден: %s</string>
     <string name="js_bridge_execution_error" formatted="false">Ошибка выполнения: %s</string>
     <string name="js_bridge_timeout">Время выполнения истекло</string>
+    <string name="js_bridge_cancelled">Выполнение отменено</string>
+    <string name="js_bridge_webview_null" formatted="false">WebView уничтожен, невозможно отправить результат: %s</string>
+    <string name="js_bridge_send_error" formatted="false">Не удалось отправить результат в JS: %s</string>
 
     <!-- ============================================================ -->
     <!-- ==================== LAUNCHER WEBVIEW ======================= -->

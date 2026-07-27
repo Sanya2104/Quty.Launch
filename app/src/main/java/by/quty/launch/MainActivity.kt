@@ -5,12 +5,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.lifecycle.lifecycleScope
 import by.quty.launch.core.Core
 import by.quty.launch.core.ShellManager
 import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
-import java.io.File
+import kotlinx.coroutines.launch
 
 /**
  * Главная активность лаунчера
@@ -38,7 +39,10 @@ class MainActivity : BaseActivity() {
         core = Core(this)
         webView = LauncherWebView(this)
         shellManager = ShellManager(this, configManager)
-        webView.addJavascriptInterface(JsBridge(core), "Android")
+
+        val jsBridge = JsBridge(core, this)
+        jsBridge.setWebView(webView)
+        webView.addJavascriptInterface(jsBridge, "Android")
 
         // Загружаем оболочку
         loadShell()
@@ -55,24 +59,21 @@ class MainActivity : BaseActivity() {
     /**
      * Загрузка активной оболочки в WebView
      * Получает оболочку из ShellManager и загружает соответствующий index.html
+     * - Загрузка оболочки в корутине
+     * - setActiveShell() - suspend функция, не блокирует UI
      */
     private fun loadShell() {
-        val shellToActivate = shellManager.getShellToActivate()
-        shellManager.setActiveShell(shellToActivate)
+        lifecycleScope.launch {
+            val shellToActivate = shellManager.getShellToActivate()
+            // Вызов suspend функции в фоновом потоке
+            shellManager.setActiveShell(shellToActivate)
 
-        // Для кастомных оболочек проверяем, распакована ли она
-        if (!shellToActivate.isAsset) {
-            val extractDir = File(filesDir, "shells/active/${shellToActivate.name}")
-            if (!extractDir.exists() || !File(extractDir, "index.html").exists()) {
-                // Если не распакована — распаковываем
-                shellManager.setActiveShell(shellToActivate)
-            }
+            // Загрузка WebView в UI потоке
+            webView.loadShell(
+                shellName = shellToActivate.name,
+                isAsset = shellToActivate.isAsset
+            )
         }
-
-        webView.loadShell(
-            shellName = shellToActivate.name,
-            isAsset = shellToActivate.isAsset
-        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

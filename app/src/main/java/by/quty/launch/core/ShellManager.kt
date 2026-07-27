@@ -8,6 +8,8 @@ import android.os.Environment
 import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import by.quty.launch.R
@@ -56,6 +58,7 @@ class ShellManager(
     companion object {
         /** Основное расширение файла оболочки (без точки) */
         const val SHELL_EXTENSION = "qutyshell"
+
         /** Основное расширение файла оболочки (с точкой) */
         const val SHELL_EXTENSION_WITH_DOT = ".qutyshell"
 
@@ -387,7 +390,11 @@ class ShellManager(
         return activeShell
     }
 
-    fun setActiveShell(shell: Shell) {
+    /**
+     * Устанавливает активную оболочку
+     * @param shell оболочка для активации
+     */
+    suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
         // Сохраняем в конфиг
         configManager.setActiveShell(shell.name)
 
@@ -395,7 +402,10 @@ class ShellManager(
         activeShell = shell
 
         // Сохраняем принудительную ориентацию в SharedPreferences
-        saveForcedOrientation()
+        // withContext(Dispatchers.Main) для доступа к SharedPreferences
+        withContext(Dispatchers.Main) {
+            saveForcedOrientation()
+        }
 
         // Очищаем директорию активной оболочки
         clearActiveDir()
@@ -406,6 +416,7 @@ class ShellManager(
             if (!extractDir.exists()) {
                 extractDir.mkdirs()
             }
+            // Распаковка в фоновом потоке (уже в Dispatchers.IO)
             unzipShell(shell.sourcePath, extractDir)
         }
     }
@@ -417,6 +428,10 @@ class ShellManager(
         }
     }
 
+    /**
+     * Распаковывает ZIP-архив оболочки
+     * Теперь выполняется в фоновом потоке (вызывается только из setActiveShell)
+     */
     private fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
         if (!zipFile.exists()) return

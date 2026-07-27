@@ -11,8 +11,13 @@ abstract class BaseApiMethod<P> {
         encodeDefaults = true
     }
 
+    /**
+     * Имя метода для регистрации в ApiRouter
+     * Теперь возвращает имя класса как есть (с большой буквы)
+     * Например: "GetApps", "LaunchApp", "GetStatusBar"
+     */
     open val name: String
-        get() = this::class.simpleName?.replaceFirstChar { it.lowercase() } ?: "unknown"
+        get() = this::class.simpleName ?: "unknown"
 
     // Этот метод нужно вызывать из JsBridge
     suspend fun execute(params: String?): String {
