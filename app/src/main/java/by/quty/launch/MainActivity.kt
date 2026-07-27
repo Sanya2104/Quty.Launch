@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import by.quty.launch.core.Core
-import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.ShellManager
 import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
@@ -14,13 +14,13 @@ import java.io.File
 
 /**
  * Главная активность лаунчера
- * Отвечает за отображение WebView с темами и обработку API вызовов
+ * Отвечает за отображение WebView с оболочками и обработку API вызовов
  */
 class MainActivity : BaseActivity() {
 
     private lateinit var core: Core
     private lateinit var webView: LauncherWebView
-    private lateinit var themeManager: ThemeManager
+    private lateinit var shellManager: ShellManager
 
     companion object {
         const val REQUEST_CODE_SETTINGS = 1001
@@ -37,11 +37,11 @@ class MainActivity : BaseActivity() {
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
         core = Core(this)
         webView = LauncherWebView(this)
-        themeManager = ThemeManager(this, configManager)
+        shellManager = ShellManager(this, configManager)
         webView.addJavascriptInterface(JsBridge(core), "Android")
 
-        // Загружаем тему
-        loadTheme()
+        // Загружаем оболочку
+        loadShell()
 
         setContentView(webView)
 
@@ -53,36 +53,36 @@ class MainActivity : BaseActivity() {
     }
 
     /**
-     * Загрузка активной темы в WebView
-     * Получает тему из ThemeManager и загружает соответствующий index.html
+     * Загрузка активной оболочки в WebView
+     * Получает оболочку из ShellManager и загружает соответствующий index.html
      */
-    private fun loadTheme() {
-        val themeToActivate = themeManager.getThemeToActivate()
-        themeManager.setActiveTheme(themeToActivate)
+    private fun loadShell() {
+        val shellToActivate = shellManager.getShellToActivate()
+        shellManager.setActiveShell(shellToActivate)
 
-        // Для кастомных тем проверяем, распакована ли она
-        if (!themeToActivate.isAsset) {
-            val extractDir = File(filesDir, "themes/active/${themeToActivate.name}")
+        // Для кастомных оболочек проверяем, распакована ли она
+        if (!shellToActivate.isAsset) {
+            val extractDir = File(filesDir, "shells/active/${shellToActivate.name}")
             if (!extractDir.exists() || !File(extractDir, "index.html").exists()) {
                 // Если не распакована — распаковываем
-                themeManager.setActiveTheme(themeToActivate)
+                shellManager.setActiveShell(shellToActivate)
             }
         }
 
-        webView.loadTheme(
-            themeName = themeToActivate.name,
-            isAsset = themeToActivate.isAsset
+        webView.loadShell(
+            shellName = shellToActivate.name,
+            isAsset = shellToActivate.isAsset
         )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        // Обрабатываем только изменение темы
-        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_THEME_CHANGED) {
-            // Перезагружаем тему с задержкой, чтобы избежать мерцания
+        // Обрабатываем только изменение оболочки
+        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_SHELL_CHANGED) {
+            // Перезагружаем оболочку с задержкой, чтобы избежать мерцания
             Handler(Looper.getMainLooper()).postDelayed({
-                loadTheme()
+                loadShell()
             }, DELAY_BEFORE_RECREATE)
         }
     }

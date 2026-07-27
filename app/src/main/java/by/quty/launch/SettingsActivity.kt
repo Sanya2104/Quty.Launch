@@ -9,23 +9,23 @@ import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.viewpager2.widget.ViewPager2
-import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.ShellManager
 import by.quty.launch.core.adapters.SettingsPagerAdapter
 import by.quty.launch.core.fragments.DisplaySettingsFragment
 import by.quty.launch.core.fragments.SystemSettingsFragment
-import by.quty.launch.core.fragments.ThemeSettingsFragment
+import by.quty.launch.core.fragments.ShellSettingsFragment
 import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
 /**
  * Активность настроек лаунчера с вкладками
- * Позволяет выбирать тему оформления, ориентацию экрана и полноэкранный режим
+ * Позволяет выбирать оболочку оформления, ориентацию экрана и полноэкранный режим
  */
 class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     // Менеджеры - используем configManager из BaseActivity через геттер
-    lateinit var themeManager: ThemeManager
+    lateinit var shellManager: ShellManager
 
     // UI компоненты
     private lateinit var tabLayout: TabLayout
@@ -34,20 +34,20 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private lateinit var pagerAdapter: SettingsPagerAdapter
 
     // Ссылки на фрагменты для обновления
-    var themeFragment: ThemeSettingsFragment? = null
+    var shellFragment: ShellSettingsFragment? = null
         private set
     var displayFragment: DisplaySettingsFragment? = null
         private set
     private var systemFragment: SystemSettingsFragment? = null
 
     // Переменные для отслеживания изменений
-    private var originalTheme: String? = null
+    private var originalShell: String? = null
     private var originalOrientation: String? = null
     private var originalFullscreen: Boolean? = null
     private var originalStrictMode: Boolean? = null
 
     // Текущие значения (могут меняться)
-    private var currentTheme: String? = null
+    private var currentShell: String? = null
     private var currentOrientation: String? = null
     private var currentFullscreen: Boolean? = null
     private var currentStrictMode: Boolean? = null
@@ -56,12 +56,12 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var isRestarting = false
 
     companion object {
-        const val RESULT_THEME_CHANGED = 1
-        const val EXTRA_SELECTED_THEME = "selected_theme"
+        const val RESULT_SHELL_CHANGED = 1
+        const val EXTRA_SELECTED_SHELL = "selected_shell"
         private const val DELAY_BEFORE_RESTART = 500L // Задержка перед перезапуском (мс)
 
         // Индексы вкладок
-        private const val TAB_THEME = 0
+        private const val TAB_SHELL = 0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,16 +69,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
         // Инициализация
         applyOrientation()
-        themeManager = ThemeManager(this, configManager)
+        shellManager = ShellManager(this, configManager)
 
         // Сохраняем исходные настройки
-        originalTheme = configManager.getActiveTheme()
+        originalShell = configManager.getActiveShell()
         originalOrientation = configManager.getOrientation()
         originalFullscreen = configManager.isFullscreenEnabled()
         originalStrictMode = configManager.isStrictModeEnabled()
 
         // Копируем в текущие
-        currentTheme = originalTheme
+        currentShell = originalShell
         currentOrientation = originalOrientation
         currentFullscreen = originalFullscreen
         currentStrictMode = originalStrictMode
@@ -113,7 +113,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         // Привязываем TabLayout к ViewPager2
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
-                SettingsPagerAdapter.TAB_THEME -> tab.text = getString(R.string.tab_theme)
+                SettingsPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_shell)
                 SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
                 SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
                 SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
@@ -155,7 +155,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         }
 
         // Обычный запуск — всегда открываем "Оформление" (индекс 0)
-        viewPager.setCurrentItem(TAB_THEME, false)
+        viewPager.setCurrentItem(TAB_SHELL, false)
     }
 
     /**
@@ -173,7 +173,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         // Перепривязываем TabLayout
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
-                SettingsPagerAdapter.TAB_THEME -> tab.text = getString(R.string.tab_theme)
+                SettingsPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_shell)
                 SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
                 SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
                 SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
@@ -191,7 +191,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Обновление ссылок на фрагменты
      */
     private fun updateFragmentReferences() {
-        themeFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_THEME}") as? ThemeSettingsFragment
+        shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
         displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplaySettingsFragment
         systemFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SYSTEM}") as? SystemSettingsFragment
     }
@@ -228,7 +228,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Проверка, были ли изменены настройки
      */
     private fun hasSettingsChanged(): Boolean {
-        return currentTheme != originalTheme ||
+        return currentShell != originalShell ||
                 currentOrientation != originalOrientation ||
                 currentFullscreen != originalFullscreen ||
                 currentStrictMode != originalStrictMode
@@ -263,9 +263,9 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
-        // Добавляем экстра с выбранной темой, если она изменилась
-        if (currentTheme != originalTheme) {
-            intent.putExtra(EXTRA_SELECTED_THEME, currentTheme)
+        // Добавляем экстра с выбранной оболочкой, если она изменилась
+        if (currentShell != originalShell) {
+            intent.putExtra(EXTRA_SELECTED_SHELL, currentShell)
         }
 
         // Запускаем с задержкой, чтобы избежать мерцания
@@ -277,8 +277,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     // ===== Методы интерфейса SettingsEventListener =====
 
-    override fun onThemeChanged(themeName: String) {
-        currentTheme = themeName
+    override fun onShellChanged(shellName: String) {
+        currentShell = shellName
     }
 
     override fun onOrientationChanged(orientation: String) {
@@ -300,7 +300,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      */
     fun refreshAllFragments() {
         updateFragmentReferences()
-        themeFragment?.refreshThemes()
+        shellFragment?.refreshShells()
         displayFragment?.refreshSettings()
         systemFragment?.refreshInfo()
     }

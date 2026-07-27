@@ -50,13 +50,13 @@
 
         </LinearLayout>
 
-        <!-- ===== 2. ИНФОРМАЦИЯ О ТЕМЕ ===== -->
+        <!-- ===== 2. ИНФОРМАЦИЯ ОБ ОБОЛОЧКЕ ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:paddingTop="24dp"
-            android:text="@string/dev_section_theme"
+            android:text="@string/dev_section_shell"
             android:textColor="#CCCCCC"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -69,21 +69,21 @@
             android:padding="8dp">
 
             <Button
-                android:id="@+id/dev_theme_manifest"
+                android:id="@+id/dev_shell_manifest"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#4A4A4A"
-                android:text="@string/dev_theme_manifest"
+                android:text="@string/dev_shell_manifest"
                 android:textColor="#FFFFFF" />
 
             <Button
-                android:id="@+id/dev_theme_reload"
+                android:id="@+id/dev_shell_reload"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginBottom="8dp"
                 android:backgroundTint="#FF9800"
-                android:text="@string/dev_theme_reload"
+                android:text="@string/dev_shell_reload"
                 android:textColor="#FFFFFF" />
 
         </LinearLayout>
@@ -314,9 +314,9 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp" />
 
-            <!-- Размер тем -->
+            <!-- Размер оболочек -->
             <LinearLayout
-                android:id="@+id/dev_themes_size_row"
+                android:id="@+id/dev_shells_size_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -329,15 +329,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_themes_size"
+                    android:text="@string/dev_shells_size"
                     android:textColor="#AAAAAA"
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/dev_themes_size_value"
+                    android:id="@+id/dev_shells_size_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dev_themes_size_value"
+                    android:text="@string/dev_shells_size_value"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:textAlignment="viewEnd" />

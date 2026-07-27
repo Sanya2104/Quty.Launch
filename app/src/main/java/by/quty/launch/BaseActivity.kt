@@ -230,13 +230,13 @@ abstract class BaseActivity : AppCompatActivity() {
 
     /**
      * Применение сохраненной ориентации экрана
-     * Сначала проверяет, не задаёт ли тема принудительную ориентацию
+     * Сначала проверяет, не задаёт ли оболочка принудительную ориентацию
      * Если да - применяет её, иначе использует настройки пользователя
      */
     protected fun applyOrientation() {
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
 
-        // Проверяем, есть ли принудительная ориентация от темы
+        // Проверяем, есть ли принудительная ориентация от оболочки
         val forcedOrientation = prefs.getString("forced_orientation", null)
 
         val orientationToApply = when (forcedOrientation) {

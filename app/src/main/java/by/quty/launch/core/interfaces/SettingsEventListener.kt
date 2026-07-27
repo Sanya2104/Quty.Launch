@@ -6,7 +6,7 @@ package by.quty.launch.core.interfaces
  * Позволяет фрагментам сообщать об изменениях настроек
  */
 interface SettingsEventListener {
-    fun onThemeChanged(themeName: String)
+    fun onShellChanged(shellName: String)
     fun onOrientationChanged(orientation: String)
     fun onFullscreenChanged(enabled: Boolean)
     fun onSettingChanged() // Общий метод для любого изменения

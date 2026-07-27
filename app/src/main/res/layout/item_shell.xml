@@ -8,9 +8,9 @@
     android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical">
 
-    <!-- Превью темы -->
+    <!-- Превью оболочки -->
     <ImageView
-        android:id="@+id/theme_preview"
+        android:id="@+id/shell_preview"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:contentDescription="TODO"
@@ -19,7 +19,7 @@
         android:src="@drawable/ic_settings"
         tools:ignore="ContentDescription,HardcodedText" />
 
-    <!-- Информация о теме -->
+    <!-- Информация об оболочке -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -28,9 +28,9 @@
         android:layout_marginStart="12dp"
         android:layout_marginEnd="8dp">
 
-        <!-- Название темы -->
+        <!-- Название оболочки -->
         <TextView
-            android:id="@+id/theme_name"
+            android:id="@+id/shell_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
@@ -39,9 +39,9 @@
             android:maxLines="1"
             android:ellipsize="end" />
 
-        <!-- Версия темы (под названием) -->
+        <!-- Версия оболочки (под названием) -->
         <TextView
-            android:id="@+id/theme_version"
+            android:id="@+id/shell_version"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#CCCCCC"
@@ -51,9 +51,9 @@
             android:layout_marginTop="2dp"
             android:visibility="gone" />
 
-        <!-- Автор темы -->
+        <!-- Автор оболочки -->
         <TextView
-            android:id="@+id/theme_author"
+            android:id="@+id/shell_author"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#666666"
@@ -65,12 +65,12 @@
 
     <!-- Кнопка меню (три точки) -->
     <ImageButton
-        android:id="@+id/theme_menu_button"
+        android:id="@+id/shell_menu_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:src="@drawable/ic_menu_dots"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/theme_menu_description"
+        android:contentDescription="@string/shell_menu_description"
         android:padding="12dp"
         tools:ignore="ContentDescription" />
 

@@ -29,7 +29,7 @@
     <string name="settings_title">Настройки лаунчера</string>
 
     <!-- Названия вкладок -->
-    <string name="tab_theme">Оформление</string>
+    <string name="tab_shell">Оформление</string>
     <string name="tab_display">Экран</string>
     <string name="tab_system">Система</string>
     <string name="tab_developer">DevMode</string>
@@ -41,79 +41,79 @@
     <string name="dialog_later">Позже</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== ТЕМЫ ОФОРМЛЕНИЯ ======================== -->
+    <!-- ==================== ОБОЛОЧКА ОФОРМЛЕНИЯ ======================== -->
     <!-- ============================================================ -->
 
     <!-- Заголовок -->
-    <string name="settings_theme_title">Выберите тему оформления:</string>
+    <string name="settings_shell_title">Выберите оболочку оформления:</string>
 
-    <!-- Установка темы из файла -->
-    <string name="install_theme_from_file">Установить тему из файла</string>
-    <string name="select_theme_title">Выберите файл темы (.qutytheme)</string>
-    <string name="invalid_theme_extensions" formatted="false">Выбранный файл не является темой Quty.Launch (требуется .qutytheme, .qtp или .qutythemepack)</string>
-    <string name="theme_install_success" formatted="false">Тема "%s" успешно установлена!</string>
-    <string name="theme_install_error">Ошибка установки темы</string>
-    <string name="theme_install_confirm">Установить тему</string>
-    <string name="theme_install_confirm_message" formatted="false">Вы уверены, что хотите установить тему "%s" версии %s?</string>
-    <string name="theme_already_exists" formatted="false">Тема "%s" уже существует. Перезаписать?</string>
-    <string name="theme_incompatible">Тема несовместима с текущей версией лаунчера</string>
-    <string name="theme_min_launcher_version" formatted="false">Требуется лаунчер версии: %s</string>
+    <!-- Установка оболочки из файла -->
+    <string name="install_shell_from_file">Импортировать оболочку</string>
+    <string name="select_shell_title">Выберите файл оболочки (.qutyshell)</string>
+    <string name="invalid_shell_extensions" formatted="false">Выбранный файл не является оболочкой Quty.Launch (требуется .qutyshell, .qsp или .qutyshellpack)</string>
+    <string name="shell_install_success" formatted="false">Оболочка "%s" успешно установлена!</string>
+    <string name="shell_install_error">Ошибка установки оболочки</string>
+    <string name="shell_install_confirm">Установить оболочку</string>
+    <string name="shell_install_confirm_message" formatted="false">Вы уверены, что хотите установить оболочку "%s" версии %s?</string>
+    <string name="shell_already_exists" formatted="false">Оболочка "%s" уже существует. Перезаписать?</string>
+    <string name="shell_incompatible">Оболочка несовместима с текущей версией лаунчера</string>
+    <string name="shell_min_launcher_version" formatted="false">Требуется лаунчер версии: %s</string>
 
-    <!-- Меню темы -->
-    <string name="theme_menu_description">Меню темы</string>
-    <string name="theme_menu_apply">Применить</string>
-    <string name="theme_menu_delete">Удалить</string>
-    <string name="theme_menu_share">Поделиться</string>
-    <string name="theme_menu_info">Информация</string>
-    <string name="theme_menu_check_updates">Проверить обновления</string>
+    <!-- Меню оболочки -->
+    <string name="shell_menu_description">Меню оболочки</string>
+    <string name="shell_menu_apply">Применить</string>
+    <string name="shell_menu_delete">Удалить</string>
+    <string name="shell_menu_share">Поделиться</string>
+    <string name="shell_menu_info">Информация</string>
+    <string name="shell_menu_check_updates">Проверить обновления</string>
 
-    <!-- Удаление темы -->
-    <string name="theme_delete_confirm">Удалить тему?</string>
-    <string name="theme_delete_message" formatted="false">Вы уверены, что хотите удалить тему "%s"?</string>
-    <string name="theme_delete_success" formatted="false">Тема "%s" удалена</string>
-    <string name="theme_delete_error">Ошибка при удалении темы</string>
-    <string name="theme_cant_delete_default">Нельзя удалить встроенную тему</string>
-    <string name="theme_cant_delete_active">Нельзя удалить активную тему. Сначала примените другую.</string>
+    <!-- Удаление оболочки -->
+    <string name="shell_delete_confirm">Удалить оболочку?</string>
+    <string name="shell_delete_message" formatted="false">Вы уверены, что хотите удалить оболочку "%s"?</string>
+    <string name="shell_delete_success" formatted="false">Оболочка "%s" удалена</string>
+    <string name="shell_delete_error">Ошибка при удалении оболочки</string>
+    <string name="shell_cant_delete_default">Нельзя удалить встроенную оболочку</string>
+    <string name="shell_cant_delete_active">Нельзя удалить активную оболочку. Сначала примените другую.</string>
 
-    <!-- Информация о теме -->
-    <string name="theme_info_title" formatted="false">Информация о теме "%s"</string>
-    <string name="theme_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется лаунчер: %5$s</string>
-    <string name="theme_type_builtin">Встроенная</string>
-    <string name="theme_type_custom">Пользовательская</string>
-    <string name="theme_version_with_label" formatted="false">Версия: %s</string>
-    <string name="theme_info_min_version" formatted="false">Версии %s</string>
-    <string name="theme_info_min_version_not_specified">Не указано</string>
+    <!-- Информация об оболочке -->
+    <string name="shell_info_title" formatted="false">Информация об оболочке "%s"</string>
+    <string name="shell_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется лаунчер: %5$s</string>
+    <string name="shell_type_builtin">Встроенная</string>
+    <string name="shell_type_custom">Пользовательская</string>
+    <string name="shell_version_with_label" formatted="false">Версия: %s</string>
+    <string name="shell_info_min_version" formatted="false">Версии %s</string>
+    <string name="shell_info_min_version_not_specified">Не указано</string>
 
-    <!-- Шаринг темы -->
-    <string name="theme_share_title">Поделиться темой</string>
-    <string name="theme_share_error">Ошибка при отправке файла</string>
-    <string name="theme_file_not_found">Файл темы не найден</string>
+    <!-- Шаринг оболочки -->
+    <string name="shell_share_title">Поделиться оболочкой</string>
+    <string name="shell_share_error">Ошибка при отправке файла</string>
+    <string name="shell_file_not_found">Файл оболочки не найден</string>
 
-    <!-- Обновление темы -->
-    <string name="theme_update_available">Доступно обновление</string>
-    <string name="theme_update_not_found">Обновлений не найдено</string>
-    <string name="theme_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
-    <string name="theme_update_downloading">Скачивание обновления…</string>
-    <string name="theme_update_success">Тема обновлена до версии %s</string>
-    <string name="theme_update_confirm_title">Обновление темы</string>
-    <string name="theme_update_confirm_message" formatted="false">Доступна новая версия темы!\n\n Текущая: %s\n\n Новая: %s\n\n Что нового:\n%s</string>
-    <string name="theme_update_checking">Проверка обновлений</string>
-    <string name="theme_update_checking_message">Проверка…</string>
-    <string name="theme_update_available_message">Доступно обновление темы!</string>
-    <string name="theme_update_current_version" formatted="false">Текущая версия: %s</string>
-    <string name="theme_update_new_version" formatted="false">Новая версия: %s</string>
-    <string name="theme_update_changelog" formatted="false">Что нового:\n%s</string>
-    <string name="theme_update_size" formatted="false">Размер: %s</string>
-    <string name="theme_update_install">Обновить</string>
-    <string name="theme_update_preparing">Подготовка…</string>
-    <string name="theme_update_progress" formatted="false">Скачивание: %d%%</string>
-    <string name="theme_update_min_launcher" formatted="false">Требуется лаунчер версии: %s</string>
-    <string name="theme_update_incompatible_title">Тема несовместима</string>
-    <string name="theme_update_incompatible_message" formatted="false">Обновление темы требует лаунчер версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
+    <!-- Обновление оболочки -->
+    <string name="shell_update_available">Доступно обновление</string>
+    <string name="shell_update_not_found">Обновлений не найдено</string>
+    <string name="shell_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
+    <string name="shell_update_downloading">Скачивание обновления…</string>
+    <string name="shell_update_success">Оболочка обновлена до версии %s</string>
+    <string name="shell_update_confirm_title">Обновление оболочки</string>
+    <string name="shell_update_confirm_message" formatted="false">Доступна новая версия оболочки!\n\n Текущая: %s\n\n Новая: %s\n\n Что нового:\n%s</string>
+    <string name="shell_update_checking">Проверка обновлений</string>
+    <string name="shell_update_checking_message">Проверка…</string>
+    <string name="shell_update_available_message">Доступно обновление оболочки!</string>
+    <string name="shell_update_current_version" formatted="false">Текущая версия: %s</string>
+    <string name="shell_update_new_version" formatted="false">Новая версия: %s</string>
+    <string name="shell_update_changelog" formatted="false">Что нового:\n%s</string>
+    <string name="shell_update_size" formatted="false">Размер: %s</string>
+    <string name="shell_update_install">Обновить</string>
+    <string name="shell_update_preparing">Подготовка…</string>
+    <string name="shell_update_progress" formatted="false">Скачивание: %d%%</string>
+    <string name="shell_update_min_launcher" formatted="false">Требуется лаунчер версии: %s</string>
+    <string name="shell_update_incompatible_title">Оболочка несовместима</string>
+    <string name="shell_update_incompatible_message" formatted="false">Обновление оболочки требует лаунчер версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
 
     <!-- Файловый менеджер -->
     <string name="file_manager_not_found">Файловый менеджер не найден</string>
-    <string name="file_manager_suggestion" formatted="false">Для установки тем необходимо приложение-файловый менеджер.\n\nРекомендуем:\n• Material Files (бесплатно, без рекламы)\n• Total Commander (мощный, бесплатный)\n• CX File Explorer (простой, бесплатный)</string>
+    <string name="file_manager_suggestion" formatted="false">Для установки оболочки необходимо приложение-файловый менеджер.\n\nРекомендуем:\n• Material Files (бесплатно, без рекламы)\n• Total Commander (мощный, бесплатный)\n• CX File Explorer (простой, бесплатный)</string>
     <string name="install_material_files">Установить Material Files</string>
     <string name="other_file_manager">Другой файловый менеджер</string>
     <string name="cannot_open_play_store">Не удалось открыть Google Play.\n Установите файловый менеджер вручную.</string>
@@ -136,9 +136,9 @@
     <string name="strict_mode_changed">Строгий режим изменён</string>
 
     <!-- Блокировка ориентации -->
-    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана темой (портретная)</string>
-    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана темой (ландшафтная)</string>
-    <string name="orientation_lock_hint_default">🔒 Ориентация задана темой</string>
+    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана оболочкой (портретная)</string>
+    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана оболочкой (ландшафтная)</string>
+    <string name="orientation_lock_hint_default">🔒 Ориентация задана оболочкой</string>
 
     <!-- ============================================================ -->
     <!-- ==================== СИСТЕМА И ОБНОВЛЕНИЯ =================== -->
@@ -227,7 +227,7 @@
     <string name="welcome_permission_location">Геолокация</string>
     <string name="welcome_permission_location_desc">Для отображения статуса GPS.</string>
     <string name="welcome_permission_storage">Хранилище</string>
-    <string name="welcome_permission_storage_desc">Для установки кастомных тем.</string>
+    <string name="welcome_permission_storage_desc">Для установки кастомных оболочек.</string>
 
     <!-- Кнопки -->
     <string name="welcome_button_grant">Предоставить доступ</string>
@@ -248,7 +248,7 @@
 
     <!-- Заголовки разделов -->
     <string name="dev_section_webview">Отладка WebView</string>
-    <string name="dev_section_theme">Информация о теме</string>
+    <string name="dev_section_shell">Информация об оболочке</string>
     <string name="dev_section_system">Системная информация</string>
     <string name="dev_section_data">Управление данными</string>
     <string name="dev_section_logs">Управление логами</string>
@@ -261,13 +261,13 @@
     <string name="dev_webview_clear_cache">Очистить кэш WebView</string>
     <string name="dev_webview_clear_cache_success">Кэш WebView очищен</string>
 
-    <!-- 2. Информация о теме -->
-    <string name="dev_theme_manifest">Показать manifest.json</string>
-    <string name="dev_theme_manifest_title">manifest.json</string>
-    <string name="dev_theme_manifest_not_found">manifest.json не найден</string>
-    <string name="dev_theme_reload">Перезагрузить тему</string>
-    <string name="dev_theme_reload_success">Тема перезагружена</string>
-    <string name="dev_theme_not_found">Активная тема не найдена</string>
+    <!-- 2. Информация об оболочке -->
+    <string name="dev_shell_manifest">Показать manifest.json</string>
+    <string name="dev_shell_manifest_title">manifest.json</string>
+    <string name="dev_shell_manifest_not_found">manifest.json не найден</string>
+    <string name="dev_shell_reload">Перезагрузить оболочку</string>
+    <string name="dev_shell_reload_success">Оболочка перезагружена</string>
+    <string name="dev_shell_not_found">Активная оболочка не найдена</string>
     <string name="dev_error">Ошибка: %s</string>
 
     <!-- 3. Системная информация -->
@@ -280,9 +280,9 @@
 
     <!-- 4. Управление данными -->
     <string name="dev_cache_size">Размер кэша</string>
-    <string name="dev_themes_size">Размер тем оформления</string>
+    <string name="dev_shells_size">Размер оболочек оформления</string>
     <string name="dev_cache_size_value">0 B</string>
-    <string name="dev_themes_size_value">0 B</string>
+    <string name="dev_shells_size_value">0 B</string>
     <string name="dev_cache_size_updated">Размер кэша обновлён</string>
     <string name="dev_logs_size">Размер логов</string>
     <string name="dev_logs_size_value">0 B</string>
@@ -290,7 +290,7 @@
     <string name="dev_clear_apps_cache_confirm">Вы уверены, что хотите очистить кэш списка приложений?\n\nПри следующей загрузке список будет обновлён.</string>
     <string name="dev_clear_apps_cache_success">Кэш приложений очищен</string>
     <string name="dev_clear_data">Очистить данные</string>
-    <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с кастомными темами</string>
+    <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с оболочками пользователя</string>
     <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
 
     <!-- 5. Управление логами -->
@@ -413,7 +413,7 @@
     <string name="logger_file_clear_error">Ошибка очистки файлов логов</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== МЕНЕДЖЕР ТЕМ =========================== -->
+    <!-- ==================== МЕНЕДЖЕР ОБОЛОЧЕК =========================== -->
     <!-- ============================================================ -->
 
     <!-- Авторы -->
@@ -421,20 +421,20 @@
     <string name="author_default">QutyTeam</string>
 
     <!-- Сообщения -->
-    <string name="theme_applied" formatted="false">Тема %s применена</string>
-    <string name="theme_already_active">Тема уже активна</string>
+    <string name="shell_applied" formatted="false">Оболочка %s применена</string>
+    <string name="shell_already_active">Оболочка уже активна</string>
     <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
     <!-- Доступ к хранилищу -->
     <string name="storage_permission_title">Доступ к хранилищу</string>
-    <string name="storage_permission_message">Для установки тем необходимо разрешить доступ к файлам</string>
+    <string name="storage_permission_message">Для установки оболочек необходимо разрешить доступ к файлам</string>
     <string name="storage_permission_allow">Разрешить</string>
-    <string name="storage_permission_denied">Для установки тем необходимо разрешить доступ к хранилищу</string>
+    <string name="storage_permission_denied">Для установки оболочек необходимо разрешить доступ к хранилищу</string>
 
     <!-- Названия -->
-    <string name="theme_default_name">Стандартная</string>
-    <string name="theme_active_not_found">Ранее активная тема не найдена или была удалена</string>
-    <string name="theme_restored_default" formatted="false">Система изменила тему на "%s"</string>
+    <string name="shell_default_name">Стандартная</string>
+    <string name="shell_active_not_found">Ранее активная оболочка не найдена или была удалена</string>
+    <string name="shell_restored_default" formatted="false">Система изменила оболочку на "%s"</string>
 
     <!-- ============================================================ -->
     <!-- ==================== МЕНЕДЖЕР ОБНОВЛЕНИЙ ==================== -->
@@ -459,7 +459,7 @@
     <!-- ============================================================ -->
 
     <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
-    <string name="webview_dir_theme_not_found">Директория активной темы не найдена</string>
+    <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
 
     <!-- ============================================================ -->
     <!-- ==================== API МЕТОДЫ ============================= -->

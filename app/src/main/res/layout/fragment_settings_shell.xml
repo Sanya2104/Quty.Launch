@@ -1,4 +1,4 @@
-<!-- res/layout/fragment_settings_theme.xml -->
+<!-- res/layout/fragment_settings_shell.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,14 +12,14 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/settings_theme_title"
+        android:text="@string/settings_shell_title"
         android:textColor="#CCCCCC"
         android:textSize="16sp"
         android:padding="16dp"
         android:paddingTop="8dp"/>
 
     <ListView
-        android:id="@+id/themes_list"
+        android:id="@+id/shells_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -28,13 +28,13 @@
         android:dividerHeight="1dp"
         android:choiceMode="singleChoice"/>
 
-    <!-- Кнопка установки темы из файла -->
+    <!-- Кнопка установки оболочки из файла -->
     <Button
-        android:id="@+id/btn_install_theme"
+        android:id="@+id/btn_install_shell"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="16dp"
-        android:text="@string/install_theme_from_file"
+        android:text="@string/install_shell_from_file"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:fontFamily="sans-serif-medium"

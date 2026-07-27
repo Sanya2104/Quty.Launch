@@ -9,7 +9,7 @@ import androidx.core.content.edit
 
 @Serializable
 data class LauncherConfig(
-    val defaultTheme: String = "default",
+    val defaultShell: String = "default",
     val defaultOrientation: String = "sensor",
     val defaultFullscreen: Boolean = true,
     val defaultStrictMode: Boolean = false
@@ -36,19 +36,19 @@ class ConfigManager(private val context: Context) {
         }
     }
 
-    fun getDefaultTheme(): String = config.defaultTheme
+    fun getDefaultShell(): String = config.defaultShell
     fun getDefaultOrientation(): String = config.defaultOrientation
     fun getDefaultFullscreen(): Boolean = config.defaultFullscreen
     fun getDefaultStrictMode(): Boolean = config.defaultStrictMode
 
-    // Получения активной темы
-    fun getActiveTheme(): String {
-        return prefs.getString("active_theme", getDefaultTheme()) ?: getDefaultTheme()
+    // Получения активной оболочки
+    fun getActiveShell(): String {
+        return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
 
-    // Сохранения активной темы
-    fun setActiveTheme(themeId: String) {
-        prefs.edit { putString("active_theme", themeId) }
+    // Сохранения активной оболочки
+    fun setActiveShell(shellId: String) {
+        prefs.edit { putString("active_shell", shellId) }
     }
 
     // Получение ориентации

@@ -8,7 +8,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import by.quty.launch.core.fragments.DeveloperSettingsFragment
 import by.quty.launch.core.fragments.DisplaySettingsFragment
 import by.quty.launch.core.fragments.SystemSettingsFragment
-import by.quty.launch.core.fragments.ThemeSettingsFragment
+import by.quty.launch.core.fragments.ShellSettingsFragment
 
 class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
@@ -16,7 +16,7 @@ class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
         private const val NUM_TABS_BASE = 3
         private const val NUM_TABS_DEV = 4
 
-        const val TAB_THEME = 0
+        const val TAB_SHELL = 0
         const val TAB_DISPLAY = 1
         const val TAB_SYSTEM = 2
         const val TAB_DEVELOPER = 3
@@ -33,7 +33,7 @@ class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            TAB_THEME -> ThemeSettingsFragment()
+            TAB_SHELL -> ShellSettingsFragment()
             TAB_DISPLAY -> DisplaySettingsFragment()
             TAB_SYSTEM -> SystemSettingsFragment()
             TAB_DEVELOPER -> DeveloperSettingsFragment()

@@ -1,4 +1,4 @@
-// *** core/fragments/ThemeSettingsFragment.kt *** //
+// *** core/fragments/ShellSettingsFragment.kt *** //
 package by.quty.launch.core.fragments
 
 import android.Manifest
@@ -24,10 +24,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.Theme
-import by.quty.launch.core.ThemeManager
-import by.quty.launch.core.ThemeRepoInfo
-import by.quty.launch.core.ThemeUpdateManager
+import by.quty.launch.core.Shell
+import by.quty.launch.core.ShellManager
+import by.quty.launch.core.ShellRepoInfo
+import by.quty.launch.core.ShellUpdateManager
 import by.quty.launch.core.interfaces.SettingsEventListener
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -36,30 +36,30 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
-class ThemeSettingsFragment : Fragment() {
+class ShellSettingsFragment : Fragment() {
 
-    private lateinit var themeManager: ThemeManager
-    private lateinit var themesAdapter: ThemesAdapter
+    private lateinit var shellManager: ShellManager
+    private lateinit var shellsAdapter: ShellsAdapter
     private var settingsEventListener: SettingsEventListener? = null
 
-    // Флаг для предотвращения множественных применений темы
-    private var isApplyingTheme = false
+    // Флаг для предотвращения множественных применений оболочки
+    private var isApplyingShell = false
 
     // JSON парсер (один экземпляр для всего класса)
     private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
-        const val EXTRA_THEME_NAME = "theme_name"
+        const val EXTRA_SHELL_NAME = "shell_name"
         private const val DELAY_BEFORE_UI_UPDATE = 100L
     }
 
-    // Регистрируем ActivityResult для выбора файла темы
-    private val selectThemeLauncher = registerForActivityResult(
+    // Регистрируем ActivityResult для выбора файла оболочки
+    private val selectShellLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                installThemeFromUri(uri)
+                installShellFromUri(uri)
             }
         }
     }
@@ -68,14 +68,14 @@ class ThemeSettingsFragment : Fragment() {
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
-        // После возврата из настроек пытаемся установить тему снова
-        pendingThemeUri?.let { uri ->
-            pendingThemeName?.let { name ->
-                performThemeInstall(uri, name)
+        // После возврата из настроек пытаемся установить оболочку снова
+        pendingShellUri?.let { uri ->
+            pendingShellName?.let { name ->
+                performShellInstall(uri, name)
             }
         }
-        pendingThemeUri = null
-        pendingThemeName = null
+        pendingShellUri = null
+        pendingShellName = null
     }
 
     // Для Android 10 и ниже
@@ -83,13 +83,13 @@ class ThemeSettingsFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            pendingThemeUri?.let { uri ->
-                pendingThemeName?.let { name ->
-                    performThemeInstall(uri, name)
+            pendingShellUri?.let { uri ->
+                pendingShellName?.let { name ->
+                    performShellInstall(uri, name)
                 }
             }
-            pendingThemeUri = null
-            pendingThemeName = null
+            pendingShellUri = null
+            pendingShellName = null
         } else {
             Toast.makeText(
                 requireContext(),
@@ -99,16 +99,16 @@ class ThemeSettingsFragment : Fragment() {
         }
     }
 
-    // Переменные для хранения данных о теме, которую пытаемся установить
-    private var pendingThemeUri: Uri? = null
-    private var pendingThemeName: String? = null
+    // Переменные для хранения данных об оболочке, которую пытаемся установить
+    private var pendingShellUri: Uri? = null
+    private var pendingShellName: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings_theme, container, false)
+        return inflater.inflate(R.layout.fragment_settings_shell, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -117,59 +117,59 @@ class ThemeSettingsFragment : Fragment() {
         // Получаем SettingsActivity как listener
         settingsEventListener = activity as? SettingsEventListener
 
-        // Инициализируем ThemeManager через активность
+        // Инициализируем ShellManager через активность
         (activity as? SettingsActivity)?.let { settingsActivity ->
-            themeManager = settingsActivity.themeManager
+            shellManager = settingsActivity.shellManager
         }
 
-        setupThemeSelector(view)
+        setupShellSelector(view)
         setupInstallButton(view)
     }
 
     override fun onResume() {
         super.onResume()
         // Сбрасываем флаг при возврате во вкладку
-        isApplyingTheme = false
+        isApplyingShell = false
         // Обновляем список
-        themesAdapter.notifyDataSetChanged()
+        shellsAdapter.notifyDataSetChanged()
     }
 
     override fun onPause() {
         super.onPause()
         // Сбрасываем флаг при уходе с вкладки
-        isApplyingTheme = false
+        isApplyingShell = false
     }
 
     /**
-     * Настройка выбора темы оформления с превью и информацией
+     * Настройка выбора оболочки оформления с превью и информацией
      */
-    private fun setupThemeSelector(view: View) {
-        val themesList = view.findViewById<ListView>(R.id.themes_list)
-        val themes = themeManager.getAvailableThemes()
+    private fun setupShellSelector(view: View) {
+        val shellsList = view.findViewById<ListView>(R.id.shells_list)
+        val shells = shellManager.getAvailableShells()
 
-        themesAdapter = ThemesAdapter(themes)
-        themesList.adapter = themesAdapter
+        shellsAdapter = ShellsAdapter(shells)
+        shellsList.adapter = shellsAdapter
     }
 
     /**
-     * Внутренний метод применения темы (используется и при клике, и из меню)
+     * Внутренний метод применения оболочки (используется и при клике, и из меню)
      */
-    private fun applyThemeInternal(theme: Theme) {
-        if (isApplyingTheme) return
+    private fun applyShellInternal(shell: Shell) {
+        if (isApplyingShell) return
 
-        isApplyingTheme = true
+        isApplyingShell = true
 
-        // Применяем тему
-        themeManager.setActiveTheme(theme)
+        // Применяем оболочку
+        shellManager.setActiveShell(shell)
 
         // Обновляем адаптер с задержкой, чтобы избежать мерцания
         Handler(Looper.getMainLooper()).postDelayed({
-            themesAdapter.notifyDataSetChanged()
-            isApplyingTheme = false
+            shellsAdapter.notifyDataSetChanged()
+            isApplyingShell = false
         }, DELAY_BEFORE_UI_UPDATE)
 
-        // Уведомляем Activity об изменении темы
-        settingsEventListener?.onThemeChanged(theme.name)
+        // Уведомляем Activity об изменении оболочки
+        settingsEventListener?.onShellChanged(shell.name)
         settingsEventListener?.onSettingChanged()
 
         // Обновляем состояние во вкладке "Экран" с задержкой
@@ -179,19 +179,19 @@ class ThemeSettingsFragment : Fragment() {
             }
         }, DELAY_BEFORE_UI_UPDATE)
 
-        val message = getString(R.string.theme_applied, theme.displayName ?: theme.name)
+        val message = getString(R.string.shell_applied, shell.displayName ?: shell.name)
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
         // Возвращаем результат в MainActivity
         val resultIntent = Intent()
-        resultIntent.putExtra(EXTRA_THEME_NAME, theme.name)
-        requireActivity().setResult(SettingsActivity.RESULT_THEME_CHANGED, resultIntent)
+        resultIntent.putExtra(EXTRA_SHELL_NAME, shell.name)
+        requireActivity().setResult(SettingsActivity.RESULT_SHELL_CHANGED, resultIntent)
     }
 
     private fun setupInstallButton(view: View) {
-        val btnInstall = view.findViewById<Button>(R.id.btn_install_theme)
+        val btnInstall = view.findViewById<Button>(R.id.btn_install_shell)
         btnInstall.setOnClickListener {
-            selectThemeFile()
+            selectShellFile()
         }
     }
 
@@ -230,10 +230,10 @@ class ThemeSettingsFragment : Fragment() {
     /**
      * Проверяет доступ к хранилищу и запрашивает при необходимости.
      */
-    private fun checkStoragePermissionAndInstall(uri: Uri, themeName: String) {
+    private fun checkStoragePermissionAndInstall(uri: Uri, shellName: String) {
         if (!hasStoragePermission()) {
-            pendingThemeUri = uri
-            pendingThemeName = themeName
+            pendingShellUri = uri
+            pendingShellName = shellName
 
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.storage_permission_title)
@@ -242,22 +242,22 @@ class ThemeSettingsFragment : Fragment() {
                     requestStoragePermission()
                 }
                 .setNegativeButton(R.string.cancel) { _, _ ->
-                    pendingThemeUri = null
-                    pendingThemeName = null
+                    pendingShellUri = null
+                    pendingShellName = null
                 }
                 .show()
             return
         }
 
-        performThemeInstall(uri, themeName)
+        performShellInstall(uri, shellName)
     }
 
     /**
-     * Открывает файловый менеджер для выбора темы.
+     * Открывает файловый менеджер для выбора оболочки.
      * Сначала пробует ACTION_OPEN_DOCUMENT, затем ACTION_GET_CONTENT,
      * при ошибке предлагает установить альтернативный файловый менеджер.
      */
-    private fun selectThemeFile() {
+    private fun selectShellFile() {
         try {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -266,20 +266,20 @@ class ThemeSettingsFragment : Fragment() {
                     "application/zip",
                     "application/octet-stream"
                 ))
-                putExtra(Intent.EXTRA_TITLE, getString(R.string.select_theme_title))
+                putExtra(Intent.EXTRA_TITLE, getString(R.string.select_shell_title))
             }
-            selectThemeLauncher.launch(intent)
+            selectShellLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
             // Пробуем альтернативный способ
-            selectThemeAlternative()
+            selectShellAlternative()
         }
     }
 
     /**
      * Альтернативный способ выбора файла через ACTION_GET_CONTENT
      */
-    private fun selectThemeAlternative() {
+    private fun selectShellAlternative() {
         try {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -289,7 +289,7 @@ class ThemeSettingsFragment : Fragment() {
                     "application/octet-stream"
                 ))
             }
-            selectThemeLauncher.launch(intent)
+            selectShellLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
             // Если и это не работает — предлагаем установить файловый менеджер
@@ -336,37 +336,37 @@ class ThemeSettingsFragment : Fragment() {
     }
 
     /**
-     * Устанавливает тему из выбранного URI.
+     * Устанавливает оболочку из выбранного URI.
      */
-    private fun installThemeFromUri(uri: Uri) {
+    private fun installShellFromUri(uri: Uri) {
         try {
             val fileName = getFileNameFromUri(uri)
-            if (fileName == null || !ThemeManager.THEME_EXTENSIONS_WITH_DOT.any { fileName.endsWith(it, ignoreCase = true) }) {
+            if (fileName == null || !ShellManager.SHELL_EXTENSIONS_WITH_DOT.any { fileName.endsWith(it, ignoreCase = true) }) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.invalid_theme_extensions),
+                    getString(R.string.invalid_shell_extensions),
                     Toast.LENGTH_LONG
                 ).show()
                 return
             }
 
-            val themeInfo = validateTheme(uri)
-            if (themeInfo == null) {
+            val shellInfo = validateShell(uri)
+            if (shellInfo == null) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.theme_incompatible),
+                    getString(R.string.shell_incompatible),
                     Toast.LENGTH_LONG
                 ).show()
                 return
             }
 
-            showConfirmInstallDialog(uri, themeInfo.first, themeInfo.second, themeInfo.third)
+            showConfirmInstallDialog(uri, shellInfo.first, shellInfo.second, shellInfo.third)
 
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(
                 requireContext(),
-                getString(R.string.theme_install_error),
+                getString(R.string.shell_install_error),
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -393,11 +393,11 @@ class ThemeSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет валидность темы и возвращает название, версию и минимальную версию лаунчера.
+     * Проверяет валидность оболочки и возвращает название, версию и минимальную версию лаунчера.
      */
-    private fun validateTheme(uri: Uri): Triple<String, String, String?>? {
+    private fun validateShell(uri: Uri): Triple<String, String, String?>? {
         return try {
-            val tempFile = File(requireContext().cacheDir, "temp_theme.zip")
+            val tempFile = File(requireContext().cacheDir, "temp_shell.zip")
             requireContext().contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(tempFile).use { output ->
                     input.copyTo(output)
@@ -412,13 +412,13 @@ class ThemeSettingsFragment : Fragment() {
                 }
 
                 val manifestContent = zip.getInputStream(entry).bufferedReader().use { it.readText() }
-                val manifest = json.decodeFromString<ThemeManifest>(manifestContent)
+                val manifest = json.decodeFromString<ShellManifest>(manifestContent)
 
                 tempFile.delete()
 
                 // Проверяем совместимость с лаунчером
                 if (!isLauncherCompatible(manifest.minLauncherVersion)) {
-                    return null  // Лаунчер слишком старый для этой темы
+                    return null  // Лаунчер слишком старый для этой оболочки
                 }
 
                 return Triple(manifest.name, manifest.version, manifest.minLauncherVersion)
@@ -429,7 +429,7 @@ class ThemeSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет, совместима ли тема с текущей версией лаунчера
+     * Проверяет, совместима ли оболочка с текущей версией лаунчера
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true
@@ -486,52 +486,52 @@ class ThemeSettingsFragment : Fragment() {
     /**
      * Показывает диалог подтверждения установки.
      */
-    private fun showConfirmInstallDialog(uri: Uri, themeName: String, themeVersion: String, minLauncherVersion: String?) {
-        val existingTheme = themeManager.getAvailableThemes().find {
-            it.displayName == themeName || it.name == themeName
+    private fun showConfirmInstallDialog(uri: Uri, shellName: String, shellVersion: String, minLauncherVersion: String?) {
+        val existingShell = shellManager.getAvailableShells().find {
+            it.displayName == shellName || it.name == shellName
         }
 
         // Добавляем информацию о совместимости
         val compatibilityInfo = if (!minLauncherVersion.isNullOrEmpty()) {
-            "\n\n${getString(R.string.theme_min_launcher_version, minLauncherVersion)}"
+            "\n\n${getString(R.string.shell_min_launcher_version, minLauncherVersion)}"
         } else {
             ""
         }
 
-        val message = if (existingTheme != null) {
-            getString(R.string.theme_already_exists, themeName) + compatibilityInfo
+        val message = if (existingShell != null) {
+            getString(R.string.shell_already_exists, shellName) + compatibilityInfo
         } else {
-            getString(R.string.theme_install_confirm_message, themeName, themeVersion) + compatibilityInfo
+            getString(R.string.shell_install_confirm_message, shellName, shellVersion) + compatibilityInfo
         }
 
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.theme_install_confirm))
+            .setTitle(getString(R.string.shell_install_confirm))
             .setMessage(message)
             .setPositiveButton(getString(R.string.install_action)) { _, _ ->
-                checkStoragePermissionAndInstall(uri, themeName)
+                checkStoragePermissionAndInstall(uri, shellName)
             }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
     }
 
     /**
-     * Выполняет установку темы.
+     * Выполняет установку оболочки.
      */
-    private fun performThemeInstall(uri: Uri, themeName: String) {
+    private fun performShellInstall(uri: Uri, shellName: String) {
         try {
-            // Новая структура: Quty.Launch/Themes/
+            // Новая структура: Quty.Launch/Shells/
             val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-            val themesDir = File(appDir, "Themes")
+            val shellsDir = File(appDir, "Shells")
 
             if (!appDir.exists()) {
                 appDir.mkdirs()
             }
-            if (!themesDir.exists()) {
-                themesDir.mkdirs()
+            if (!shellsDir.exists()) {
+                shellsDir.mkdirs()
             }
 
-            val fileName = "$themeName${ThemeManager.THEME_EXTENSION_WITH_DOT}"
-            val destFile = File(themesDir, fileName)
+            val fileName = "$shellName${ShellManager.SHELL_EXTENSION_WITH_DOT}"
+            val destFile = File(shellsDir, fileName)
 
             if (destFile.exists()) {
                 destFile.delete()
@@ -543,11 +543,11 @@ class ThemeSettingsFragment : Fragment() {
                 }
             }
 
-            refreshThemes()
+            refreshShells()
 
             Toast.makeText(
                 requireContext(),
-                getString(R.string.theme_install_success, themeName),
+                getString(R.string.shell_install_success, shellName),
                 Toast.LENGTH_LONG
             ).show()
 
@@ -555,52 +555,52 @@ class ThemeSettingsFragment : Fragment() {
             e.printStackTrace()
             Toast.makeText(
                 requireContext(),
-                getString(R.string.theme_install_error),
+                getString(R.string.shell_install_error),
                 Toast.LENGTH_LONG
             ).show()
         }
     }
 
-    inner class ThemesAdapter(private val themes: List<Theme>) : BaseAdapter() {
+    inner class ShellsAdapter(private val shells: List<Shell>) : BaseAdapter() {
 
-        override fun getCount(): Int = themes.size
+        override fun getCount(): Int = shells.size
 
-        override fun getItem(position: Int): Theme = themes[position]
+        override fun getItem(position: Int): Shell = shells[position]
 
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = convertView ?: layoutInflater.inflate(R.layout.item_theme, parent, false)
-            val theme = getItem(position)
+            val view = convertView ?: layoutInflater.inflate(R.layout.item_shell, parent, false)
+            val shell = getItem(position)
 
-            val previewView = view.findViewById<ImageView>(R.id.theme_preview)
-            val nameView = view.findViewById<TextView>(R.id.theme_name)
-            val versionView = view.findViewById<TextView>(R.id.theme_version)
-            val authorView = view.findViewById<TextView>(R.id.theme_author)
-            val menuButton = view.findViewById<ImageButton>(R.id.theme_menu_button)
+            val previewView = view.findViewById<ImageView>(R.id.shell_preview)
+            val nameView = view.findViewById<TextView>(R.id.shell_name)
+            val versionView = view.findViewById<TextView>(R.id.shell_version)
+            val authorView = view.findViewById<TextView>(R.id.shell_author)
+            val menuButton = view.findViewById<ImageButton>(R.id.shell_menu_button)
 
             // Устанавливаем название
-            nameView.text = theme.displayName ?: theme.name
+            nameView.text = shell.displayName ?: shell.name
 
             // Устанавливаем версию (показываем только если есть)
-            if (!theme.version.isNullOrEmpty()) {
-                versionView.text = getString(R.string.theme_version_with_label, theme.version)
+            if (!shell.version.isNullOrEmpty()) {
+                versionView.text = getString(R.string.shell_version_with_label, shell.version)
                 versionView.visibility = View.VISIBLE
             } else {
                 versionView.visibility = View.GONE
             }
 
             // Устанавливаем автора
-            authorView.text = theme.author ?: if (theme.isCustom) {
+            authorView.text = shell.author ?: if (shell.isCustom) {
                 getString(R.string.author_custom)
             } else {
                 getString(R.string.author_default)
             }
 
             // Устанавливаем превью
-            if (!theme.previewBase64.isNullOrEmpty()) {
+            if (!shell.previewBase64.isNullOrEmpty()) {
                 try {
-                    val imageBytes = Base64.decode(theme.previewBase64, Base64.DEFAULT)
+                    val imageBytes = Base64.decode(shell.previewBase64, Base64.DEFAULT)
                     val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     previewView.setImageBitmap(bitmap)
                     previewView.visibility = View.VISIBLE
@@ -611,13 +611,13 @@ class ThemeSettingsFragment : Fragment() {
                 previewView.setImageResource(R.drawable.ic_settings)
             }
 
-            // Получаем актуальную активную тему из менеджера
-            val activeTheme = themeManager.getActiveTheme()
+            // Получаем актуальную активную оболочку из менеджера
+            val activeShell = shellManager.getActiveShell()
 
-            // Подсвечиваем активную тему
-            val isActive = theme.name == activeTheme?.name
+            // Подсвечиваем активную оболочку
+            val isActive = shell.name == activeShell?.name
             if (isActive) {
-                view.setBackgroundColor(resources.getColor(R.color.theme_active_background, null))
+                view.setBackgroundColor(resources.getColor(R.color.shell_active_background, null))
             } else {
                 view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
@@ -625,70 +625,70 @@ class ThemeSettingsFragment : Fragment() {
             // Устанавливаем клик на всю строку (кроме кнопки меню)
             view.setOnClickListener {
                 // Предотвращаем множественные нажатия
-                if (isApplyingTheme) return@setOnClickListener
+                if (isApplyingShell) return@setOnClickListener
 
-                // Проверяем, не активна ли уже тема
-                if (theme.name == activeTheme?.name) {
-                    Toast.makeText(requireContext(), R.string.theme_already_active, Toast.LENGTH_SHORT).show()
+                // Проверяем, не активна ли уже оболочка
+                if (shell.name == activeShell?.name) {
+                    Toast.makeText(requireContext(), R.string.shell_already_active, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
-                applyThemeInternal(theme)
+                applyShellInternal(shell)
             }
 
             // Настройка кнопки меню (передаём флаг isActive)
-            setupThemeMenuButton(menuButton, theme, isActive)
+            setupShellMenuButton(menuButton, shell, isActive)
 
             return view
         }
 
         /**
-         * Настройка кнопки меню для темы
-         * @param isActive true если тема уже активна
+         * Настройка кнопки меню для оболочки
+         * @param isActive true если оболочка уже активна
          */
-        private fun setupThemeMenuButton(menuButton: ImageButton, theme: Theme, isActive: Boolean) {
+        private fun setupShellMenuButton(menuButton: ImageButton, shell: Shell, isActive: Boolean) {
             menuButton.setOnClickListener { view ->
                 // Останавливаем распространение события, чтобы не сработал клик по строке
                 view.parent.requestDisallowInterceptTouchEvent(true)
-                showThemeMenu(view, theme, isActive)
+                showShellMenu(view, shell, isActive)
             }
         }
 
         /**
-         * Показывает выпадающее меню для управления темой
-         * @param isActive true если тема уже активна
+         * Показывает выпадающее меню для управления оболочкой
+         * @param isActive true если оболочка уже активна
          */
-        private fun showThemeMenu(anchor: View, theme: Theme, isActive: Boolean) {
+        private fun showShellMenu(anchor: View, shell: Shell, isActive: Boolean) {
             val popupMenu = PopupMenu(requireContext(), anchor)
 
             val menu = popupMenu.menu
 
             // Пункт "Применить" - только если не активна
             if (!isActive) {
-                menu.add(0, 1, 0, getString(R.string.theme_menu_apply))
+                menu.add(0, 1, 0, getString(R.string.shell_menu_apply))
             }
 
             // Пункт "Информация"
-            menu.add(0, 2, 0, getString(R.string.theme_menu_info))
+            menu.add(0, 2, 0, getString(R.string.shell_menu_info))
 
-            // Для кастомных тем добавляем "Удалить" и "Поделиться"
-            if (theme.isCustom) {
-                menu.add(0, 3, 0, getString(R.string.theme_menu_delete))
-                menu.add(0, 4, 0, getString(R.string.theme_menu_share))
+            // Для кастомных оболочек добавляем "Удалить" и "Поделиться"
+            if (shell.isCustom) {
+                menu.add(0, 3, 0, getString(R.string.shell_menu_delete))
+                menu.add(0, 4, 0, getString(R.string.shell_menu_share))
 
                 // Если есть repoUrl - добавляем "Проверить обновления"
-                if (!theme.repoUrl.isNullOrEmpty()) {
-                    menu.add(0, 5, 0, getString(R.string.theme_menu_check_updates))
+                if (!shell.repoUrl.isNullOrEmpty()) {
+                    menu.add(0, 5, 0, getString(R.string.shell_menu_check_updates))
                 }
             }
 
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
-                    1 -> applyThemeInternal(theme)
-                    2 -> showThemeInfo(theme)
-                    3 -> deleteTheme(theme)
-                    4 -> shareTheme(theme)
-                    5 -> checkThemeUpdates(theme)
+                    1 -> applyShellInternal(shell)
+                    2 -> showShellInfo(shell)
+                    3 -> deleteShell(shell)
+                    4 -> shareShell(shell)
+                    5 -> checkShellUpdates(shell)
                 }
                 true
             }
@@ -697,26 +697,26 @@ class ThemeSettingsFragment : Fragment() {
         }
 
         /**
-         * Проверка обновлений для темы
+         * Проверка обновлений для оболочки
          */
-        private fun checkThemeUpdates(theme: Theme) {
-            val updateManager = ThemeUpdateManager(requireContext())
+        private fun checkShellUpdates(shell: Shell) {
+            val updateManager = ShellUpdateManager(requireContext())
 
             // Показываем диалог с прогрессом
             val progressDialog = AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.theme_update_checking))
-                .setMessage(getString(R.string.theme_update_checking_message))
+                .setTitle(getString(R.string.shell_update_checking))
+                .setMessage(getString(R.string.shell_update_checking_message))
                 .setCancelable(false)
                 .show()
 
             lifecycleScope.launch {
-                val updateInfo = updateManager.checkForUpdate(theme)
+                val updateInfo = updateManager.checkForUpdate(shell)
                 progressDialog.dismiss()
 
                 if (updateInfo == null) {
-                    Toast.makeText(requireContext(), getString(R.string.theme_update_not_found), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), getString(R.string.shell_update_not_found), Toast.LENGTH_SHORT).show()
                 } else {
-                    showUpdateConfirmDialog(theme, updateInfo)
+                    showUpdateConfirmDialog(shell, updateInfo)
                 }
             }
         }
@@ -724,117 +724,117 @@ class ThemeSettingsFragment : Fragment() {
         /**
          * Диалог подтверждения обновления
          */
-        private fun showUpdateConfirmDialog(theme: Theme, updateInfo: ThemeRepoInfo) {
+        private fun showUpdateConfirmDialog(shell: Shell, updateInfo: ShellRepoInfo) {
             // Проверяем совместимость при обновлении
             if (!isLauncherCompatible(updateInfo.minLauncherVersion)) {
                 AlertDialog.Builder(requireContext())
-                    .setTitle(getString(R.string.theme_update_incompatible_title))
-                    .setMessage(getString(R.string.theme_update_incompatible_message, updateInfo.version))
+                    .setTitle(getString(R.string.shell_update_incompatible_title))
+                    .setMessage(getString(R.string.shell_update_incompatible_message, updateInfo.version))
                     .setPositiveButton(android.R.string.ok, null)
                     .show()
                 return
             }
 
             val message = buildString {
-                append(getString(R.string.theme_update_available_message))
+                append(getString(R.string.shell_update_available_message))
                 append("\n\n")
-                append(getString(R.string.theme_update_current_version, theme.version ?: "—"))
+                append(getString(R.string.shell_update_current_version, shell.version ?: "—"))
                 append("\n")
-                append(getString(R.string.theme_update_new_version, updateInfo.version))
+                append(getString(R.string.shell_update_new_version, updateInfo.version))
 
                 // Добавляем информацию о минимальной версии лаунчера
                 if (!updateInfo.minLauncherVersion.isNullOrEmpty()) {
                     append("\n")
-                    append(getString(R.string.theme_update_min_launcher, updateInfo.minLauncherVersion))
+                    append(getString(R.string.shell_update_min_launcher, updateInfo.minLauncherVersion))
                 }
 
                 if (updateInfo.changelog.isNotEmpty()) {
                     append("\n\n")
-                    append(getString(R.string.theme_update_changelog, updateInfo.changelog))
+                    append(getString(R.string.shell_update_changelog, updateInfo.changelog))
                 }
                 if (updateInfo.fileSize.isNotEmpty()) {
                     append("\n\n")
-                    append(getString(R.string.theme_update_size, updateInfo.fileSize))
+                    append(getString(R.string.shell_update_size, updateInfo.fileSize))
                 }
             }
 
             AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.theme_update_confirm_title))
+                .setTitle(getString(R.string.shell_update_confirm_title))
                 .setMessage(message)
-                .setPositiveButton(getString(R.string.theme_update_install)) { _, _ ->
-                    downloadThemeUpdate(updateInfo)
+                .setPositiveButton(getString(R.string.shell_update_install)) { _, _ ->
+                    downloadShellUpdate(updateInfo)
                 }
                 .setNegativeButton(getString(R.string.cancel), null)
                 .show()
         }
 
         /**
-         * Скачивание и установка обновления темы
+         * Скачивание и установка обновления оболочки
          */
-        private fun downloadThemeUpdate(updateInfo: ThemeRepoInfo) {
-            val updateManager = ThemeUpdateManager(requireContext())
+        private fun downloadShellUpdate(updateInfo: ShellRepoInfo) {
+            val updateManager = ShellUpdateManager(requireContext())
 
             val progressDialog = AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.theme_update_downloading))
-                .setMessage(getString(R.string.theme_update_preparing))
+                .setTitle(getString(R.string.shell_update_downloading))
+                .setMessage(getString(R.string.shell_update_preparing))
                 .setCancelable(false)
                 .show()
 
             lifecycleScope.launch {
-                updateManager.downloadThemeUpdate(updateInfo, object : ThemeUpdateManager.DownloadListener {
+                updateManager.downloadShellUpdate(updateInfo, object : ShellUpdateManager.DownloadListener {
                     override fun onProgress(percent: Int) {
-                        progressDialog.setMessage(getString(R.string.theme_update_progress, percent))
+                        progressDialog.setMessage(getString(R.string.shell_update_progress, percent))
                     }
 
                     override fun onSuccess() {
                         progressDialog.dismiss()
 
-                        // Принудительно перезагружаем активную тему из файла
-                        themeManager.reloadActiveTheme()
+                        // Принудительно перезагружаем активную оболочку из файла
+                        shellManager.reloadActiveShell()
 
-                        // Обновляем список тем
-                        refreshThemes()
+                        // Обновляем список оболочек
+                        refreshShells()
 
                         Toast.makeText(
                             requireContext(),
-                            getString(R.string.theme_update_success, updateInfo.version),
+                            getString(R.string.shell_update_success, updateInfo.version),
                             Toast.LENGTH_LONG
                         ).show()
                     }
 
                     override fun onError(message: String) {
                         progressDialog.dismiss()
-                        Toast.makeText(requireContext(), getString(R.string.theme_update_error, message), Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), getString(R.string.shell_update_error, message), Toast.LENGTH_LONG).show()
                     }
                 })
             }
         }
 
         /**
-         * Показать информацию о теме
+         * Показать информацию об оболочке
          */
-        private fun showThemeInfo(theme: Theme): Boolean {
-            val type = if (theme.isCustom) {
-                getString(R.string.theme_type_custom)
+        private fun showShellInfo(shell: Shell): Boolean {
+            val type = if (shell.isCustom) {
+                getString(R.string.shell_type_custom)
             } else {
-                getString(R.string.theme_type_builtin)
+                getString(R.string.shell_type_builtin)
             }
 
-            val version = theme.version ?: "—"
-            val author = theme.author ?: if (theme.isCustom) {
+            val version = shell.version ?: "—"
+            val author = shell.author ?: if (shell.isCustom) {
                 getString(R.string.author_custom)
             } else {
                 getString(R.string.author_default)
             }
 
             // Добавляем информацию о минимальной версии лаунчера
-            val minVersion = theme.minLauncherVersion?.let {
-                getString(R.string.theme_info_min_version, it)
-            } ?: getString(R.string.theme_info_min_version_not_specified)
+            val minVersion = shell.minLauncherVersion?.let {
+                getString(R.string.shell_info_min_version, it)
+            } ?: getString(R.string.shell_info_min_version_not_specified)
 
             val message = getString(
-                R.string.theme_info_message,
-                theme.displayName ?: theme.name,
+                R.string.shell_info_message,
+                shell.displayName ?: shell.name,
                 version,
                 author,
                 type,
@@ -842,7 +842,7 @@ class ThemeSettingsFragment : Fragment() {
             )
 
             AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.theme_info_title, theme.displayName ?: theme.name))
+                .setTitle(getString(R.string.shell_info_title, shell.displayName ?: shell.name))
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
@@ -851,21 +851,21 @@ class ThemeSettingsFragment : Fragment() {
         }
 
         /**
-         * Удалить кастомную тему
+         * Удалить кастомную оболочку
          */
-        private fun deleteTheme(theme: Theme): Boolean {
-            // Проверяем, что тему можно удалить
-            if (!theme.isCustom) {
-                Toast.makeText(requireContext(), getString(R.string.theme_cant_delete_default), Toast.LENGTH_SHORT).show()
+        private fun deleteShell(shell: Shell): Boolean {
+            // Проверяем, что оболочку можно удалить
+            if (!shell.isCustom) {
+                Toast.makeText(requireContext(), getString(R.string.shell_cant_delete_default), Toast.LENGTH_SHORT).show()
                 return false
             }
 
-            // Проверяем, не активна ли тема
-            val activeTheme = themeManager.getActiveTheme()
-            if (theme.name == activeTheme?.name) {
+            // Проверяем, не активна ли оболочка
+            val activeShell = shellManager.getActiveShell()
+            if (shell.name == activeShell?.name) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.theme_cant_delete_active),
+                    getString(R.string.shell_cant_delete_active),
                     Toast.LENGTH_SHORT
                 ).show()
                 return false
@@ -873,10 +873,10 @@ class ThemeSettingsFragment : Fragment() {
 
             // Диалог подтверждения
             AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.theme_delete_confirm))
-                .setMessage(getString(R.string.theme_delete_message, theme.displayName ?: theme.name))
+                .setTitle(getString(R.string.shell_delete_confirm))
+                .setMessage(getString(R.string.shell_delete_message, shell.displayName ?: shell.name))
                 .setPositiveButton(getString(R.string.delete)) { _, _ ->
-                    performDeleteTheme(theme)
+                    performDeleteShell(shell)
                 }
                 .setNegativeButton(getString(R.string.cancel), null)
                 .show()
@@ -885,45 +885,45 @@ class ThemeSettingsFragment : Fragment() {
         }
 
         /**
-         * Выполнить удаление темы
+         * Выполнить удаление оболочки
          */
-        private fun performDeleteTheme(theme: Theme) {
+        private fun performDeleteShell(shell: Shell) {
             try {
-                val themeFile = File(theme.sourcePath)
-                if (themeFile.exists()) {
-                    themeFile.delete()
+                val shellFile = File(shell.sourcePath)
+                if (shellFile.exists()) {
+                    shellFile.delete()
                 }
 
-                // Обновляем список тем
-                refreshThemes()
+                // Обновляем список оболочек
+                refreshShells()
 
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.theme_delete_success, theme.displayName ?: theme.name),
+                    getString(R.string.shell_delete_success, shell.displayName ?: shell.name),
                     Toast.LENGTH_SHORT
                 ).show()
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(requireContext(), getString(R.string.theme_delete_error), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.shell_delete_error), Toast.LENGTH_SHORT).show()
             }
         }
 
         /**
-         * Поделиться темой (отправить файл)
+         * Поделиться оболочкой (отправить файл)
          */
-        private fun shareTheme(theme: Theme): Boolean {
+        private fun shareShell(shell: Shell): Boolean {
             try {
-                val themeFile = File(theme.sourcePath)
-                if (!themeFile.exists()) {
-                    Toast.makeText(requireContext(), getString(R.string.theme_file_not_found), Toast.LENGTH_SHORT).show()
+                val shellFile = File(shell.sourcePath)
+                if (!shellFile.exists()) {
+                    Toast.makeText(requireContext(), getString(R.string.shell_file_not_found), Toast.LENGTH_SHORT).show()
                     return false
                 }
 
                 val uri = androidx.core.content.FileProvider.getUriForFile(
                     requireContext(),
                     "${requireContext().packageName}.fileprovider",
-                    themeFile
+                    shellFile
                 )
 
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -932,31 +932,31 @@ class ThemeSettingsFragment : Fragment() {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
 
-                startActivity(Intent.createChooser(shareIntent, getString(R.string.theme_share_title)))
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.shell_share_title)))
                 return true
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(requireContext(), getString(R.string.theme_share_error), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.shell_share_error), Toast.LENGTH_SHORT).show()
                 return false
             }
         }
     }
 
     /**
-     * Обновление списка тем (вызывается из Activity при необходимости).
+     * Обновление списка оболочек (вызывается из Activity при необходимости).
      */
-    fun refreshThemes() {
-        isApplyingTheme = false
-        themesAdapter = ThemesAdapter(themeManager.getAvailableThemes())
-        val themesList = view?.findViewById<ListView>(R.id.themes_list)
-        themesList?.adapter = themesAdapter
-        themesAdapter.notifyDataSetChanged()
+    fun refreshShells() {
+        isApplyingShell = false
+        shellsAdapter = ShellsAdapter(shellManager.getAvailableShells())
+        val shellsList = view?.findViewById<ListView>(R.id.shells_list)
+        shellsList?.adapter = shellsAdapter
+        shellsAdapter.notifyDataSetChanged()
     }
 
     // Внутренний класс для парсинга manifest.json
     @Serializable
-    data class ThemeManifest(
+    data class ShellManifest(
         val name: String,
         val author: String = "",
         val version: String = "0.0.1",

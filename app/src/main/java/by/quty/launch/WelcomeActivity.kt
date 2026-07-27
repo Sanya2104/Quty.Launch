@@ -405,7 +405,7 @@ class WelcomeActivity : BaseActivity() {
 
     /**
      * Проверяет, есть ли доступ к хранилищу
-     * Вызывается из ThemeSettingsFragment
+     * Вызывается из ShellSettingsFragment
      */
     @Suppress("unused")
     fun hasStoragePermission(): Boolean {
@@ -421,7 +421,7 @@ class WelcomeActivity : BaseActivity() {
 
     /**
      * Запрашивает доступ к хранилищу
-     * Вызывается из ThemeSettingsFragment
+     * Вызывается из ShellSettingsFragment
      */
     @Suppress("unused")
     fun requestStoragePermission() {

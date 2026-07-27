@@ -1,4 +1,4 @@
-// *** core/ThemeUpdateManager.kt *** //
+// *** core/ShellUpdateManager.kt *** //
 package by.quty.launch.core
 
 import android.content.Context
@@ -16,32 +16,32 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @Serializable
-data class ThemeRepoInfo(
+data class ShellRepoInfo(
     val name: String,
     val version: String,
     val downloadUrl: String,
     val changelog: String = "",
     val fileSize: String = "",
-    val minLauncherVersion: String? = null  // минимальная версия лаунчера из theme.json
+    val minLauncherVersion: String? = null  // минимальная версия лаунчера из shell.json
 )
 
-class ThemeUpdateManager(private val context: Context) {
+class ShellUpdateManager(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
-     * Проверяет наличие обновления для темы
-     * @param theme тема для проверки
-     * @return ThemeRepoInfo если есть обновление, null если нет или ошибка
+     * Проверяет наличие обновления для оболочки
+     * @param shell оболочка для проверки
+     * @return ShellRepoInfo если есть обновление, null если нет или ошибка
      */
-    suspend fun checkForUpdate(theme: Theme): ThemeRepoInfo? = withContext(Dispatchers.IO) {
-        val repoUrl = theme.repoUrl ?: return@withContext null
+    suspend fun checkForUpdate(shell: Shell): ShellRepoInfo? = withContext(Dispatchers.IO) {
+        val repoUrl = shell.repoUrl ?: return@withContext null
 
         return@withContext try {
             val url = if (repoUrl.endsWith("/")) {
-                "${repoUrl}theme.json"
+                "${repoUrl}shell.json"
             } else {
-                "$repoUrl/theme.json"
+                "$repoUrl/shell.json"
             }
 
             val connection = URL(url).openConnection() as HttpURLConnection
@@ -55,15 +55,15 @@ class ThemeUpdateManager(private val context: Context) {
                 // Убираем BOM символ, если он есть
                 val cleanJson = jsonString.trimStart('\uFEFF')
 
-                val repoInfo = json.decodeFromString<ThemeRepoInfo>(cleanJson)
+                val repoInfo = json.decodeFromString<ShellRepoInfo>(cleanJson)
 
-                // Проверяем, поддерживает ли лаунчер эту тему
+                // Проверяем, поддерживает ли лаунчер эту оболочку
                 if (!isLauncherCompatible(repoInfo.minLauncherVersion)) {
-                    return@withContext null  // Лаунчер слишком старый для этой темы
+                    return@withContext null  // Лаунчер слишком старый для этой оболочки
                 }
 
                 // Сравниваем версии
-                val currentVersion = theme.version ?: "0.0.0"
+                val currentVersion = shell.version ?: "0.0.0"
                 if (isNewerVersion(repoInfo.version, currentVersion)) {
                     repoInfo
                 } else {
@@ -78,8 +78,8 @@ class ThemeUpdateManager(private val context: Context) {
     }
 
     /**
-     * Проверяет, совместима ли тема с текущей версией лаунчера
-     * @param minVersion минимальная версия лаунчера, требуемая темой
+     * Проверяет, совместима ли оболочка с текущей версией лаунчера
+     * @param minVersion минимальная версия лаунчера, требуемая оболочкой
      * @return true если лаунчер совместим
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
@@ -143,10 +143,10 @@ class ThemeUpdateManager(private val context: Context) {
     }
 
     /**
-     * Скачивает обновление темы
+     * Скачивает обновление оболочки
      */
-    suspend fun downloadThemeUpdate(
-        repoInfo: ThemeRepoInfo,
+    suspend fun downloadShellUpdate(
+        repoInfo: ShellRepoInfo,
         listener: DownloadListener
     ): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -157,7 +157,7 @@ class ThemeUpdateManager(private val context: Context) {
             val inputStream = connection.inputStream
 
             // Сохраняем во временную папку
-            val tempFile = File(context.cacheDir, "theme_update_${System.currentTimeMillis()}.qutytheme")
+            val tempFile = File(context.cacheDir, "shell_update_${System.currentTimeMillis()}.qutyshell")
             val outputStream = FileOutputStream(tempFile)
 
             val buffer = ByteArray(4096)
@@ -183,20 +183,20 @@ class ThemeUpdateManager(private val context: Context) {
             outputStream.close()
             inputStream.close()
 
-            // Копируем файл в папку Quty.Launch/Themes/
+            // Копируем файл в папку Quty.Launch/Shells/
             val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-            val themesDir = File(appDir, "Themes")
+            val shellsDir = File(appDir, "Shells")
 
             if (!appDir.exists()) {
                 appDir.mkdirs()
             }
-            if (!themesDir.exists()) {
-                themesDir.mkdirs()
+            if (!shellsDir.exists()) {
+                shellsDir.mkdirs()
             }
 
-            // Сохраняем с основным расширением .qutytheme
-            val fileName = "${repoInfo.name}${ThemeManager.THEME_EXTENSION_WITH_DOT}"
-            val destFile = File(themesDir, fileName)
+            // Сохраняем с основным расширением .qutyshell
+            val fileName = "${repoInfo.name}${ShellManager.SHELL_EXTENSION_WITH_DOT}"
+            val destFile = File(shellsDir, fileName)
 
             if (destFile.exists()) {
                 destFile.delete()

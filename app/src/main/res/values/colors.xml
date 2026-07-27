@@ -8,8 +8,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Theme selection colors -->
-    <color name="theme_active_background">#009688</color>
+    <!-- Shell selection colors -->
+    <color name="shell_active_background">#009688</color>
 
     <!-- TabLayout colors -->
     <color name="tab_indicator">#009688</color>

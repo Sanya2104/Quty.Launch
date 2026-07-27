@@ -21,10 +21,10 @@ import java.net.URLConnection
 @SuppressLint("SetJavaScriptEnabled")
 class LauncherWebView(context: Context) : WebView(context) {
 
-    private val activeThemeDir = File(context.filesDir, "themes/active")
+    private val activeShellDir = File(context.filesDir, "shells/active")
 
-    // Храним имя активной темы для корректной загрузки
-    private var activeThemeName: String? = null
+    // Храним имя активной оболочки для корректной загрузки
+    private var activeShellName: String? = null
 
     init {
         settings.javaScriptEnabled = true
@@ -111,29 +111,29 @@ class LauncherWebView(context: Context) : WebView(context) {
                         path = path.substring(2)
                     }
 
-                    // Определяем папку темы по имени активной темы
-                    val themeDir = getActiveThemeDir()
-                    if (themeDir == null) {
+                    // Определяем папку оболочки по имени активной оболочки
+                    val shellDir = getActiveShellDir()
+                    if (shellDir == null) {
                         Logger.e(
                             "LauncherWebView",
-                            context.getString(R.string.webview_dir_theme_not_found)
+                            context.getString(R.string.webview_dir_shell_not_found)
                         )
                         return null
                     }
 
-                    // Пытаемся найти файл в папке темы
-                    var file = File(themeDir, path)
+                    // Пытаемся найти файл в папке оболочки
+                    var file = File(shellDir, path)
 
-                    // Если файл не найден и путь начинается с themes/active/,
+                    // Если файл не найден и путь начинается с shells/active/,
                     // пробуем убрать этот префикс
-                    if (!file.exists() && path.startsWith("themes/active/")) {
-                        val relativePath = path.replace("themes/active/", "")
-                        file = File(themeDir, relativePath)
+                    if (!file.exists() && path.startsWith("shells/active/")) {
+                        val relativePath = path.replace("shells/active/", "")
+                        file = File(shellDir, relativePath)
                     }
 
-                    // Если всё ещё не найден, пробуем найти файл в подпапках темы
+                    // Если всё ещё не найден, пробуем найти файл в подпапках оболочки
                     if (!file.exists()) {
-                        val foundFile = findFileRecursively(themeDir, File(path).name)
+                        val foundFile = findFileRecursively(shellDir, File(path).name)
                         if (foundFile != null) {
                             file = foundFile
                         }
@@ -146,8 +146,8 @@ class LauncherWebView(context: Context) : WebView(context) {
                     }
 
                     // Если файл не найден, пробуем загрузить из assets (запасной вариант)
-                    if (path.startsWith("themes/")) {
-                        val assetPath = path.replace("themes/", "")
+                    if (path.startsWith("shells/")) {
+                        val assetPath = path.replace("shells/", "")
                         try {
                             val inputStream = context.assets.open(assetPath)
                             val mimeType = URLConnection.guessContentTypeFromName(File(assetPath).name)
@@ -165,22 +165,22 @@ class LauncherWebView(context: Context) : WebView(context) {
             }
 
             /**
-             * Возвращает директорию активной темы по имени
-             * Использует сохранённое имя активной темы для точного поиска
+             * Возвращает директорию активной оболочки по имени
+             * Использует сохранённое имя активной оболочки для точного поиска
              */
-            private fun getActiveThemeDir(): File? {
-                // Если есть сохранённое имя активной темы — ищем конкретную папку
-                activeThemeName?.let { themeName ->
-                    val themeDir = File(activeThemeDir, themeName)
-                    if (themeDir.exists() && themeDir.isDirectory) {
-                        return themeDir
+            private fun getActiveShellDir(): File? {
+                // Если есть сохранённое имя активной оболочки — ищем конкретную папку
+                activeShellName?.let { shellName ->
+                    val shellDir = File(activeShellDir, shellName)
+                    if (shellDir.exists() && shellDir.isDirectory) {
+                        return shellDir
                     }
                 }
 
                 // Если имя не сохранено или папка не найдена — ищем первую папку
-                val themeDirs = activeThemeDir.listFiles { it.isDirectory }
-                if (!themeDirs.isNullOrEmpty()) {
-                    return themeDirs[0]
+                val shellDirs = activeShellDir.listFiles { it.isDirectory }
+                if (!shellDirs.isNullOrEmpty()) {
+                    return shellDirs[0]
                 }
 
                 return null
@@ -230,19 +230,19 @@ class LauncherWebView(context: Context) : WebView(context) {
     }
 
     /**
-     * Загружает тему
-     * @param themeName имя темы (например, "default" или "custom_theme")
-     * @param isAsset true если тема из assets, false если кастомная
+     * Загружает оболочку
+     * @param shellName имя оболочки (например, "default" или "custom_shell")
+     * @param isAsset true если оболочка из assets, false если кастомная
      */
-    fun loadTheme(themeName: String, isAsset: Boolean = true) {
-        // Сохраняем имя активной темы для корректной загрузки ресурсов
-        activeThemeName = themeName
+    fun loadShell(shellName: String, isAsset: Boolean = true) {
+        // Сохраняем имя активной оболочки для корректной загрузки ресурсов
+        activeShellName = shellName
 
         val url = if (isAsset) {
-            "https://appassets.androidplatform.net/assets/themes/$themeName/index.html"
+            "https://appassets.androidplatform.net/assets/shells/$shellName/index.html"
         } else {
-            // Для кастомных тем используем quty:// схему
-            "quty://themes/active/index.html"
+            // Для кастомных оболочек используем quty:// схему
+            "quty://shells/active/index.html"
         }
         loadUrl(url)
     }

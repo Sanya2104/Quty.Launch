@@ -26,7 +26,7 @@ import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.ConfigManager
-import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.ShellManager
 import by.quty.launch.core.logger.LoggerFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -36,7 +36,7 @@ import java.util.Locale
 class DeveloperSettingsFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
-    private lateinit var themeManager: ThemeManager
+    private lateinit var shellManager: ShellManager
 
     // Элементы управления логами
     private lateinit var switchPersist: SwitchCompat
@@ -62,11 +62,11 @@ class DeveloperSettingsFragment : Fragment() {
 
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
-            themeManager = settingsActivity.themeManager
+            shellManager = settingsActivity.shellManager
         }
 
         setupWebViewDebug(view)
-        setupThemeInfo(view)
+        setupShellInfo(view)
         setupSystemInfo(view)
         setupDataManagement(view)
         setupLogsManagement(view)
@@ -117,42 +117,42 @@ class DeveloperSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // 2. ИНФОРМАЦИЯ О ТЕМЕ
+    // 2. ИНФОРМАЦИЯ ОБ ОБОЛОЧКЕ
     // ============================================================
 
-    private fun setupThemeInfo(view: View) {
-        val manifestBtn = view.findViewById<Button>(R.id.dev_theme_manifest)
-        val reloadBtn = view.findViewById<Button>(R.id.dev_theme_reload)
+    private fun setupShellInfo(view: View) {
+        val manifestBtn = view.findViewById<Button>(R.id.dev_shell_manifest)
+        val reloadBtn = view.findViewById<Button>(R.id.dev_shell_reload)
 
         // 2.2 Показать manifest.json
         manifestBtn.setOnClickListener {
-            showThemeManifest()
+            showShellManifest()
         }
 
-        // 2.3 Перезагрузить тему
+        // 2.3 Перезагрузить оболочку
         reloadBtn.setOnClickListener {
-            themeManager.reloadActiveTheme()
-            Toast.makeText(requireContext(), R.string.dev_theme_reload_success, Toast.LENGTH_SHORT).show()
+            shellManager.reloadActiveShell()
+            Toast.makeText(requireContext(), R.string.dev_shell_reload_success, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun showThemeManifest() {
+    private fun showShellManifest() {
         try {
-            val activeTheme = themeManager.getActiveTheme()
-            if (activeTheme == null) {
-                Toast.makeText(requireContext(), R.string.dev_theme_not_found, Toast.LENGTH_SHORT).show()
+            val activeShell = shellManager.getActiveShell()
+            if (activeShell == null) {
+                Toast.makeText(requireContext(), R.string.dev_shell_not_found, Toast.LENGTH_SHORT).show()
                 return
             }
 
-            val content = if (activeTheme.isAsset) {
-                val stream = requireContext().assets.open("themes/${activeTheme.name}/manifest.json")
+            val content = if (activeShell.isAsset) {
+                val stream = requireContext().assets.open("shells/${activeShell.name}/manifest.json")
                 stream.bufferedReader().use { it.readText() }
             } else {
-                val themeDir = File(requireContext().filesDir, "themes/active/${activeTheme.name}")
-                val manifestFile = File(themeDir, "manifest.json")
+                val shellDir = File(requireContext().filesDir, "shells/active/${activeShell.name}")
+                val manifestFile = File(shellDir, "manifest.json")
 
                 if (!manifestFile.exists()) {
-                    Toast.makeText(requireContext(), R.string.dev_theme_manifest_not_found, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.dev_shell_manifest_not_found, Toast.LENGTH_SHORT).show()
                     return
                 }
                 manifestFile.readText()
@@ -168,13 +168,13 @@ class DeveloperSettingsFragment : Fragment() {
                     formatted
                 }
                 AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.dev_theme_manifest_title)
+                    .setTitle(R.string.dev_shell_manifest_title)
                     .setMessage(displayText)
                     .setPositiveButton(android.R.string.ok, null)
                     .show()
             } catch (_: Exception) {
                 AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.dev_theme_manifest_title)
+                    .setTitle(R.string.dev_shell_manifest_title)
                     .setMessage(content)
                     .setPositiveButton(android.R.string.ok, null)
                     .show()
@@ -249,14 +249,14 @@ class DeveloperSettingsFragment : Fragment() {
 
     private fun setupDataManagement(view: View) {
         val cacheSizeView = view.findViewById<TextView>(R.id.dev_cache_size_value)
-        val themesSizeView = view.findViewById<TextView>(R.id.dev_themes_size_value)
+        val shellsSizeView = view.findViewById<TextView>(R.id.dev_shells_size_value)
         val logsSizeView = view.findViewById<TextView>(R.id.dev_logs_size_value)
         val clearDataBtn = view.findViewById<Button>(R.id.dev_clear_data)
         val clearAppsCacheBtn = view.findViewById<Button>(R.id.dev_clear_apps_cache)
 
         // Обновляем размеры
         updateCacheSize(cacheSizeView)
-        updateThemesSize(themesSizeView)
+        updateShellsSize(shellsSizeView)
         updateLogsSize(logsSizeView)
 
         // Кнопка обновления размера кэша (по клику на строку)
@@ -266,10 +266,10 @@ class DeveloperSettingsFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
-        // Кнопка обновления размера тем (по клику на строку)
-        val themesSizeRow = view.findViewById<View>(R.id.dev_themes_size_row)
-        themesSizeRow?.setOnClickListener {
-            updateThemesSize(themesSizeView)
+        // Кнопка обновления размера оболочек (по клику на строку)
+        val shellsSizeRow = view.findViewById<View>(R.id.dev_shells_size_row)
+        shellsSizeRow?.setOnClickListener {
+            updateShellsSize(shellsSizeView)
             Toast.makeText(requireContext(), R.string.dev_cache_size_updated, Toast.LENGTH_SHORT).show()
         }
 
@@ -328,8 +328,8 @@ class DeveloperSettingsFragment : Fragment() {
         textView.text = formatSize(size)
     }
 
-    private fun updateThemesSize(textView: TextView) {
-        val size = getThemesSize()
+    private fun updateShellsSize(textView: TextView) {
+        val size = getShellsSize()
         textView.text = formatSize(size)
     }
 
@@ -347,14 +347,14 @@ class DeveloperSettingsFragment : Fragment() {
         return size
     }
 
-    private fun getThemesSize(): Long {
+    private fun getShellsSize(): Long {
         var size = 0L
-        // Новая структура: Quty.Launch/Themes/
+        // Новая структура: Quty.Launch/Shells/
         val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-        val themesDir = File(appDir, "Themes")
+        val shellsDir = File(appDir, "Shells")
 
-        if (themesDir.exists()) {
-            themesDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
+        if (shellsDir.exists()) {
+            shellsDir.walkTopDown().filter { it.isFile }.forEach { size += it.length() }
         }
         return size
     }
@@ -385,7 +385,7 @@ class DeveloperSettingsFragment : Fragment() {
             val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
             prefs.edit { clear() }
 
-            // Новая структура: Quty.Launch/Themes/
+            // Новая структура: Quty.Launch/Shells/
             val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
             if (appDir.exists()) {
                 appDir.deleteRecursively()

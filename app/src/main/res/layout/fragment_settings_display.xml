@@ -29,7 +29,7 @@
             android:background="#1E1E1E"
             android:padding="16dp">
 
-            <!-- Подсказка о блокировке ориентации темой (по умолчанию скрыта) -->
+            <!-- Подсказка о блокировке ориентации оболочкой (по умолчанию скрыта) -->
             <TextView
                 android:id="@+id/orientation_lock_hint"
                 android:layout_width="match_parent"

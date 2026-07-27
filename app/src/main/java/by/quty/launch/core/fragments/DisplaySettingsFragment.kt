@@ -16,13 +16,13 @@ import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.ConfigManager
-import by.quty.launch.core.ThemeManager
+import by.quty.launch.core.ShellManager
 import by.quty.launch.core.interfaces.SettingsEventListener
 
 class DisplaySettingsFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
-    private lateinit var themeManager: ThemeManager
+    private lateinit var shellManager: ShellManager
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
@@ -46,10 +46,10 @@ class DisplaySettingsFragment : Fragment() {
         // Получаем SettingsActivity как listener
         settingsEventListener = activity as? SettingsEventListener
 
-        // Получаем ConfigManager и ThemeManager через активность
+        // Получаем ConfigManager и ShellManager через активность
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
-            themeManager = settingsActivity.themeManager
+            shellManager = settingsActivity.shellManager
         }
 
         orientationGroup = view.findViewById(R.id.orientation_group)
@@ -61,7 +61,7 @@ class DisplaySettingsFragment : Fragment() {
         setupFullscreenSelector()
         setupStrictModeSelector()
 
-        // Обновляем состояние UI в соответствии с текущей темой
+        // Обновляем состояние UI в соответствии с текущей оболочкой
         Handler(Looper.getMainLooper()).postDelayed({
             updateOrientationLockState()
         }, 50)
@@ -81,7 +81,7 @@ class DisplaySettingsFragment : Fragment() {
 
         orientationGroup.setOnCheckedChangeListener { _, checkedId ->
             // Если идёт обновление или ориентация заблокирована - игнорируем
-            if (isUpdating || themeManager.hasForcedOrientation()) {
+            if (isUpdating || shellManager.hasForcedOrientation()) {
                 return@setOnCheckedChangeListener
             }
 
@@ -99,18 +99,18 @@ class DisplaySettingsFragment : Fragment() {
     }
 
     /**
-     * Обновление состояния блокировки ориентации в соответствии с текущей темой
+     * Обновление состояния блокировки ориентации в соответствии с текущей оболочкой
      */
     fun updateOrientationLockState() {
         isUpdating = true
 
-        val forcedOrientation = themeManager.getForcedOrientationFromActiveTheme()
+        val forcedOrientation = shellManager.getForcedOrientationFromActiveShell()
 
         if (forcedOrientation == "portrait" || forcedOrientation == "landscape") {
-            // Тема задаёт принудительную ориентацию - блокируем RadioButton
+            // Оболочка задаёт принудительную ориентацию - блокируем RadioButton
             lockOrientationSelector(forcedOrientation)
         } else {
-            // Тема не задаёт ориентацию - разблокируем RadioButton
+            // Оболочка не задаёт ориентацию - разблокируем RadioButton
             unlockOrientationSelector()
         }
 
@@ -238,7 +238,7 @@ class DisplaySettingsFragment : Fragment() {
         updateOrientationLockState()
 
         // Если не заблокировано - обновляем выбранное значение из настроек
-        if (!themeManager.hasForcedOrientation()) {
+        if (!shellManager.hasForcedOrientation()) {
             val currentOrientation = configManager.getOrientation()
             when (currentOrientation) {
                 "portrait" -> orientationGroup.check(R.id.orientation_portrait)
