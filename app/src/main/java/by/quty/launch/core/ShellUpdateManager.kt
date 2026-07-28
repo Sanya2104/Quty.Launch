@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
+import android.os.StatFs
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -143,6 +144,28 @@ class ShellUpdateManager(private val context: Context) {
     }
 
     /**
+     * Проверяет, достаточно ли свободного места для загрузки файла
+     * @param requiredSpace требуемое место в байтах
+     * @return true если места достаточно
+     */
+    private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
+        return try {
+            val path = Environment.getExternalStorageDirectory().path
+            val stat = StatFs(path)
+            val blockSize = stat.blockSizeLong
+            val availableBlocks = stat.availableBlocksLong
+            val freeSpace = blockSize * availableBlocks
+
+            // Проверяем, что свободного места как минимум на 10% больше требуемого
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            // Если не удалось проверить — считаем, что места достаточно
+            true
+        }
+    }
+
+    /**
      * Скачивает обновление оболочки
      */
     suspend fun downloadShellUpdate(
@@ -150,17 +173,46 @@ class ShellUpdateManager(private val context: Context) {
         listener: DownloadListener
     ): Boolean = withContext(Dispatchers.IO) {
         try {
+            // Проверяем наличие свободного места
+            // Получаем размер файла через HEAD запрос
+            val headConnection = URL(repoInfo.downloadUrl).openConnection() as HttpURLConnection
+            headConnection.requestMethod = "HEAD"
+            headConnection.connectTimeout = 5000
+            headConnection.readTimeout = 5000
+            headConnection.connect()
+
+            val fileSize = headConnection.contentLength.toLong()
+            headConnection.disconnect()
+
+            if (fileSize > 0 && !hasEnoughFreeSpace(fileSize)) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.shell_update_not_enough_space))
+                }
+                return@withContext false
+            }
+
+            // Основное подключение с тайм-аутами
             val connection = URL(repoInfo.downloadUrl).openConnection() as HttpURLConnection
+            connection.connectTimeout = 15000  // 15 секунд на подключение
+            connection.readTimeout = 30000      // 30 секунд на чтение
             connection.connect()
 
-            val fileLength = connection.contentLength
+            // Проверяем код ответа
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.shell_update_http_error, connection.responseCode))
+                }
+                connection.disconnect()
+                return@withContext false
+            }
+
             val inputStream = connection.inputStream
 
             // Сохраняем во временную папку
             val tempFile = File(context.cacheDir, "shell_update_${System.currentTimeMillis()}.qutyshell")
             val outputStream = FileOutputStream(tempFile)
 
-            val buffer = ByteArray(4096)
+            val buffer = ByteArray(8192)  // Увеличен буфер для скорости
             var bytesRead: Int
             var totalBytesRead = 0L
             var lastProgress = 0
@@ -169,8 +221,8 @@ class ShellUpdateManager(private val context: Context) {
                 outputStream.write(buffer, 0, bytesRead)
                 totalBytesRead += bytesRead
 
-                if (fileLength > 0) {
-                    val progress = (totalBytesRead * 100 / fileLength).toInt()
+                if (fileSize > 0) {
+                    val progress = (totalBytesRead * 100 / fileSize).toInt()
                     if (progress > lastProgress) {
                         lastProgress = progress
                         withContext(Dispatchers.Main) {
@@ -182,6 +234,16 @@ class ShellUpdateManager(private val context: Context) {
 
             outputStream.close()
             inputStream.close()
+            connection.disconnect()
+
+            // Проверяем, что скачанный файл не пустой
+            if (tempFile.length() == 0L) {
+                tempFile.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.shell_update_empty_file))
+                }
+                return@withContext false
+            }
 
             // Копируем файл в папку Quty.Launch/Shells/
             val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
@@ -210,6 +272,16 @@ class ShellUpdateManager(private val context: Context) {
             }
             true
 
+        } catch (_: java.net.SocketTimeoutException) {
+            withContext(Dispatchers.Main) {
+                listener.onError(context.getString(R.string.shell_update_timeout))
+            }
+            false
+        } catch (_: java.net.UnknownHostException) {
+            withContext(Dispatchers.Main) {
+                listener.onError(context.getString(R.string.no_internet_connection))
+            }
+            false
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))

@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.StatFs
 import android.provider.MediaStore
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
@@ -296,6 +297,30 @@ class UpdateManager(private val context: Context) {
     }
 
     /**
+     * Проверяет, достаточно ли свободного места для загрузки файла
+     * @param requiredSpace требуемое место в байтах
+     * @return true если места достаточно
+     */
+    private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
+        return try {
+            val path = Environment.getExternalStorageDirectory().path
+            val stat = StatFs(path)
+            val blockSize = stat.blockSizeLong
+            val availableBlocks = stat.availableBlocksLong
+            val freeSpace = blockSize * availableBlocks
+
+            // Проверяем, что свободного места как минимум на 10% больше требуемого
+            // (для запаса на системные нужды)
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            // Если не удалось проверить — считаем, что места достаточно
+            // (чтобы не блокировать обновление при ошибке)
+            true
+        }
+    }
+
+    /**
      * Скачивание APK с проверкой на существование файла
      * @param versionInfo информация о версии
      * @param listener слушатель событий
@@ -321,6 +346,23 @@ class UpdateManager(private val context: Context) {
                 }
             }
 
+            // Проверяем наличие свободного места перед загрузкой
+            // Получаем размер файла
+            val connection = URL(versionInfo.downloadUrl).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            connection.connect()
+            val fileSize = connection.contentLength.toLong()
+            connection.disconnect()
+
+            if (fileSize > 0 && !hasEnoughFreeSpace(fileSize)) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.update_not_enough_space))
+                }
+                return@withContext false
+            }
+
             // Если файла нет или принудительная загрузка - скачиваем
             downloadViaMediaStore(versionInfo, fileName, listener)
         } catch (e: Exception) {
@@ -343,7 +385,7 @@ class UpdateManager(private val context: Context) {
             val connection = URL(versionInfo.downloadUrl).openConnection() as HttpURLConnection
             connection.connect()
 
-            val fileLength = connection.contentLength
+            val fileLength = connection.contentLength.toLong()
             val inputStream = connection.inputStream
 
             // Создаём запись в MediaStore для Downloads
@@ -376,9 +418,9 @@ class UpdateManager(private val context: Context) {
                 ?: throw Exception(context.getString(R.string.update_manager_media_store_open_failed))
 
             // Качаем и пишем
-            val buffer = ByteArray(4096)
+            val buffer = ByteArray(8192)  // Увеличен буфер для скорости
             var bytesRead: Int
-            var totalBytesRead = 0
+            var totalBytesRead = 0L
             var lastProgress = 0
 
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
@@ -386,7 +428,7 @@ class UpdateManager(private val context: Context) {
                 totalBytesRead += bytesRead
 
                 if (fileLength > 0) {
-                    val progress = (totalBytesRead * 100 / fileLength)
+                    val progress = (totalBytesRead * 100 / fileLength).toInt()
                     if (progress > lastProgress) {
                         lastProgress = progress
                         withContext(Dispatchers.Main) {

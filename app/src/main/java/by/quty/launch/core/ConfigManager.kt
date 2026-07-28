@@ -2,6 +2,8 @@
 package by.quty.launch.core
 
 import android.content.Context
+import by.quty.launch.R
+import by.quty.launch.core.logger.Logger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
@@ -25,13 +27,24 @@ class ConfigManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
     private var config: LauncherConfig = loadConfig()
 
+    /**
+     * Загружает конфигурацию из launcher.conf
+     * Если файл отсутствует или повреждён — использует значения по умолчанию
+     */
     private fun loadConfig(): LauncherConfig {
         return try {
             val inputStream = context.assets.open("launcher.conf")
             val jsonString = inputStream.bufferedReader().use { it.readText() }
-            json.decodeFromString<LauncherConfig>(jsonString)
+
+            try {
+                json.decodeFromString<LauncherConfig>(jsonString)
+            } catch (e: Exception) {
+                // JSON повреждён — используем значения по умолчанию
+                Logger.e("ConfigManager", context.getString(R.string.config_parse_error, e.message))
+                LauncherConfig()
+            }
         } catch (_: IOException) {
-            // Если файла нет - используем default
+            // Файла нет — используем default
             LauncherConfig()
         }
     }
