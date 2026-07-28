@@ -493,4 +493,18 @@
 
     <string name="config_parse_error" formatted="false">Ошибка парсинга launcher.conf: %s</string>
 
+    <!-- ============================================================ -->
+    <!-- ==================== CACHE MANAGER ========================== -->
+    <!-- ============================================================ -->
+
+    <string name="cache_manager_package_changed" formatted="false">📦 Обнаружено изменение в приложениях: %s -> %s</string>
+    <string name="cache_manager_receiver_registered">📦 BroadcastReceiver зарегистрирован для отслеживания приложений</string>
+    <string name="cache_manager_receiver_register_error" formatted="false">Ошибка регистрации BroadcastReceiver: %s</string>
+    <string name="cache_manager_receiver_unregistered">📦 BroadcastReceiver отменён</string>
+    <string name="cache_manager_receiver_unregister_error" formatted="false">Ошибка отмены BroadcastReceiver: %s</string>
+    <string name="cache_manager_skipped_dirty">⏭️ Кэш пропущен (грязный флаг)</string>
+    <string name="cache_manager_saved" formatted="false">✅ Сохранено приложений в кэш: %d</string>
+    <string name="cache_manager_cleared">🗑️ Кэш приложений очищен</string>
+    <string name="cache_manager_invalidated">🔄 Кэш приложений инвалидирован (грязный флаг = true)</string>
+
 </resources>

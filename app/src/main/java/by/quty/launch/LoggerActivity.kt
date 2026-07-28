@@ -42,6 +42,14 @@ class LoggerActivity : BaseActivity() {
     private var selectedLevel: String = ""
     private var selectedSource: String = ""
 
+    // Ключи для сохранения состояния
+    companion object {
+        private const val KEY_SELECTED_LEVEL = "selected_level"
+        private const val KEY_SELECTED_SOURCE = "selected_source"
+        private const val KEY_SELECTED_LEVEL_POSITION = "selected_level_position"
+        private const val KEY_SELECTED_SOURCE_POSITION = "selected_source_position"
+    }
+
     // Слушатель для обновления UI при добавлении логов
     private val logListener = object : Logger.LogListener {
         override fun onLogAdded(entry: LogEntry) {
@@ -71,10 +79,6 @@ class LoggerActivity : BaseActivity() {
             return
         }
 
-        // Инициализируем значения фильтров после получения Context
-        selectedLevel = getString(R.string.logger_filter_all)
-        selectedSource = getString(R.string.logger_filter_all)
-
         setContentView(R.layout.activity_logger)
 
         // Применяем ориентацию
@@ -92,6 +96,15 @@ class LoggerActivity : BaseActivity() {
         // Настройка кнопок
         setupButtons()
 
+        // Восстанавливаем состояние, если есть
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState)
+        } else {
+            // Инициализируем значения фильтров только при первом создании
+            selectedLevel = getString(R.string.logger_filter_all)
+            selectedSource = getString(R.string.logger_filter_all)
+        }
+
         // Обновляем статус
         updateStatus()
 
@@ -102,6 +115,40 @@ class LoggerActivity : BaseActivity() {
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
+        }
+    }
+
+    /**
+     * Сохраняет состояние активности при повороте экрана
+     */
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        // Сохраняем выбранные значения фильтров
+        outState.putString(KEY_SELECTED_LEVEL, selectedLevel)
+        outState.putString(KEY_SELECTED_SOURCE, selectedSource)
+
+        // Сохраняем позиции в Spinner
+        outState.putInt(KEY_SELECTED_LEVEL_POSITION, spinnerLevel.selectedItemPosition)
+        outState.putInt(KEY_SELECTED_SOURCE_POSITION, spinnerSource.selectedItemPosition)
+    }
+
+    /**
+     * Восстанавливает состояние активности после поворота экрана
+     */
+    private fun restoreState(savedInstanceState: Bundle) {
+        selectedLevel = savedInstanceState.getString(KEY_SELECTED_LEVEL, getString(R.string.logger_filter_all))
+        selectedSource = savedInstanceState.getString(KEY_SELECTED_SOURCE, getString(R.string.logger_filter_all))
+
+        val levelPosition = savedInstanceState.getInt(KEY_SELECTED_LEVEL_POSITION, 0)
+        val sourcePosition = savedInstanceState.getInt(KEY_SELECTED_SOURCE_POSITION, 0)
+
+        // Восстанавливаем позиции в Spinner (если адаптер уже установлен)
+        if (::spinnerLevel.isInitialized && spinnerLevel.adapter != null) {
+            spinnerLevel.setSelection(levelPosition, false)
+        }
+        if (::spinnerSource.isInitialized && spinnerSource.adapter != null) {
+            spinnerSource.setSelection(sourcePosition, false)
         }
     }
 

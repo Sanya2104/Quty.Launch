@@ -1,4 +1,4 @@
-// *** core/UpdateManager.kt *** //
+// *** core/managers/UpdateManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.content.ContentValues

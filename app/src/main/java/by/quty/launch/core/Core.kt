@@ -4,6 +4,7 @@ package by.quty.launch.core
 import android.content.Context
 import by.quty.launch.api.ApiInitializer
 import by.quty.launch.api.router.ApiRouter
+import by.quty.launch.core.managers.CacheManager
 
 /**
  * Основной движок приложения.
@@ -14,6 +15,9 @@ class Core(context: Context) {
     init {
         // Инициализируем все методы при старте
         ApiInitializer.init(context)
+
+        // Регистрируем BroadcastReceiver для отслеживания изменений приложений
+        CacheManager.registerPackageReceiver(context)
     }
 
     /**

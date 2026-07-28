@@ -1,8 +1,13 @@
-// *** core/CacheManager.kt *** //
+// *** core/managers/CacheManager.kt *** //
 package by.quty.launch.core.managers
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import by.quty.launch.R
 import by.quty.launch.api.model.AppInfo
+import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -29,9 +34,83 @@ object CacheManager {
     // In-memory кэш (самый быстрый доступ)
     private var memoryCache: CachedApps? = null
 
+    // Флаг, что кэш нужно принудительно обновить
+    private var isCacheDirty = false
+
+    // Регистрация BroadcastReceiver
+    private var receiverRegistered = false
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            val data = intent.data
+            val packageName = data?.schemeSpecificPart
+
+            when (action) {
+                Intent.ACTION_PACKAGE_ADDED,
+                Intent.ACTION_PACKAGE_REMOVED,
+                Intent.ACTION_PACKAGE_REPLACED -> {
+                    Logger.d("CacheManager", context.getString(R.string.cache_manager_package_changed, action, packageName))
+                    invalidateCache()
+                }
+            }
+        }
+    }
+
     private val json = Json {
         ignoreUnknownKeys = true
         prettyPrint = true
+    }
+
+    /**
+     * Регистрирует BroadcastReceiver для отслеживания изменений в приложениях
+     * Вызывается при инициализации приложения
+     * @param context контекст приложения
+     */
+    fun registerPackageReceiver(context: Context) {
+        if (receiverRegistered) return
+
+        try {
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addDataScheme("package")
+            }
+
+            context.applicationContext.registerReceiver(packageReceiver, filter)
+            receiverRegistered = true
+            Logger.d("CacheManager", context.getString(R.string.cache_manager_receiver_registered))
+        } catch (e: Exception) {
+            Logger.e("CacheManager", context.getString(R.string.cache_manager_receiver_register_error, e.message))
+        }
+    }
+
+    /**
+     * Отменяет регистрацию BroadcastReceiver
+     * Вызывается при завершении приложения
+     * @param context контекст приложения
+     */
+    fun unregisterPackageReceiver(context: Context) {
+        if (!receiverRegistered) return
+
+        try {
+            context.applicationContext.unregisterReceiver(packageReceiver)
+            receiverRegistered = false
+            Logger.d("CacheManager", context.getString(R.string.cache_manager_receiver_unregistered))
+        } catch (e: Exception) {
+            Logger.e("CacheManager", context.getString(R.string.cache_manager_receiver_unregister_error, e.message))
+        }
+    }
+
+    /**
+     * Принудительно инвалидирует кэш
+     * Вызывается при изменении списка приложений
+     */
+    fun invalidateCache() {
+        memoryCache = null
+        isCacheDirty = true
+        // Используем Logger без контекста, так как invalidateCache() вызывается из BroadcastReceiver
+        // где контекст доступен, но мы не можем его передать без изменения сигнатуры
     }
 
     /**
@@ -42,6 +121,12 @@ object CacheManager {
      * @return список приложений или null, если кэш отсутствует/просрочен
      */
     fun getCachedApps(context: Context): List<AppInfo>? {
+        // Если кэш помечен как грязный — пропускаем
+        if (isCacheDirty) {
+            Logger.d("CacheManager", context.getString(R.string.cache_manager_skipped_dirty))
+            return null
+        }
+
         // 1. Проверяем память (самый быстрый способ)
         memoryCache?.let { cached ->
             if (!isExpired(cached.timestamp)) {
@@ -72,11 +157,15 @@ object CacheManager {
 
         // Сохраняем в память (мгновенно)
         memoryCache = cached
+        // Сбрасываем флаг грязного кэша
+        isCacheDirty = false
 
         // Сохраняем на диск в фоновом потоке (чтобы не тормозить UI)
         withContext(Dispatchers.IO) {
             saveToDisk(context, cached)
         }
+
+        Logger.d("CacheManager", context.getString(R.string.cache_manager_saved, apps.size))
     }
 
     /**
@@ -116,9 +205,10 @@ object CacheManager {
     /**
      * Проверить, не устарел ли кэш
      * @param timestamp время создания кэша
-     * @return true если кэш старше 30 минут
+     * @return true если кэш старше 30 минут или есть флаг грязного кэша
      */
     private fun isExpired(timestamp: Long): Boolean {
+        if (isCacheDirty) return true
         return System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
     }
 
@@ -129,6 +219,7 @@ object CacheManager {
     fun clearCache(context: Context) {
         // Очищаем in-memory кэш
         memoryCache = null
+        isCacheDirty = true
 
         // Удаляем файл кэша с диска
         try {
@@ -139,5 +230,7 @@ object CacheManager {
         } catch (_: Exception) {
             // Игнорируем ошибки
         }
+
+        Logger.d("CacheManager", context.getString(R.string.cache_manager_cleared))
     }
 }

@@ -1,4 +1,4 @@
-// core/PermissionManager.kt
+// *** core/managers/PermissionManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.Manifest

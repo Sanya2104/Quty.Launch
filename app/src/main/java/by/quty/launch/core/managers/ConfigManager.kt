@@ -1,4 +1,4 @@
-// *** core/ConfigManager.kt *** //
+// *** core/managers/ConfigManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.content.Context

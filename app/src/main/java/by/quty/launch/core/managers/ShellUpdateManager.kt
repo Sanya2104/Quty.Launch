@@ -1,4 +1,4 @@
-// *** core/ShellUpdateManager.kt *** //
+// *** core/managers/ShellUpdateManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.content.Context
