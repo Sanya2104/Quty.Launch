@@ -19,7 +19,7 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
 /**
- * Активность настроек лаунчера с вкладками
+ * Активность настроек Quty.Launch с вкладками
  * Позволяет выбирать оболочку оформления, ориентацию экрана и полноэкранный режим
  */
 class SettingsActivity : BaseActivity(), SettingsEventListener {

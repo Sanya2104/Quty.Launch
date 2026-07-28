@@ -26,7 +26,7 @@
     <!-- ============================================================ -->
 
     <!-- Заголовки -->
-    <string name="settings_title">Настройки лаунчера</string>
+    <string name="settings_title">Настройки Quty.Launch</string>
 
     <!-- Названия вкладок -->
     <string name="tab_shell">Оформление</string>
@@ -56,8 +56,8 @@
     <string name="shell_install_confirm">Установить оболочку</string>
     <string name="shell_install_confirm_message" formatted="false">Вы уверены, что хотите установить оболочку "%s" версии %s?</string>
     <string name="shell_already_exists" formatted="false">Оболочка "%s" уже существует. Перезаписать?</string>
-    <string name="shell_incompatible">Оболочка несовместима с текущей версией лаунчера</string>
-    <string name="shell_min_launcher_version" formatted="false">Требуется лаунчер версии: %s</string>
+    <string name="shell_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
+    <string name="shell_min_launcher_version" formatted="false">Требуется Quty.Launch версии: %s</string>
 
     <!-- Меню оболочки -->
     <string name="shell_menu_description">Меню оболочки</string>
@@ -77,11 +77,11 @@
 
     <!-- Информация об оболочке -->
     <string name="shell_info_title" formatted="false">Информация об оболочке "%s"</string>
-    <string name="shell_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется лаунчер: %5$s</string>
+    <string name="shell_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется Quty.Launch версии: %5$s</string>
     <string name="shell_type_builtin">Встроенная</string>
     <string name="shell_type_custom">Пользовательская</string>
     <string name="shell_version_with_label" formatted="false">Версия: %s</string>
-    <string name="shell_info_min_version" formatted="false">Версии %s</string>
+    <string name="shell_info_min_version" formatted="false"> %s</string>
     <string name="shell_info_min_version_not_specified">Не указано</string>
 
     <!-- Шаринг оболочки -->
@@ -108,9 +108,9 @@
     <string name="shell_update_install">Обновить</string>
     <string name="shell_update_preparing">Подготовка…</string>
     <string name="shell_update_progress" formatted="false">Скачивание: %d%%</string>
-    <string name="shell_update_min_launcher" formatted="false">Требуется лаунчер версии: %s</string>
+    <string name="shell_update_min_launcher" formatted="false">Требуется Quty.Launch версии: %s</string>
     <string name="shell_update_incompatible_title">Оболочка несовместима</string>
-    <string name="shell_update_incompatible_message" formatted="false">Обновление оболочки требует лаунчер версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
+    <string name="shell_update_incompatible_message" formatted="false">Обновление оболочки требует Quty.Launch версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
 
     <!-- Файловый менеджер -->
     <string name="file_manager_not_found">Файловый менеджер не найден</string>
@@ -234,13 +234,13 @@
     <string name="welcome_button_grant">Предоставить доступ</string>
     <string name="welcome_button_retry">Повторить запрос</string>
     <string name="welcome_button_settings">Открыть настройки</string>
-    <string name="welcome_all_required">Все разрешения обязательны для работы лаунчера</string>
+    <string name="welcome_all_required">Все разрешения обязательны для работы Quty.Launch</string>
     <string name="welcome_required_done">✅ Все обязательные разрешения получены!</string>
     <string name="welcome_button_start">🚀 Начать</string>
 
     <!-- Ошибки -->
     <string name="welcome_permission_denied_title">Разрешения не предоставлены</string>
-    <string name="welcome_permission_denied_message">Для корректной работы лаунчера необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
+    <string name="welcome_permission_denied_message">Для корректной работы Quty.Launch необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
     <string name="welcome_permission_denied_button">Открыть настройки приложения</string>
 
     <!-- ============================================================ -->
@@ -470,7 +470,7 @@
     <!-- ============================================================ -->
 
     <!-- GetApps -->
-    <string name="api_getapps_settings_name">Настройки лаунчера</string>
+    <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
 
     <!-- LaunchApp -->
     <string name="api_launchapp_package_required">Требуется имя пакета</string>

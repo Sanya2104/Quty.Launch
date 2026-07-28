@@ -402,7 +402,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет валидность оболочки и возвращает название, версию и минимальную версию лаунчера.
+     * Проверяет валидность оболочки и возвращает название, версию и минимальную версию Quty.Launch
      */
     private fun validateShell(uri: Uri): Triple<String, String, String?>? {
         return try {
@@ -425,12 +425,12 @@ class ShellSettingsFragment : Fragment() {
 
                 tempFile.delete()
 
-                // Проверяем совместимость с лаунчером
-                if (!isLauncherCompatible(manifest.minLauncherVersion)) {
-                    return null  // Лаунчер слишком старый для этой оболочки
+                // Проверяем совместимость с Quty.Launch
+                if (!isLauncherCompatible(manifest.minQutyLaunchVersion)) {
+                    return null  // Quty.Launch слишком старый для этой оболочки
                 }
 
-                return Triple(manifest.name, manifest.version, manifest.minLauncherVersion)
+                return Triple(manifest.name, manifest.version, manifest.minQutyLaunchVersion)
             }
         } catch (_: Exception) {
             null
@@ -438,7 +438,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет, совместима ли оболочка с текущей версией лаунчера
+     * Проверяет, совместима ли оболочка с текущей версией Quty.Launch
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true
@@ -450,7 +450,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Получает текущую версию лаунчера
+     * Получает текущую версию Quty.Launch
      */
     private fun getCurrentLauncherVersion(): String {
         return try {
@@ -495,14 +495,14 @@ class ShellSettingsFragment : Fragment() {
     /**
      * Показывает диалог подтверждения установки.
      */
-    private fun showConfirmInstallDialog(uri: Uri, shellName: String, shellVersion: String, minLauncherVersion: String?) {
+    private fun showConfirmInstallDialog(uri: Uri, shellName: String, shellVersion: String, minQutyLaunchVersion: String?) {
         val existingShell = shellManager.getAvailableShells().find {
             it.displayName == shellName || it.name == shellName
         }
 
         // Добавляем информацию о совместимости
-        val compatibilityInfo = if (!minLauncherVersion.isNullOrEmpty()) {
-            "\n\n${getString(R.string.shell_min_launcher_version, minLauncherVersion)}"
+        val compatibilityInfo = if (!minQutyLaunchVersion.isNullOrEmpty()) {
+            "\n\n${getString(R.string.shell_min_launcher_version, minQutyLaunchVersion)}"
         } else {
             ""
         }
@@ -680,13 +680,14 @@ class ShellSettingsFragment : Fragment() {
             // Пункт "Информация" - ВСЕГДА
             menu.add(0, 2, 0, getString(R.string.shell_menu_info))
 
-            // "Удалить" — только для кастомных оболочек
+            // Только для кастомных оболочек
             if (shell.isCustom) {
+                // Пункт "Удалить"
                 menu.add(0, 3, 0, getString(R.string.shell_menu_delete))
-            }
 
-            // Пункт "Поделиться" - ВСЕГДА
-            menu.add(0, 4, 0, getString(R.string.shell_menu_share))
+                // Пункт "Поделиться"
+                menu.add(0, 4, 0, getString(R.string.shell_menu_share))
+            }
 
             // "Проверить обновления" — если есть repoUrl (для ЛЮБЫХ оболочек)
             if (!shell.repoUrl.isNullOrEmpty()) {
@@ -737,7 +738,7 @@ class ShellSettingsFragment : Fragment() {
          */
         private fun showUpdateConfirmDialog(shell: Shell, updateInfo: ShellRepoInfo) {
             // Проверяем совместимость при обновлении
-            if (!isLauncherCompatible(updateInfo.minLauncherVersion)) {
+            if (!isLauncherCompatible(updateInfo.minQutyLaunchVersion)) {
                 AlertDialog.Builder(requireContext())
                     .setTitle(getString(R.string.shell_update_incompatible_title))
                     .setMessage(getString(R.string.shell_update_incompatible_message, updateInfo.version))
@@ -753,10 +754,10 @@ class ShellSettingsFragment : Fragment() {
                 append("\n")
                 append(getString(R.string.shell_update_new_version, updateInfo.version))
 
-                // Добавляем информацию о минимальной версии лаунчера
-                if (!updateInfo.minLauncherVersion.isNullOrEmpty()) {
+                // Добавляем информацию о минимальной версии Quty.Launch
+                if (!updateInfo.minQutyLaunchVersion.isNullOrEmpty()) {
                     append("\n")
-                    append(getString(R.string.shell_update_min_launcher, updateInfo.minLauncherVersion))
+                    append(getString(R.string.shell_update_min_launcher, updateInfo.minQutyLaunchVersion))
                 }
 
                 if (updateInfo.changelog.isNotEmpty()) {
@@ -838,8 +839,8 @@ class ShellSettingsFragment : Fragment() {
                 getString(R.string.author_default)
             }
 
-            // Добавляем информацию о минимальной версии лаунчера
-            val minVersion = shell.minLauncherVersion?.let {
+            // Добавляем информацию о минимальной версии Quty.Launch
+            val minVersion = shell.minQutyLaunchVersion?.let {
                 getString(R.string.shell_info_min_version, it)
             } ?: getString(R.string.shell_info_min_version_not_specified)
 
@@ -974,6 +975,6 @@ class ShellSettingsFragment : Fragment() {
         val preview: String? = null,
         val orientation: String? = null,
         val repoUrl: String? = null,
-        val minLauncherVersion: String? = null
+        val minQutyLaunchVersion: String? = null
     )
 }

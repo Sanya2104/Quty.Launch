@@ -33,7 +33,7 @@ data class Shell(
     val previewBase64: String? = null,      // превью в base64 для отображения
     val orientation: String? = null,        // ориентация из manifest.json (portrait/landscape/sensor/user)
     val repoUrl: String? = null,            // ссылка на репозиторий из manifest.json
-    val minLauncherVersion: String? = null  // минимальная версия лаунчера из manifest.json
+    val minQutyLaunchVersion: String? = null  // минимальная версия Quty.Launch из manifest.json
 )
 
 /**
@@ -47,7 +47,7 @@ data class ShellManifest(
     val preview: String? = null,            // путь к превью внутри оболочки
     val orientation: String? = null,        // ориентация оболочки (portrait/landscape/sensor/user)
     val repoUrl: String? = null,            // ссылка на репозиторий
-    val minLauncherVersion: String? = null  // минимальная версия лаунчера
+    val minQutyLaunchVersion: String? = null  // минимальная версия Quty.Launch
 )
 
 class ShellManager(
@@ -239,7 +239,7 @@ class ShellManager(
                         previewBase64 = previewBase64,
                         orientation = manifest?.orientation,
                         repoUrl = manifest?.repoUrl,
-                        minLauncherVersion = manifest?.minLauncherVersion
+                        minQutyLaunchVersion = manifest?.minQutyLaunchVersion
                     )
                 )
             }
@@ -287,7 +287,7 @@ class ShellManager(
                             previewBase64 = previewBase64,
                             orientation = manifest?.orientation,
                             repoUrl = manifest?.repoUrl,
-                            minLauncherVersion = manifest?.minLauncherVersion
+                            minQutyLaunchVersion = manifest?.minQutyLaunchVersion
                         )
                     )
                 } catch (_: Exception) {

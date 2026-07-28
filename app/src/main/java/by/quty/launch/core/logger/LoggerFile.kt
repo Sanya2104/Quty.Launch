@@ -138,7 +138,8 @@ object LoggerFile {
 
         } catch (_: Exception) {
             // Ошибки записи не должны крашить приложение
-            Logger.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
+            // Используем android.util.Log, чтобы избежать бесконечного цикла
+            android.util.Log.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
         }
     }
 
@@ -235,7 +236,8 @@ object LoggerFile {
             // Создаём новый активный файл
             prepareCurrentLogFile()
         } catch (_: Exception) {
-            Logger.e("LoggerFile", appContext.getString(R.string.logger_file_clear_error))
+            // Ошибка очистки — игнорируем
+            android.util.Log.e("LoggerFile", appContext.getString(R.string.logger_file_clear_error))
         }
     }
 

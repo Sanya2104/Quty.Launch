@@ -14,7 +14,7 @@ import by.quty.launch.core.webview.LauncherWebView
 import kotlinx.coroutines.launch
 
 /**
- * Главная активность лаунчера
+ * Главная активность Quty.Launch
  * Отвечает за отображение WebView с оболочками и обработку API вызовов
  */
 class MainActivity : BaseActivity() {

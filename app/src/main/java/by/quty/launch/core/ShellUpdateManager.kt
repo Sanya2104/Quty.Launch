@@ -22,7 +22,7 @@ data class ShellRepoInfo(
     val downloadUrl: String,
     val changelog: String = "",
     val fileSize: String = "",
-    val minLauncherVersion: String? = null  // минимальная версия лаунчера из shell.json
+    val minQutyLaunchVersion: String? = null  // минимальная версия Quty.Launch из shell.json
 )
 
 class ShellUpdateManager(private val context: Context) {
@@ -57,9 +57,9 @@ class ShellUpdateManager(private val context: Context) {
 
                 val repoInfo = json.decodeFromString<ShellRepoInfo>(cleanJson)
 
-                // Проверяем, поддерживает ли лаунчер эту оболочку
-                if (!isLauncherCompatible(repoInfo.minLauncherVersion)) {
-                    return@withContext null  // Лаунчер слишком старый для этой оболочки
+                // Проверяем, поддерживает ли Quty.Launch эту оболочку
+                if (!isLauncherCompatible(repoInfo.minQutyLaunchVersion)) {
+                    return@withContext null  // Quty.Launch слишком старый для этой оболочки
                 }
 
                 // Сравниваем версии
@@ -78,9 +78,9 @@ class ShellUpdateManager(private val context: Context) {
     }
 
     /**
-     * Проверяет, совместима ли оболочка с текущей версией лаунчера
-     * @param minVersion минимальная версия лаунчера, требуемая оболочкой
-     * @return true если лаунчер совместим
+     * Проверяет, совместима ли оболочка с текущей версией Quty.Launch
+     * @param minVersion минимальная версия Quty.Launch, требуемая оболочкой
+     * @return true если Quty.Launch совместим
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true  // Если не указано — совместима
@@ -92,7 +92,7 @@ class ShellUpdateManager(private val context: Context) {
     }
 
     /**
-     * Получает текущую версию лаунчера
+     * Получает текущую версию Quty.Launch
      */
     private fun getCurrentLauncherVersion(): String {
         return try {

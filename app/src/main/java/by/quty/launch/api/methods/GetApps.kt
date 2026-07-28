@@ -72,7 +72,7 @@ class GetApps(
         // Кастомные приложения
         val customApps = mutableListOf<AppInfo>()
 
-        // 1. Настройки лаунчера
+        // 1. Настройки Quty.Launch
         customApps.add(
             AppInfo(
                 name = context.getString(R.string.api_getapps_settings_name),
