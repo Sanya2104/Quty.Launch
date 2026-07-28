@@ -24,10 +24,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.Shell
-import by.quty.launch.core.ShellManager
-import by.quty.launch.core.ShellRepoInfo
-import by.quty.launch.core.ShellUpdateManager
+import by.quty.launch.core.managers.Shell
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.ShellRepoInfo
+import by.quty.launch.core.managers.ShellUpdateManager
 import by.quty.launch.core.interfaces.SettingsEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

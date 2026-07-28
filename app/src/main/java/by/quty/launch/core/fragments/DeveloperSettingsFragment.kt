@@ -25,8 +25,9 @@ import androidx.fragment.app.Fragment
 import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.ConfigManager
-import by.quty.launch.core.ShellManager
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.logger.LoggerFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -37,6 +38,7 @@ class DeveloperSettingsFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
+    private lateinit var cacheManager: CacheManager
 
     // Элементы управления логами
     private lateinit var switchPersist: SwitchCompat
@@ -311,7 +313,7 @@ class DeveloperSettingsFragment : Fragment() {
     private fun clearAppsCache() {
         try {
             // Очищаем кэш приложений
-            by.quty.launch.core.CacheManager.clearCache(requireContext())
+            cacheManager.clearCache(requireContext())
 
             // Обновляем размер кэша в UI
             val cacheSizeView = view?.findViewById<TextView>(R.id.dev_cache_size_value)

@@ -1,5 +1,5 @@
 // *** core/ShellUpdateManager.kt *** //
-package by.quty.launch.core
+package by.quty.launch.core.managers
 
 import android.content.Context
 import android.content.pm.PackageManager

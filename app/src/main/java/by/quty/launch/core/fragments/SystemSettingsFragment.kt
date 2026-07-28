@@ -20,8 +20,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.UpdateManager
-import by.quty.launch.core.VersionInfo
+import by.quty.launch.core.managers.UpdateManager
+import by.quty.launch.core.managers.VersionInfo
 import kotlinx.coroutines.launch
 import android.provider.MediaStore
 import androidx.core.net.toUri

@@ -11,7 +11,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import by.quty.launch.core.ConfigManager
+import by.quty.launch.core.managers.ConfigManager
 
 /**
  * Базовый класс для всех активностей приложения

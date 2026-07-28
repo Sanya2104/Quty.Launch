@@ -19,7 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import by.quty.launch.core.PermissionManager
+import by.quty.launch.core.managers.PermissionManager
 
 class WelcomeActivity : BaseActivity() {
 

@@ -1,6 +1,5 @@
 // core/PermissionManager.kt
-
-package by.quty.launch.core
+package by.quty.launch.core.managers
 
 import android.Manifest
 import android.content.Context

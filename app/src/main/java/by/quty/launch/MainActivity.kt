@@ -7,7 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.core.Core
-import by.quty.launch.core.ShellManager
+import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView

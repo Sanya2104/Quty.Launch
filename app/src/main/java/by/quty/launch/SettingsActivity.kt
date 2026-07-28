@@ -9,7 +9,7 @@ import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.viewpager2.widget.ViewPager2
-import by.quty.launch.core.ShellManager
+import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.adapters.SettingsPagerAdapter
 import by.quty.launch.core.fragments.DisplaySettingsFragment
 import by.quty.launch.core.fragments.SystemSettingsFragment

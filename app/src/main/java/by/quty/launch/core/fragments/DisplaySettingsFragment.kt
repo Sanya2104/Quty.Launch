@@ -15,8 +15,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.ConfigManager
-import by.quty.launch.core.ShellManager
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.interfaces.SettingsEventListener
 
 class DisplaySettingsFragment : Fragment() {
