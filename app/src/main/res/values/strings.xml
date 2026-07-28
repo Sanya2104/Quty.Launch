@@ -475,6 +475,8 @@
 
     <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
     <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
+    <string name="webview_max_retries_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
+    <string name="webview_retry_loading" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
 
     <!-- ============================================================ -->
     <!-- ==================== API МЕТОДЫ ============================= -->

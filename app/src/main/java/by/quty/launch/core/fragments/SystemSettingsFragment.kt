@@ -7,8 +7,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +22,7 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.UpdateManager
 import by.quty.launch.core.managers.VersionInfo
+import by.quty.launch.core.managers.CacheManager
 import kotlinx.coroutines.launch
 import android.provider.MediaStore
 import androidx.core.net.toUri
@@ -167,16 +168,24 @@ class SystemSettingsFragment : Fragment() {
         progressToast?.show()
     }
 
+    /**
+     * Переключает режим разработчика
+     */
     private fun toggleDeveloperMode() {
         val prefs = requireContext().getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
         val isCurrentlyEnabled = prefs.getBoolean("developer_mode", false)
 
-        if (isCurrentlyEnabled) {
-            prefs.edit { putBoolean("developer_mode", false) }
-            Toast.makeText(requireContext(), R.string.dev_mode_deactivated, Toast.LENGTH_SHORT).show()
-        } else {
-            prefs.edit { putBoolean("developer_mode", true) }
+        val newState = !isCurrentlyEnabled
+        prefs.edit { putBoolean("developer_mode", newState) }
+
+        // Инвалидируем кэш приложений при изменении DevMode
+        CacheManager.invalidateCache()
+
+        // Логируем действие
+        if (newState) {
             Toast.makeText(requireContext(), R.string.dev_mode_activated, Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(requireContext(), R.string.dev_mode_deactivated, Toast.LENGTH_SHORT).show()
         }
 
         // Обновляем UI без перезапуска активности (без моргания!)

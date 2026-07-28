@@ -26,6 +26,16 @@ class LauncherWebView(context: Context) : WebView(context) {
     // Храним имя активной оболочки для корректной загрузки
     private var activeShellName: String? = null
 
+    // Счётчик попыток перезагрузки при ошибке
+    private var errorRetryCount = 0
+    private var lastErrorUrl: String? = null
+
+    // Максимальное количество попыток перезагрузки
+    private companion object {
+        private const val MAX_RETRY_COUNT = 3
+        private const val RETRY_DELAY_MS = 2000L
+    }
+
     init {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
@@ -221,10 +231,63 @@ class LauncherWebView(context: Context) : WebView(context) {
                 failingUrl: String?
             ) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
+
+                val url = failingUrl ?: "unknown"
+                val errorDesc = description ?: "unknown error"
+
                 Logger.e(
                     "LauncherWebView",
-                    context.getString(R.string.webview_error_loading, failingUrl ?: "unknown", description ?: "unknown")
+                    context.getString(R.string.webview_error_loading, url, errorDesc)
                 )
+
+                // Если это страница оболочки (не ресурс) — пробуем перезагрузить
+                if (isShellPage(url)) {
+                    scheduleRetry(url)
+                }
+            }
+
+            /**
+             * Проверяет, является ли URL страницей оболочки (не ресурсом)
+             */
+            private fun isShellPage(url: String): Boolean {
+                return url.contains("index.html") ||
+                        url.endsWith("/") ||
+                        url.matches(Regex(".*quty://.*"))
+            }
+
+            /**
+             * Планирует повторную загрузку с задержкой
+             */
+            private fun scheduleRetry(url: String) {
+                // Если это тот же URL, увеличиваем счётчик
+                if (lastErrorUrl == url) {
+                    errorRetryCount++
+                } else {
+                    // Новый URL — сбрасываем счётчик
+                    errorRetryCount = 1
+                    lastErrorUrl = url
+                }
+
+                // Если превышен лимит — не перезагружаем
+                if (errorRetryCount > MAX_RETRY_COUNT) {
+                    Logger.e(
+                        "LauncherWebView",
+                        context.getString(R.string.webview_max_retries_reached, url, errorRetryCount)
+                    )
+                    return
+                }
+
+                Logger.d(
+                    "LauncherWebView",
+                    context.getString(R.string.webview_retry_loading, url, errorRetryCount, MAX_RETRY_COUNT)
+                )
+
+                // Задержка перед перезагрузкой
+                postDelayed({
+                    if (url == lastErrorUrl) {
+                        loadUrl(url)
+                    }
+                }, RETRY_DELAY_MS)
             }
         }
     }
@@ -237,6 +300,10 @@ class LauncherWebView(context: Context) : WebView(context) {
     fun loadShell(shellName: String, isAsset: Boolean = true) {
         // Сохраняем имя активной оболочки для корректной загрузки ресурсов
         activeShellName = shellName
+
+        // Сбрасываем счётчик ошибок при новой загрузке
+        errorRetryCount = 0
+        lastErrorUrl = null
 
         val url = if (isAsset) {
             "https://appassets.androidplatform.net/assets/shells/$shellName/index.html"

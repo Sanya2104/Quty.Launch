@@ -45,6 +45,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var originalOrientation: String? = null
     private var originalFullscreen: Boolean? = null
     private var originalStrictMode: Boolean? = null
+    private var originalDevMode: Boolean? = null
 
     // Текущие значения (могут меняться)
     private var currentShell: String? = null
@@ -76,6 +77,10 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         originalOrientation = configManager.getOrientation()
         originalFullscreen = configManager.isFullscreenEnabled()
         originalStrictMode = configManager.isStrictModeEnabled()
+
+        // Сохраняем исходное состояние DevMode (фиксируется при первом открытии настроек)
+        val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
+        originalDevMode = prefs.getBoolean("developer_mode", false)
 
         // Копируем в текущие
         currentShell = originalShell
@@ -133,9 +138,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     /**
      * Получить текущую позицию вкладки
      */
-    fun getCurrentTabPosition(): Int {
-        return viewPager.currentItem
-    }
+    fun getCurrentTabPosition(): Int = viewPager.currentItem
 
     /**
      * Восстанавливает позицию вкладки из Intent
@@ -226,12 +229,19 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     /**
      * Проверка, были ли изменены настройки
+     * DevMode читается напрямую из SharedPreferences при каждом вызове
      */
     private fun hasSettingsChanged(): Boolean {
-        return currentShell != originalShell ||
+        val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
+        val currentDevMode = prefs.getBoolean("developer_mode", false)
+
+        val result = currentShell != originalShell ||
                 currentOrientation != originalOrientation ||
                 currentFullscreen != originalFullscreen ||
-                currentStrictMode != originalStrictMode
+                currentStrictMode != originalStrictMode ||
+                currentDevMode != originalDevMode
+
+        return result
     }
 
     /**
@@ -249,7 +259,11 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
-                finish()
+                // Просто закрываем диалог, остаёмся в настройках
+                // Ничего не делаем
+
+                // finish закомментирован чтобы невозможно было выйти без обязательного перезапуска
+                // finish()
             }
             .setCancelable(false)
             .show()
@@ -292,7 +306,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     }
 
     override fun onSettingChanged() {
-        // Можем добавить дополнительную логику при любом изменении
+        // При изменении настроек ничего не делаем
+        // DevMode будет прочитан при выходе из настроек
     }
 
     /**
