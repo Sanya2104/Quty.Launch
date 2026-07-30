@@ -20,7 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.managers.UpdateManager
+import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.managers.VersionInfo
 import by.quty.launch.core.managers.CacheManager
 import kotlinx.coroutines.launch
@@ -40,7 +40,7 @@ class SystemSettingsFragment : Fragment() {
     private lateinit var installStatus: TextView
     private lateinit var checkUpdateButton: View
     private lateinit var installFromFileButton: View
-    private lateinit var updateManager: UpdateManager
+    private lateinit var updateManager: SystemUpdateManager
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
@@ -85,7 +85,7 @@ class SystemSettingsFragment : Fragment() {
         checkUpdateButton = view.findViewById(R.id.check_update_button)
         installFromFileButton = view.findViewById(R.id.install_from_file_button)
 
-        updateManager = UpdateManager(requireContext())
+        updateManager = SystemUpdateManager(requireContext())
 
         setupVersionInfo()
         setupUpdateCheck()
@@ -607,7 +607,7 @@ class SystemSettingsFragment : Fragment() {
             .show()
 
         lifecycleScope.launch {
-            updateManager.downloadApk(versionInfo, object : UpdateManager.DownloadListener {
+            updateManager.downloadApk(versionInfo, object : SystemUpdateManager.DownloadListener {
                 override fun onProgress(percent: Int) {
                     progressDialog.setMessage(getString(R.string.downloading_progress, percent))
                 }
@@ -645,7 +645,7 @@ class SystemSettingsFragment : Fragment() {
             .show()
 
         lifecycleScope.launch {
-            updateManager.downloadApk(versionInfo, object : UpdateManager.DownloadListener {
+            updateManager.downloadApk(versionInfo, object : SystemUpdateManager.DownloadListener {
                 override fun onProgress(percent: Int) {
                     progressDialog.setMessage(getString(R.string.downloading_progress, percent))
                 }
