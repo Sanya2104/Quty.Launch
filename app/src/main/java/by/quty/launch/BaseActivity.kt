@@ -1,6 +1,7 @@
 // *** BaseActivity.kt *** //
 package by.quty.launch
 
+import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.content.Intent
 import android.os.Build
@@ -83,6 +84,7 @@ abstract class BaseActivity : AppCompatActivity() {
     /**
      * Современный способ для Android 11+ (API 30+)
      */
+    @SuppressLint("WrongConstant")
     private fun enableImmersiveModeModern(window: android.view.Window, strictMode: Boolean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -98,10 +100,10 @@ abstract class BaseActivity : AppCompatActivity() {
             if (strictMode) {
                 // Строгий режим: панели НЕ появляются при свайпе
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    // Android 12+: используем BEHAVIOR_DEFAULT
+                    // Android 12+ (API 31+): используем BEHAVIOR_DEFAULT
                     insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_DEFAULT
                 } else {
-                    // Android 11: используем BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    // Android 11 (API 30): используем BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                     insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
             } else {
@@ -126,6 +128,7 @@ abstract class BaseActivity : AppCompatActivity() {
      * Настраивает слушатель для строгого режима (Android 11+)
      * Использует OnApplyWindowInsetsListener вместо устаревшего OnSystemUiVisibilityChangeListener
      */
+    @SuppressLint("WrongConstant")
     private fun setupStrictModeListenerModern(
         window: android.view.Window,
         insetsController: WindowInsetsController

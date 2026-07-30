@@ -7,6 +7,8 @@ import by.quty.launch.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -42,6 +44,9 @@ object LoggerFile {
 
     // Активный файл для записи
     private var currentLogFile: File? = null
+
+    // Mutex для синхронизации записи в файл (предотвращает повреждение)
+    private val mutex = Mutex()
 
     // JSON парсер
     private val json = Json {
@@ -106,40 +111,43 @@ object LoggerFile {
     }
 
     /**
-     * Записывает одну запись в файл
+     * Записывает одну запись в файл с синхронизацией
      */
     private suspend fun writeToFile(entry: LogEntry) {
-        try {
-            // Проверяем, нужно ли создать новый файл
-            checkAndRotateIfNeeded()
+        // Используем Mutex для синхронизации доступа к файлу
+        mutex.withLock {
+            try {
+                // Проверяем, нужно ли создать новый файл
+                checkAndRotateIfNeeded()
 
-            val file = currentLogFile ?: return
+                val file = currentLogFile ?: return@withLock
 
-            // Читаем существующие логи из файла
-            val existingLogs = readLogsFromFile(file)
+                // Читаем существующие логи из файла
+                val existingLogs = readLogsFromFile(file)
 
-            // Добавляем новый лог в начало списка (новые сверху)
-            val updatedLogs = listOf(entry) + existingLogs
+                // Добавляем новый лог в начало списка (новые сверху)
+                val updatedLogs = listOf(entry) + existingLogs
 
-            // Ограничиваем количество логов в файле (1000 записей)
-            val limitedLogs = if (updatedLogs.size > 1000) {
-                updatedLogs.take(1000)
-            } else {
-                updatedLogs
+                // Ограничиваем количество логов в файле (1000 записей)
+                val limitedLogs = if (updatedLogs.size > 1000) {
+                    updatedLogs.take(1000)
+                } else {
+                    updatedLogs
+                }
+
+                // Формируем JSON
+                val jsonContent = buildJson(limitedLogs)
+
+                // Записываем в файл
+                withContext(Dispatchers.IO) {
+                    file.writeText(jsonContent)
+                }
+
+            } catch (_: Exception) {
+                // Ошибки записи не должны крашить приложение
+                // Используем android.util.Log, чтобы избежать бесконечного цикла
+                android.util.Log.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
             }
-
-            // Формируем JSON
-            val jsonContent = buildJson(limitedLogs)
-
-            // Записываем в файл
-            withContext(Dispatchers.IO) {
-                file.writeText(jsonContent)
-            }
-
-        } catch (_: Exception) {
-            // Ошибки записи не должны крашить приложение
-            // Используем android.util.Log, чтобы избежать бесконечного цикла
-            android.util.Log.e("LoggerFile", appContext.getString(R.string.logger_file_write_error))
         }
     }
 

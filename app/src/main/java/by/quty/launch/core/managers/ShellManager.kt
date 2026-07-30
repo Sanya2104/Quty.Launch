@@ -57,7 +57,7 @@ class ShellManager(
 
     companion object {
         /** Основное расширение файла оболочки (без точки) */
-        const val SHELL_EXTENSION = "qutyshell"
+        // const val SHELL_EXTENSION = "qutyshell"
 
         /** Основное расширение файла оболочки (с точкой) */
         const val SHELL_EXTENSION_WITH_DOT = ".qutyshell"
@@ -258,41 +258,43 @@ class ShellManager(
             val assetPaths = context.assets.list("shells") ?: return shells
 
             assetPaths.forEach { shellFolder ->
+                // Проверяем наличие index.html
                 try {
                     context.assets.open("shells/$shellFolder/index.html").close()
-
-                    val manifest = try {
-                        context.assets.open("shells/$shellFolder/manifest.json").bufferedReader().use {
-                            json.decodeFromString<ShellManifest>(it.readText())
-                        }
-                    } catch (_: Exception) {
-                        null
-                    }
-
-                    val previewBase64 = loadPreviewFromAssets(shellFolder, manifest?.preview)
-
-                    shells.add(
-                        Shell(
-                            name = shellFolder,
-                            isDefault = shellFolder == "default",
-                            sourcePath = "shells/$shellFolder",
-                            isAsset = true,
-                            displayName = manifest?.name ?: when (shellFolder) {
-                                "default" -> context.getString(R.string.shell_default_name)
-                                else -> shellFolder.replaceFirstChar { it.uppercase() }
-                            },
-                            isCustom = false,
-                            version = manifest?.version,
-                            author = manifest?.author,
-                            previewBase64 = previewBase64,
-                            orientation = manifest?.orientation,
-                            repoUrl = manifest?.repoUrl,
-                            minQutyLaunchVersion = manifest?.minQutyLaunchVersion
-                        )
-                    )
                 } catch (_: Exception) {
                     // В папке нет index.html - пропускаем
+                    return@forEach
                 }
+
+                val manifest = try {
+                    context.assets.open("shells/$shellFolder/manifest.json").bufferedReader().use {
+                        json.decodeFromString<ShellManifest>(it.readText())
+                    }
+                } catch (_: Exception) {
+                    null
+                }
+
+                val previewBase64 = loadPreviewFromAssets(shellFolder, manifest?.preview)
+
+                shells.add(
+                    Shell(
+                        name = shellFolder,
+                        isDefault = shellFolder == "default",
+                        sourcePath = "shells/$shellFolder",
+                        isAsset = true,
+                        displayName = manifest?.name ?: when (shellFolder) {
+                            "default" -> context.getString(R.string.shell_default_name)
+                            else -> shellFolder.replaceFirstChar { it.uppercase() }
+                        },
+                        isCustom = false,
+                        version = manifest?.version,
+                        author = manifest?.author,
+                        previewBase64 = previewBase64,
+                        orientation = manifest?.orientation,
+                        repoUrl = manifest?.repoUrl,
+                        minQutyLaunchVersion = manifest?.minQutyLaunchVersion
+                    )
+                )
             }
         } catch (e: Exception) {
             e.printStackTrace()

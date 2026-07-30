@@ -41,6 +41,9 @@ class WelcomeActivity : BaseActivity() {
     // Флаг, что мы уже запрашивали разрешения
     private var isRequestingPermissions = false
 
+    // Флаг, что активность уже завершается (предотвращает повторные вызовы)
+    private var isFinishingActivity = false
+
     // Регистрируем ActivityResult для запроса доступа к хранилищу (замена startActivityForResult)
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -444,6 +447,10 @@ class WelcomeActivity : BaseActivity() {
     }
 
     private fun finishAndGoToMain() {
+        // Предотвращаем повторный вызов
+        if (isFinishingActivity) return
+        isFinishingActivity = true
+
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
         prefs.edit {
             putBoolean("onboarding_completed", true)
@@ -458,6 +465,10 @@ class WelcomeActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        // Если активность уже завершается — пропускаем
+        if (isFinishingActivity) return
+
         updatePermissionsUI()
 
         if (PermissionManager.hasAllRequiredPermissions(this)) {
