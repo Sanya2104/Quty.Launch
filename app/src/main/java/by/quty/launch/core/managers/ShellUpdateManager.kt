@@ -128,7 +128,11 @@ class ShellUpdateManager(private val context: Context) {
                         val fileName = "${repoInfo.name}${ShellManager.SHELL_EXTENSION_WITH_DOT}"
                         val destFile = File(shellsDir, fileName)
 
-                        if (destFile.exists()) destFile.delete()
+                        // Удаляем старый файл, если он существует
+                        if (destFile.exists()) {
+                            destFile.delete()
+                        }
+
                         file.copyTo(destFile, overwrite = true)
                         file.delete()
 

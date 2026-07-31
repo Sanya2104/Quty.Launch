@@ -208,12 +208,41 @@ class ShellManager(
 
     /**
      * Получить список всех доступных оболочек
+     * Встроенные оболочки заменяются кастомными версиями с тем же именем
      */
     fun getAvailableShells(): List<Shell> {
-        val shells = mutableListOf<Shell>()
+        val builtInShells = getBuiltInShells()
+        val customShells = getCustomShells()
 
-        // Встроенные оболочки из assets
-        shells.addAll(getBuiltInShells())
+        val result = mutableListOf<Shell>()
+
+        // Для каждой встроенной оболочки проверяем, есть ли кастомная версия с тем же именем
+        builtInShells.forEach { builtIn ->
+            val customVersion = customShells.find { it.name == builtIn.name }
+            if (customVersion != null) {
+                // Если есть кастомная версия — показываем её вместо встроенной
+                result.add(customVersion)
+            } else {
+                // Если нет — показываем встроенную
+                result.add(builtIn)
+            }
+        }
+
+        // Добавляем остальные кастомные оболочки (которые не перезаписывают встроенные)
+        customShells.forEach { custom ->
+            if (result.none { it.name == custom.name }) {
+                result.add(custom)
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Получить кастомные оболочки из внешней папки (Quty.Launch/Shells/)
+     */
+    private fun getCustomShells(): List<Shell> {
+        val shells = mutableListOf<Shell>()
 
         // Кастомные оболочки из внешней папки (Quty.Launch/Shells/)
         if (customShellsDir.exists()) {
@@ -456,6 +485,37 @@ class ShellManager(
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Удаляет кастомную оболочку по имени
+     * @param name имя оболочки (без расширения)
+     * @return true если удаление успешно, false если файл не найден или ошибка
+     */
+    fun deleteShellByName(name: String): Boolean {
+        return try {
+            val fileName = "$name${SHELL_EXTENSION_WITH_DOT}"
+            val file = File(customShellsDir, fileName)
+
+            if (!file.exists()) {
+                return false
+            }
+
+            val deleted = file.delete()
+
+            // Если оболочка была активной — сбрасываем активную оболочку
+            if (deleted) {
+                val currentActive = getActiveShell()
+                if (currentActive?.name == name && currentActive.isCustom) {
+                    // Перезагружаем активную оболочку из конфига
+                    loadActiveShellFromConfig()
+                }
+            }
+
+            deleted
+        } catch (_: Exception) {
+            false
         }
     }
 }

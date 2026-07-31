@@ -680,12 +680,14 @@ class ShellSettingsFragment : Fragment() {
             // Пункт "Информация" - ВСЕГДА
             menu.add(0, 2, 0, getString(R.string.shell_menu_info))
 
-            // Только для кастомных оболочек
+            // Пункт "Удалить" - ТОЛЬКО для кастомных оболочек
+            // (включая обновлённые встроенные, которые стали кастомными)
             if (shell.isCustom) {
-                // Пункт "Удалить"
                 menu.add(0, 3, 0, getString(R.string.shell_menu_delete))
+            }
 
-                // Пункт "Поделиться"
+            // Пункт "Поделиться" - только для кастомных оболочек
+            if (shell.isCustom) {
                 menu.add(0, 4, 0, getString(R.string.shell_menu_share))
             }
 
@@ -864,9 +866,10 @@ class ShellSettingsFragment : Fragment() {
 
         /**
          * Удалить кастомную оболочку
+         * При удалении обновлённой встроенной оболочки — возвращается встроенная версия
          */
         private fun deleteShell(shell: Shell): Boolean {
-            // Проверяем, что оболочку можно удалить
+            // Проверяем, что оболочку можно удалить (только кастомные)
             if (!shell.isCustom) {
                 Toast.makeText(requireContext(), getString(R.string.shell_cant_delete_default), Toast.LENGTH_SHORT).show()
                 return false
@@ -901,19 +904,32 @@ class ShellSettingsFragment : Fragment() {
          */
         private fun performDeleteShell(shell: Shell) {
             try {
-                val shellFile = File(shell.sourcePath)
-                if (shellFile.exists()) {
-                    shellFile.delete()
+                // Удаляем файл через ShellManager
+                val deleted = shellManager.deleteShellByName(shell.name)
+
+                if (deleted) {
+                    // Обновляем список оболочек
+                    refreshShells()
+
+                    val message = if (shell.isAsset) {
+                        // Если это была обновлённая встроенная оболочка — показываем сообщение о возврате к встроенной
+                        getString(R.string.shell_delete_custom_restored, shell.displayName ?: shell.name)
+                    } else {
+                        getString(R.string.shell_delete_success, shell.displayName ?: shell.name)
+                    }
+
+                    Toast.makeText(
+                        requireContext(),
+                        message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.shell_delete_error),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-
-                // Обновляем список оболочек
-                refreshShells()
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.shell_delete_success, shell.displayName ?: shell.name),
-                    Toast.LENGTH_SHORT
-                ).show()
 
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -38,7 +38,6 @@ class DeveloperSettingsFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
-    private lateinit var cacheManager: CacheManager
 
     // Элементы управления логами
     private lateinit var switchPersist: SwitchCompat
@@ -312,8 +311,8 @@ class DeveloperSettingsFragment : Fragment() {
      */
     private fun clearAppsCache() {
         try {
-            // Очищаем кэш приложений
-            cacheManager.clearCache(requireContext())
+            // Очищаем кэш приложений (CacheManager - объект-синглтон)
+            CacheManager.clearCache(requireContext())
 
             // Обновляем размер кэша в UI
             val cacheSizeView = view?.findViewById<TextView>(R.id.dev_cache_size_value)
