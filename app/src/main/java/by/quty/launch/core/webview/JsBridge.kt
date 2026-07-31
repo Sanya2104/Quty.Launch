@@ -107,4 +107,36 @@ class JsBridge(
             }
         }
     }
+
+    /**
+     * Принимает лог из JavaScript и отправляет в Logger
+     * @param logData JSON строка с полями: level, message
+     */
+    @JavascriptInterface
+    fun log(logData: String) {
+        try {
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            val data = json.decodeFromString<LogData>(logData)
+
+            // Всегда используем "WebView" как источник
+            when (data.level.lowercase()) {
+                "debug", "log" -> Logger.d("WebView", data.message, "WebView")
+                "info" -> Logger.i("WebView", data.message, "WebView")
+                "warn" -> Logger.w("WebView", data.message, "WebView")
+                "error" -> Logger.e("WebView", data.message, "WebView")
+                else -> Logger.d("WebView", data.message, "WebView")
+            }
+        } catch (_: Exception) {
+            // Игнорируем ошибки парсинга
+        }
+    }
+
+    /**
+     * Структура данных для лога
+     */
+    @kotlinx.serialization.Serializable
+    data class LogData(
+        val level: String,
+        val message: String
+    )
 }

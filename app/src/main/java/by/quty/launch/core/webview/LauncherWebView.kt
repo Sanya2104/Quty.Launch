@@ -55,18 +55,21 @@ class LauncherWebView(context: Context) : WebView(context) {
         // Настраиваем WebViewAssetLoader
         setupAssetLoader()
 
-        // Настраиваем WebChromeClient для перехвата console.log() из JavaScript
+        // Настраиваем WebChromeClient
+        // Логи из JavaScript отправляются через JsBridge.log() для избежания дублирования
         setupWebChromeClient()
     }
 
     /**
-     * Настройка WebChromeClient для перехвата логов из JavaScript
-     * Все console.log(), console.error(), console.warn() и т.д.
-     * отправляются в Logger
+     * Настройка WebChromeClient
+     * Не перехватывает console.log() для предотвращения дублирования
+     * Логи из JavaScript отправляются через JsBridge.log()
      */
     private fun setupWebChromeClient() {
         webChromeClient = object : WebChromeClient() {
-            // Современный метод для Android 8.0+ (API 26+)
+            // Перехват console.log() отключён — логи отправляются через JsBridge.log()
+            // Чтобы включить перехват для отладки, раскомментируйте код ниже
+            /*
             override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
                 // Перехватываем все логи из JavaScript
                 val level = consoleMessage.messageLevel().name
@@ -86,6 +89,13 @@ class LauncherWebView(context: Context) : WebView(context) {
             override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                 // Отправляем в наш логгер
                 Logger.fromWebView("log", "[$sourceID:$lineNumber] $message")
+            }
+            */
+
+            // Оставляем только для отладки в браузере (не влияет на логгер)
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                // Просто пропускаем — логи уже отправлены через JsBridge.log()
+                return false
             }
         }
     }

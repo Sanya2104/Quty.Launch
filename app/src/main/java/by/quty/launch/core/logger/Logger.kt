@@ -140,39 +140,43 @@ object Logger {
      * Добавляет лог с уровнем DEBUG
      * @param tag тег (обычно имя класса)
      * @param message сообщение
+     * @param source источник (по умолчанию "Kotlin")
      */
     @Suppress("unused")
-    fun d(tag: String, message: String) {
-        addLog(LogLevel.DEBUG, tag, message)
+    fun d(tag: String, message: String, source: String = "Kotlin") {
+        addLog(LogLevel.DEBUG, tag, message, source)
     }
 
     /**
      * Добавляет лог с уровнем INFO
      * @param tag тег (обычно имя класса)
      * @param message сообщение
+     * @param source источник (по умолчанию "Kotlin")
      */
     @Suppress("unused")
-    fun i(tag: String, message: String) {
-        addLog(LogLevel.INFO, tag, message)
+    fun i(tag: String, message: String, source: String = "Kotlin") {
+        addLog(LogLevel.INFO, tag, message, source)
     }
 
     /**
      * Добавляет лог с уровнем WARN
      * @param tag тег (обычно имя класса)
      * @param message сообщение
+     * @param source источник (по умолчанию "Kotlin")
      */
     @Suppress("unused")
-    fun w(tag: String, message: String) {
-        addLog(LogLevel.WARN, tag, message)
+    fun w(tag: String, message: String, source: String = "Kotlin") {
+        addLog(LogLevel.WARN, tag, message, source)
     }
 
     /**
      * Добавляет лог с уровнем ERROR
      * @param tag тег (обычно имя класса)
      * @param message сообщение
+     * @param source источник (по умолчанию "Kotlin")
      */
-    fun e(tag: String, message: String) {
-        addLog(LogLevel.ERROR, tag, message)
+    fun e(tag: String, message: String, source: String = "Kotlin") {
+        addLog(LogLevel.ERROR, tag, message, source)
     }
 
     /**
