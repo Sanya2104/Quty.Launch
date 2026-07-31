@@ -28,6 +28,7 @@ import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.CacheManager
+import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.logger.LoggerFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -741,22 +742,14 @@ class DeveloperSettingsFragment : Fragment() {
     }
 
     /**
-     * Очищает все файлы логов
+     * Очищает все файлы логов и логи в памяти
      */
     private fun clearLogs() {
         try {
-            val logsDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch/Logs")
+            // Очищаем логи в памяти и файлы через Logger
+            Logger.clear()
 
-            if (logsDir.exists()) {
-                logsDir.listFiles()?.forEach { file ->
-                    if (file.isFile) {
-                        file.delete()
-                    }
-                }
-                Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
         } catch (_: Exception) {
             Toast.makeText(requireContext(), R.string.dev_logs_clear_error, Toast.LENGTH_SHORT).show()
         }

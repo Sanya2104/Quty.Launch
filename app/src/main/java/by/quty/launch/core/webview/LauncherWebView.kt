@@ -62,40 +62,22 @@ class LauncherWebView(context: Context) : WebView(context) {
 
     /**
      * Настройка WebChromeClient
-     * Не перехватывает console.log() для предотвращения дублирования
-     * Логи из JavaScript отправляются через JsBridge.log()
+     * Перехват console.log() ОТКЛЮЧЁН — логи отправляются только через JsBridge.log()
+     * Это предотвращает дублирование и попадание CSS-стилей в логгер
      */
     private fun setupWebChromeClient() {
         webChromeClient = object : WebChromeClient() {
-            // Перехват console.log() отключён — логи отправляются через JsBridge.log()
-            // Чтобы включить перехват для отладки, раскомментируйте код ниже
-            /*
-            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                // Перехватываем все логи из JavaScript
-                val level = consoleMessage.messageLevel().name
-                val message = consoleMessage.message()
-                val sourceId = consoleMessage.sourceId() ?: "unknown"
-
-                // Отправляем в наш логгер
-                Logger.fromWebView(level, "[$sourceId] $message")
-
-                // Возвращаем true, чтобы сообщение не дублировалось в системном логе
-                return true
-            }
-
-            // Для обратной совместимости с Android < 8.0 (API < 26)
-            @Suppress("DEPRECATION")
-            @Deprecated("Use onConsoleMessage(ConsoleMessage) instead")
-            override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
-                // Отправляем в наш логгер
-                Logger.fromWebView("log", "[$sourceID:$lineNumber] $message")
-            }
-            */
-
-            // Оставляем только для отладки в браузере (не влияет на логгер)
+            // Полностью отключаем перехват console.log()
+            // Логи отправляются только через JsBridge.log()
             override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
                 // Просто пропускаем — логи уже отправлены через JsBridge.log()
                 return false
+            }
+
+            @Suppress("DEPRECATION")
+            @Deprecated("Use onConsoleMessage(ConsoleMessage) instead")
+            override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
+                // Ничего не делаем
             }
         }
     }

@@ -112,19 +112,28 @@ class JsBridge(
      * Принимает лог из JavaScript и отправляет в Logger
      * @param logData JSON строка с полями: level, message
      */
+
     @JavascriptInterface
     fun log(logData: String) {
         try {
             val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
             val data = json.decodeFromString<LogData>(logData)
 
-            // Всегда используем "WebView" как источник
+            val sourceTag = if (data.tag != null) {
+                "WebView/${data.tag}"
+            } else {
+                "WebView"
+            }
+
+            // Убираем маркер из сообщения
+            val cleanMessage = data.message.replace("[JS_BRIDGE_LOG] ", "")
+
             when (data.level.lowercase()) {
-                "debug", "log" -> Logger.d("WebView", data.message, "WebView")
-                "info" -> Logger.i("WebView", data.message, "WebView")
-                "warn" -> Logger.w("WebView", data.message, "WebView")
-                "error" -> Logger.e("WebView", data.message, "WebView")
-                else -> Logger.d("WebView", data.message, "WebView")
+                "debug", "log" -> Logger.d(sourceTag, cleanMessage, "WebView")
+                "info" -> Logger.i(sourceTag, cleanMessage, "WebView")
+                "warn" -> Logger.w(sourceTag, cleanMessage, "WebView")
+                "error" -> Logger.e(sourceTag, cleanMessage, "WebView")
+                else -> Logger.d(sourceTag, cleanMessage, "WebView")
             }
         } catch (_: Exception) {
             // Игнорируем ошибки парсинга
@@ -137,6 +146,7 @@ class JsBridge(
     @kotlinx.serialization.Serializable
     data class LogData(
         val level: String,
+        val tag: String? = null,
         val message: String
     )
 }
