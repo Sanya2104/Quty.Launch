@@ -2,6 +2,8 @@
 package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -647,7 +649,8 @@ class DeveloperSettingsFragment : Fragment() {
         val options = arrayOf(
             getString(R.string.dev_logs_view),       // Просмотр
             getString(R.string.dev_logs_share),      // Поделиться
-            getString(R.string.dev_logs_delete)      // Удалить
+            getString(R.string.dev_logs_delete),     // Удалить
+            getString(R.string.dev_logs_copy)        // Копировать
         )
 
         AlertDialog.Builder(requireContext())
@@ -657,10 +660,33 @@ class DeveloperSettingsFragment : Fragment() {
                     0 -> showLogFileContent(file)
                     1 -> shareLogFile(file)
                     2 -> confirmDeleteLogFile(file)
+                    3 -> copyLogFileContent(file)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    /**
+     * Копирует содержимое файла лога в буфер обмена
+     */
+    private fun copyLogFileContent(file: File) {
+        try {
+            val content = file.readText()
+
+            if (content.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("LogFile", content)
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(requireContext(), R.string.dev_logs_copied, Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.dev_logs_copy_error, Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**
@@ -680,7 +706,10 @@ class DeveloperSettingsFragment : Fragment() {
                 .setTitle(getString(R.string.dev_logs_file_title, file.name))
                 .setMessage(displayContent)
                 .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(R.string.dev_logs_delete) { _, _ ->
+                .setNeutralButton(R.string.dev_logs_copy) { _, _ ->
+                    copyLogFileContent(file)
+                }
+                .setNegativeButton(R.string.dev_logs_delete) { _, _ ->
                     confirmDeleteLogFile(file)
                 }
                 .show()

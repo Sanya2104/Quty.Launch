@@ -330,6 +330,9 @@
     <string name="dev_logs_share">Поделиться</string>
     <string name="dev_logs_share_error">Ошибка при отправке файла</string>
     <string name="dev_logs_share_title">Поделиться логами</string>
+    <string name="dev_logs_copy">Копировать</string>
+    <string name="dev_logs_copied">Содержимое файла скопировано в буфер обмена</string>
+    <string name="dev_logs_copy_error">Ошибка при копировании файла</string>
 
     <!-- 6. Управление сохранением логов -->
     <string name="dev_logs_persist">Сохранять логи в файл</string>
