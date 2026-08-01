@@ -332,6 +332,17 @@ class ShellManager(
         return shells
     }
 
+    /**
+     * Проверяет, является ли кастомная оболочка обновлением встроенной
+     * @param shell оболочка для проверки
+     * @return true если это кастомная оболочка с именем, совпадающим с встроенной
+     */
+    fun isBuiltInShellUpdate(shell: Shell): Boolean {
+        if (!shell.isCustom) return false
+        val builtInShells = getBuiltInShells()
+        return builtInShells.any { it.name == shell.name }
+    }
+
     private fun readManifestFromZip(zipFile: File): ShellManifest? {
         return try {
             ZipFile(zipFile).use { zip ->

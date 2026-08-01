@@ -205,11 +205,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private fun setupBackPressedDispatcher() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (hasSettingsChanged()) {
-                    showRestartDialog()
-                } else {
-                    finish()
-                }
+                checkAndShowRestartDialog()
             }
         })
     }
@@ -219,11 +215,25 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      */
     private fun setupCloseButton() {
         closeButton.setOnClickListener {
-            if (hasSettingsChanged()) {
-                showRestartDialog()
-            } else {
-                finish()
-            }
+            checkAndShowRestartDialog()
+        }
+    }
+
+    /**
+     * Проверяет флаг перезагрузки из ShellSettingsFragment и показывает диалог
+     */
+    private fun checkAndShowRestartDialog() {
+        // Получаем флаг из ShellSettingsFragment
+        val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+        val needsRestart = shellFragment?.getNeedsRestart() ?: false
+
+        // Проверяем также изменения в настройках
+        val settingsChanged = hasSettingsChanged()
+
+        if (needsRestart || settingsChanged) {
+            showRestartDialog()
+        } else {
+            finish()
         }
     }
 
@@ -259,6 +269,9 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
+                // Сбрасываем флаг, чтобы диалог не появлялся снова при следующем закрытии
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+                shellFragment?.setNeedsRestart(false)
                 // Просто закрываем диалог, остаёмся в настройках
                 // Ничего не делаем
 

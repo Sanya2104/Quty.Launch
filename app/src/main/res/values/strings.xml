@@ -72,9 +72,10 @@
     <string name="shell_delete_message" formatted="false">Вы уверены, что хотите удалить оболочку "%s"?</string>
     <string name="shell_delete_success" formatted="false">Оболочка "%s" удалена</string>
     <string name="shell_delete_error">Ошибка при удалении оболочки</string>
-    <string name="shell_delete_custom_restored" formatted="false">Обновление оболочки "%s" удалены. Восстановлена встроенная версия.</string>
     <string name="shell_cant_delete_default">Нельзя удалить встроенную оболочку</string>
     <string name="shell_cant_delete_active">Нельзя удалить активную оболочку. Сначала примените другую.</string>
+    <string name="shell_menu_delete_update">Удалить обновление</string>
+    <string name="shell_delete_update_success" formatted="false">Обновление оболочки "%s" удалены. Восстановлена встроенная версия</string>
 
     <!-- Информация об оболочке -->
     <string name="shell_info_title" formatted="false">Информация об оболочке "%s"</string>

@@ -47,6 +47,9 @@ class ShellSettingsFragment : Fragment() {
     // Флаг для предотвращения множественных применений оболочки
     private var isApplyingShell = false
 
+    // Флаг, что требуется перезагрузка интерфейса
+    private var needsRestart = false
+
     // JSON парсер (один экземпляр для всего класса)
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -143,6 +146,18 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
+     * Устанавливает флаг необходимости перезагрузки
+     */
+    fun setNeedsRestart(value: Boolean) {
+        this.needsRestart = value
+    }
+
+    /**
+     * Возвращает флаг необходимости перезагрузки
+     */
+    fun getNeedsRestart(): Boolean = needsRestart
+
+    /**
      * Настройка выбора оболочки оформления с превью и информацией
      */
     private fun setupShellSelector(view: View) {
@@ -162,6 +177,10 @@ class ShellSettingsFragment : Fragment() {
         if (isApplyingShell) return
 
         isApplyingShell = true
+
+        // Запоминаем, была ли оболочка уже активна
+        val currentActive = shellManager.getActiveShell()
+        val isDifferent = currentActive?.name != shell.name
 
         // Применяем оболочку в фоновом потоке
         lifecycleScope.launch {
@@ -185,6 +204,11 @@ class ShellSettingsFragment : Fragment() {
                         settingsActivity.displayFragment?.updateOrientationLockState()
                     }
                 }, DELAY_BEFORE_UI_UPDATE)
+
+                // Если применили другую оболочку — устанавливаем флаг перезагрузки
+                if (isDifferent) {
+                    needsRestart = true
+                }
 
                 val message = getString(R.string.shell_applied, shell.displayName ?: shell.name)
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
@@ -681,9 +705,15 @@ class ShellSettingsFragment : Fragment() {
             menu.add(0, 2, 0, getString(R.string.shell_menu_info))
 
             // Пункт "Удалить" - ТОЛЬКО для кастомных оболочек
-            // (включая обновлённые встроенные, которые стали кастомными)
             if (shell.isCustom) {
-                menu.add(0, 3, 0, getString(R.string.shell_menu_delete))
+                // Проверяем, является ли это обновлением встроенной оболочки
+                val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
+                val menuText = if (isBuiltInUpdate) {
+                    getString(R.string.shell_menu_delete_update)
+                } else {
+                    getString(R.string.shell_menu_delete)
+                }
+                menu.add(0, 3, 0, menuText)
             }
 
             // Пункт "Поделиться" - только для кастомных оболочек
@@ -809,6 +839,12 @@ class ShellSettingsFragment : Fragment() {
                         // Обновляем список оболочек
                         refreshShells()
 
+                        // Если обновлялась активная оболочка — устанавливаем флаг перезагрузки
+                        val activeShell = shellManager.getActiveShell()
+                        if (activeShell?.name == shellManager.getActiveShell()?.name) {
+                            needsRestart = true
+                        }
+
                         Toast.makeText(
                             requireContext(),
                             getString(R.string.shell_update_success, updateInfo.version),
@@ -904,16 +940,45 @@ class ShellSettingsFragment : Fragment() {
          */
         private fun performDeleteShell(shell: Shell) {
             try {
+                // Сохраняем имя оболочки до удаления
+                val shellName = shell.name
+                val wasActive = shellManager.getActiveShell()?.name == shellName
+
+                // Проверяем, является ли это обновлением встроенной оболочки
+                val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
+
                 // Удаляем файл через ShellManager
                 val deleted = shellManager.deleteShellByName(shell.name)
 
                 if (deleted) {
+                    // Принудительно перезагружаем активную оболочку из конфига
+                    shellManager.reloadActiveShell()
+
                     // Обновляем список оболочек
                     refreshShells()
 
-                    val message = if (shell.isAsset) {
-                        // Если это была обновлённая встроенная оболочка — показываем сообщение о возврате к встроенной
-                        getString(R.string.shell_delete_custom_restored, shell.displayName ?: shell.name)
+                    // Определяем, нужна ли перезагрузка
+                    var needRestart = false
+
+                    if (wasActive) {
+                        // Если удалялась активная оболочка — точно нужна перезагрузка
+                        needRestart = true
+                    } else if (isBuiltInUpdate) {
+                        // Если удаляется обновление встроенной оболочки — после удаления
+                        // активная оболочка может смениться на встроенную
+                        val newActiveShell = shellManager.getActiveShell()
+                        // Если активная оболочка стала встроенной (isAsset = true) с тем же именем
+                        if (newActiveShell?.isAsset == true && newActiveShell.name == shellName) {
+                            needRestart = true
+                        }
+                    }
+
+                    if (needRestart) {
+                        needsRestart = true
+                    }
+
+                    val message = if (isBuiltInUpdate) {
+                        getString(R.string.shell_delete_update_success, shell.displayName ?: shell.name)
                     } else {
                         getString(R.string.shell_delete_success, shell.displayName ?: shell.name)
                     }
