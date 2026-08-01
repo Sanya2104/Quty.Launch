@@ -911,7 +911,24 @@ class ShellSettingsFragment : Fragment() {
                 return false
             }
 
-            // Проверяем, не активна ли оболочка
+            // Проверяем, является ли это обновлением встроенной оболочки
+            val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
+
+            // Если это обновление встроенной оболочки — разрешаем удаление даже если активна
+            if (isBuiltInUpdate) {
+                // Показываем диалог подтверждения
+                AlertDialog.Builder(requireContext())
+                    .setTitle(getString(R.string.shell_delete_active_update_title))
+                    .setMessage(getString(R.string.shell_delete_active_update_confirm))
+                    .setPositiveButton(getString(R.string.delete)) { _, _ ->
+                        performDeleteShell(shell)
+                    }
+                    .setNegativeButton(getString(R.string.cancel), null)
+                    .show()
+                return true
+            }
+
+            // Для обычных кастомных оболочек — проверяем активность
             val activeShell = shellManager.getActiveShell()
             if (shell.name == activeShell?.name) {
                 Toast.makeText(
@@ -922,7 +939,7 @@ class ShellSettingsFragment : Fragment() {
                 return false
             }
 
-            // Диалог подтверждения
+            // Диалог подтверждения для обычных кастомных оболочек
             AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.shell_delete_confirm))
                 .setMessage(getString(R.string.shell_delete_message, shell.displayName ?: shell.name))
@@ -960,8 +977,8 @@ class ShellSettingsFragment : Fragment() {
                     // Определяем, нужна ли перезагрузка
                     var needRestart = false
 
-                    if (wasActive) {
-                        // Если удалялась активная оболочка — точно нужна перезагрузка
+                    if (wasActive || isBuiltInUpdate) {
+                        // Если удалялась активная оболочка или это обновление встроенной — нужна перезагрузка
                         needRestart = true
                     } else if (isBuiltInUpdate) {
                         // Если удаляется обновление встроенной оболочки — после удаления

@@ -77,6 +77,10 @@
     <string name="shell_menu_delete_update">Удалить обновление</string>
     <string name="shell_delete_update_success" formatted="false">Обновление оболочки "%s" удалены. Восстановлена встроенная версия</string>
 
+    <!-- Удаление обновления активной встроенной оболочки -->
+    <string name="shell_delete_active_update_confirm">Вы уверены, что хотите удалить обновление активной оболочки?\n\nОболочка будет заменена на встроенную версию. Интерфейс будет перезагружен.</string>
+    <string name="shell_delete_active_update_title">Удалить обновление</string>
+
     <!-- Информация об оболочке -->
     <string name="shell_info_title" formatted="false">Информация об оболочке "%s"</string>
     <string name="shell_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется Quty.Launch версии: %5$s</string>
