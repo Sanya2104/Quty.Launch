@@ -4,6 +4,8 @@ package by.quty.launch.core.managers
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Environment
 import androidx.core.content.ContextCompat
 
 object PermissionManager {
@@ -15,6 +17,13 @@ object PermissionManager {
         Manifest.permission.ACCESS_WIFI_STATE,
         Manifest.permission.ACCESS_FINE_LOCATION,
     )
+
+    /**
+     * Возвращает список обязательных разрешений
+     */
+    fun getRequiredPermissions(): List<String> {
+        return REQUIRED_PERMISSIONS
+    }
 
     fun hasAllRequiredPermissions(context: Context): Boolean {
         return REQUIRED_PERMISSIONS.all { permission ->
@@ -32,11 +41,17 @@ object PermissionManager {
         }
     }
 
-    fun getRequiredProgress(context: Context): Int {
-        if (REQUIRED_PERMISSIONS.isEmpty()) return 100
-        val granted = REQUIRED_PERMISSIONS.count { permission ->
-            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    /**
+     * Проверяет наличие MANAGE_EXTERNAL_STORAGE (Android 11+)
+     */
+    fun hasManageStoragePermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
         }
-        return (granted * 100) / REQUIRED_PERMISSIONS.size
     }
 }

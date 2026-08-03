@@ -248,6 +248,12 @@
     <string name="welcome_permission_storage">Хранилище</string>
     <string name="welcome_permission_storage_desc">Для установки кастомных оболочек.</string>
 
+    <!-- MANAGE_EXTERNAL_STORAGE разрешение -->
+    <string name="welcome_permission_manage_storage">Доступ к файлам (полный)</string>
+    <string name="welcome_permission_manage_storage_desc">Для сохранения оболочек и логов на устройстве</string>
+    <string name="storage_permission_granted">Доступ к хранилищу получен</string>
+    <string name="cannot_open_manage_storage">Не удалось открыть настройки доступа к файлам</string>
+
     <!-- Кнопки -->
     <string name="welcome_button_grant">Предоставить доступ</string>
     <string name="welcome_button_retry">Повторить запрос</string>

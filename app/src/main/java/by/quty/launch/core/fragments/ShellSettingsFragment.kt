@@ -29,7 +29,6 @@ import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
 import by.quty.launch.core.managers.ShellUpdateManager
 import by.quty.launch.core.interfaces.SettingsEventListener
-import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -856,10 +855,6 @@ class ShellSettingsFragment : Fragment() {
                     override fun onError(message: String) {
                         progressDialog.dismiss()
                         Toast.makeText(requireContext(), getString(R.string.shell_update_error, message), Toast.LENGTH_LONG).show()
-                        Logger.e(
-                            "ShellSettingsFragment",
-                            getString(R.string.shell_update_error, message)
-                        )
                     }
                 })
             }
