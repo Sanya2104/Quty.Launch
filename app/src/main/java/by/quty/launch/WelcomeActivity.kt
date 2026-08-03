@@ -135,17 +135,11 @@ class WelcomeActivity : BaseActivity() {
                 titleRes = R.string.welcome_permission_location,
                 descRes = R.string.welcome_permission_location_desc,
                 isRequired = false
-            ),
-            PermissionItem(
-                permission = Manifest.permission.READ_EXTERNAL_STORAGE,
-                iconRes = R.drawable.ic_storage,
-                titleRes = R.string.welcome_permission_storage,
-                descRes = R.string.welcome_permission_storage_desc,
-                isRequired = false
             )
         )
 
-        // Добавляем MANAGE_EXTERNAL_STORAGE для Android 11+
+        // Для Android 10 и ниже показываем READ_EXTERNAL_STORAGE
+        // Для Android 11+ показываем MANAGE_EXTERNAL_STORAGE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             permissionsData.add(
                 PermissionItem(
@@ -154,6 +148,16 @@ class WelcomeActivity : BaseActivity() {
                     titleRes = R.string.welcome_permission_manage_storage,
                     descRes = R.string.welcome_permission_manage_storage_desc,
                     isRequired = true
+                )
+            )
+        } else {
+            permissionsData.add(
+                PermissionItem(
+                    permission = Manifest.permission.READ_EXTERNAL_STORAGE,
+                    iconRes = R.drawable.ic_storage,
+                    titleRes = R.string.welcome_permission_storage,
+                    descRes = R.string.welcome_permission_storage_desc,
+                    isRequired = false
                 )
             )
         }
@@ -442,11 +446,21 @@ class WelcomeActivity : BaseActivity() {
 
         // Подсчитываем прогресс
         val requiredPermissions = PermissionManager.getRequiredPermissions()
-        val totalCount = requiredPermissions.size + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 1 else 0
+        val hasManageStorage = PermissionManager.hasManageStoragePermission(this)
+
+        // Базовое количество обязательных разрешений (без учёта хранилища)
+        val baseRequiredCount = requiredPermissions.size
+
+        // Добавляем хранилище в зависимости от версии Android
+        val totalCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            baseRequiredCount + 1  // + MANAGE_EXTERNAL_STORAGE
+        } else {
+            baseRequiredCount + 1  // + READ_EXTERNAL_STORAGE (необязательное, но считаем в прогрессе)
+        }
 
         val grantedCount = requiredPermissions.count { permission ->
             PermissionManager.hasPermission(this, permission)
-        } + if (PermissionManager.hasManageStoragePermission(this)) 1 else 0
+        } + if (hasManageStorage) 1 else 0
 
         val finalProgress = if (totalCount > 0) {
             (grantedCount * 100 / totalCount)
