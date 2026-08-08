@@ -65,25 +65,25 @@ class ShellUpdateManager(private val context: Context) {
 
                 // Проверяем совместимость с Quty.Launch
                 if (!isLauncherCompatible(repoInfo.minQutyLaunchVersion)) {
-                    Logger.d("ShellUpdateManager", "⚠️ Обновление несовместимо с текущей версией Quty.Launch")
+                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_incompatible))
                     return@withContext null
                 }
 
                 // Сравниваем версии
                 val currentVersion = shell.version ?: "0.0.0"
                 if (UpdateHelper.isNewerVersion(repoInfo.version, currentVersion)) {
-                    Logger.d("ShellUpdateManager", "✅ Найдено обновление: ${repoInfo.version} (текущая: $currentVersion)")
+                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_found, repoInfo.version, currentVersion))
                     repoInfo
                 } else {
-                    Logger.d("ShellUpdateManager", "ℹ️ Обновлений нет (текущая: $currentVersion, доступна: ${repoInfo.version})")
+                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_not_found, currentVersion, repoInfo.version))
                     null
                 }
             } else {
-                Logger.w("ShellUpdateManager", "⚠️ Ошибка проверки обновлений: ${connection.responseCode}")
+                Logger.w("ShellUpdateManager", context.getString(R.string.log_shell_update_check_error, connection.responseCode))
                 null
             }
         } catch (e: Exception) {
-            Logger.e("ShellUpdateManager", "❌ Ошибка проверки обновлений: ${e.message}")
+            Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_check_exception, e.message))
             null
         }
     }
@@ -197,13 +197,13 @@ class ShellUpdateManager(private val context: Context) {
             file.delete()
 
             if (success) {
-                Logger.d("ShellUpdateManager", "✅ Обновление оболочки сохранено: $fileName")
+                Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_saved, fileName))
                 withContext(Dispatchers.Main) {
                     listener.onSuccess()
                 }
                 true
             } else {
-                Logger.e("ShellUpdateManager", "❌ Ошибка сохранения обновления оболочки")
+                Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_save_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.shell_install_error))
                 }
@@ -211,7 +211,7 @@ class ShellUpdateManager(private val context: Context) {
             }
 
         } catch (e: Exception) {
-            Logger.e("ShellUpdateManager", "❌ Ошибка скачивания обновления: ${e.message}")
+            Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_download_error, e.message))
             tempFile?.delete()
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))

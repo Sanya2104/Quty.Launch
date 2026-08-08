@@ -322,7 +322,7 @@ class DeveloperSettingsFragment : Fragment() {
     private fun clearAppsCache() {
         try {
             lifecycleScope.launch {
-                CacheManager.clearCache()
+                CacheManager.clearCache(requireContext())
                 withContext(Dispatchers.Main) {
                     val cacheSizeView = view?.findViewById<TextView>(R.id.dev_cache_size_value)
                     cacheSizeView?.let { updateCacheSize(it) }
@@ -557,7 +557,7 @@ class DeveloperSettingsFragment : Fragment() {
         spinnerMaxSize.setSelection(1, false)
         isLoadingSettings = false
 
-        LoggerFile.init(storageManager, 5, 5, true)
+        LoggerFile.init(storageManager, 5, 5, true, requireContext())
 
         Toast.makeText(requireContext(), R.string.dev_logs_reset_success, Toast.LENGTH_SHORT).show()
     }

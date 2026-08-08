@@ -185,7 +185,7 @@ class SystemSettingsFragment : Fragment() {
         prefs.edit { putBoolean("developer_mode", newState) }
 
         // Инвалидируем кэш приложений при изменении DevMode
-        CacheManager.invalidateCache()
+        CacheManager.invalidateCache(requireContext())
 
         // Логируем действие
         if (newState) {

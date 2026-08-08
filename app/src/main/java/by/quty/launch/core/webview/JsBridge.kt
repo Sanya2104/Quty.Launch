@@ -56,12 +56,12 @@ class JsBridge(
 
             } catch (e: TimeoutCancellationException) {
                 // Тайм-аут выполнения
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout)}"}"""
+                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
                 // Отмена выполнения
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled)}"}"""
+                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {

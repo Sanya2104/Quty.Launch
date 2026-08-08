@@ -94,16 +94,13 @@
     <string name="shell_share_title">Поделиться оболочкой</string>
     <string name="shell_share_error">Ошибка при отправке файла</string>
     <string name="shell_file_not_found">Файл оболочки не найден</string>
-    <string name="shell_share_unavailable">Невозможно поделиться этой оболочкой</string>
 
     <!-- Обновление оболочки -->
-    <string name="shell_update_available">Доступно обновление</string>
     <string name="shell_update_not_found">Обновлений не найдено</string>
     <string name="shell_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
     <string name="shell_update_downloading">Скачивание обновления…</string>
     <string name="shell_update_success">Оболочка обновлена до версии %s</string>
     <string name="shell_update_confirm_title">Обновление оболочки</string>
-    <string name="shell_update_confirm_message" formatted="false">Доступна новая версия оболочки!\n\n Текущая: %s\n\n Новая: %s\n\n Что нового:\n%s</string>
     <string name="shell_update_checking">Проверка обновлений</string>
     <string name="shell_update_checking_message">Проверка…</string>
     <string name="shell_update_available_message">Доступно обновление оболочки!</string>
@@ -168,8 +165,6 @@
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
     <string name="no_internet_connection">Отсутствует подключение к интернету</string>
 
-    <!-- Копирайт -->
-    <string name="copyright">Quty.Launch © 2026</string>
 
     <!-- Локальная установка APK -->
     <string name="install_from_file">Локальное обновление из файла</string>
@@ -190,8 +185,6 @@
     <!-- Скачивание APK -->
     <string name="download_apk">📥 Скачать APK</string>
     <string name="download_complete_title">Загрузка завершена</string>
-    <string name="download_complete" formatted="false">APK сохранён по пути:\n%s</string>
-    <string name="open_folder">📂 Открыть папку</string>
     <string name="download_error">Ошибка скачивания</string>
 
     <!-- Диалог обновления -->
@@ -221,9 +214,6 @@
 
     <string name="download_not_enough_space">Недостаточно свободного места для загрузки</string>
     <string name="download_http_error" formatted="false">Ошибка загрузки: сервер вернул код %d</string>
-    <string name="download_media_store_create_failed">Не удалось создать файл в MediaStore</string>
-    <string name="download_media_store_open_failed">Не удалось открыть поток для записи</string>
-    <string name="download_file_path_failed">Не удалось получить путь к файлу</string>
     <string name="download_empty_file">Скачанный файл повреждён или пуст</string>
     <string name="download_timeout">Превышено время ожидания ответа от сервера</string>
 
@@ -245,27 +235,18 @@
     <string name="welcome_permission_wifi_desc">Для отображения уровня сигнала Wi-Fi</string>
     <string name="welcome_permission_location">Геолокация</string>
     <string name="welcome_permission_location_desc">Для отображения статуса GPS.</string>
-    <string name="welcome_permission_storage">Хранилище</string>
-    <string name="welcome_permission_storage_desc">Для установки кастомных оболочек.</string>
 
     <!-- MANAGE_EXTERNAL_STORAGE разрешение -->
-    <string name="welcome_permission_manage_storage">Доступ к файлам (полный)</string>
-    <string name="welcome_permission_manage_storage_desc">Для сохранения оболочек и логов на устройстве</string>
-    <string name="storage_permission_granted">Доступ к хранилищу получен</string>
-    <string name="cannot_open_manage_storage">Не удалось открыть настройки доступа к файлам</string>
 
     <!-- Кнопки -->
     <string name="welcome_button_grant">Предоставить доступ</string>
     <string name="welcome_button_retry">Повторить запрос</string>
     <string name="welcome_button_settings">Открыть настройки</string>
-    <string name="welcome_all_required">Все разрешения обязательны для работы Quty.Launch</string>
-    <string name="welcome_required_done">✅ Все обязательные разрешения получены!</string>
     <string name="welcome_button_start">🚀 Начать</string>
 
     <!-- Ошибки -->
     <string name="welcome_permission_denied_title">Разрешения не предоставлены</string>
     <string name="welcome_permission_denied_message">Для корректной работы Quty.Launch необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
-    <string name="welcome_permission_denied_button">Открыть настройки приложения</string>
 
     <!-- ============================================================ -->
     <!-- ==================== РЕЖИМ РАЗРАБОТЧИКА ===================== -->
@@ -349,7 +330,6 @@
     <string name="dev_logs_reset_success">Настройки логов сброшены</string>
     <string name="dev_logs_persist_enabled">Сохранение логов включено</string>
     <string name="dev_logs_persist_disabled">Сохранение логов выключено</string>
-    <string name="dev_logs_restored">Логи восстановлены из файла</string>
     <string name="dev_logs_applied">Настройки логов применены</string>
 
     <!-- Массивы для Spinner -->
@@ -387,22 +367,16 @@
     <string name="logger_clear">Очистить</string>
     <string name="logger_copy">Копировать</string>
     <string name="logger_pause">Пауза</string>
-    <string name="logger_resume">Старт</string>
     <string name="logger_close">Закрыть</string>
     <string name="logger_empty">Логов пока нет</string>
     <string name="logger_save">Сохранить логи</string>
     <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
     <string name="logger_save_error">Ошибка сохранения логов</string>
     <string name="logger_share">Поделиться логами</string>
-    <string name="logger_share_error">Ошибка при отправке логов</string>
     <string name="logger_share_title">Поделиться логами</string>
 
     <!-- Фильтры -->
     <string name="logger_filter_all">Все</string>
-    <string name="logger_filter_level">Уровень</string>
-    <string name="logger_filter_source">Источник</string>
-    <string name="logger_filter_source_kotlin">Kotlin</string>
-    <string name="logger_filter_source_webview">WebView</string>
     <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
 
     <string-array name="logger_levels">
@@ -425,20 +399,9 @@
     <string name="logger_cleared">Логи очищены</string>
     <string name="logger_paused">Сбор логов приостановлен</string>
     <string name="logger_resumed">Сбор логов возобновлён</string>
-    <string name="logger_source_kotlin">Kotlin</string>
-    <string name="logger_source_webview">WebView</string>
-    <string name="logger_level_debug">DEBUG</string>
-    <string name="logger_level_info">INFO</string>
-    <string name="logger_level_warn">WARN</string>
-    <string name="logger_level_error">ERROR</string>
 
     <!-- Ошибки -->
     <string name="logger_devmode_required">Режим разработчика не активирован</string>
-    <string name="logger_initialized">Logger инициализирован</string>
-    <string name="logger_restored_from_file" formatted="false">Восстановлено %d логов из файла</string>
-    <string name="logger_restore_error">Ошибка восстановления логов из файла</string>
-    <string name="logger_file_write_error">Ошибка записи лога в файл</string>
-    <string name="logger_file_clear_error">Ошибка очистки файлов логов</string>
 
     <!-- ============================================================ -->
     <!-- ==================== МЕНЕДЖЕР ОБОЛОЧЕК =========================== -->
@@ -454,10 +417,6 @@
     <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
     <!-- Доступ к хранилищу -->
-    <string name="storage_permission_title">Доступ к хранилищу</string>
-    <string name="storage_permission_message">Для установки оболочек необходимо разрешить доступ к файлам</string>
-    <string name="storage_permission_allow">Разрешить</string>
-    <string name="storage_permission_denied">Для установки оболочек необходимо разрешить доступ к хранилищу</string>
 
     <!-- Названия -->
     <string name="shell_default_name">Стандартная</string>
@@ -469,32 +428,22 @@
     <!-- ============================================================ -->
 
     <string name="shell_update_not_enough_space">Недостаточно свободного места для загрузки оболочки.\nПожалуйста, освободите место и попробуйте снова.</string>
-    <string name="shell_update_http_error" formatted="false">Ошибка загрузки: сервер вернул код %d</string>
-    <string name="shell_update_timeout">Превышено время ожидания ответа от сервера.\nПроверьте подключение к интернету.</string>
-    <string name="shell_update_empty_file">Скачанный файл повреждён или пуст.\nПопробуйте ещё раз.</string>
 
     <!-- ============================================================ -->
     <!-- ==================== МЕНЕДЖЕР ОБНОВЛЕНИЙ ==================== -->
     <!-- ============================================================ -->
 
-    <string name="update_check_failed" formatted="false">Ошибка проверки обновлений: %s</string>
     <string name="update_install_failed" formatted="false">Не удалось установить обновление: %s</string>
-    <string name="apk_not_found">APK файл не найден</string>
-    <string name="update_manager_media_store_create_failed">Не удалось создать файл в MediaStore</string>
-    <string name="update_manager_media_store_open_failed">Не удалось открыть поток для записи</string>
-    <string name="update_not_enough_space">Недостаточно свободного места для загрузки обновления.\nПожалуйста, освободите место и попробуйте снова.</string>
-
+    <string name="update_install_permission_required">Разрешите установку из неизвестных источников и повторите попытку</string>
 
     <!-- ============================================================ -->
     <!-- ==================== JsBridge =============================== -->
     <!-- ============================================================ -->
 
-    <string name="js_bridge_method_not_found" formatted="false">Метод не найден: %s</string>
-    <string name="js_bridge_execution_error" formatted="false">Ошибка выполнения: %s</string>
-    <string name="js_bridge_timeout">Время выполнения истекло</string>
-    <string name="js_bridge_cancelled">Выполнение отменено</string>
     <string name="js_bridge_webview_null" formatted="false">WebView уничтожен, невозможно отправить результат: %s</string>
     <string name="js_bridge_send_error" formatted="false">Не удалось отправить результат в JS: %s</string>
+    <string name="js_bridge_timeout_error">Время выполнения истекло</string>
+    <string name="js_bridge_cancelled_error">Выполнение отменено</string>
 
     <!-- ============================================================ -->
     <!-- ==================== LAUNCHER WEBVIEW ======================= -->
@@ -502,8 +451,8 @@
 
     <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
     <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
-    <string name="webview_max_retries_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
-    <string name="webview_retry_loading" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
+    <string name="webview_retry_limit_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
+    <string name="webview_retry_attempt" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
 
     <!-- ============================================================ -->
     <!-- ==================== API МЕТОДЫ ============================= -->
@@ -526,14 +475,55 @@
     <!-- ==================== CACHE MANAGER ========================== -->
     <!-- ============================================================ -->
 
-    <string name="cache_manager_package_changed" formatted="false">📦 Обнаружено изменение в приложениях: %s -> %s</string>
-    <string name="cache_manager_receiver_registered">📦 BroadcastReceiver зарегистрирован для отслеживания приложений</string>
-    <string name="cache_manager_receiver_register_error" formatted="false">Ошибка регистрации BroadcastReceiver: %s</string>
-    <string name="cache_manager_receiver_unregistered">📦 BroadcastReceiver отменён</string>
-    <string name="cache_manager_receiver_unregister_error" formatted="false">Ошибка отмены BroadcastReceiver: %s</string>
-    <string name="cache_manager_skipped_dirty">⏭️ Кэш пропущен (грязный флаг)</string>
-    <string name="cache_manager_saved" formatted="false">✅ Сохранено приложений в кэш: %d</string>
-    <string name="cache_manager_cleared">🗑️ Кэш приложений очищен</string>
-    <string name="cache_manager_invalidated">🔄 Кэш приложений инвалидирован (грязный флаг = true)</string>
+    <!-- ============================================================ -->
+    <!-- ==================== ЛОГИ (TECHNICAL) ====================== -->
+    <!-- ============================================================ -->
+
+    <!-- CacheManager логи -->
+    <string name="log_cache_manager_package_changed" formatted="false">📦 Обнаружено изменение в приложениях: %s -&gt; %s</string>
+    <string name="log_cache_manager_receiver_registered">📦 BroadcastReceiver зарегистрирован для отслеживания приложений</string>
+    <string name="log_cache_manager_receiver_register_error">Ошибка регистрации BroadcastReceiver: %s</string>
+    <string name="log_cache_manager_skipped_dirty">⏭️ Кэш пропущен (грязный флаг)</string>
+    <string name="log_cache_manager_saved">✅ Сохранено приложений в кэш: %d</string>
+    <string name="log_cache_manager_cleared">🗑️ Кэш приложений очищен</string>
+    <string name="log_cache_manager_invalidated">🔄 Кэш приложений инвалидирован (грязный флаг = true)</string>
+
+    <!-- ShellUpdateManager логи -->
+    <string name="log_shell_update_incompatible">⚠️ Обновление несовместимо с текущей версией Quty.Launch</string>
+    <string name="log_shell_update_found" formatted="false">✅ Найдено обновление: %s (текущая: %s)</string>
+    <string name="log_shell_update_not_found" formatted="false">ℹ️ Обновлений нет (текущая: %s, доступна: %s)</string>
+    <string name="log_shell_update_check_error">⚠️ Ошибка проверки обновлений: %d</string>
+    <string name="log_shell_update_check_exception">❌ Ошибка проверки обновлений: %s</string>
+    <string name="log_shell_update_saved">✅ Обновление оболочки сохранено: %s</string>
+    <string name="log_shell_update_save_error">❌ Ошибка сохранения обновления оболочки</string>
+    <string name="log_shell_update_download_error">❌ Ошибка скачивания обновления: %s</string>
+
+    <!-- StorageManager логи -->
+    <string name="log_storage_dir_created">📁 Создана директория: %s</string>
+    <string name="log_storage_dir_create_failed">❌ Не удалось создать: %s</string>
+    <string name="log_storage_file_not_exists">⚠️ Файл не существует: %s</string>
+    <string name="log_storage_file_read_error">❌ Ошибка чтения файла: %s</string>
+    <string name="log_storage_file_saved">✅ Файл сохранён: %s</string>
+    <string name="log_storage_file_save_error">❌ Ошибка сохранения файла: %s</string>
+    <string name="log_storage_file_stream_saved">✅ Файл сохранён из потока: %s</string>
+    <string name="log_storage_file_stream_save_error">❌ Ошибка сохранения файла из потока: %s</string>
+    <string name="log_storage_file_bytes_saved">✅ Файл сохранён (байты): %s</string>
+    <string name="log_storage_file_bytes_save_error">❌ Ошибка сохранения файла (байты): %s</string>
+    <string name="log_storage_file_deleted">🗑️ Файл удалён: %s</string>
+    <string name="log_storage_file_delete_error">❌ Ошибка удаления файла: %s</string>
+    <string name="log_storage_dir_deleted">🗑️ Директория удалена: %s</string>
+    <string name="log_storage_dir_delete_error">❌ Ошибка удаления директории: %s</string>
+    <string name="log_storage_files_deleted">🗑️ Все файлы удалены из %s</string>
+    <string name="log_storage_files_delete_error">❌ Ошибка удаления файлов: %s</string>
+    <string name="log_storage_uri_error">❌ Ошибка получения URI: %s</string>
+
+    <!-- Logger логи -->
+    <string name="log_logger_initialized">Logger инициализирован</string>
+    <string name="log_logger_restored">Восстановлено %d логов из файла</string>
+    <string name="log_logger_restore_error">Ошибка восстановления логов из файла</string>
+
+    <!-- LoggerFile логи -->
+    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
+    <string name="log_logger_file_clear_error">Ошибка очистки файлов логов</string>
 
 </resources>

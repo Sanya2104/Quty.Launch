@@ -5,6 +5,7 @@ import android.content.Context
 import by.quty.launch.api.ApiInitializer
 import by.quty.launch.api.router.ApiRouter
 import by.quty.launch.core.managers.CacheManager
+import by.quty.launch.core.managers.StorageManager
 
 /**
  * Основной движок приложения.
@@ -17,7 +18,9 @@ class Core(context: Context) {
         ApiInitializer.init(context)
 
         // Регистрируем BroadcastReceiver для отслеживания изменений приложений
-        CacheManager.registerPackageReceiver(context)
+        // Создаём StorageManager для CacheManager
+        val storageManager = StorageManager(context)
+        CacheManager.init(storageManager, context)
     }
 
     /**

@@ -78,14 +78,14 @@ object Logger {
         storageManagerRef = WeakReference(storageManager)
 
         // Инициализируем файловое ядро
-        LoggerFile.init(storageManager, maxFiles, maxSizeMB, persistEnabled)
+        LoggerFile.init(storageManager, maxFiles, maxSizeMB, persistEnabled, context.applicationContext)
 
         // Если сохранение включено — восстанавливаем логи из файла
         if (persistEnabled) {
             restoreLogsFromFile()
         }
 
-        d("Logger", appContext.getString(R.string.logger_initialized))
+        d("Logger", appContext.getString(R.string.log_logger_initialized))
     }
 
     /**
@@ -95,7 +95,7 @@ object Logger {
         try {
             val storageManager = getStorageManager()
             if (storageManager == null) {
-                e("Logger", appContext.getString(R.string.logger_restore_error))
+                e("Logger", appContext.getString(R.string.log_logger_restore_error))
                 return
             }
 
@@ -128,9 +128,9 @@ object Logger {
                 }
             }
 
-            d("Logger", appContext.getString(R.string.logger_restored_from_file, restoredLogs.size))
+            d("Logger", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
         } catch (_: Exception) {
-            e("Logger", appContext.getString(R.string.logger_restore_error))
+            e("Logger", appContext.getString(R.string.log_logger_restore_error))
         }
     }
 

@@ -28,7 +28,7 @@ class GetApps(
 
     override suspend fun executeInternal(params: Unit?): String {
         // 1. Пробуем получить из кэша
-        val cachedApps = CacheManager.getCachedApps()
+        val cachedApps = CacheManager.getCachedApps(context)
         if (cachedApps != null) {
             return json.encodeToString(
                 ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
@@ -40,7 +40,7 @@ class GetApps(
         val freshApps = loadFreshApps()
 
         // 3. Сохраняем в кэш
-        CacheManager.saveApps(freshApps)
+        CacheManager.saveApps(context, freshApps)
 
         return json.encodeToString(
             ApiResponse.serializer(ListSerializer(AppInfo.serializer())),

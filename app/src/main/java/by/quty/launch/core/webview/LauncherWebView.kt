@@ -264,14 +264,14 @@ class LauncherWebView(context: Context) : WebView(context) {
                 if (errorRetryCount > MAX_RETRY_COUNT) {
                     Logger.e(
                         "LauncherWebView",
-                        context.getString(R.string.webview_max_retries_reached, url, errorRetryCount)
+                        context.getString(R.string.webview_retry_limit_reached, url, errorRetryCount)
                     )
                     return
                 }
 
                 Logger.d(
                     "LauncherWebView",
-                    context.getString(R.string.webview_retry_loading, url, errorRetryCount, MAX_RETRY_COUNT)
+                    context.getString(R.string.webview_retry_attempt, url, errorRetryCount, MAX_RETRY_COUNT)
                 )
 
                 // Задержка перед перезагрузкой

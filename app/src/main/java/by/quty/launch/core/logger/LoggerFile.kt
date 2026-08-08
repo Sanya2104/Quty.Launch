@@ -1,6 +1,8 @@
 // *** core/logger/LoggerFile.kt *** //
 package by.quty.launch.core.logger
 
+import android.content.Context
+import by.quty.launch.R
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageFileType
 import by.quty.launch.core.managers.StorageManager
@@ -61,6 +63,9 @@ object LoggerFile {
         ignoreUnknownKeys = true
     }
 
+    // Контекст для доступа к ресурсам
+    private lateinit var appContext: Context
+
     /**
      * Получает StorageManager из WeakReference
      * @return StorageManager или null, если сборщик мусора уже очистил ссылку
@@ -75,17 +80,20 @@ object LoggerFile {
      * @param maxFiles количество файлов
      * @param maxSizeMB максимальный размер файла в МБ
      * @param persistEnabled включено ли сохранение в файл
+     * @param context контекст приложения для логирования
      */
     fun init(
         storageManager: StorageManager,
         maxFiles: Int = 5,
         maxSizeMB: Int = 5,
-        persistEnabled: Boolean = true
+        persistEnabled: Boolean = true,
+        context: Context
     ) {
         this.storageManagerRef = WeakReference(storageManager)
         this.maxFiles = maxFiles
         this.maxSizeMB = maxSizeMB
         this.persistEnabled = persistEnabled
+        this.appContext = context.applicationContext
 
         if (persistEnabled) {
             prepareCurrentLogFile()
@@ -181,7 +189,7 @@ object LoggerFile {
             }
 
         } catch (_: Exception) {
-            android.util.Log.e("LoggerFile", "Ошибка записи лога в файл")
+            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_file_write_error))
         }
     }
 
@@ -288,7 +296,7 @@ object LoggerFile {
             currentLogFile = null
             prepareCurrentLogFile()
         } catch (_: Exception) {
-            android.util.Log.e("LoggerFile", "Ошибка очистки файлов логов")
+            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_file_clear_error))
         }
     }
 

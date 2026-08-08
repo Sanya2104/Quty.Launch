@@ -459,7 +459,7 @@ class ShellManager(
      */
     private suspend fun clearActiveDir() {
         if (activeShellDir.exists()) {
-            // Удаляем содержимое директории через StorageManager.
+            // Удаляем содержимое директории через StorageManager
             // Получаем File объект и удаляем его
             val activeDir = storageManager.get("shells/active")
             if (activeDir.exists()) {

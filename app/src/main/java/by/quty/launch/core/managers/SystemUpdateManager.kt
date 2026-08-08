@@ -457,7 +457,7 @@ class SystemUpdateManager(private val context: Context) {
                 intent.data = "package:${context.packageName}".toUri()
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                Toast.makeText(context, "Разрешите установку из неизвестных источников и повторите попытку", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.update_install_permission_required, Toast.LENGTH_LONG).show()
                 return
             }
 
@@ -477,7 +477,11 @@ class SystemUpdateManager(private val context: Context) {
 
         } catch (e: Exception) {
             Logger.e("SystemUpdateManager", "❌ Ошибка запуска установки: ${e.message}")
-            Toast.makeText(context, "Не удалось установить обновление: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.update_install_failed, e.message),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
