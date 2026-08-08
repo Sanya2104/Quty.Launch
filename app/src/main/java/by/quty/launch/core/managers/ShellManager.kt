@@ -4,15 +4,15 @@ package by.quty.launch.core.managers
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
 import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
+import by.quty.launch.R
+import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import by.quty.launch.R
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -28,12 +28,12 @@ data class Shell(
     val isAsset: Boolean = false,
     val displayName: String? = null,
     val isCustom: Boolean = false,
-    val version: String? = null,            // версия оболочки из manifest.json
-    val author: String? = null,             // автор оболочки из manifest.json
-    val previewBase64: String? = null,      // превью в base64 для отображения
-    val orientation: String? = null,        // ориентация из manifest.json (portrait/landscape/sensor/user)
-    val repoUrl: String? = null,            // ссылка на репозиторий из manifest.json
-    val minQutyLaunchVersion: String? = null  // минимальная версия Quty.Launch из manifest.json
+    val version: String? = null,
+    val author: String? = null,
+    val previewBase64: String? = null,
+    val orientation: String? = null,
+    val repoUrl: String? = null,
+    val minQutyLaunchVersion: String? = null
 )
 
 /**
@@ -44,10 +44,10 @@ data class ShellManifest(
     val name: String,
     val author: String = "",
     val version: String = "0.0.1",
-    val preview: String? = null,            // путь к превью внутри оболочки
-    val orientation: String? = null,        // ориентация оболочки (portrait/landscape/sensor/user)
-    val repoUrl: String? = null,            // ссылка на репозиторий
-    val minQutyLaunchVersion: String? = null  // минимальная версия Quty.Launch
+    val preview: String? = null,
+    val orientation: String? = null,
+    val repoUrl: String? = null,
+    val minQutyLaunchVersion: String? = null
 )
 
 class ShellManager(
@@ -56,20 +56,17 @@ class ShellManager(
 ) {
 
     companion object {
-        /** Основное расширение файла оболочки (без точки) */
-        // const val SHELL_EXTENSION = "qutyshell"
-
-        /** Основное расширение файла оболочки (с точкой) */
+        /** Расширение файла оболочки (с точкой) */
         const val SHELL_EXTENSION_WITH_DOT = ".qutyshell"
 
-        /** Дополнительные расширения файлов оболочки (без точки) */
+        /** Поддерживаемые расширения файлов оболочки (без точки) */
         val SHELL_EXTENSIONS = listOf(
-            "qutyshell",    // основное
-            "qsp",          // сокращённое
-            "qutyshellpack" // альтернативное
+            "qutyshell",
+            "qsp",
+            "qutyshellpack"
         )
 
-        /** Дополнительные расширения файлов оболочки (с точкой) */
+        /** Поддерживаемые расширения файлов оболочки (с точкой) */
         val SHELL_EXTENSIONS_WITH_DOT = listOf(
             ".qutyshell",
             ".qsp",
@@ -77,29 +74,33 @@ class ShellManager(
         )
     }
 
-    private val shellsDir = File(context.filesDir, "shells")
-    private val activeShellDir = File(shellsDir, "active")
+    // Хранилище и менеджеры
+    private val storageManager = StorageManager(context)
 
-    // Новая структура: Quty.Launch/Shells/
-    private val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-    private val customShellsDir = File(appDir, "Shells")
-
+    // Активная оболочка в памяти
     private var activeShell: Shell? = null
 
+    // JSON парсер
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Поддерживаемые расширения оболочек
-    private val supportedExtensions = SHELL_EXTENSIONS
+    // Директория активной оболочки (для распакованных файлов)
+    private val activeShellDir: File by lazy {
+        File(context.filesDir, "shells/active")
+    }
 
     init {
-        if (!shellsDir.exists()) shellsDir.mkdirs()
-        if (!activeShellDir.exists()) activeShellDir.mkdirs()
-        if (!appDir.exists()) appDir.mkdirs()
-        if (!customShellsDir.exists()) customShellsDir.mkdirs()
+        // Создаём директорию для активной оболочки
+        if (!activeShellDir.exists()) {
+            activeShellDir.mkdirs()
+        }
 
-        // При инициализации загружаем активную оболочку из настроек
+        // Загружаем активную оболочку из конфига
         loadActiveShellFromConfig()
     }
+
+    // ============================================================
+    // ЗАГРУЗКА АКТИВНОЙ ОБОЛОЧКИ
+    // ============================================================
 
     /**
      * Загружает активную оболочку из конфига в память
@@ -118,7 +119,7 @@ class ShellManager(
             restoreDefaultShell()
         }
 
-        // Сохраняем принудительную ориентацию в SharedPreferences, если она есть
+        // Сохраняем принудительную ориентацию
         saveForcedOrientation()
     }
 
@@ -160,7 +161,6 @@ class ShellManager(
         val message = context.getString(R.string.shell_active_not_found) + "\n" +
                 context.getString(R.string.shell_restored_default, defaultShell.displayName ?: defaultShell.name)
 
-        // Используем Handler для показа Toast в UI потоке
         android.os.Handler(android.os.Looper.getMainLooper()).post {
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
@@ -168,7 +168,6 @@ class ShellManager(
 
     /**
      * Сохраняет принудительную ориентацию текущей оболочки в SharedPreferences
-     * Если оболочка не задаёт ориентацию - удаляем ключ forced_orientation
      */
     private fun saveForcedOrientation() {
         val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
@@ -183,28 +182,9 @@ class ShellManager(
         }
     }
 
-    /**
-     * Получить принудительную ориентацию из активной оболочки
-     * @return String? - "portrait", "landscape", "sensor", "user" или null
-     */
-    fun getForcedOrientationFromActiveShell(): String? {
-        val shell = getActiveShell() ?: return null
-
-        // Проверяем валидность значения
-        return when (val orientation = shell.orientation) {
-            "portrait", "landscape", "sensor", "user" -> orientation
-            else -> null // игнорируем некорректные значения
-        }
-    }
-
-    /**
-     * Проверяет, задаёт ли текущая оболочка принудительную ориентацию
-     * @return true если оболочка задаёт portrait или landscape
-     */
-    fun hasForcedOrientation(): Boolean {
-        val forced = getForcedOrientationFromActiveShell()
-        return forced == "portrait" || forced == "landscape"
-    }
+    // ============================================================
+    // ПОЛУЧЕНИЕ ОБОЛОЧЕК
+    // ============================================================
 
     /**
      * Получить список всех доступных оболочек
@@ -216,19 +196,17 @@ class ShellManager(
 
         val result = mutableListOf<Shell>()
 
-        // Для каждой встроенной оболочки проверяем, есть ли кастомная версия с тем же именем
+        // Для каждой встроенной оболочки проверяем, есть ли кастомная версия
         builtInShells.forEach { builtIn ->
             val customVersion = customShells.find { it.name == builtIn.name }
             if (customVersion != null) {
-                // Если есть кастомная версия — показываем её вместо встроенной
                 result.add(customVersion)
             } else {
-                // Если нет — показываем встроенную
                 result.add(builtIn)
             }
         }
 
-        // Добавляем остальные кастомные оболочки (которые не перезаписывают встроенные)
+        // Добавляем остальные кастомные оболочки
         customShells.forEach { custom ->
             if (result.none { it.name == custom.name }) {
                 result.add(custom)
@@ -239,39 +217,41 @@ class ShellManager(
     }
 
     /**
-     * Получить кастомные оболочки из внешней папки (Quty.Launch/Shells/)
+     * Получить кастомные оболочки из хранилища
      */
     private fun getCustomShells(): List<Shell> {
         val shells = mutableListOf<Shell>()
 
-        // Кастомные оболочки из внешней папки (Quty.Launch/Shells/)
-        if (customShellsDir.exists()) {
-            // Ищем файлы с поддерживаемыми расширениями
-            customShellsDir.listFiles { file ->
-                supportedExtensions.any { ext ->
-                    file.extension.equals(ext, ignoreCase = true)
+        // Получаем все файлы оболочек из директории SHELLS
+        val shellFiles = storageManager.list(
+            directory = StorageDirectory.SHELLS,
+            filter = { fileName ->
+                SHELL_EXTENSIONS.any { ext ->
+                    fileName.endsWith(".$ext", ignoreCase = true)
                 }
-            }?.forEach { file ->
-                val manifest = readManifestFromZip(file)
-                val previewBase64 = loadPreviewFromZip(file, manifest?.preview)
-
-                shells.add(
-                    Shell(
-                        name = file.nameWithoutExtension,
-                        isDefault = false,
-                        sourcePath = file.absolutePath,
-                        isAsset = false,
-                        displayName = manifest?.name ?: file.nameWithoutExtension,
-                        isCustom = true,
-                        version = manifest?.version,
-                        author = manifest?.author,
-                        previewBase64 = previewBase64,
-                        orientation = manifest?.orientation,
-                        repoUrl = manifest?.repoUrl,
-                        minQutyLaunchVersion = manifest?.minQutyLaunchVersion
-                    )
-                )
             }
+        )
+
+        shellFiles.forEach { file ->
+            val manifest = readManifestFromZip(file)
+            val previewBase64 = loadPreviewFromZip(file, manifest?.preview)
+
+            shells.add(
+                Shell(
+                    name = file.nameWithoutExtension,
+                    isDefault = false,
+                    sourcePath = file.absolutePath,
+                    isAsset = false,
+                    displayName = manifest?.name ?: file.nameWithoutExtension,
+                    isCustom = true,
+                    version = manifest?.version,
+                    author = manifest?.author,
+                    previewBase64 = previewBase64,
+                    orientation = manifest?.orientation,
+                    repoUrl = manifest?.repoUrl,
+                    minQutyLaunchVersion = manifest?.minQutyLaunchVersion
+                )
+            )
         }
 
         return shells
@@ -291,7 +271,6 @@ class ShellManager(
                 try {
                     context.assets.open("shells/$shellFolder/index.html").close()
                 } catch (_: Exception) {
-                    // В папке нет index.html - пропускаем
                     return@forEach
                 }
 
@@ -332,17 +311,13 @@ class ShellManager(
         return shells
     }
 
-    /**
-     * Проверяет, является ли кастомная оболочка обновлением встроенной
-     * @param shell оболочка для проверки
-     * @return true если это кастомная оболочка с именем, совпадающим с встроенной
-     */
-    fun isBuiltInShellUpdate(shell: Shell): Boolean {
-        if (!shell.isCustom) return false
-        val builtInShells = getBuiltInShells()
-        return builtInShells.any { it.name == shell.name }
-    }
+    // ============================================================
+    // ЧТЕНИЕ MANIFEST И ПРЕВЬЮ
+    // ============================================================
 
+    /**
+     * Читает manifest.json из ZIP-файла оболочки
+     */
     private fun readManifestFromZip(zipFile: File): ShellManifest? {
         return try {
             ZipFile(zipFile).use { zip ->
@@ -356,6 +331,9 @@ class ShellManager(
         }
     }
 
+    /**
+     * Загружает превью из ZIP-файла оболочки
+     */
     private fun loadPreviewFromZip(zipFile: File, previewPath: String?): String? {
         if (previewPath.isNullOrEmpty()) return null
 
@@ -372,6 +350,9 @@ class ShellManager(
         }
     }
 
+    /**
+     * Загружает превью из assets
+     */
     private fun loadPreviewFromAssets(shellFolder: String, previewPath: String?): String? {
         if (previewPath.isNullOrEmpty()) return null
 
@@ -384,6 +365,9 @@ class ShellManager(
         }
     }
 
+    /**
+     * Конвертирует Bitmap в Base64
+     */
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val outputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
@@ -391,6 +375,13 @@ class ShellManager(
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
+    // ============================================================
+    // АКТИВНАЯ ОБОЛОЧКА
+    // ============================================================
+
+    /**
+     * Получить оболочку для активации
+     */
     fun getShellToActivate(): Shell {
         val shells = getAvailableShells()
         val activeShellId = configManager.getActiveShell()
@@ -412,20 +403,9 @@ class ShellManager(
     }
 
     /**
-     * Принудительно перезагружает активную оболочку из файла
-     * Используется после обновления оболочки
+     * Получить активную оболочку
      */
-    fun reloadActiveShell() {
-        val shells = getAvailableShells()
-        val activeShellId = configManager.getActiveShell()
-        activeShell = shells.find { it.name == activeShellId }
-
-        // Сохраняем принудительную ориентацию в SharedPreferences, если она есть
-        saveForcedOrientation()
-    }
-
     fun getActiveShell(): Shell? {
-        // Если в памяти нет, пробуем загрузить из конфига
         if (activeShell == null) {
             loadActiveShellFromConfig()
         }
@@ -433,8 +413,17 @@ class ShellManager(
     }
 
     /**
+     * Принудительно перезагружает активную оболочку из файла
+     */
+    fun reloadActiveShell() {
+        val shells = getAvailableShells()
+        val activeShellId = configManager.getActiveShell()
+        activeShell = shells.find { it.name == activeShellId }
+        saveForcedOrientation()
+    }
+
+    /**
      * Устанавливает активную оболочку
-     * @param shell оболочка для активации
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
         // Сохраняем в конфиг
@@ -443,8 +432,7 @@ class ShellManager(
         // Обновляем в памяти
         activeShell = shell
 
-        // Сохраняем принудительную ориентацию в SharedPreferences
-        // withContext(Dispatchers.Main) для доступа к SharedPreferences
+        // Сохраняем принудительную ориентацию
         withContext(Dispatchers.Main) {
             saveForcedOrientation()
         }
@@ -452,74 +440,116 @@ class ShellManager(
         // Очищаем директорию активной оболочки
         clearActiveDir()
 
-        // Если это не asset оболочка - распаковываем в папку с именем оболочки
+        // Если это не asset оболочка — распаковываем
         if (!shell.isAsset) {
             val extractDir = File(activeShellDir, shell.name)
             if (!extractDir.exists()) {
                 extractDir.mkdirs()
             }
-            // Распаковка в фоновом потоке (уже в Dispatchers.IO)
             unzipShell(shell.sourcePath, extractDir)
         }
     }
 
-    private fun clearActiveDir() {
+    // ============================================================
+    // РАСПАКОВКА ОБОЛОЧКИ
+    // ============================================================
+
+    /**
+     * Очищает директорию активной оболочки
+     */
+    private suspend fun clearActiveDir() {
         if (activeShellDir.exists()) {
-            activeShellDir.deleteRecursively()
-            activeShellDir.mkdirs()
+            // Удаляем содержимое директории через StorageManager.
+            // Получаем File объект и удаляем его
+            val activeDir = storageManager.get("shells/active")
+            if (activeDir.exists()) {
+                storageManager.remove(activeDir)
+                activeShellDir.mkdirs()
+            }
         }
     }
 
     /**
      * Распаковывает ZIP-архив оболочки
-     * Теперь выполняется в фоновом потоке (вызывается только из setActiveShell)
      */
-    private fun unzipShell(zipPath: String, outputDir: File) {
+    private suspend fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
         if (!zipFile.exists()) return
 
         try {
-            ZipFile(zipFile).use { zip ->
-                zip.entries().asSequence().forEach { entry ->
-                    val outFile = File(outputDir, entry.name)
-                    if (entry.isDirectory) {
-                        outFile.mkdirs()
-                    } else {
-                        outFile.parentFile?.mkdirs()
-                        zip.getInputStream(entry).use { input ->
-                            FileOutputStream(outFile).use { output ->
-                                input.copyTo(output)
+            withContext(Dispatchers.IO) {
+                ZipFile(zipFile).use { zip ->
+                    zip.entries().asSequence().forEach { entry ->
+                        val outFile = File(outputDir, entry.name)
+                        if (entry.isDirectory) {
+                            outFile.mkdirs()
+                        } else {
+                            outFile.parentFile?.mkdirs()
+                            zip.getInputStream(entry).use { input ->
+                                FileOutputStream(outFile).use { output ->
+                                    input.copyTo(output)
+                                }
                             }
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("ShellManager", "❌ Ошибка распаковки оболочки: ${e.message}")
+        }
+    }
+
+    // ============================================================
+    // ПРИНУДИТЕЛЬНАЯ ОРИЕНТАЦИЯ
+    // ============================================================
+
+    /**
+     * Получить принудительную ориентацию из активной оболочки
+     */
+    fun getForcedOrientationFromActiveShell(): String? {
+        val shell = getActiveShell() ?: return null
+        return when (val orientation = shell.orientation) {
+            "portrait", "landscape", "sensor", "user" -> orientation
+            else -> null
         }
     }
 
     /**
-     * Удаляет кастомную оболочку по имени
-     * @param name имя оболочки (без расширения)
-     * @return true если удаление успешно, false если файл не найден или ошибка
+     * Проверяет, задаёт ли текущая оболочка принудительную ориентацию
      */
-    fun deleteShellByName(name: String): Boolean {
+    fun hasForcedOrientation(): Boolean {
+        val forced = getForcedOrientationFromActiveShell()
+        return forced == "portrait" || forced == "landscape"
+    }
+
+    // ============================================================
+    // УПРАВЛЕНИЕ ОБОЛОЧКАМИ
+    // ============================================================
+
+    /**
+     * Проверяет, является ли кастомная оболочка обновлением встроенной
+     */
+    fun isBuiltInShellUpdate(shell: Shell): Boolean {
+        if (!shell.isCustom) return false
+        val builtInShells = getBuiltInShells()
+        return builtInShells.any { it.name == shell.name }
+    }
+
+    /**
+     * Удаляет кастомную оболочку по имени
+     */
+    suspend fun deleteShellByName(name: String): Boolean {
         return try {
             val fileName = "$name${SHELL_EXTENSION_WITH_DOT}"
-            val file = File(customShellsDir, fileName)
+            val deleted = storageManager.remove(
+                directory = StorageDirectory.SHELLS,
+                name = fileName
+            )
 
-            if (!file.exists()) {
-                return false
-            }
-
-            val deleted = file.delete()
-
-            // Если оболочка была активной — сбрасываем активную оболочку
+            // Если оболочка была активной — перезагружаем
             if (deleted) {
                 val currentActive = getActiveShell()
                 if (currentActive?.name == name && currentActive.isCustom) {
-                    // Перезагружаем активную оболочку из конфига
                     loadActiveShellFromConfig()
                 }
             }
@@ -527,6 +557,18 @@ class ShellManager(
             deleted
         } catch (_: Exception) {
             false
+        }
+    }
+
+    /**
+     * Получает URI для оболочки (для шаринга)
+     */
+    fun getShellUri(shell: Shell): android.net.Uri? {
+        val file = File(shell.sourcePath)
+        return if (file.exists()) {
+            storageManager.getUri(file)
+        } else {
+            null
         }
     }
 }

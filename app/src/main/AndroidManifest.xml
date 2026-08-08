@@ -2,20 +2,33 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Разрешения -->
+    <!-- ============================================================ -->
+    <!-- РАЗРЕШЕНИЯ                                                    -->
+    <!-- ============================================================ -->
+
+    <!-- Для получения информации о телефоне (уровень сигнала, тип сети) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- Для проверки состояния сети -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Для проверки состояния Wi-Fi -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Для доступа в интернет (проверка обновлений, загрузка оболочек) -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Для определения местоположения (статус GPS) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
+
+    <!-- ДЛЯ УСТАНОВКИ APK (Android 8+) -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:ignore="RequestInstallPackagesPolicy" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
+
+    <!-- ============================================================ -->
+    <!-- QUERIES                                                       -->
+    <!-- ============================================================ -->
 
     <queries>
         <intent>
@@ -23,6 +36,10 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
+
+    <!-- ============================================================ -->
+    <!-- ПРИЛОЖЕНИЕ                                                    -->
+    <!-- ============================================================ -->
 
     <application
         android:allowBackup="true"
@@ -33,8 +50,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.QutyLaunch"
-        android:requestLegacyExternalStorage="true"
+        android:requestLegacyExternalStorage="false"
         tools:ignore="UnusedAttribute">
+
+        <!-- ============================================================ -->
+        <!-- АКТИВНОСТИ                                                    -->
+        <!-- ============================================================ -->
 
         <!-- Главный экран -->
         <activity
@@ -43,7 +64,7 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
         </activity>
 
-        <!-- Экран приветствия -->
+        <!-- Экран приветствия (онбординг) -->
         <activity
             android:name=".WelcomeActivity"
             android:exported="true"
@@ -59,7 +80,7 @@
 
         </activity>
 
-        <!-- Экран настройки -->
+        <!-- Экран настроек -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
@@ -67,13 +88,17 @@
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
-        <!-- Логгер (DevMode) -->
+        <!-- Логгер (доступен только в DevMode) -->
         <activity
             android:name=".LoggerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.QutyLaunch">
         </activity>
+
+        <!-- ============================================================ -->
+        <!-- FILE PROVIDER                                                 -->
+        <!-- ============================================================ -->
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -84,6 +109,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 
 </manifest>

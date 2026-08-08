@@ -4,13 +4,15 @@ package by.quty.launch.core.managers
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Environment
 import androidx.core.content.ContextCompat
 
+/**
+ * Менеджер для работы с разрешениями
+ * Проверяет и управляет системными разрешениями приложения
+ */
 object PermissionManager {
 
-    // Обязательные разрешения
+    // Обязательные разрешения для работы приложения
     private val REQUIRED_PERMISSIONS = listOf(
         Manifest.permission.READ_PHONE_STATE,
         Manifest.permission.ACCESS_NETWORK_STATE,
@@ -25,33 +27,35 @@ object PermissionManager {
         return REQUIRED_PERMISSIONS
     }
 
+    /**
+     * Проверяет, предоставлены ли все обязательные разрешения
+     * @param context контекст приложения
+     * @return true если все разрешения предоставлены
+     */
     fun hasAllRequiredPermissions(context: Context): Boolean {
         return REQUIRED_PERMISSIONS.all { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 
+    /**
+     * Проверяет, предоставлено ли конкретное разрешение
+     * @param context контекст приложения
+     * @param permission разрешение для проверки
+     * @return true если разрешение предоставлено
+     */
     fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Возвращает список отсутствующих обязательных разрешений
+     * @param context контекст приложения
+     * @return список разрешений, которые ещё не предоставлены
+     */
     fun getMissingRequiredPermissions(context: Context): List<String> {
         return REQUIRED_PERMISSIONS.filter { permission ->
             ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    /**
-     * Проверяет наличие MANAGE_EXTERNAL_STORAGE (Android 11+)
-     */
-    fun hasManageStoragePermission(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 }

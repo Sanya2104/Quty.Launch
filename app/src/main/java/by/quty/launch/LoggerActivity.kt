@@ -18,6 +18,10 @@ import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.core.adapters.LoggerAdapter
 import by.quty.launch.core.logger.LogEntry
 import by.quty.launch.core.logger.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Активность для просмотра логов (Логгер)
@@ -264,11 +268,23 @@ class LoggerActivity : BaseActivity() {
 
         // Кнопка "Сохранить"
         btnSave.setOnClickListener {
-            val filePath = Logger.saveLogsToFile()
-            if (filePath != null) {
-                Toast.makeText(this, getString(R.string.logger_saved, filePath), Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(this, R.string.logger_save_error, Toast.LENGTH_SHORT).show()
+            CoroutineScope(Dispatchers.IO).launch {
+                val filePath = Logger.saveLogsToFile()
+                withContext(Dispatchers.Main) {
+                    if (filePath != null) {
+                        Toast.makeText(
+                            this@LoggerActivity,
+                            getString(R.string.logger_saved, filePath),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@LoggerActivity,
+                            R.string.logger_save_error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
         }
 
@@ -309,9 +325,7 @@ class LoggerActivity : BaseActivity() {
      */
     private fun updateStatus(filteredCount: Int = 0, totalCount: Int = 0) {
         val count = if (totalCount > 0) totalCount else Logger.getLogCount()
-        // Показываем реальное количество отфильтрованных логов (даже если 0)
-        val filtered = filteredCount
-        tvStatus.text = getString(R.string.logger_filter_status, filtered, count)
+        tvStatus.text = getString(R.string.logger_filter_status, filteredCount, count)
     }
 
     override fun onDestroy() {

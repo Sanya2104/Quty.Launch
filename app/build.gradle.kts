@@ -1,4 +1,4 @@
-﻿// app/build.gradle.kts
+// app/build.gradle.kts
 
 plugins {
     alias(libs.plugins.android.application)
@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 312
-    versionName = "0.0.101"
+    versionCode = 345
+    versionName = "0.0.110"
         versionNameSuffix = "Alpha"
     }
 
@@ -59,29 +59,3 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

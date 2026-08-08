@@ -1,15 +1,13 @@
 <!-- res/xml/file_paths.xml -->
 <paths>
-    <external-files-path name="updates" path="updates/" />
-    <cache-path name="cache" path="/" />
+    <!-- filesDir приложения (Android/data/by.quty.launch/files/) -->
+    <files-path
+        name="files"
+        path="/" />
 
-    <!-- Доступ к папке Download для установки APK -->
-    <external-path
-        name="download"
-        path="Download/" />
+    <!-- cacheDir приложения -->
+    <cache-path
+        name="cache"
+        path="/" />
 
-    <!-- Доступ к внешнему хранилищу -->
-    <external-path
-        name="external"
-        path="." />
 </paths>

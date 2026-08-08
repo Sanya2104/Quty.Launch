@@ -1,5 +1,4 @@
-// WelcomeActivity.kt
-
+// *** WelcomeActivity.kt *** //
 package by.quty.launch
 
 import android.Manifest
@@ -8,8 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -23,10 +20,13 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import by.quty.launch.core.managers.PermissionManager
 
+/**
+ * Активность приветствия (онбординг)
+ * Запрашивает необходимые разрешения перед запуском приложения
+ */
 class WelcomeActivity : BaseActivity() {
 
     private val permissionRequestCode = 100
-    private val storageRequestCode = 101
 
     // UI элементы
     private lateinit var progressBar: ProgressBar
@@ -43,22 +43,15 @@ class WelcomeActivity : BaseActivity() {
     // Флаг, что мы уже запрашивали разрешения
     private var isRequestingPermissions = false
 
-    // Флаг, что мы уже запрашивали MANAGE_EXTERNAL_STORAGE
-    private var isRequestingManageStorage = false
-
-    // Флаг, что активность уже завершается (предотвращает повторные вызовы)
+    // Флаг, что активность уже завершается
     private var isFinishingActivity = false
 
-    // Регистрируем ActivityResult для запроса доступа к хранилищу (замена startActivityForResult)
-    private val storagePermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        // Обновляем UI после возврата из настроек
-        updatePermissionsUI()
-        // Проверяем, дал ли пользователь разрешение
-        if (PermissionManager.hasManageStoragePermission(this)) {
-            Toast.makeText(this, R.string.storage_permission_granted, Toast.LENGTH_SHORT).show()
-        }
+    // Регистрируем ActivityResult для запроса разрешений (Android 11+)
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        isRequestingPermissions = false
+        handlePermissionResults(results)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,7 +64,8 @@ class WelcomeActivity : BaseActivity() {
         updatePermissionsUI()
         setupListeners()
 
-        if (PermissionManager.hasAllRequiredPermissions(this) && PermissionManager.hasManageStoragePermission(this)) {
+        // Проверяем, все ли разрешения уже есть
+        if (PermissionManager.hasAllRequiredPermissions(this)) {
             finishAndGoToMain()
         }
     }
@@ -107,7 +101,7 @@ class WelcomeActivity : BaseActivity() {
         permissionStatusViews.clear()
 
         // Список разрешений с иконками, названиями, описаниями
-        val permissionsData = mutableListOf(
+        val permissionsData = listOf(
             PermissionItem(
                 permission = Manifest.permission.READ_PHONE_STATE,
                 iconRes = R.drawable.ic_phone,
@@ -137,30 +131,6 @@ class WelcomeActivity : BaseActivity() {
                 isRequired = false
             )
         )
-
-        // Для Android 10 и ниже показываем READ_EXTERNAL_STORAGE
-        // Для Android 11+ показываем MANAGE_EXTERNAL_STORAGE
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            permissionsData.add(
-                PermissionItem(
-                    permission = "MANAGE_EXTERNAL_STORAGE",
-                    iconRes = R.drawable.ic_storage,
-                    titleRes = R.string.welcome_permission_manage_storage,
-                    descRes = R.string.welcome_permission_manage_storage_desc,
-                    isRequired = true
-                )
-            )
-        } else {
-            permissionsData.add(
-                PermissionItem(
-                    permission = Manifest.permission.READ_EXTERNAL_STORAGE,
-                    iconRes = R.drawable.ic_storage,
-                    titleRes = R.string.welcome_permission_storage,
-                    descRes = R.string.welcome_permission_storage_desc,
-                    isRequired = false
-                )
-            )
-        }
 
         for (item in permissionsData) {
             val itemView = createPermissionItem(
@@ -332,65 +302,57 @@ class WelcomeActivity : BaseActivity() {
     }
 
     /**
-     * Запрашивает MANAGE_EXTERNAL_STORAGE для Android 11+
+     * Запрашивает все необходимые разрешения
      */
-    private fun requestManageStoragePermission() {
-        if (isRequestingManageStorage) return
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                isRequestingManageStorage = true
-                try {
-                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                    intent.data = "package:$packageName".toUri()
-                    storagePermissionLauncher.launch(intent)
-                } catch (_: Exception) {
-                    try {
-                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                        storagePermissionLauncher.launch(intent)
-                    } catch (_: Exception) {
-                        isRequestingManageStorage = false
-                        Toast.makeText(
-                            this,
-                            R.string.cannot_open_manage_storage,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
-    }
-
     private fun requestAllPermissions() {
         if (isRequestingPermissions) return
         isRequestingPermissions = true
 
-        // Сначала запрашиваем MANAGE_EXTERNAL_STORAGE для Android 11+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            requestManageStoragePermission()
-            isRequestingPermissions = false
-            return
-        }
-
         val missingPermissions = PermissionManager.getMissingRequiredPermissions(this)
 
         if (missingPermissions.isEmpty()) {
-            if (PermissionManager.hasManageStoragePermission(this)) {
-                finishAndGoToMain()
-            } else {
-                requestManageStoragePermission()
-            }
             isRequestingPermissions = false
+            finishAndGoToMain()
             return
         }
 
-        ActivityCompat.requestPermissions(
-            this,
-            missingPermissions.toTypedArray(),
-            permissionRequestCode
-        )
+        // Используем ActivityResult для Android 11+
+        permissionLauncher.launch(missingPermissions.toTypedArray())
     }
 
+    /**
+     * Обрабатывает результаты запроса разрешений
+     */
+    private fun handlePermissionResults(results: Map<String, Boolean>) {
+        isRequestingPermissions = false
+
+        val allGranted = PermissionManager.hasAllRequiredPermissions(this)
+
+        if (allGranted) {
+            finishAndGoToMain()
+        } else {
+            // Проверяем, были ли отклонены разрешения навсегда
+            val hasDeniedPermanently = results.entries.any { (permission, granted) ->
+                !granted && !ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
+            }
+
+            if (hasDeniedPermanently) {
+                showPermissionDeniedError()
+            } else {
+                // Разрешения были отклонены, но их можно запросить снова
+                Toast.makeText(
+                    this,
+                    getString(R.string.welcome_permission_denied_message),
+                    Toast.LENGTH_LONG
+                ).show()
+                showPermissionDeniedError()
+            }
+
+            updatePermissionsUI()
+        }
+    }
+
+    @Suppress("DEPRECATION")
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -400,36 +362,43 @@ class WelcomeActivity : BaseActivity() {
         isRequestingPermissions = false
 
         if (requestCode == permissionRequestCode) {
-            val allRequiredGranted = PermissionManager.hasAllRequiredPermissions(this)
+            // Для обратной совместимости со старыми устройствами
+            val allGranted = PermissionManager.hasAllRequiredPermissions(this)
 
-            if (allRequiredGranted && PermissionManager.hasManageStoragePermission(this)) {
+            if (allGranted) {
                 finishAndGoToMain()
             } else {
-                if (allRequiredGranted && !PermissionManager.hasManageStoragePermission(this)) {
-                    requestManageStoragePermission()
+                // Проверяем, были ли отклонены разрешения навсегда
+                val hasDeniedPermanently = permissions.indices.any { i ->
+                    !grantResults[i].isGranted() &&
+                            !ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])
+                }
+
+                if (hasDeniedPermanently) {
+                    showPermissionDeniedError()
                 } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.welcome_permission_denied_message),
+                        Toast.LENGTH_LONG
+                    ).show()
                     showPermissionDeniedError()
                 }
-            }
 
-            updatePermissionsUI()
-        } else if (requestCode == storageRequestCode) {
-            // Обработка READ_EXTERNAL_STORAGE для Android 10 и ниже
-            updatePermissionsUI()
-            if (PermissionManager.hasAllRequiredPermissions(this) && PermissionManager.hasManageStoragePermission(this)) {
-                finishAndGoToMain()
+                updatePermissionsUI()
             }
         }
+    }
+
+    private fun Int.isGranted(): Boolean {
+        return this == PackageManager.PERMISSION_GRANTED
     }
 
     @SuppressLint("SetTextI18n")
     private fun updatePermissionsUI() {
         // Обновляем статусы
         for ((permission, statusView) in permissionStatusViews) {
-            val isGranted = when (permission) {
-                "MANAGE_EXTERNAL_STORAGE" -> PermissionManager.hasManageStoragePermission(this)
-                else -> PermissionManager.hasPermission(this, permission)
-            }
+            val isGranted = PermissionManager.hasPermission(this, permission)
             statusView.text = if (isGranted) {
                 getString(R.string.permission_granted)
             } else {
@@ -446,21 +415,11 @@ class WelcomeActivity : BaseActivity() {
 
         // Подсчитываем прогресс
         val requiredPermissions = PermissionManager.getRequiredPermissions()
-        val hasManageStorage = PermissionManager.hasManageStoragePermission(this)
-
-        // Базовое количество обязательных разрешений (без учёта хранилища)
-        val baseRequiredCount = requiredPermissions.size
-
-        // Добавляем хранилище в зависимости от версии Android
-        val totalCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            baseRequiredCount + 1  // + MANAGE_EXTERNAL_STORAGE
-        } else {
-            baseRequiredCount + 1  // + READ_EXTERNAL_STORAGE (необязательное, но считаем в прогрессе)
-        }
+        val totalCount = requiredPermissions.size
 
         val grantedCount = requiredPermissions.count { permission ->
             PermissionManager.hasPermission(this, permission)
-        } + if (hasManageStorage) 1 else 0
+        }
 
         val finalProgress = if (totalCount > 0) {
             (grantedCount * 100 / totalCount)
@@ -471,8 +430,7 @@ class WelcomeActivity : BaseActivity() {
         progressBar.progress = finalProgress
         progressText.text = "$finalProgress%"
 
-        val allRequiredGranted = PermissionManager.hasAllRequiredPermissions(this) &&
-                PermissionManager.hasManageStoragePermission(this)
+        val allRequiredGranted = PermissionManager.hasAllRequiredPermissions(this)
 
         if (allRequiredGranted) {
             btnGrant.text = getString(R.string.welcome_button_start)
@@ -500,35 +458,16 @@ class WelcomeActivity : BaseActivity() {
 
     private fun openAppSettings() {
         try {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
             intent.data = "package:$packageName".toUri()
             startActivity(intent)
         } catch (_: Exception) {
-            val intent = Intent(Settings.ACTION_SETTINGS)
+            val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
             startActivity(intent)
         }
     }
 
-    /**
-     * Проверяет, есть ли доступ к хранилищу
-     * Вызывается из ShellSettingsFragment
-     */
-    @Suppress("unused")
-    fun hasStoragePermission(): Boolean {
-        return PermissionManager.hasManageStoragePermission(this)
-    }
-
-    /**
-     * Запрашивает доступ к хранилищу
-     * Вызывается из ShellSettingsFragment
-     */
-    @Suppress("unused")
-    fun requestStoragePermission() {
-        requestManageStoragePermission()
-    }
-
     private fun finishAndGoToMain() {
-        // Предотвращаем повторный вызов
         if (isFinishingActivity) return
         isFinishingActivity = true
 
@@ -547,15 +486,12 @@ class WelcomeActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
-        // Если активность уже завершается — пропускаем
         if (isFinishingActivity) return
-
-        // Сбрасываем флаг запроса, так как мы вернулись из настроек
-        isRequestingManageStorage = false
+        isRequestingPermissions = false
 
         updatePermissionsUI()
 
-        if (PermissionManager.hasAllRequiredPermissions(this) && PermissionManager.hasManageStoragePermission(this)) {
+        if (PermissionManager.hasAllRequiredPermissions(this)) {
             finishAndGoToMain()
         }
     }

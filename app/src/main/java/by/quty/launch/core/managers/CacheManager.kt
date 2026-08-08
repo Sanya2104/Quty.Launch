@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
+import java.lang.ref.WeakReference
 
 /**
  * Менеджер кэширования списка приложений
@@ -28,7 +28,7 @@ data class CachedApps(
 )
 
 object CacheManager {
-    private const val CACHE_FILE_NAME = "apps_cache.json"
+    private const val CACHE_FILE_NAME = "apps_cache"
     private const val CACHE_VALIDITY_MS = 30 * 60 * 1000 // 30 минут
 
     // In-memory кэш (самый быстрый доступ)
@@ -36,6 +36,9 @@ object CacheManager {
 
     // Флаг, что кэш нужно принудительно обновить
     private var isCacheDirty = false
+
+    // StorageManager - хранится в WeakReference для предотвращения утечек памяти
+    private var storageManagerRef: WeakReference<StorageManager>? = null
 
     // Регистрация BroadcastReceiver
     private var receiverRegistered = false
@@ -62,8 +65,23 @@ object CacheManager {
     }
 
     /**
+     * Получает StorageManager из WeakReference
+     * @return StorageManager или null, если сборщик мусора уже очистил ссылку
+     */
+    private fun getStorageManager(): StorageManager? {
+        return storageManagerRef?.get()
+    }
+
+    /**
+     * Инициализация CacheManager
+     * @param storageManager экземпляр StorageManager (хранится в WeakReference)
+     */
+    fun init(storageManager: StorageManager) {
+        this.storageManagerRef = WeakReference(storageManager)
+    }
+
+    /**
      * Регистрирует BroadcastReceiver для отслеживания изменений в приложениях
-     * Вызывается при инициализации приложения
      * @param context контекст приложения
      */
     fun registerPackageReceiver(context: Context) {
@@ -86,62 +104,45 @@ object CacheManager {
     }
 
     /**
-     * Отменяет регистрацию BroadcastReceiver
-     * Вызывается при завершении приложения
-     * @param context контекст приложения
-     */
-    fun unregisterPackageReceiver(context: Context) {
-        if (!receiverRegistered) return
-
-        try {
-            context.applicationContext.unregisterReceiver(packageReceiver)
-            receiverRegistered = false
-            Logger.d("CacheManager", context.getString(R.string.cache_manager_receiver_unregistered))
-        } catch (e: Exception) {
-            Logger.e("CacheManager", context.getString(R.string.cache_manager_receiver_unregister_error, e.message))
-        }
-    }
-
-    /**
      * Принудительно инвалидирует кэш
      * Вызывается при изменении списка приложений
      */
     fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
-        // Используем Logger без контекста, так как invalidateCache() вызывается из BroadcastReceiver
-        // где контекст доступен, но мы не можем его передать без изменения сигнатуры
+        Logger.d("CacheManager", "🔄 Кэш приложений инвалидирован")
     }
 
     /**
      * Получить кэшированный список приложений
      * Сначала проверяет in-memory кэш (мгновенно),
      * затем пробует загрузить с диска.
-     * @param context контекст приложения
      * @return список приложений или null, если кэш отсутствует/просрочен
      */
-    fun getCachedApps(context: Context): List<AppInfo>? {
+    suspend fun getCachedApps(): List<AppInfo>? = withContext(Dispatchers.IO) {
+        val storageManager = getStorageManager()
+
         // Если кэш помечен как грязный — пропускаем
         if (isCacheDirty) {
-            Logger.d("CacheManager", context.getString(R.string.cache_manager_skipped_dirty))
-            return null
+            Logger.d("CacheManager", "⏭️ Кэш пропущен (грязный флаг)")
+            return@withContext null
         }
 
         // 1. Проверяем память (самый быстрый способ)
         memoryCache?.let { cached ->
             if (!isExpired(cached.timestamp)) {
-                return cached.apps
+                return@withContext cached.apps
             }
         }
 
         // 2. Проверяем диск
-        val diskCache = loadFromDisk(context)
+        val diskCache = loadFromDisk(storageManager)
         if (diskCache != null && !isExpired(diskCache.timestamp)) {
             memoryCache = diskCache // сохраняем в память для будущих запросов
-            return diskCache.apps
+            return@withContext diskCache.apps
         }
 
-        return null
+        return@withContext null
     }
 
     /**
@@ -149,10 +150,9 @@ object CacheManager {
      * Сохраняет одновременно:
      * - в оперативную память (in-memory)
      * - на диск (в фоновом потоке)
-     * @param context контекст приложения
      * @param apps список приложений для сохранения
      */
-    suspend fun saveApps(context: Context, apps: List<AppInfo>) {
+    suspend fun saveApps(apps: List<AppInfo>) {
         val cached = CachedApps(apps, System.currentTimeMillis())
 
         // Сохраняем в память (мгновенно)
@@ -160,42 +160,48 @@ object CacheManager {
         // Сбрасываем флаг грязного кэша
         isCacheDirty = false
 
-        // Сохраняем на диск в фоновом потоке (чтобы не тормозить UI)
-        withContext(Dispatchers.IO) {
-            saveToDisk(context, cached)
+        // Сохраняем на диск в фоновом потоке
+        val storageManager = getStorageManager()
+        if (storageManager != null) {
+            saveToDisk(storageManager, cached)
         }
 
-        Logger.d("CacheManager", context.getString(R.string.cache_manager_saved, apps.size))
+        Logger.d("CacheManager", "✅ Сохранено приложений в кэш: ${apps.size}")
     }
 
     /**
-     * Сохранить кэш на диск в формате JSON
-     * Использует cacheDir приложения, который автоматически очищается
-     * системой при нехватке места
-     * @param context контекст приложения
+     * Сохранить кэш на диск через StorageManager
+     * @param storageManager экземпляр StorageManager
      * @param cached данные для сохранения
      */
-    private fun saveToDisk(context: Context, cached: CachedApps) {
+    private suspend fun saveToDisk(storageManager: StorageManager, cached: CachedApps) {
         try {
             val jsonString = json.encodeToString(cached)
-            val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
-            cacheFile.writeText(jsonString)
+            storageManager.set(
+                directory = StorageDirectory.CACHE,
+                name = CACHE_FILE_NAME,
+                content = jsonString,
+                overwrite = true
+            )
         } catch (_: Exception) {
             // Игнорируем ошибки кэширования — приложение работает и без кэша
         }
     }
 
     /**
-     * Загрузить кэш с диска
-     * Читает JSON-файл из cacheDir и десериализует его
-     * @param context контекст приложения
+     * Загрузить кэш с диска через StorageManager
+     * @param storageManager экземпляр StorageManager или null
      * @return закэшированные данные или null
      */
-    private fun loadFromDisk(context: Context): CachedApps? {
+    private suspend fun loadFromDisk(storageManager: StorageManager?): CachedApps? {
+        if (storageManager == null) return null
+
         return try {
-            val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
-            if (!cacheFile.exists()) return null
-            val jsonString = cacheFile.readText()
+            val jsonString = storageManager.getString(
+                directory = StorageDirectory.CACHE,
+                name = CACHE_FILE_NAME
+            )
+            if (jsonString.isNullOrEmpty()) return null
             json.decodeFromString<CachedApps>(jsonString)
         } catch (_: Exception) {
             null
@@ -214,23 +220,24 @@ object CacheManager {
 
     /**
      * Очищает кэш приложений (in-memory и disk)
-     * @param context контекст приложения
      */
-    fun clearCache(context: Context) {
+    suspend fun clearCache() {
         // Очищаем in-memory кэш
         memoryCache = null
         isCacheDirty = true
 
-        // Удаляем файл кэша с диска
-        try {
-            val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
-            if (cacheFile.exists()) {
-                cacheFile.delete()
+        // Удаляем файл кэша с диска через StorageManager
+        val storageManager = getStorageManager()
+        if (storageManager != null) {
+            try {
+                storageManager.remove(
+                    directory = StorageDirectory.CACHE,
+                    name = CACHE_FILE_NAME
+                )
+                Logger.d("CacheManager", "🗑️ Кэш приложений очищен")
+            } catch (_: Exception) {
+                // Игнорируем ошибки
             }
-        } catch (_: Exception) {
-            // Игнорируем ошибки
         }
-
-        Logger.d("CacheManager", context.getString(R.string.cache_manager_cleared))
     }
 }

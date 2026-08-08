@@ -1,28 +1,32 @@
 // *** core/managers/SystemUpdateManager.kt *** //
 package by.quty.launch.core.managers
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
+import android.provider.Settings
+import android.widget.Toast
+import androidx.core.content.edit
 import by.quty.launch.R
+import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import androidx.core.content.edit
-import java.io.File
+import androidx.core.net.toUri
 
+/**
+ * Информация о версии приложения
+ */
 @Serializable
 data class VersionInfo(
     val version: String,
@@ -34,6 +38,9 @@ data class VersionInfo(
     val size: String
 )
 
+/**
+ * Результат проверки обновлений
+ */
 @Serializable
 data class UpdateCheckResult(
     val hasUpdate: Boolean,
@@ -41,41 +48,73 @@ data class UpdateCheckResult(
     val error: String? = null
 )
 
+/**
+ * Менеджер обновления приложения
+ * Проверяет наличие обновлений, скачивает и устанавливает APK
+ */
 class SystemUpdateManager(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val storageManager = StorageManager(context)
+
+    // URL для проверки обновлений
     private val versionUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/updates/version.json"
 
     // SharedPreferences для меток завершённых загрузок
     private val prefs = context.getSharedPreferences("update_prefs", Context.MODE_PRIVATE)
 
+    companion object {
+        private const val APK_PREFIX = "Quty.Launch"
+        private const val DOWNLOAD_COMPLETE_KEY = "download_complete_"
+        private const val CONNECT_TIMEOUT_MS = 5000
+        private const val READ_TIMEOUT_MS = 5000
+    }
+
+    init {
+        cleanupOldDownloadMarks()
+    }
+
+    // ============================================================
+    // ПОЛУЧЕНИЕ ИНФОРМАЦИИ О ВЕРСИИ
+    // ============================================================
+
     /**
      * Получение текущей версии приложения через PackageManager
      */
-    private fun getCurrentVersionCode(): Int {
+    private fun getCurrentVersionCode(): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
             } else {
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            packageInfo.longVersionCode.toInt()
+            packageInfo.longVersionCode
         } catch (e: Exception) {
-            e.printStackTrace()
-            0
+            Logger.e("SystemUpdateManager", "❌ Ошибка получения версии: ${e.message}")
+            0L
         }
     }
 
+    // ============================================================
+    // ПРОВЕРКА ОБНОВЛЕНИЙ
+    // ============================================================
+
     /**
      * Проверка наличия обновлений
+     * @return UpdateCheckResult с информацией об обновлении
      */
     suspend fun checkForUpdates(): UpdateCheckResult = withContext(Dispatchers.IO) {
         try {
+            Logger.d("SystemUpdateManager", "🔍 Проверка обновлений...")
+
             val connection = URL(versionUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
+            connection.readTimeout = READ_TIMEOUT_MS
 
             if (connection.responseCode == 200) {
                 val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
@@ -84,8 +123,12 @@ class SystemUpdateManager(private val context: Context) {
                 val currentVersionCode = getCurrentVersionCode()
                 val hasUpdate = versionInfo.versionCode > currentVersionCode
 
+                Logger.d("SystemUpdateManager",
+                    "📊 Текущая версия: $currentVersionCode, Доступна: ${versionInfo.versionCode}, Обновление: $hasUpdate"
+                )
+
                 if (!hasUpdate) {
-                    cleanupOldDownloadMarks(currentVersionCode)
+                    cleanupOldDownloadMarks()
                     deleteOldApkFiles()
                 }
 
@@ -94,7 +137,11 @@ class SystemUpdateManager(private val context: Context) {
                     versionInfo = if (hasUpdate) versionInfo else null
                 )
             } else {
-                UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.server_error, connection.responseCode))
+                Logger.w("SystemUpdateManager", "⚠️ Сервер вернул код: ${connection.responseCode}")
+                UpdateCheckResult(
+                    hasUpdate = false,
+                    error = context.getString(R.string.server_error, connection.responseCode)
+                )
             }
         } catch (_: UnknownHostException) {
             UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.no_internet_connection))
@@ -109,156 +156,151 @@ class SystemUpdateManager(private val context: Context) {
                 e.message?.contains("hostname") == true -> context.getString(R.string.no_internet_connection)
                 else -> e.message ?: context.getString(R.string.update_error)
             }
+            Logger.e("SystemUpdateManager", "❌ Ошибка проверки: ${e.message}")
             UpdateCheckResult(hasUpdate = false, error = errorMessage)
         }
     }
 
+    // ============================================================
+    // УПРАВЛЕНИЕ ФАЙЛАМИ ОБНОВЛЕНИЙ
+    // ============================================================
+
     /**
-     * Очищает метки загрузки для версий, которые уже не актуальны
+     * Получить имя APK файла для указанной версии
      */
-    private fun cleanupOldDownloadMarks(currentVersionCode: Int) {
-        try {
-            val allKeys = prefs.all.keys
-            for (key in allKeys) {
-                if (key.startsWith("download_complete_")) {
-                    val versionCode = key.replace("download_complete_", "").toIntOrNull()
-                    if (versionCode != null && versionCode <= currentVersionCode) {
-                        prefs.edit { remove(key) }
-                    }
+    private fun getApkFileName(version: String): String {
+        return "$APK_PREFIX-$version.apk"
+    }
+
+    /**
+     * Проверяет, существует ли уже скачанный APK файл для указанной версии
+     * @param versionInfo информация о версии
+     * @return Pair(существует ли, URI файла)
+     */
+    suspend fun checkIfApkExists(versionInfo: VersionInfo): Pair<Boolean, Uri?> =
+        withContext(Dispatchers.IO) {
+            try {
+                val fileName = getApkFileName(versionInfo.version)
+
+                // Проверяем метку о завершении загрузки
+                if (!isDownloadComplete(versionInfo.versionCode)) {
+                    // Если метки нет, удаляем возможный файл-призрак
+                    deleteApkFile(fileName)
+                    return@withContext Pair(false, null)
                 }
+
+                // Проверяем существование файла через StorageManager
+                val file = storageManager.get(StorageDirectory.UPDATES, fileName)
+                if (storageManager.isValidFile(file)) {
+                    val uri = storageManager.getUri(file)
+                    return@withContext Pair(true, uri)
+                } else {
+                    // Файл повреждён или отсутствует — очищаем метку
+                    clearDownloadMark(versionInfo.versionCode)
+                    return@withContext Pair(false, null)
+                }
+            } catch (_: Exception) {
+                Pair(false, null)
             }
-        } catch (_: Exception) { }
+        }
+
+    /**
+     * Удаляет APK файл по имени
+     */
+    private suspend fun deleteApkFile(fileName: String) {
+        try {
+            storageManager.remove(StorageDirectory.UPDATES, fileName)
+        } catch (_: Exception) {
+            // Игнорируем ошибки
+        }
     }
 
     /**
      * Удаляет все старые APK файлы
      */
-    private fun deleteOldApkFiles() {
+    private suspend fun deleteOldApkFiles() {
         try {
-            val cursor = context.contentResolver.query(
-                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                arrayOf(
-                    MediaStore.Downloads._ID,
-                    MediaStore.Downloads.DISPLAY_NAME
-                ),
-                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                arrayOf("Quty.Launch-%.apk"),
-                null
+            val apkFiles = storageManager.list(
+                directory = StorageDirectory.UPDATES,
+                filter = { it.startsWith(APK_PREFIX) && it.endsWith(".apk") }
             )
-
-            cursor?.use {
-                while (it.moveToNext()) {
-                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
-                    val uri = Uri.withAppendedPath(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        id.toString()
-                    )
-                    context.contentResolver.delete(uri, null, null)
-                }
+            var deletedCount = 0
+            apkFiles.forEach { file ->
+                storageManager.remove(file)
+                deletedCount++
             }
-        } catch (_: Exception) { }
+            if (deletedCount > 0) {
+                Logger.d("SystemUpdateManager", "🗑️ Удалено $deletedCount старых APK файлов")
+            }
+        } catch (_: Exception) {
+            // Игнорируем ошибки
+        }
     }
+
+    // ============================================================
+    // УПРАВЛЕНИЕ МЕТКАМИ ЗАГРУЗКИ
+    // ============================================================
 
     /**
      * Сохраняет информацию об успешно скачанном файле
      */
     private fun markDownloadComplete(versionCode: Int) {
-        prefs.edit { putBoolean("download_complete_$versionCode", true) }
+        prefs.edit { putBoolean("$DOWNLOAD_COMPLETE_KEY$versionCode", true) }
+        Logger.d("SystemUpdateManager", "✅ Отмечено завершение загрузки для версии $versionCode")
     }
 
     /**
      * Проверяет, был ли файл успешно скачан
      */
     private fun isDownloadComplete(versionCode: Int): Boolean {
-        return prefs.getBoolean("download_complete_$versionCode", false)
+        return prefs.getBoolean("$DOWNLOAD_COMPLETE_KEY$versionCode", false)
     }
 
     /**
      * Очищает метку о загрузке
      */
     fun clearDownloadMark(versionCode: Int) {
-        prefs.edit { remove("download_complete_$versionCode") }
+        prefs.edit { remove("$DOWNLOAD_COMPLETE_KEY$versionCode") }
+        Logger.d("SystemUpdateManager", "🗑️ Очищена метка загрузки для версии $versionCode")
     }
 
     /**
-     * Удаляет файл по имени из Download
+     * Очищает старые метки загрузки (для версий, которые уже не актуальны)
      */
-    private fun deleteFileIfExists(fileName: String) {
+    private fun cleanupOldDownloadMarks() {
         try {
-            val cursor = context.contentResolver.query(
-                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Downloads._ID),
-                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-                arrayOf(fileName),
-                null
-            )
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
-                    val uri = Uri.withAppendedPath(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        id.toString()
-                    )
-                    context.contentResolver.delete(uri, null, null)
-                }
-            }
-        } catch (_: Exception) { }
-    }
+            val currentVersionCode = getCurrentVersionCode()
+            val allKeys = prefs.all.keys
+            var removedCount = 0
 
-    /**
-     * Проверка, существует ли уже скачанный APK файл для указанной версии
-     */
-    suspend fun checkIfApkExists(versionInfo: VersionInfo): Pair<Boolean, Uri?> = withContext(Dispatchers.IO) {
-        try {
-            val fileName = "Quty.Launch-${versionInfo.version}.apk"
-
-            if (!isDownloadComplete(versionInfo.versionCode)) {
-                deleteFileIfExists(fileName)
-                return@withContext Pair(false, null)
-            }
-
-            val cursor = context.contentResolver.query(
-                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                arrayOf(
-                    MediaStore.Downloads._ID,
-                    MediaStore.Downloads.SIZE
-                ),
-                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-                arrayOf(fileName),
-                null
-            )
-
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
-                    val size = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads.SIZE))
-
-                    if (size > 0) {
-                        val uri = Uri.withAppendedPath(
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                            id.toString()
-                        )
-                        return@withContext Pair(true, uri)
-                    } else {
-                        val uri = Uri.withAppendedPath(
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                            id.toString()
-                        )
-                        context.contentResolver.delete(uri, null, null)
-                        clearDownloadMark(versionInfo.versionCode)
-                        return@withContext Pair(false, null)
+            allKeys.forEach { key ->
+                if (key.startsWith(DOWNLOAD_COMPLETE_KEY)) {
+                    val versionCode = key.replace(DOWNLOAD_COMPLETE_KEY, "").toIntOrNull()
+                    if (versionCode != null && versionCode <= currentVersionCode) {
+                        prefs.edit { remove(key) }
+                        removedCount++
                     }
                 }
             }
 
-            Pair(false, null)
+            if (removedCount > 0) {
+                Logger.d("SystemUpdateManager", "🗑️ Очищено $removedCount старых меток загрузки")
+            }
         } catch (_: Exception) {
-            Pair(false, null)
+            // Игнорируем ошибки
         }
     }
 
+    // ============================================================
+    // СКАЧИВАНИЕ И УСТАНОВКА
+    // ============================================================
+
     /**
-     * Скачивание APK с проверкой на существование файла
+     * Скачивает APK файл
+     * @param versionInfo информация о версии
+     * @param listener слушатель прогресса
+     * @param forceDownload принудительно перескачать (игнорировать существующий)
+     * @return true при успехе
      */
     suspend fun downloadApk(
         versionInfo: VersionInfo,
@@ -266,11 +308,13 @@ class SystemUpdateManager(private val context: Context) {
         forceDownload: Boolean = false
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            val fileName = "Quty.Launch-${versionInfo.version}.apk"
+            val fileName = getApkFileName(versionInfo.version)
 
+            // Проверяем, существует ли уже скачанный APK
             if (!forceDownload) {
                 val (exists, existingUri) = checkIfApkExists(versionInfo)
                 if (exists && existingUri != null) {
+                    Logger.d("SystemUpdateManager", "✅ APK уже скачан: $fileName")
                     withContext(Dispatchers.Main) {
                         listener.onSuccess(existingUri)
                     }
@@ -278,7 +322,24 @@ class SystemUpdateManager(private val context: Context) {
                 }
             }
 
-            // Используем UpdateHelper для скачивания
+            // Проверяем наличие свободного места
+            val fileSize = versionInfo.size.toLongOrNull() ?: (20 * 1024 * 1024) // 20 MB по умолчанию
+            if (!hasEnoughFreeSpace(fileSize)) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_not_enough_space))
+                }
+                return@withContext false
+            }
+
+            // Создаём временный файл
+            val tempFile = storageManager.createTempFile(
+                prefix = "apk_download_${versionInfo.versionCode}",
+                extension = "tmp"
+            )
+
+            Logger.d("SystemUpdateManager", "📥 Начинаем скачивание APK: $fileName")
+
+            // Скачиваем через UpdateHelper
             val file = UpdateHelper.downloadFile(
                 context = context,
                 url = versionInfo.downloadUrl,
@@ -288,46 +349,76 @@ class SystemUpdateManager(private val context: Context) {
                     }
 
                     override fun onSuccess(file: File) {
-                        // Сохраняем в MediaStore
-                        val contentValues = ContentValues().apply {
-                            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-                            put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive")
-                            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                        }
-
-                        val contentUri = context.contentResolver.insert(
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                            contentValues
-                        )
-
-                        if (contentUri != null) {
-                            context.contentResolver.openOutputStream(contentUri)?.use { os ->
-                                file.inputStream().use { input ->
-                                    input.copyTo(os)
-                                }
-                            }
-                            file.delete()
-
-                            markDownloadComplete(versionInfo.versionCode)
-                            listener.onSuccess(contentUri)
-                        } else {
-                            listener.onError(context.getString(R.string.download_media_store_create_failed))
-                        }
+                        // Файл скачан во временный файл
                     }
 
                     override fun onError(message: String) {
-                        clearDownloadMark(versionInfo.versionCode)
                         listener.onError(message)
                     }
                 },
-                destination = UpdateHelper.Destination.TempFile("apk_download"),
-                connectTimeout = 5000,
-                readTimeout = 5000
+                destination = UpdateHelper.Destination.CustomPath(tempFile.absolutePath),
+                connectTimeout = 15000,
+                readTimeout = 30000
             )
 
-            file != null
+            if (file == null || !file.exists()) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_empty_file))
+                }
+                return@withContext false
+            }
+
+            // Проверяем, что файл не пустой
+            if (file.length() == 0L) {
+                file.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_empty_file))
+                }
+                return@withContext false
+            }
+
+            // Сохраняем через StorageManager
+            val success = storageManager.set(
+                directory = StorageDirectory.UPDATES,
+                name = fileName,
+                inputStream = file.inputStream(),
+                overwrite = true
+            )
+
+            // Удаляем временный файл
+            file.delete()
+
+            if (!success) {
+                Logger.e("SystemUpdateManager", "❌ Ошибка сохранения APK")
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_error))
+                }
+                return@withContext false
+            }
+
+            // Отмечаем загрузку как завершённую
+            markDownloadComplete(versionInfo.versionCode)
+
+            // Получаем URI для установки
+            val savedFile = storageManager.get(StorageDirectory.UPDATES, fileName)
+            val uri = storageManager.getUri(savedFile)
+
+            if (uri == null) {
+                Logger.e("SystemUpdateManager", "❌ Не удалось получить URI для APK")
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_error))
+                }
+                return@withContext false
+            }
+
+            Logger.d("SystemUpdateManager", "✅ APK сохранён: $fileName")
+            withContext(Dispatchers.Main) {
+                listener.onSuccess(uri)
+            }
+            true
 
         } catch (e: Exception) {
+            Logger.e("SystemUpdateManager", "❌ Ошибка скачивания APK: ${e.message}")
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))
             }
@@ -336,24 +427,63 @@ class SystemUpdateManager(private val context: Context) {
     }
 
     /**
+     * Проверяет, достаточно ли свободного места для загрузки файла
+     */
+    private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
+        return try {
+            val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
+            // Проверяем, что свободного места как минимум на 10% больше требуемого
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            // Если не удалось проверить — считаем, что места достаточно
+            true
+        }
+    }
+
+    /**
      * Установка APK из Uri
+     * @param uri URI APK файла
+     * @param versionCode версия для очистки метки (опционально)
      */
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
+            Logger.d("SystemUpdateManager", "📲 Запуск установки APK")
+
+            // Проверяем разрешение на установку (для Android 8+)
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                Logger.w("SystemUpdateManager", "⚠️ Нет разрешения на установку, открываем настройки")
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                intent.data = "package:${context.packageName}".toUri()
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                Toast.makeText(context, "Разрешите установку из неизвестных источников и повторите попытку", Toast.LENGTH_LONG).show()
+                return
+            }
+
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                // Для Android 7+ нужна поддержка FileProvider
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             }
             context.startActivity(intent)
 
-            if (versionCode != null) {
-                clearDownloadMark(versionCode)
+            // Очищаем метку загрузки после запуска установки
+            versionCode?.let { code ->
+                clearDownloadMark(code)
             }
+
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("SystemUpdateManager", "❌ Ошибка запуска установки: ${e.message}")
+            Toast.makeText(context, "Не удалось установить обновление: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+    // ============================================================
+    // СЛУШАТЕЛЬ
+    // ============================================================
 
     interface DownloadListener {
         fun onProgress(percent: Int)

@@ -1,6 +1,7 @@
 // *** api/methods/GetApps.kt *** //
 package by.quty.launch.api.methods
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -27,7 +28,7 @@ class GetApps(
 
     override suspend fun executeInternal(params: Unit?): String {
         // 1. Пробуем получить из кэша
-        val cachedApps = CacheManager.getCachedApps(context)
+        val cachedApps = CacheManager.getCachedApps()
         if (cachedApps != null) {
             return json.encodeToString(
                 ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
@@ -39,7 +40,7 @@ class GetApps(
         val freshApps = loadFreshApps()
 
         // 3. Сохраняем в кэш
-        CacheManager.saveApps(context, freshApps)
+        CacheManager.saveApps(freshApps)
 
         return json.encodeToString(
             ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
@@ -47,10 +48,14 @@ class GetApps(
         )
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
     private suspend fun loadFreshApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val packageManager = context.packageManager
 
-        // Получаем реальные установленные приложения с иконками
+        // Android 11+ ограничивает видимость пакетов.
+        // Мы используем getInstalledApplications(0) + фильтр по LAUNCHER,
+        // что соответствует объявленному в манифесте <queries>.
+        // Это позволяет видеть только приложения с иконкой на рабочем столе.
         val realApps = packageManager
             .getInstalledApplications(0)
             .filter { packageManager.getLaunchIntentForPackage(it.packageName) != null }

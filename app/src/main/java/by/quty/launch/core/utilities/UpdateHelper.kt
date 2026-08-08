@@ -1,11 +1,8 @@
 // *** core/utilities/UpdateHelper.kt *** //
 package by.quty.launch.core.utilities
 
-import android.content.ContentValues
 import android.content.Context
-import android.os.Environment
 import android.os.StatFs
-import android.provider.MediaStore
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,11 +18,15 @@ import java.net.URL
  * Использование:
  * - compareVersions() - сравнение версий
  * - isNewerVersion() - проверка, новее ли версия
- * - hasEnoughFreeSpace() - проверка свободного места
- * - getFileSize() - получение размера файла
  * - downloadFile() - скачивание файла
  */
 object UpdateHelper {
+
+    private const val BUFFER_SIZE = 8192
+
+    // ============================================================
+    // РАБОТА С ВЕРСИЯМИ
+    // ============================================================
 
     /**
      * Сравнивает две версии (формат x.y.z)
@@ -58,27 +59,9 @@ object UpdateHelper {
         return compareVersions(newVersion, currentVersion) > 0
     }
 
-    /**
-     * Проверяет, достаточно ли свободного места для загрузки файла
-     * @param requiredSpace требуемое место в байтах
-     * @return true если места достаточно
-     */
-    fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
-        return try {
-            val path = Environment.getExternalStorageDirectory().path
-            val stat = StatFs(path)
-            val blockSize = stat.blockSizeLong
-            val availableBlocks = stat.availableBlocksLong
-            val freeSpace = blockSize * availableBlocks
-
-            // Проверяем, что свободного места как минимум на 10% больше требуемого
-            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
-            freeSpace >= requiredWithBuffer
-        } catch (_: Exception) {
-            // Если не удалось проверить — считаем, что места достаточно
-            true
-        }
-    }
+    // ============================================================
+    // РАБОТА С РАЗМЕРАМИ
+    // ============================================================
 
     /**
      * Получает размер файла по URL (HEAD запрос)
@@ -101,43 +84,37 @@ object UpdateHelper {
     }
 
     /**
-     * Назначение файла (куда сохранять)
+     * Проверяет, достаточно ли свободного места
+     * @param requiredSpace требуемое место в байтах
+     * @param path путь для проверки (по умолчанию внешнее хранилище)
+     * @return true если места достаточно
      */
-    sealed class Destination {
-        /**
-         * Сохранить в MediaStore (папка Download)
-         * @param fileName имя файла
-         */
-        data class MediaStore(val fileName: String) : Destination()
+    fun hasEnoughFreeSpace(requiredSpace: Long, path: String = android.os.Environment.getExternalStorageDirectory().path): Boolean {
+        return try {
+            val stat = StatFs(path)
+            val blockSize = stat.blockSizeLong
+            val availableBlocks = stat.availableBlocksLong
+            val freeSpace = blockSize * availableBlocks
 
-        /**
-         * Сохранить во временную папку
-         * @param prefix префикс для имени временного файла
-         */
-        data class TempFile(val prefix: String) : Destination()
-
-        /**
-         * Сохранить по указанному пути
-         * @param path полный путь к файлу
-         */
-        data class CustomPath(val path: String) : Destination()
+            // Проверяем, что свободного места как минимум на 10% больше требуемого
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            // Если не удалось проверить — считаем, что места достаточно
+            true
+        }
     }
 
-    /**
-     * Слушатель прогресса скачивания
-     */
-    interface DownloadListener {
-        fun onProgress(percent: Int)
-        fun onSuccess(file: File)
-        fun onError(message: String)
-    }
+    // ============================================================
+    // СКАЧИВАНИЕ ФАЙЛОВ
+    // ============================================================
 
     /**
      * Скачивает файл из интернета
      * @param context контекст приложения
      * @param url ссылка на файл
      * @param listener слушатель прогресса
-     * @param destination куда сохранять
+     * @param destination куда сохранять (полный путь к файлу)
      * @param connectTimeout тайм-аут подключения (мс)
      * @param readTimeout тайм-аут чтения (мс)
      * @return скачанный файл или null в случае ошибки
@@ -152,10 +129,10 @@ object UpdateHelper {
     ): File? = withContext(Dispatchers.IO) {
         var connection: HttpURLConnection? = null
         var inputStream: java.io.InputStream? = null
-        var outputStream: java.io.OutputStream? = null
+        var outputStream: FileOutputStream? = null
 
         try {
-            // Получаем размер файла через HEAD запрос
+            // Получаем размер файла
             val fileSize = getFileSize(url)
 
             // Проверяем свободное место
@@ -166,7 +143,7 @@ object UpdateHelper {
                 return@withContext null
             }
 
-            // Основное подключение
+            // Подключаемся
             connection = URL(url).openConnection() as HttpURLConnection
             connection.connectTimeout = connectTimeout
             connection.readTimeout = readTimeout
@@ -185,31 +162,6 @@ object UpdateHelper {
 
             // Подготавливаем файл для сохранения
             val file = when (destination) {
-                is Destination.MediaStore -> {
-                    val contentValues = ContentValues().apply {
-                        put(MediaStore.Downloads.DISPLAY_NAME, destination.fileName)
-                        put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                    }
-
-                    val contentUri = context.contentResolver.insert(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        contentValues
-                    ) ?: throw Exception(context.getString(R.string.download_media_store_create_failed))
-
-                    val os = context.contentResolver.openOutputStream(contentUri)
-                        ?: throw Exception(context.getString(R.string.download_media_store_open_failed))
-
-                    outputStream = os
-                    File(contentUri.path ?: throw Exception(context.getString(R.string.download_file_path_failed)))
-                }
-
-                is Destination.TempFile -> {
-                    val tempFile = File(context.cacheDir, "${destination.prefix}_${System.currentTimeMillis()}.tmp")
-                    outputStream = FileOutputStream(tempFile)
-                    tempFile
-                }
-
                 is Destination.CustomPath -> {
                     val customFile = File(destination.path)
                     customFile.parentFile?.mkdirs()
@@ -219,7 +171,7 @@ object UpdateHelper {
             }
 
             // Скачиваем
-            val buffer = ByteArray(8192)
+            val buffer = ByteArray(BUFFER_SIZE)
             var bytesRead: Int
             var totalBytesRead = 0L
             var lastProgress = 0
@@ -240,7 +192,7 @@ object UpdateHelper {
             }
 
             outputStream.close()
-            inputStream.close()
+            inputStream?.close()
             connection.disconnect()
 
             // Проверяем, что файл не пустой
@@ -277,5 +229,29 @@ object UpdateHelper {
             outputStream?.close()
             connection?.disconnect()
         }
+    }
+
+    // ============================================================
+    // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
+    // ============================================================
+
+    /**
+     * Назначение файла (куда сохранять)
+     */
+    sealed class Destination {
+        /**
+         * Сохранить по указанному пути
+         * @param path полный путь к файлу
+         */
+        data class CustomPath(val path: String) : Destination()
+    }
+
+    /**
+     * Слушатель прогресса скачивания
+     */
+    interface DownloadListener {
+        fun onProgress(percent: Int)
+        fun onSuccess(file: File)
+        fun onError(message: String)
     }
 }

@@ -4,8 +4,8 @@ package by.quty.launch.core.managers
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import by.quty.launch.R
+import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,6 +15,9 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
+/**
+ * Информация об обновлении оболочки из репозитория
+ */
 @Serializable
 data class ShellRepoInfo(
     val name: String,
@@ -25,17 +28,25 @@ data class ShellRepoInfo(
     val minQutyLaunchVersion: String? = null
 )
 
+/**
+ * Менеджер обновления оболочек оформления
+ * Проверяет наличие обновлений в репозитории и скачивает их
+ */
 class ShellUpdateManager(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val storageManager = StorageManager(context)
 
     /**
      * Проверяет наличие обновления для оболочки
+     * @param shell оболочка для проверки
+     * @return ShellRepoInfo если обновление доступно, иначе null
      */
     suspend fun checkForUpdate(shell: Shell): ShellRepoInfo? = withContext(Dispatchers.IO) {
         val repoUrl = shell.repoUrl ?: return@withContext null
 
         return@withContext try {
+            // Формируем URL для shell.json
             val url = if (repoUrl.endsWith("/")) {
                 "${repoUrl}shell.json"
             } else {
@@ -52,20 +63,27 @@ class ShellUpdateManager(private val context: Context) {
                 val cleanJson = jsonString.trimStart('\uFEFF')
                 val repoInfo = json.decodeFromString<ShellRepoInfo>(cleanJson)
 
+                // Проверяем совместимость с Quty.Launch
                 if (!isLauncherCompatible(repoInfo.minQutyLaunchVersion)) {
+                    Logger.d("ShellUpdateManager", "⚠️ Обновление несовместимо с текущей версией Quty.Launch")
                     return@withContext null
                 }
 
+                // Сравниваем версии
                 val currentVersion = shell.version ?: "0.0.0"
                 if (UpdateHelper.isNewerVersion(repoInfo.version, currentVersion)) {
+                    Logger.d("ShellUpdateManager", "✅ Найдено обновление: ${repoInfo.version} (текущая: $currentVersion)")
                     repoInfo
                 } else {
+                    Logger.d("ShellUpdateManager", "ℹ️ Обновлений нет (текущая: $currentVersion, доступна: ${repoInfo.version})")
                     null
                 }
             } else {
+                Logger.w("ShellUpdateManager", "⚠️ Ошибка проверки обновлений: ${connection.responseCode}")
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.e("ShellUpdateManager", "❌ Ошибка проверки обновлений: ${e.message}")
             null
         }
     }
@@ -102,13 +120,33 @@ class ShellUpdateManager(private val context: Context) {
 
     /**
      * Скачивает обновление оболочки
+     * @param repoInfo информация об обновлении
+     * @param listener слушатель прогресса
+     * @return true при успехе
      */
     suspend fun downloadShellUpdate(
         repoInfo: ShellRepoInfo,
         listener: DownloadListener
     ): Boolean = withContext(Dispatchers.IO) {
+        var tempFile: File? = null
+
         try {
-            // Используем UpdateHelper для скачивания
+            // Создаём временный файл для скачивания
+            tempFile = storageManager.createTempFile(
+                prefix = "shell_update_${repoInfo.name}",
+                extension = "tmp"
+            )
+
+            // Проверяем наличие свободного места
+            val requiredSpace = repoInfo.fileSize.toLongOrNull() ?: (5 * 1024 * 1024) // 5 MB по умолчанию
+            if (!hasEnoughFreeSpace(requiredSpace)) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.shell_update_not_enough_space))
+                }
+                return@withContext false
+            }
+
+            // Скачиваем файл через UpdateHelper
             val file = UpdateHelper.downloadFile(
                 context = context,
                 url = repoInfo.downloadUrl,
@@ -118,39 +156,63 @@ class ShellUpdateManager(private val context: Context) {
                     }
 
                     override fun onSuccess(file: File) {
-                        // Копируем файл в папку Quty.Launch/Shells/
-                        val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-                        val shellsDir = File(appDir, "Shells")
-
-                        if (!appDir.exists()) appDir.mkdirs()
-                        if (!shellsDir.exists()) shellsDir.mkdirs()
-
-                        val fileName = "${repoInfo.name}${ShellManager.SHELL_EXTENSION_WITH_DOT}"
-                        val destFile = File(shellsDir, fileName)
-
-                        // Удаляем старый файл, если он существует
-                        if (destFile.exists()) {
-                            destFile.delete()
-                        }
-
-                        file.copyTo(destFile, overwrite = true)
-                        file.delete()
-
-                        listener.onSuccess()
+                        // Файл скачан во временный файл
                     }
 
                     override fun onError(message: String) {
                         listener.onError(message)
                     }
                 },
-                destination = UpdateHelper.Destination.TempFile("shell_update"),
+                destination = UpdateHelper.Destination.CustomPath(tempFile.absolutePath),
                 connectTimeout = 15000,
                 readTimeout = 30000
             )
 
-            file != null
+            if (file == null || !file.exists()) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_empty_file))
+                }
+                return@withContext false
+            }
+
+            // Проверяем, что файл не пустой
+            if (file.length() == 0L) {
+                file.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_empty_file))
+                }
+                return@withContext false
+            }
+
+            // Сохраняем оболочку через StorageManager
+            val fileName = "${repoInfo.name}${ShellManager.SHELL_EXTENSION_WITH_DOT}"
+            val success = storageManager.set(
+                directory = StorageDirectory.SHELLS,
+                name = fileName,
+                inputStream = file.inputStream(),
+                overwrite = true
+            )
+
+            // Удаляем временный файл
+            file.delete()
+
+            if (success) {
+                Logger.d("ShellUpdateManager", "✅ Обновление оболочки сохранено: $fileName")
+                withContext(Dispatchers.Main) {
+                    listener.onSuccess()
+                }
+                true
+            } else {
+                Logger.e("ShellUpdateManager", "❌ Ошибка сохранения обновления оболочки")
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.shell_install_error))
+                }
+                false
+            }
 
         } catch (e: Exception) {
+            Logger.e("ShellUpdateManager", "❌ Ошибка скачивания обновления: ${e.message}")
+            tempFile?.delete()
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))
             }
@@ -158,6 +220,24 @@ class ShellUpdateManager(private val context: Context) {
         }
     }
 
+    /**
+     * Проверяет, достаточно ли свободного места для загрузки файла
+     */
+    private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
+        return try {
+            val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
+            // Проверяем, что свободного места как минимум на 10% больше требуемого
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            // Если не удалось проверить — считаем, что места достаточно
+            true
+        }
+    }
+
+    /**
+     * Слушатель прогресса скачивания обновления
+     */
     interface DownloadListener {
         fun onProgress(percent: Int)
         fun onSuccess()

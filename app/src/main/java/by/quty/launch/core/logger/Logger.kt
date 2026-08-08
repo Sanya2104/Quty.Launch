@@ -3,11 +3,14 @@ package by.quty.launch.core.logger
 
 import android.content.Context
 import android.util.Log
+import by.quty.launch.R
+import by.quty.launch.core.managers.StorageFileType
+import by.quty.launch.core.managers.StorageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import by.quty.launch.R
-import java.io.File
+import kotlinx.coroutines.runBlocking
+import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,6 +40,17 @@ object Logger {
     // Контекст для доступа к ресурсам
     private lateinit var appContext: Context
 
+    // StorageManager - хранится в WeakReference для предотвращения утечек памяти
+    private var storageManagerRef: WeakReference<StorageManager>? = null
+
+    /**
+     * Получает StorageManager из WeakReference
+     * @return StorageManager или null, если сборщик мусора уже очистил ссылку
+     */
+    private fun getStorageManager(): StorageManager? {
+        return storageManagerRef?.get()
+    }
+
     /**
      * Интерфейс для уведомления об изменениях в логах
      */
@@ -59,8 +73,12 @@ object Logger {
         val maxFiles = prefs.getInt("max_files", 5)
         val maxSizeMB = prefs.getInt("max_size_mb", 5)
 
+        // Создаём StorageManager и передаём в LoggerFile
+        val storageManager = StorageManager(context.applicationContext)
+        storageManagerRef = WeakReference(storageManager)
+
         // Инициализируем файловое ядро
-        LoggerFile.init(context, maxFiles, maxSizeMB, persistEnabled)
+        LoggerFile.init(storageManager, maxFiles, maxSizeMB, persistEnabled)
 
         // Если сохранение включено — восстанавливаем логи из файла
         if (persistEnabled) {
@@ -75,12 +93,22 @@ object Logger {
      */
     private fun restoreLogsFromFile() {
         try {
-            val logFiles = LoggerFile.getLogFiles()
+            val storageManager = getStorageManager()
+            if (storageManager == null) {
+                e("Logger", appContext.getString(R.string.logger_restore_error))
+                return
+            }
+
+            val logFiles = LoggerFile.getLogFiles(storageManager)
             if (logFiles.isEmpty()) return
 
             // Берём самый свежий файл (первый в списке)
             val latestFile = logFiles.firstOrNull() ?: return
-            val restoredLogs = LoggerFile.readLogsFromFile(latestFile)
+
+            // Читаем логи из файла через LoggerFile (синхронно)
+            val restoredLogs = runBlocking {
+                LoggerFile.readLogsFromFile(storageManager, latestFile)
+            }
 
             // Добавляем в память (новые сверху)
             synchronized(logs) {
@@ -192,22 +220,6 @@ object Logger {
     }
 
     /**
-     * Добавляет лог из WebView (JavaScript)
-     * @param level уровень из JS (log, info, warn, error)
-     * @param message сообщение
-     */
-    fun fromWebView(level: String, message: String) {
-        val logLevel = when (level.lowercase()) {
-            "log" -> LogLevel.DEBUG
-            "info" -> LogLevel.INFO
-            "warn" -> LogLevel.WARN
-            "error" -> LogLevel.ERROR
-            else -> LogLevel.DEBUG
-        }
-        addLog(logLevel, "WebView", message, source = "WebView")
-    }
-
-    /**
      * Внутренний метод добавления лога
      */
     private fun addLog(level: LogLevel, tag: String, message: String, source: String = "Kotlin") {
@@ -276,7 +288,9 @@ object Logger {
         }
 
         // Очищаем файлы
-        LoggerFile.clearAll()
+        CoroutineScope(Dispatchers.IO).launch {
+            LoggerFile.clearAll()
+        }
 
         CoroutineScope(Dispatchers.Main).launch {
             notifyLogsCleared()
@@ -339,24 +353,23 @@ object Logger {
      * @return путь к сохранённому файлу или null в случае ошибки
      */
     fun saveLogsToFile(): String? {
+        val storageManager = getStorageManager() ?: return null
+
         return try {
             // Формируем имя файла: log_YYYY-MM-DD_HH-MM-SS.json
             val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
-            val fileName = "log_${dateFormat.format(Date())}.json"
+            val fileName = "log_${dateFormat.format(Date())}"
 
-            val appDir = File(android.os.Environment.getExternalStorageDirectory(), "Quty.Launch")
-            val logsDir = File(appDir, "Logs")
-
-            if (!appDir.exists()) appDir.mkdirs()
-            if (!logsDir.exists()) logsDir.mkdirs()
-
-            val logFile = File(logsDir, fileName)
+            // Получаем файл через StorageManager
+            val logFile = storageManager.getFile(fileName, StorageFileType.LOG)
 
             // Форматируем логи для записи
             val content = formatLogsForFile()
 
-            // Записываем в файл
-            logFile.writeText(content)
+            // Записываем в файл через StorageManager (синхронно)
+            runBlocking {
+                storageManager.set(logFile, content, overwrite = true)
+            }
 
             // Возвращаем путь к файлу
             logFile.absolutePath

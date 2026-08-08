@@ -1,7 +1,6 @@
 // *** core/fragments/ShellSettingsFragment.kt *** //
 package by.quty.launch.core.fragments
 
-import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,7 +8,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
@@ -18,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -28,19 +25,20 @@ import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
 import by.quty.launch.core.managers.ShellUpdateManager
+import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.interfaces.SettingsEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
-import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
 class ShellSettingsFragment : Fragment() {
 
     private lateinit var shellManager: ShellManager
+    private lateinit var storageManager: StorageManager
     private lateinit var shellsAdapter: ShellsAdapter
     private var settingsEventListener: SettingsEventListener? = null
 
@@ -50,7 +48,7 @@ class ShellSettingsFragment : Fragment() {
     // Флаг, что требуется перезагрузка интерфейса
     private var needsRestart = false
 
-    // JSON парсер (один экземпляр для всего класса)
+    // JSON парсер
     private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
@@ -69,45 +67,6 @@ class ShellSettingsFragment : Fragment() {
         }
     }
 
-    // Регистрируем ActivityResult для запроса доступа к хранилищу (Android 11+)
-    private val storagePermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
-        // После возврата из настроек пытаемся установить оболочку снова
-        pendingShellUri?.let { uri ->
-            pendingShellName?.let { name ->
-                performShellInstall(uri, name)
-            }
-        }
-        pendingShellUri = null
-        pendingShellName = null
-    }
-
-    // Для Android 10 и ниже
-    private val requestStoragePermissionLegacy = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            pendingShellUri?.let { uri ->
-                pendingShellName?.let { name ->
-                    performShellInstall(uri, name)
-                }
-            }
-            pendingShellUri = null
-            pendingShellName = null
-        } else {
-            Toast.makeText(
-                requireContext(),
-                R.string.storage_permission_denied,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    // Переменные для хранения данных об оболочке, которую пытаемся установить
-    private var pendingShellUri: Uri? = null
-    private var pendingShellName: String? = null
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -122,9 +81,10 @@ class ShellSettingsFragment : Fragment() {
         // Получаем SettingsActivity как listener
         settingsEventListener = activity as? SettingsEventListener
 
-        // Инициализируем ShellManager через активность
+        // Инициализируем менеджеры через активность
         (activity as? SettingsActivity)?.let { settingsActivity ->
             shellManager = settingsActivity.shellManager
+            storageManager = StorageManager(requireContext())
         }
 
         setupShellSelector(view)
@@ -133,15 +93,12 @@ class ShellSettingsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Сбрасываем флаг при возврате во вкладку
         isApplyingShell = false
-        // Обновляем список
         shellsAdapter.notifyDataSetChanged()
     }
 
     override fun onPause() {
         super.onPause()
-        // Сбрасываем флаг при уходе с вкладки
         isApplyingShell = false
     }
 
@@ -169,43 +126,34 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Внутренний метод применения оболочки (используется и при клике, и из меню)
-     * - Применение оболочки теперь в корутине
-     * - setActiveShell() - suspend функция, не блокирует UI
+     * Внутренний метод применения оболочки
      */
     private fun applyShellInternal(shell: Shell) {
         if (isApplyingShell) return
 
         isApplyingShell = true
 
-        // Запоминаем, была ли оболочка уже активна
         val currentActive = shellManager.getActiveShell()
         val isDifferent = currentActive?.name != shell.name
 
-        // Применяем оболочку в фоновом потоке
         lifecycleScope.launch {
             shellManager.setActiveShell(shell)
 
-            // Обновляем UI в главном потоке после завершения
             withContext(Dispatchers.Main) {
-                // Обновляем адаптер с задержкой, чтобы избежать мерцания
                 Handler(Looper.getMainLooper()).postDelayed({
                     shellsAdapter.notifyDataSetChanged()
                     isApplyingShell = false
                 }, DELAY_BEFORE_UI_UPDATE)
 
-                // Уведомляем Activity об изменении оболочки
                 settingsEventListener?.onShellChanged(shell.name)
                 settingsEventListener?.onSettingChanged()
 
-                // Обновляем состояние во вкладке "Экран" с задержкой
                 Handler(Looper.getMainLooper()).postDelayed({
                     (activity as? SettingsActivity)?.let { settingsActivity ->
                         settingsActivity.displayFragment?.updateOrientationLockState()
                     }
                 }, DELAY_BEFORE_UI_UPDATE)
 
-                // Если применили другую оболочку — устанавливаем флаг перезагрузки
                 if (isDifferent) {
                     needsRestart = true
                 }
@@ -213,7 +161,6 @@ class ShellSettingsFragment : Fragment() {
                 val message = getString(R.string.shell_applied, shell.displayName ?: shell.name)
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
-                // Возвращаем результат в MainActivity
                 val resultIntent = Intent()
                 resultIntent.putExtra(EXTRA_SHELL_NAME, shell.name)
                 requireActivity().setResult(SettingsActivity.RESULT_SHELL_CHANGED, resultIntent)
@@ -229,66 +176,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Проверяет доступ к хранилищу.
-     */
-    private fun hasStoragePermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    /**
-     * Запрашивает доступ к хранилищу.
-     */
-    private fun requestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                val intent = Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                intent.data = "package:${requireContext().packageName}".toUri()
-                storagePermissionLauncher.launch(intent)
-            } catch (_: Exception) {
-                val intent = Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                storagePermissionLauncher.launch(intent)
-            }
-        } else {
-            requestStoragePermissionLegacy.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-    }
-
-    /**
-     * Проверяет доступ к хранилищу и запрашивает при необходимости.
-     */
-    private fun checkStoragePermissionAndInstall(uri: Uri, shellName: String) {
-        if (!hasStoragePermission()) {
-            pendingShellUri = uri
-            pendingShellName = shellName
-
-            AlertDialog.Builder(requireContext())
-                .setTitle(R.string.storage_permission_title)
-                .setMessage(R.string.storage_permission_message)
-                .setPositiveButton(R.string.storage_permission_allow) { _, _ ->
-                    requestStoragePermission()
-                }
-                .setNegativeButton(R.string.cancel) { _, _ ->
-                    pendingShellUri = null
-                    pendingShellName = null
-                }
-                .show()
-            return
-        }
-
-        performShellInstall(uri, shellName)
-    }
-
-    /**
-     * Открывает файловый менеджер для выбора оболочки.
-     * Сначала пробует ACTION_OPEN_DOCUMENT, затем ACTION_GET_CONTENT,
-     * при ошибке предлагает установить альтернативный файловый менеджер.
+     * Открывает файловый менеджер для выбора оболочки
      */
     private fun selectShellFile() {
         try {
@@ -304,13 +192,12 @@ class ShellSettingsFragment : Fragment() {
             selectShellLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
-            // Пробуем альтернативный способ
             selectShellAlternative()
         }
     }
 
     /**
-     * Альтернативный способ выбора файла через ACTION_GET_CONTENT
+     * Альтернативный способ выбора файла
      */
     private fun selectShellAlternative() {
         try {
@@ -325,7 +212,6 @@ class ShellSettingsFragment : Fragment() {
             selectShellLauncher.launch(intent)
         } catch (e: Exception) {
             e.printStackTrace()
-            // Если и это не работает — предлагаем установить файловый менеджер
             showFileManagerSuggestion()
         }
     }
@@ -369,7 +255,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Устанавливает оболочку из выбранного URI.
+     * Устанавливает оболочку из выбранного URI
      */
     private fun installShellFromUri(uri: Uri) {
         try {
@@ -406,7 +292,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Получает имя файла из URI.
+     * Получает имя файла из URI
      */
     private fun getFileNameFromUri(uri: Uri): String? {
         return try {
@@ -430,9 +316,14 @@ class ShellSettingsFragment : Fragment() {
      */
     private fun validateShell(uri: Uri): Triple<String, String, String?>? {
         return try {
-            val tempFile = File(requireContext().cacheDir, "temp_shell.zip")
+            // Создаём временный файл через StorageManager
+            val tempFile = storageManager.createTempFile(
+                prefix = "temp_shell_validation",
+                extension = "zip"
+            )
+
             requireContext().contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(tempFile).use { output ->
+                tempFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
@@ -449,9 +340,9 @@ class ShellSettingsFragment : Fragment() {
 
                 tempFile.delete()
 
-                // Проверяем совместимость с Quty.Launch
+                // Проверяем совместимость
                 if (!isLauncherCompatible(manifest.minQutyLaunchVersion)) {
-                    return null  // Quty.Launch слишком старый для этой оболочки
+                    return null
                 }
 
                 return Triple(manifest.name, manifest.version, manifest.minQutyLaunchVersion)
@@ -517,14 +408,13 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Показывает диалог подтверждения установки.
+     * Показывает диалог подтверждения установки
      */
     private fun showConfirmInstallDialog(uri: Uri, shellName: String, shellVersion: String, minQutyLaunchVersion: String?) {
         val existingShell = shellManager.getAvailableShells().find {
             it.displayName == shellName || it.name == shellName
         }
 
-        // Добавляем информацию о совместимости
         val compatibilityInfo = if (!minQutyLaunchVersion.isNullOrEmpty()) {
             "\n\n${getString(R.string.shell_min_launcher_version, minQutyLaunchVersion)}"
         } else {
@@ -541,49 +431,51 @@ class ShellSettingsFragment : Fragment() {
             .setTitle(getString(R.string.shell_install_confirm))
             .setMessage(message)
             .setPositiveButton(getString(R.string.install_action)) { _, _ ->
-                checkStoragePermissionAndInstall(uri, shellName)
+                performShellInstall(uri, shellName)
             }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
     }
 
     /**
-     * Выполняет установку оболочки.
+     * Выполняет установку оболочки через StorageManager
      */
     private fun performShellInstall(uri: Uri, shellName: String) {
         try {
-            // Новая структура: Quty.Launch/Shells/
-            val appDir = File(Environment.getExternalStorageDirectory(), "Quty.Launch")
-            val shellsDir = File(appDir, "Shells")
-
-            if (!appDir.exists()) {
-                appDir.mkdirs()
-            }
-            if (!shellsDir.exists()) {
-                shellsDir.mkdirs()
-            }
-
             val fileName = "$shellName${ShellManager.SHELL_EXTENSION_WITH_DOT}"
-            val destFile = File(shellsDir, fileName)
 
-            if (destFile.exists()) {
-                destFile.delete()
-            }
+            // Сохраняем оболочку через StorageManager
+            lifecycleScope.launch {
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val success = storageManager.set(
+                        directory = StorageDirectory.SHELLS,
+                        name = fileName,
+                        inputStream = inputStream,
+                        overwrite = true
+                    )
 
-            requireContext().contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(destFile).use { output ->
-                    input.copyTo(output)
+                    if (success) {
+                        refreshShells()
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.shell_install_success, shellName),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.shell_install_error),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
                 }
             }
-
-            refreshShells()
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.shell_install_success, shellName),
-                Toast.LENGTH_LONG
-            ).show()
-
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(
@@ -593,6 +485,10 @@ class ShellSettingsFragment : Fragment() {
             ).show()
         }
     }
+
+    // ============================================================
+    // ВНУТРЕННИЙ АДАПТЕР
+    // ============================================================
 
     inner class ShellsAdapter(private val shells: List<Shell>) : BaseAdapter() {
 
@@ -615,7 +511,7 @@ class ShellSettingsFragment : Fragment() {
             // Устанавливаем название
             nameView.text = shell.displayName ?: shell.name
 
-            // Устанавливаем версию (показываем только если есть)
+            // Устанавливаем версию
             if (!shell.version.isNullOrEmpty()) {
                 versionView.text = getString(R.string.shell_version_with_label, shell.version)
                 versionView.visibility = View.VISIBLE
@@ -644,7 +540,7 @@ class ShellSettingsFragment : Fragment() {
                 previewView.setImageResource(R.drawable.ic_settings)
             }
 
-            // Получаем актуальную активную оболочку из менеджера
+            // Получаем актуальную активную оболочку
             val activeShell = shellManager.getActiveShell()
 
             // Подсвечиваем активную оболочку
@@ -655,12 +551,10 @@ class ShellSettingsFragment : Fragment() {
                 view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
 
-            // Устанавливаем клик на всю строку (кроме кнопки меню)
+            // Устанавливаем клик на всю строку
             view.setOnClickListener {
-                // Предотвращаем множественные нажатия
                 if (isApplyingShell) return@setOnClickListener
 
-                // Проверяем, не активна ли уже оболочка
                 if (shell.name == activeShell?.name) {
                     Toast.makeText(requireContext(), R.string.shell_already_active, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
@@ -669,7 +563,7 @@ class ShellSettingsFragment : Fragment() {
                 applyShellInternal(shell)
             }
 
-            // Настройка кнопки меню (передаём флаг isActive)
+            // Настройка кнопки меню
             setupShellMenuButton(menuButton, shell, isActive)
 
             return view
@@ -677,11 +571,9 @@ class ShellSettingsFragment : Fragment() {
 
         /**
          * Настройка кнопки меню для оболочки
-         * @param isActive true если оболочка уже активна
          */
         private fun setupShellMenuButton(menuButton: ImageButton, shell: Shell, isActive: Boolean) {
             menuButton.setOnClickListener { view ->
-                // Останавливаем распространение события, чтобы не сработал клик по строке
                 view.parent.requestDisallowInterceptTouchEvent(true)
                 showShellMenu(view, shell, isActive)
             }
@@ -689,7 +581,6 @@ class ShellSettingsFragment : Fragment() {
 
         /**
          * Показывает выпадающее меню для управления оболочкой
-         * @param isActive true если оболочка уже активна
          */
         private fun showShellMenu(anchor: View, shell: Shell, isActive: Boolean) {
             val popupMenu = PopupMenu(requireContext(), anchor)
@@ -706,7 +597,6 @@ class ShellSettingsFragment : Fragment() {
 
             // Пункт "Удалить" - ТОЛЬКО для кастомных оболочек
             if (shell.isCustom) {
-                // Проверяем, является ли это обновлением встроенной оболочки
                 val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
                 val menuText = if (isBuiltInUpdate) {
                     getString(R.string.shell_menu_delete_update)
@@ -721,7 +611,7 @@ class ShellSettingsFragment : Fragment() {
                 menu.add(0, 4, 0, getString(R.string.shell_menu_share))
             }
 
-            // "Проверить обновления" — если есть repoUrl (для ЛЮБЫХ оболочек)
+            // "Проверить обновления" — если есть repoUrl
             if (!shell.repoUrl.isNullOrEmpty()) {
                 menu.add(0, 5, 0, getString(R.string.shell_menu_check_updates))
             }
@@ -746,7 +636,6 @@ class ShellSettingsFragment : Fragment() {
         private fun checkShellUpdates(shell: Shell) {
             val updateManager = ShellUpdateManager(requireContext())
 
-            // Показываем диалог с прогрессом
             val progressDialog = AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.shell_update_checking))
                 .setMessage(getString(R.string.shell_update_checking_message))
@@ -769,7 +658,6 @@ class ShellSettingsFragment : Fragment() {
          * Диалог подтверждения обновления
          */
         private fun showUpdateConfirmDialog(shell: Shell, updateInfo: ShellRepoInfo) {
-            // Проверяем совместимость при обновлении
             if (!isLauncherCompatible(updateInfo.minQutyLaunchVersion)) {
                 AlertDialog.Builder(requireContext())
                     .setTitle(getString(R.string.shell_update_incompatible_title))
@@ -786,7 +674,6 @@ class ShellSettingsFragment : Fragment() {
                 append("\n")
                 append(getString(R.string.shell_update_new_version, updateInfo.version))
 
-                // Добавляем информацию о минимальной версии Quty.Launch
                 if (!updateInfo.minQutyLaunchVersion.isNullOrEmpty()) {
                     append("\n")
                     append(getString(R.string.shell_update_min_launcher, updateInfo.minQutyLaunchVersion))
@@ -806,7 +693,7 @@ class ShellSettingsFragment : Fragment() {
                 .setTitle(getString(R.string.shell_update_confirm_title))
                 .setMessage(message)
                 .setPositiveButton(getString(R.string.shell_update_install)) { _, _ ->
-                    downloadShellUpdate(updateInfo)
+                    downloadShellUpdate(shell, updateInfo)
                 }
                 .setNegativeButton(getString(R.string.cancel), null)
                 .show()
@@ -815,7 +702,7 @@ class ShellSettingsFragment : Fragment() {
         /**
          * Скачивание и установка обновления оболочки
          */
-        private fun downloadShellUpdate(updateInfo: ShellRepoInfo) {
+        private fun downloadShellUpdate(shell: Shell, updateInfo: ShellRepoInfo) {
             val updateManager = ShellUpdateManager(requireContext())
 
             val progressDialog = AlertDialog.Builder(requireContext())
@@ -833,15 +720,12 @@ class ShellSettingsFragment : Fragment() {
                     override fun onSuccess() {
                         progressDialog.dismiss()
 
-                        // Принудительно перезагружаем активную оболочку из файла
                         shellManager.reloadActiveShell()
-
-                        // Обновляем список оболочек
                         refreshShells()
 
-                        // Если обновлялась активная оболочка — устанавливаем флаг перезагрузки
+                        // Проверяем, была ли обновлена активная оболочка
                         val activeShell = shellManager.getActiveShell()
-                        if (activeShell?.name == shellManager.getActiveShell()?.name) {
+                        if (activeShell?.name == shell.name) {
                             needsRestart = true
                         }
 
@@ -877,7 +761,6 @@ class ShellSettingsFragment : Fragment() {
                 getString(R.string.author_default)
             }
 
-            // Добавляем информацию о минимальной версии Quty.Launch
             val minVersion = shell.minQutyLaunchVersion?.let {
                 getString(R.string.shell_info_min_version, it)
             } ?: getString(R.string.shell_info_min_version_not_specified)
@@ -902,21 +785,16 @@ class ShellSettingsFragment : Fragment() {
 
         /**
          * Удалить кастомную оболочку
-         * При удалении обновлённой встроенной оболочки — возвращается встроенная версия
          */
         private fun deleteShell(shell: Shell): Boolean {
-            // Проверяем, что оболочку можно удалить (только кастомные)
             if (!shell.isCustom) {
                 Toast.makeText(requireContext(), getString(R.string.shell_cant_delete_default), Toast.LENGTH_SHORT).show()
                 return false
             }
 
-            // Проверяем, является ли это обновлением встроенной оболочки
             val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
 
-            // Если это обновление встроенной оболочки — разрешаем удаление даже если активна
             if (isBuiltInUpdate) {
-                // Показываем диалог подтверждения
                 AlertDialog.Builder(requireContext())
                     .setTitle(getString(R.string.shell_delete_active_update_title))
                     .setMessage(getString(R.string.shell_delete_active_update_confirm))
@@ -928,7 +806,6 @@ class ShellSettingsFragment : Fragment() {
                 return true
             }
 
-            // Для обычных кастомных оболочек — проверяем активность
             val activeShell = shellManager.getActiveShell()
             if (shell.name == activeShell?.name) {
                 Toast.makeText(
@@ -939,7 +816,6 @@ class ShellSettingsFragment : Fragment() {
                 return false
             }
 
-            // Диалог подтверждения для обычных кастомных оболочек
             AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.shell_delete_confirm))
                 .setMessage(getString(R.string.shell_delete_message, shell.displayName ?: shell.name))
@@ -957,60 +833,49 @@ class ShellSettingsFragment : Fragment() {
          */
         private fun performDeleteShell(shell: Shell) {
             try {
-                // Сохраняем имя оболочки до удаления
                 val shellName = shell.name
                 val wasActive = shellManager.getActiveShell()?.name == shellName
-
-                // Проверяем, является ли это обновлением встроенной оболочки
                 val isBuiltInUpdate = shellManager.isBuiltInShellUpdate(shell)
 
-                // Удаляем файл через ShellManager
-                val deleted = shellManager.deleteShellByName(shell.name)
+                lifecycleScope.launch {
+                    val deleted = shellManager.deleteShellByName(shell.name)
 
-                if (deleted) {
-                    // Принудительно перезагружаем активную оболочку из конфига
-                    shellManager.reloadActiveShell()
+                    if (deleted) {
+                        shellManager.reloadActiveShell()
+                        refreshShells()
 
-                    // Обновляем список оболочек
-                    refreshShells()
+                        var needRestart = false
 
-                    // Определяем, нужна ли перезагрузка
-                    var needRestart = false
-
-                    if (wasActive || isBuiltInUpdate) {
-                        // Если удалялась активная оболочка или это обновление встроенной — нужна перезагрузка
-                        needRestart = true
-                    } else if (isBuiltInUpdate) {
-                        // Если удаляется обновление встроенной оболочки — после удаления
-                        // активная оболочка может смениться на встроенную
-                        val newActiveShell = shellManager.getActiveShell()
-                        // Если активная оболочка стала встроенной (isAsset = true) с тем же именем
-                        if (newActiveShell?.isAsset == true && newActiveShell.name == shellName) {
+                        if (wasActive || isBuiltInUpdate) {
                             needRestart = true
                         }
-                    }
 
-                    if (needRestart) {
-                        needsRestart = true
-                    }
+                        if (needRestart) {
+                            this@ShellSettingsFragment.needsRestart = true
+                        }
 
-                    val message = if (isBuiltInUpdate) {
-                        getString(R.string.shell_delete_update_success, shell.displayName ?: shell.name)
+                        val message = if (isBuiltInUpdate) {
+                            getString(R.string.shell_delete_update_success, shell.displayName ?: shell.name)
+                        } else {
+                            getString(R.string.shell_delete_success, shell.displayName ?: shell.name)
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                requireContext(),
+                                message,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     } else {
-                        getString(R.string.shell_delete_success, shell.displayName ?: shell.name)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.shell_delete_error),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-
-                    Toast.makeText(
-                        requireContext(),
-                        message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.shell_delete_error),
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
 
             } catch (e: Exception) {
@@ -1024,17 +889,11 @@ class ShellSettingsFragment : Fragment() {
          */
         private fun shareShell(shell: Shell): Boolean {
             try {
-                val shellFile = File(shell.sourcePath)
-                if (!shellFile.exists()) {
+                val uri = shellManager.getShellUri(shell)
+                if (uri == null) {
                     Toast.makeText(requireContext(), getString(R.string.shell_file_not_found), Toast.LENGTH_SHORT).show()
                     return false
                 }
-
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    requireContext(),
-                    "${requireContext().packageName}.fileprovider",
-                    shellFile
-                )
 
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "application/zip"
@@ -1054,7 +913,7 @@ class ShellSettingsFragment : Fragment() {
     }
 
     /**
-     * Обновление списка оболочек (вызывается из Activity при необходимости).
+     * Обновление списка оболочек
      */
     fun refreshShells() {
         isApplyingShell = false

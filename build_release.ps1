@@ -108,7 +108,12 @@ foreach ($line in ($gradleFile -split "`n")) {
 }
 
 try {
-    $newContent -join "`n" | Set-Content "app/build.gradle.kts" -Encoding UTF8 -ErrorAction Stop
+    # Используем WriteAllText для сохранения без добавления лишней пустой строки
+    $contentToWrite = $newContent -join "`n"
+    # Удаляем BOM и сохраняем в UTF-8 без BOM
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    $bytes = $utf8NoBom.GetBytes($contentToWrite)
+    [System.IO.File]::WriteAllBytes("app/build.gradle.kts", $bytes)
     Write-Host "✅ build.gradle.kts обновлен" -ForegroundColor Green
 } catch {
     Write-Host "❌ Не удалось сохранить build.gradle.kts: $($_.Exception.Message)" -ForegroundColor Red

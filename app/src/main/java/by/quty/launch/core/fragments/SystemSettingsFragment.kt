@@ -4,11 +4,12 @@ package by.quty.launch.core.fragments
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,15 +21,18 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.core.managers.CacheManager
+import by.quty.launch.core.managers.StorageDirectory
+import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.managers.VersionInfo
-import by.quty.launch.core.managers.CacheManager
 import kotlinx.coroutines.launch
-import android.provider.MediaStore
-import androidx.core.net.toUri
-import android.content.pm.PackageInfo
 import java.io.File
 
+/**
+ * Фрагмент системных настроек
+ * Отображает информацию о системе и управление обновлениями
+ */
 class SystemSettingsFragment : Fragment() {
 
     private lateinit var versionTextView: TextView
@@ -41,6 +45,7 @@ class SystemSettingsFragment : Fragment() {
     private lateinit var checkUpdateButton: View
     private lateinit var installFromFileButton: View
     private lateinit var updateManager: SystemUpdateManager
+    private lateinit var storageManager: StorageManager
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
@@ -75,6 +80,9 @@ class SystemSettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        storageManager = StorageManager(requireContext())
+        updateManager = SystemUpdateManager(requireContext())
+
         versionTextView = view.findViewById(R.id.version_text)
         versionCodeTextView = view.findViewById(R.id.version_code_text)
         channelTextView = view.findViewById(R.id.channel_text)
@@ -84,8 +92,6 @@ class SystemSettingsFragment : Fragment() {
         installStatus = view.findViewById(R.id.install_status)
         checkUpdateButton = view.findViewById(R.id.check_update_button)
         installFromFileButton = view.findViewById(R.id.install_from_file_button)
-
-        updateManager = SystemUpdateManager(requireContext())
 
         setupVersionInfo()
         setupUpdateCheck()
@@ -188,27 +194,21 @@ class SystemSettingsFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.dev_mode_deactivated, Toast.LENGTH_SHORT).show()
         }
 
-        // Обновляем UI без перезапуска активности (без моргания!)
+        // Обновляем UI без перезапуска активности
         refreshActivityWithoutRestart()
     }
 
     /**
-     * Обновляет UI без перезапуска активности - без мерцания!
-     * Просто обновляем адаптер ViewPager2 и остаёмся на текущей вкладке
+     * Обновляет UI без перезапуска активности
      */
     private fun refreshActivityWithoutRestart() {
         val activity = requireActivity()
 
-        // Проверяем, что активность не уничтожена
         if (activity.isFinishing || activity.isDestroyed) {
             return
         }
 
-        // Обновляем адаптер ViewPager2 через SettingsActivity
-        (activity as? SettingsActivity)?.let { settingsActivity ->
-            // Обновляем адаптер (пересоздаём фрагменты)
-            settingsActivity.refreshPagerAdapter()
-        }
+        (activity as? SettingsActivity)?.refreshPagerAdapter()
     }
 
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {
@@ -516,7 +516,6 @@ class SystemSettingsFragment : Fragment() {
                 updateStatus.text = getString(R.string.update_error)
                 updateStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
 
-                // Определяем тип ошибки и показываем понятное сообщение
                 val errorMessage = when {
                     result.error.contains("UnknownHostException") ||
                             result.error.contains("ConnectException") ||
@@ -614,14 +613,16 @@ class SystemSettingsFragment : Fragment() {
 
                 override fun onSuccess(uri: Uri) {
                     progressDialog.dismiss()
-                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    val message = getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: "")
+
+                    val fileName = "Quty.Launch-${versionInfo.version}.apk"
+                    val file = storageManager.get(StorageDirectory.UPDATES, fileName)
+                    val message = getString(R.string.apk_saved_to, file.absolutePath)
 
                     AlertDialog.Builder(requireContext())
                         .setTitle(getString(R.string.download_complete_title))
                         .setMessage(message)
-                        .setPositiveButton(getString(R.string.open_folder)) { _, _ ->
-                            openDownloadsFolder()
+                        .setPositiveButton(getString(R.string.install_action)) { _, _ ->
+                            updateManager.installApk(uri, versionInfo.versionCode)
                         }
                         .setNegativeButton(getString(R.string.close), null)
                         .show()
@@ -656,7 +657,6 @@ class SystemSettingsFragment : Fragment() {
                         .setTitle(getString(R.string.install_title))
                         .setMessage(getString(R.string.install_message))
                         .setPositiveButton(getString(R.string.install_action)) { _, _ ->
-                            // Передаём versionCode для очистки метки
                             updateManager.installApk(uri, versionInfo.versionCode)
                         }
                         .setNegativeButton(getString(R.string.dialog_later), null)
@@ -670,76 +670,6 @@ class SystemSettingsFragment : Fragment() {
                         Toast.LENGTH_LONG).show()
                 }
             })
-        }
-    }
-
-    private fun openDownloadsFolder() {
-        try {
-            try {
-                val cursor = requireContext().contentResolver.query(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Downloads._ID),
-                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                    arrayOf("Quty.Launch-%.apk"),
-                    "${MediaStore.Downloads.DATE_ADDED} DESC LIMIT 1"
-                )
-
-                cursor?.use {
-                    if (it.moveToFirst()) {
-                        val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Downloads._ID))
-                        val uri = Uri.withAppendedPath(
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                            id.toString()
-                        )
-
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(uri, "application/vnd.android.package-archive")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        startActivity(intent)
-                        return
-                    }
-                }
-            } catch (_: Exception) { }
-
-            try {
-                val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "vnd.android.document/root")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                startActivity(intent)
-                return
-            } catch (_: Exception) { }
-
-            try {
-                val uri = "content://com.android.externalstorage.documents/document/primary%3ADownload".toUri()
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                    setDataAndType(uri, "vnd.android.document/root")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                startActivity(intent)
-                return
-            } catch (_: Exception) { }
-
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS
-            )
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: ""),
-                Toast.LENGTH_LONG
-            ).show()
-
-        } catch (_: Exception) {
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS
-            )
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.apk_saved_to, downloadsDir?.absolutePath ?: ""),
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 
