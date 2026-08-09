@@ -93,7 +93,15 @@
             android:name=".LoggerActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:theme="@style/Theme.QutyLaunch">
+            android:theme="@style/Theme.AppCompat.Translucent">
+        </activity>
+
+        <!-- Магазин оболочек -->
+        <activity
+            android:name=".StoreActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
         <!-- ============================================================ -->

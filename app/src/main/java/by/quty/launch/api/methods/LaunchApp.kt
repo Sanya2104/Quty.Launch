@@ -9,6 +9,7 @@ import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.SettingsActivity
 import by.quty.launch.LoggerActivity
+import by.quty.launch.StoreActivity
 import kotlinx.serialization.builtins.serializer
 
 class LaunchApp(
@@ -35,6 +36,12 @@ class LaunchApp(
             "by.quty.launch.logger" -> {
                 // Открываем Логгер
                 val intent = Intent(context, LoggerActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            "by.quty.launch.store" -> {
+                // Открываем Магазин оболочек
+                val intent = Intent(context, StoreActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }

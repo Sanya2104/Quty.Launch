@@ -70,14 +70,13 @@ class GetApps(
             }
             .sortedBy { it.name }  // Сортируем обычные приложения по алфавиту
 
-        // Загружаем иконку для настроек из ресурсов
-        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
-        val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
-
         // Кастомные приложения
         val customApps = mutableListOf<AppInfo>()
 
         // 1. Настройки Quty.Launch
+        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
+        val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
+
         customApps.add(
             AppInfo(
                 name = context.getString(R.string.api_getapps_settings_name),
@@ -104,6 +103,19 @@ class GetApps(
                 )
             )
         }
+
+        // 3. Магазин оболочек (всегда доступен)
+        val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_store)
+        val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.store_app_name),
+                packageName = "by.quty.launch.store",
+                isCustom = true,
+                iconBase64 = storeIconBase64
+            )
+        )
 
         // Объединяем: сначала кастомные, потом обычные
         customApps + realApps
