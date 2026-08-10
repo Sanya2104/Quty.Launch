@@ -4,151 +4,138 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark"
     android:fillViewport="true"
-    android:padding="16dp">
+    android:padding="@dimen/screen_padding_horizontal">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- ===== ИНФОРМАЦИЯ О СИСТЕМЕ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/system_info_title"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:paddingTop="8dp"/>
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            android:text="@string/system_info_title" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/background_card"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_l">
 
-            <!-- Версия -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="@dimen/spacing_m">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/version_label"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/version_label" />
 
                 <TextView
                     android:id="@+id/version_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/version_unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
-            <!-- Разделитель -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginVertical="4dp" />
+                android:layout_marginVertical="@dimen/spacing_xxs" />
 
-            <!-- Код версии -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="@dimen/spacing_m">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/version_code_label"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/version_code_label" />
 
                 <TextView
                     android:id="@+id/version_code_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/unknown_code"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
-            <!-- Разделитель -->
             <View
                 android:id="@+id/channel_divider"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginVertical="4dp"
+                android:layout_marginVertical="@dimen/spacing_xxs"
                 android:visibility="gone" />
 
-            <!-- Канал -->
             <LinearLayout
                 android:id="@+id/channel_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
+                android:padding="@dimen/spacing_m"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/channel_label"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/channel_label" />
 
                 <TextView
                     android:id="@+id/channel_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/empty"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Информация о приложении -->
+        <!-- ===== ИНФОРМАЦИЯ О ПРИЛОЖЕНИИ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/update_info_title"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:paddingTop="8dp"/>
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            android:text="@string/update_info_title" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/background_card"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_l">
 
-            <!-- Кнопка установки из файла -->
             <LinearLayout
                 android:id="@+id/install_from_file_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
+                android:padding="@dimen/spacing_m"
                 android:background="?android:attr/selectableItemBackground"
                 android:gravity="center_vertical">
 
@@ -156,35 +143,32 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/install_from_file"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"/>
+                    style="@style/Text.Body"
+                    android:text="@string/install_from_file" />
 
                 <TextView
                     android:id="@+id/install_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Small"
                     android:text="@string/empty"
                     android:textColor="@color/status_granted"
-                    android:textSize="14sp"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
             </LinearLayout>
 
-            <!-- Разделитель -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginVertical="8dp"/>
+                android:layout_marginVertical="@dimen/spacing_s" />
 
-            <!-- Кнопка проверки обновлений -->
             <LinearLayout
                 android:id="@+id/check_update_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
+                android:padding="@dimen/spacing_m"
                 android:background="?android:attr/selectableItemBackground"
                 android:gravity="center_vertical">
 
@@ -192,18 +176,17 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/check_updates_online_button"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"/>
+                    style="@style/Text.Body"
+                    android:text="@string/check_updates_online_button" />
 
                 <TextView
                     android:id="@+id/update_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Small"
                     android:text="@string/empty"
                     android:textColor="@color/status_granted"
-                    android:textSize="14sp"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
             </LinearLayout>
 

@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark"
     android:fillViewport="true"
-    android:padding="16dp">
+    android:padding="@dimen/screen_padding_horizontal">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,120 +13,109 @@
 
         <!-- ===== 1. ОТЛАДКА WEBVIEW ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="8dp"
-            android:text="@string/dev_section_webview"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            android:text="@string/dev_section_webview" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/dev_webview_debug"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:text="@string/dev_webview_debug"
-                android:textColor="@color/text_primary" />
+                android:minHeight="@dimen/height_button"
+                android:padding="@dimen/spacing_s"
+                style="@style/Text.Body"
+                android:text="@string/dev_webview_debug" />
 
             <Button
                 android:id="@+id/dev_clear_cache"
+                style="@style/Button.Secondary"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="@color/button_secondary"
-                android:text="@string/dev_webview_clear_cache"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:layout_marginBottom="@dimen/spacing_s"
+                android:text="@string/dev_webview_clear_cache" />
 
         </LinearLayout>
 
         <!-- ===== 2. ИНФОРМАЦИЯ ОБ ОБОЛОЧКЕ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_shell"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_shell" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
             <Button
                 android:id="@+id/dev_shell_manifest"
+                style="@style/Button.Secondary"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="@color/button_secondary"
-                android:text="@string/dev_shell_manifest"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_s"
+                android:text="@string/dev_shell_manifest" />
 
             <Button
                 android:id="@+id/dev_shell_reload"
+                style="@style/Button.Warning"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="@color/accent_orange"
-                android:text="@string/dev_shell_reload"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_s"
+                android:text="@string/dev_shell_reload" />
 
         </LinearLayout>
 
         <!-- ===== 3. СИСТЕМНАЯ ИНФОРМАЦИЯ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_system"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_system" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_device_model"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_device_model" />
 
                 <TextView
                     android:id="@+id/dev_device_model_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
@@ -134,23 +123,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_android_version"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_android_version" />
 
                 <TextView
                     android:id="@+id/dev_android_version_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
@@ -158,53 +145,49 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_sdk_level"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_sdk_level" />
 
                 <TextView
                     android:id="@+id/dev_sdk_level_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginVertical="8dp" />
+                android:layout_marginVertical="@dimen/spacing_s" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_app_version"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_app_version" />
 
                 <TextView
                     android:id="@+id/dev_app_version_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
@@ -212,23 +195,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_app_code"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_app_code" />
 
                 <TextView
                     android:id="@+id/dev_app_code_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
@@ -236,24 +217,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp"
-                android:paddingBottom="8dp">
+                android:padding="@dimen/spacing_s"
+                android:paddingBottom="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_app_channel"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_app_channel" />
 
                 <TextView
                     android:id="@+id/dev_app_channel_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unknown"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body"
+                    android:text="@string/unknown" />
 
             </LinearLayout>
 
@@ -261,345 +240,292 @@
 
         <!-- ===== 4. УПРАВЛЕНИЕ ДАННЫМИ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_data"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_data" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
-            <!-- Размер кэша -->
             <LinearLayout
                 android:id="@+id/dev_cache_size_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
+                android:padding="@dimen/spacing_m"
                 android:background="?android:attr/selectableItemBackground">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_cache_size"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_cache_size" />
 
                 <TextView
                     android:id="@+id/dev_cache_size_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/dev_cache_size_value"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s" />
 
-            <!-- Размер оболочек -->
             <LinearLayout
                 android:id="@+id/dev_shells_size_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
+                android:padding="@dimen/spacing_m"
                 android:background="?android:attr/selectableItemBackground">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_shells_size"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_shells_size" />
 
                 <TextView
                     android:id="@+id/dev_shells_size_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/dev_shells_size_value"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s" />
 
-            <!-- Размер логов -->
             <LinearLayout
                 android:id="@+id/dev_logs_size_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
+                android:padding="@dimen/spacing_m"
                 android:background="?android:attr/selectableItemBackground">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_logs_size"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_logs_size" />
 
                 <TextView
                     android:id="@+id/dev_logs_size_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/Text.Body"
                     android:text="@string/dev_logs_size_value"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s" />
 
-            <!-- Очистить кэш приложений -->
             <Button
                 android:id="@+id/dev_clear_apps_cache"
+                style="@style/Button.ClearCache"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:backgroundTint="@color/button_clear_cache"
-                android:text="@string/dev_clear_apps_cache"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:text="@string/dev_clear_apps_cache" />
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:layout_marginTop="@dimen/spacing_s" />
 
-            <!-- Очистить данные -->
             <Button
                 android:id="@+id/dev_clear_data"
+                style="@style/Button.Danger"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="@color/button_danger"
-                android:text="@string/dev_clear_data"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:layout_marginBottom="@dimen/spacing_s"
+                android:text="@string/dev_clear_data" />
 
         </LinearLayout>
 
         <!-- ===== 5. УПРАВЛЕНИЕ ЛОГАМИ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_logs"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_logs" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
-            <!-- Сохранять логи в файл -->
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/dev_logs_persist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:padding="8dp"
+                android:minHeight="@dimen/height_button"
+                android:padding="@dimen/spacing_s"
+                style="@style/Text.Body"
                 android:text="@string/dev_logs_persist"
-                android:textColor="@color/text_primary"
                 android:checked="true" />
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:layout_marginVertical="@dimen/spacing_s" />
 
-            <!-- Максимум файлов -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:padding="0dp">
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_logs_max_files"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_logs_max_files" />
 
                 <Spinner
                     android:id="@+id/dev_logs_max_files"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minWidth="100dp"
-                    android:background="@drawable/spinner_bg"
-                    android:popupBackground="@color/background_card"
-                    android:spinnerMode="dropdown" />
+                    style="@style/Spinner" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:layout_marginVertical="@dimen/spacing_s" />
 
-            <!-- Максимум на файл -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:padding="0dp">
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/dev_logs_max_size"
-                    android:textColor="@color/text_hint"
-                    android:textSize="14sp" />
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/dev_logs_max_size" />
 
                 <Spinner
                     android:id="@+id/dev_logs_max_size"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minWidth="100dp"
-                    android:background="@drawable/spinner_bg"
-                    android:popupBackground="@color/background_card"
-                    android:spinnerMode="dropdown" />
+                    style="@style/Spinner" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/spacing_xxs"
                 android:background="@color/divider"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:layout_marginVertical="@dimen/spacing_s" />
 
-            <!-- Кнопка "Показать логи" -->
             <Button
                 android:id="@+id/dev_logs_show"
+                style="@style/Button.Secondary"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="4dp"
-                android:backgroundTint="@color/button_secondary"
-                android:text="@string/dev_logs_show"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xxs"
+                android:text="@string/dev_logs_show" />
 
-            <!-- Кнопка "Очистить логи" -->
             <Button
                 android:id="@+id/dev_logs_clear"
+                style="@style/Button.Danger"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:backgroundTint="@color/button_danger"
-                android:text="@string/dev_logs_clear"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:text="@string/dev_logs_clear" />
 
-            <!-- Кнопка "Сбросить настройки" -->
             <Button
                 android:id="@+id/dev_logs_reset"
+                style="@style/Button.Warning"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="4dp"
-                android:backgroundTint="@color/accent_orange"
-                android:text="@string/dev_logs_reset"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:layout_marginBottom="@dimen/spacing_xxs"
+                android:text="@string/dev_logs_reset" />
 
         </LinearLayout>
 
         <!-- ===== 6. ИНСТРУМЕНТЫ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:paddingTop="24dp"
-            android:text="@string/dev_section_tools"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_tools" />
 
         <LinearLayout
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_card"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/spacing_s">
 
             <Button
                 android:id="@+id/dev_restart_app"
+                style="@style/Button.Warning"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:backgroundTint="@color/button_restart"
-                android:text="@string/dev_restart_app"
-                android:textColor="@color/text_primary" />
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/spacing_s"
+                android:text="@string/dev_restart_app" />
 
         </LinearLayout>
 
-        <!-- Отступ снизу -->
+        <!-- ===== ОТСТУП СНИЗУ ===== -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="32dp" />
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 

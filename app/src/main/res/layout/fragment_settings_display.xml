@@ -5,43 +5,40 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark"
     android:fillViewport="true"
-    android:padding="16dp">
+    android:padding="@dimen/screen_padding_horizontal">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Ориентация экрана -->
+        <!-- ===== ОРИЕНТАЦИЯ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_orientation_title"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:paddingTop="8dp"/>
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            android:text="@string/settings_orientation_title" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Card"
             android:orientation="vertical"
-            android:background="@color/background_card"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_l">
 
-            <!-- Подсказка о блокировке ориентации оболочкой (по умолчанию скрыта) -->
+            <!-- Подсказка о блокировке -->
             <TextView
                 android:id="@+id/orientation_lock_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/orientation_lock_hint_default"
-                android:textColor="@color/status_warning"
-                android:textSize="14sp"
-                android:padding="8dp"
+                android:padding="@dimen/spacing_s"
                 android:background="@color/background_warning"
                 android:gravity="center"
                 android:visibility="gone"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="@dimen/spacing_m"
+                style="@style/Text.Body"
+                android:text="@string/orientation_lock_hint_default"
+                android:textColor="@color/status_warning" />
 
             <RadioGroup
                 android:id="@+id/orientation_group"
@@ -54,72 +51,68 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:minHeight="48dp"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
                     android:text="@string/orientation_auto"
-                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
                     android:id="@+id/orientation_portrait"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
                     android:text="@string/orientation_portrait"
-                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
                     android:id="@+id/orientation_landscape"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
                     android:text="@string/orientation_landscape"
-                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
             </RadioGroup>
         </LinearLayout>
 
-        <!-- Дополнительные настройки -->
+        <!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ===== -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_additional_title"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:paddingTop="24dp"/>
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/settings_additional_title" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Card"
             android:orientation="vertical"
-            android:background="@color/background_card"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_l">
 
-            <!-- Строгий режим - доступен только при включенном полноэкранном -->
             <CheckBox
                 android:id="@+id/fullscreen_checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:enabled="true"
-                android:minHeight="48dp"
+                android:minHeight="@dimen/height_button"
+                style="@style/Text.Body"
                 android:text="@string/additional_fullscreen"
-                android:textColor="@color/text_primary"
                 tools:ignore="VisualLintButtonSize" />
 
             <CheckBox
                 android:id="@+id/strict_mode_checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_s"
                 android:alpha="0.5"
                 android:checked="false"
                 android:enabled="false"
-                android:minHeight="48dp"
+                android:minHeight="@dimen/height_button"
+                style="@style/Text.Body"
                 android:text="@string/additional_strict_mode"
-                android:textColor="@color/text_primary"
                 tools:ignore="VisualLintButtonSize" />
 
         </LinearLayout>

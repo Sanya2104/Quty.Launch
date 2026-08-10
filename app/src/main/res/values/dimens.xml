@@ -1,8 +1,95 @@
 <!-- res/values/dimens.xml -->
 <resources>
-    <!-- Padding для элемента разрешения -->
-    <dimen name="permission_item_padding">16dp</dimen>
+    <!-- ============================================================ -->
+    <!-- ===== БАЗОВЫЕ ОТСТУПЫ (SPACING) ============================ -->
+    <!-- ============================================================ -->
 
-    <!-- Margin между элементами разрешений -->
+    <!-- Микро-отступы -->
+    <dimen name="spacing_xxs">2dp</dimen>
+    <dimen name="spacing_xs">4dp</dimen>
+
+    <!-- Основные отступы -->
+    <dimen name="spacing_s">8dp</dimen>
+    <dimen name="spacing_m">12dp</dimen>
+    <dimen name="spacing_l">16dp</dimen>
+    <dimen name="spacing_xl">24dp</dimen>
+    <dimen name="spacing_xxl">32dp</dimen>
+    <dimen name="spacing_xxxl">40dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== ОТСТУПЫ ДЛЯ ЭКРАНОВ ================================== -->
+    <!-- ============================================================ -->
+
+    <dimen name="screen_padding_horizontal">16dp</dimen>
+    <dimen name="screen_padding_vertical">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="item_padding">12dp</dimen>
+    <dimen name="section_padding">16dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== ОТСТУПЫ МЕЖДУ ЭЛЕМЕНТАМИ ============================= -->
+    <!-- ============================================================ -->
+
+    <dimen name="margin_between_items">8dp</dimen>
+    <dimen name="margin_between_sections">16dp</dimen>
+    <dimen name="margin_between_blocks">24dp</dimen>
+    <dimen name="margin_between_elements">12dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== РАЗМЕРЫ ШРИФТОВ ====================================== -->
+    <!-- ============================================================ -->
+
+    <dimen name="text_xxs">10sp</dimen>
+    <dimen name="text_xs">11sp</dimen>
+    <dimen name="text_s">12sp</dimen>
+    <dimen name="text_m">14sp</dimen>
+    <dimen name="text_l">16sp</dimen>
+    <dimen name="text_xl">20sp</dimen>
+    <dimen name="text_xxl">24sp</dimen>
+    <dimen name="text_xxxl">28sp</dimen>
+
+    <!-- Заголовки -->
+    <dimen name="title_large">24sp</dimen>
+    <dimen name="title_medium">20sp</dimen>
+    <dimen name="title_small">16sp</dimen>
+    <dimen name="title_xsmall">14sp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== ВЫСОТЫ ЭЛЕМЕНТОВ ===================================== -->
+    <!-- ============================================================ -->
+
+    <dimen name="height_button">48dp</dimen>
+    <dimen name="height_button_large">56dp</dimen>
+    <dimen name="height_toolbar">56dp</dimen>
+
+    <!-- Иконки -->
+    <dimen name="icon_small">24dp</dimen>
+    <dimen name="icon_medium">36dp</dimen>
+    <dimen name="icon_large">48dp</dimen>
+    <dimen name="icon_xlarge">80dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== РАДИУСЫ СКРУГЛЕНИЯ ================================== -->
+    <!-- ============================================================ -->
+
+    <dimen name="radius_small">4dp</dimen>
+    <dimen name="radius_medium">8dp</dimen>
+    <dimen name="radius_large">12dp</dimen>
+    <dimen name="radius_xlarge">16dp</dimen>
+    <dimen name="radius_circle">28dp</dimen>
+    <dimen name="radius_full">999dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- ===== СПЕЦИФИЧНЫЕ РАЗМЕРЫ ================================== -->
+    <!-- ============================================================ -->
+
+    <!-- Элементы разрешений (WelcomeActivity) -->
+    <dimen name="permission_item_padding">16dp</dimen>
     <dimen name="permission_item_margin_bottom">12dp</dimen>
+
+    <!-- Прогресс-бар -->
+    <dimen name="progress_bar_height">6dp</dimen>
+
+    <!-- Spinner -->
+    <dimen name="spinner_min_width">100dp</dimen>
 </resources>

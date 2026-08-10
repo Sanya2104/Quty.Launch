@@ -7,51 +7,45 @@
     android:orientation="vertical"
     android:background="@color/background_dark">
 
-    <!-- Шапка фиксированная -->
+    <!-- ===== ШАПКА ===== -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="10dp"
-        android:background="@color/background_dark">
+        style="@style/Toolbar"
+        android:padding="@dimen/spacing_s">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/settings_title"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            style="@style/Text.Title.Large"
+            android:text="@string/settings_title" />
 
         <Button
             android:id="@+id/close_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:text="✕"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="@dimen/text_xxl"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
-    <!-- TabLayout для вкладок -->
+    <!-- ===== TABLAYOUT ===== -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background_card"
         app:tabIndicatorColor="@color/tab_indicator"
-        app:tabIndicatorHeight="3dp"
+        app:tabIndicatorHeight="@dimen/spacing_xxs"
         app:tabSelectedTextColor="@color/tab_text_selected"
         app:tabTextColor="@color/tab_text_unselected"
         app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
-        app:tabPadding="12dp"
+        app:tabPadding="@dimen/spacing_m"
         app:tabMode="fixed"
         app:tabGravity="fill"/>
 
-    <!-- ViewPager2 для переключения между вкладками -->
+    <!-- ===== VIEWPAGER ===== -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager"
         android:layout_width="match_parent"

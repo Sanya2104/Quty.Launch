@@ -7,45 +7,37 @@
 
     <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
-        android:background="@color/background_card">
+        style="@style/Toolbar">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/store_title"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            style="@style/Text.Title.Medium"
+            android:text="@string/store_title" />
 
-        <!-- Кнопка закрытия -->
         <ImageButton
             android:id="@+id/btn_close"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
             android:src="@drawable/ic_close"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/close"
-            android:padding="12dp" />
+            android:padding="@dimen/spacing_m" />
 
     </LinearLayout>
 
-    <!-- ===== ПЛЕЙСХОЛДЕР (временное содержимое) ===== -->
+    <!-- ===== ПЛЕЙСХОЛДЕР ===== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="32dp">
+        android:padding="@dimen/spacing_xxl">
 
         <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="@dimen/icon_xlarge"
+            android:layout_height="@dimen/icon_xlarge"
             android:src="@drawable/ic_store"
             android:contentDescription="@string/store_title"
             android:alpha="0.3" />
@@ -53,10 +45,9 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_xl"
+            style="@style/Text.Body.Dim"
             android:text="@string/store_placeholder"
-            android:textColor="@color/text_dim"
-            android:textSize="16sp"
             android:gravity="center" />
 
     </LinearLayout>

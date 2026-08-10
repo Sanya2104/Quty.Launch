@@ -11,44 +11,41 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="@dimen/screen_padding_horizontal"
         android:gravity="center_horizontal">
 
-        <!-- Иконка приложения -->
+        <!-- ===== ИКОНКА ===== -->
         <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginTop="40dp"
+            android:layout_width="@dimen/icon_xlarge"
+            android:layout_height="@dimen/icon_xlarge"
+            android:layout_marginTop="@dimen/spacing_xxxl"
             android:src="@mipmap/ic_launcher"
             android:contentDescription="@string/app_name" />
 
-        <!-- Заголовок -->
+        <!-- ===== ЗАГОЛОВОК ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_xl"
+            style="@style/Text.Title.Large"
             android:text="@string/welcome_title"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold"
             android:gravity="center" />
 
-        <!-- Подзаголовок -->
+        <!-- ===== ПОДЗАГОЛОВОК ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/spacing_m"
+            style="@style/Text.Body.Secondary"
             android:text="@string/welcome_subtitle"
-            android:textColor="@color/text_hint"
-            android:textSize="14sp"
             android:gravity="center"
-            android:lineSpacingExtra="4dp" />
+            android:lineSpacingExtra="@dimen/spacing_xxs" />
 
-        <!-- Прогресс-бар -->
+        <!-- ===== ПРОГРЕСС-БАР ===== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_xl"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -56,7 +53,7 @@
                 android:id="@+id/progress_bar"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="0dp"
-                android:layout_height="6dp"
+                android:layout_height="@dimen/progress_bar_height"
                 android:layout_weight="1"
                 android:progress="0"
                 android:max="100"
@@ -67,121 +64,101 @@
                 android:id="@+id/progress_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/spacing_m"
+                style="@style/Text.Body"
                 android:text="@string/_0"
-                android:textColor="@color/text_hint"
-                android:textSize="14sp"
                 android:fontFamily="sans-serif-medium" />
         </LinearLayout>
 
-        <!-- Список разрешений (динамический) -->
+        <!-- ===== СПИСОК РАЗРЕШЕНИЙ ===== -->
         <LinearLayout
             android:id="@+id/permissions_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_xl"
             android:orientation="vertical" />
 
-        <!-- Кнопка "Предоставить доступ" -->
+        <!-- ===== КНОПКА ===== -->
         <Button
             android:id="@+id/btn_grant"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
+            style="@style/Button.Primary"
+            android:layout_marginTop="@dimen/spacing_xl"
             android:text="@string/welcome_button_grant"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-medium"
-            android:backgroundTint="@color/button_primary"
             android:enabled="false"
-            android:alpha="0.5"
-            app:cornerRadius="28dp"
-            app:rippleColor="#33FFFFFF" />
+            android:alpha="0.5" />
 
-        <!-- Сообщение об ошибке/отказе -->
+        <!-- ===== ОШИБКА ===== -->
         <LinearLayout
             android:id="@+id/error_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_l"
             android:orientation="vertical"
             android:background="@color/background_error"
-            android:padding="16dp"
+            android:padding="@dimen/spacing_l"
             android:visibility="gone"
-            app:cornerRadius="8dp">
+            app:cornerRadius="@dimen/radius_medium">
 
             <TextView
                 android:id="@+id/error_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/Text.Title.Small"
                 android:text="@string/welcome_permission_denied_title"
                 android:textColor="@color/text_error"
-                android:textSize="16sp"
-                android:textStyle="bold"
                 android:gravity="center" />
 
             <TextView
                 android:id="@+id/error_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_s"
+                style="@style/Text.Body.Secondary"
                 android:text="@string/welcome_permission_denied_message"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp"
                 android:gravity="center"
-                android:lineSpacingExtra="4dp" />
+                android:lineSpacingExtra="@dimen/spacing_xxs" />
 
             <LinearLayout
                 style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/spacing_m"
                 android:orientation="horizontal"
                 android:gravity="center">
 
                 <Button
                     android:id="@+id/btn_retry"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Button.Danger"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="@dimen/height_button"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="@dimen/spacing_s"
                     android:text="@string/welcome_button_retry"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
                     android:backgroundTint="@color/text_error"
-                    app:cornerRadius="24dp"
-                    app:rippleColor="#33FFFFFF" />
+                    app:cornerRadius="@dimen/radius_circle" />
 
                 <Button
                     android:id="@+id/btn_settings"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="@dimen/height_button"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/spacing_s"
                     android:text="@string/welcome_button_settings"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:backgroundTint="@color/button_secondary"
-                    app:cornerRadius="24dp"
-                    app:rippleColor="#33FFFFFF" />
+                    app:cornerRadius="@dimen/radius_circle" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Версия приложения -->
+        <!-- ===== ВЕРСИЯ ===== -->
         <TextView
             android:id="@+id/tv_version"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/spacing_xxl"
+            style="@style/Text.XSmall"
             android:text="@string/version_format"
-            android:textColor="@color/text_dim"
-            android:textSize="12sp"
             android:gravity="center" />
 
     </LinearLayout>

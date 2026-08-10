@@ -184,10 +184,10 @@ class WelcomeActivity : BaseActivity() {
         // Иконка
         val iconView = androidx.appcompat.widget.AppCompatImageView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
-                36.dpToPx(),
-                36.dpToPx()
+                resources.getDimension(R.dimen.icon_medium).toInt(),
+                resources.getDimension(R.dimen.icon_medium).toInt()
             ).apply {
-                marginEnd = 16.dpToPx()
+                marginEnd = resources.getDimension(R.dimen.spacing_l).toInt()
             }
             setImageResource(iconRes)
             setColorFilter(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
@@ -210,7 +210,7 @@ class WelcomeActivity : BaseActivity() {
             )
             text = title
             setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
-            textSize = 16f
+            textSize = resources.getDimension(R.dimen.text_l) / resources.displayMetrics.density
             typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
 
@@ -221,7 +221,7 @@ class WelcomeActivity : BaseActivity() {
             )
             text = description
             setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
-            textSize = 13f
+            textSize = resources.getDimension(R.dimen.text_s) / resources.displayMetrics.density
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
@@ -244,10 +244,10 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                marginEnd = 8.dpToPx()
+                marginEnd = resources.getDimension(R.dimen.spacing_s).toInt()
             }
             text = getString(R.string.permission_denied)
-            textSize = 14f
+            textSize = resources.getDimension(R.dimen.text_m) / resources.displayMetrics.density
             id = View.generateViewId()
             setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_error))
         }
@@ -262,7 +262,7 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             text = "›"
-            textSize = 24f
+            textSize = resources.getDimension(R.dimen.text_xxl) / resources.displayMetrics.density
             setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
         }
 
@@ -277,13 +277,6 @@ class WelcomeActivity : BaseActivity() {
         container.addView(rowLayout)
 
         return container
-    }
-
-    /**
-     * Конвертация dp в px
-     */
-    private fun Int.dpToPx(): Int {
-        return (this * resources.displayMetrics.density).toInt()
     }
 
     private fun setupListeners() {
