@@ -1,5 +1,8 @@
 <!-- res/values/colors.xml -->
 <resources>
+    <!-- ============================================================ -->
+    <!-- СУЩЕСТВУЮЩИЕ ЦВЕТА -->
+    <!-- ============================================================ -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -8,18 +11,72 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Shell selection colors -->
+    <!-- ============================================================ -->
+    <!-- ЦВЕТА ИНТЕРФЕЙСА -->
+    <!-- ============================================================ -->
+
+    <!-- Shell selection -->
     <color name="shell_active_background">#009688</color>
 
-    <!-- TabLayout colors -->
+    <!-- TabLayout -->
     <color name="tab_indicator">#009688</color>
     <color name="tab_text_selected">#009688</color>
     <color name="tab_text_unselected">#8A8A8A</color>
 
-    <!-- Logger colors -->
+    <!-- Logger backgrounds -->
     <color name="log_debug_bg">#1B5E20</color>
     <color name="log_info_bg">#0D47A1</color>
     <color name="log_warn_bg">#E65100</color>
     <color name="log_error_bg">#B71C1C</color>
+
+    <!-- ============================================================ -->
+    <!-- ОСНОВНЫЕ ЦВЕТА ТЕМЫ -->
+    <!-- ============================================================ -->
+
+    <!-- Фоны -->
+    <color name="background_dark">#121212</color>
+    <color name="background_card">#1E1E1E</color>
+    <color name="background_item">#1A1A1A</color>
+    <color name="background_input">#2A2A2A</color>
+    <color name="background_warning">#332A2A</color>
+    <color name="background_error">#332222</color>
+    <color name="background_permission_item">#1E1E1E</color>
+
+    <!-- Текст -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
+    <color name="text_hint">#AAAAAA</color>
+    <color name="text_muted">#888888</color>
+    <color name="text_dim">#666666</color>
+    <color name="text_error">#FF6B6B</color>
+
+    <!-- Разделители и обводки -->
+    <color name="divider">#333333</color>
+    <color name="stroke">#444444</color>
+
+    <!-- Цвета статусов -->
+    <color name="status_granted">#4CAF50</color>
+    <color name="status_denied">#FF6B6B</color>
+    <color name="status_warning">#FF9800</color>
+
+    <!-- Акценты -->
+    <color name="accent_orange">#FF9800</color>
+    <color name="accent_red">#D32F2F</color>
+    <color name="accent_red_dark">#B71C1C</color>
+    <color name="accent_yellow_dark">#FF6F00</color>
+    <color name="accent_green">#4CAF50</color>
+    <color name="accent_blue">#2196F3</color>
+
+    <!-- Spinner -->
+    <color name="spinner_background">#2A2A2A</color>
+    <color name="spinner_stroke">#444444</color>
+
+    <!-- Кнопки -->
+    <color name="button_primary">#009688</color>
+    <color name="button_secondary">#4A4A4A</color>
+    <color name="button_danger">#D32F2F</color>
+    <color name="button_warning">#FF9800</color>
+    <color name="button_clear_cache">#FF6F00</color>
+    <color name="button_restart">#FF9800</color>
 
 </resources>

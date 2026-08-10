@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@color/background_dark"
     android:fillViewport="true"
     android:padding="16dp">
 
@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_orientation_title"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:padding="16dp"
             android:paddingTop="8dp"/>
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
+            android:background="@color/background_card"
             android:padding="16dp">
 
             <!-- Подсказка о блокировке ориентации оболочкой (по умолчанию скрыта) -->
@@ -35,10 +35,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/orientation_lock_hint_default"
-                android:textColor="#FF9800"
+                android:textColor="@color/status_warning"
                 android:textSize="14sp"
                 android:padding="8dp"
-                android:background="#332A2A"
+                android:background="@color/background_warning"
                 android:gravity="center"
                 android:visibility="gone"
                 android:layout_marginBottom="12dp"/>
@@ -56,7 +56,7 @@
                     android:checked="true"
                     android:minHeight="48dp"
                     android:text="@string/orientation_auto"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
                     android:text="@string/orientation_portrait"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
                 <RadioButton
@@ -74,7 +74,7 @@
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
                     android:text="@string/orientation_landscape"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     tools:ignore="VisualLintButtonSize" />
 
             </RadioGroup>
@@ -85,7 +85,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_additional_title"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:padding="16dp"
             android:paddingTop="24dp"/>
@@ -94,7 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
+            android:background="@color/background_card"
             android:padding="16dp">
 
             <!-- Строгий режим - доступен только при включенном полноэкранном -->
@@ -106,7 +106,7 @@
                 android:enabled="true"
                 android:minHeight="48dp"
                 android:text="@string/additional_fullscreen"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 tools:ignore="VisualLintButtonSize" />
 
             <CheckBox
@@ -119,7 +119,7 @@
                 android:enabled="false"
                 android:minHeight="48dp"
                 android:text="@string/additional_strict_mode"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 tools:ignore="VisualLintButtonSize" />
 
         </LinearLayout>

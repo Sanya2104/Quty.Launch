@@ -190,7 +190,7 @@ class WelcomeActivity : BaseActivity() {
                 marginEnd = 16.dpToPx()
             }
             setImageResource(iconRes)
-            setColorFilter(ContextCompat.getColor(this@WelcomeActivity, android.R.color.white))
+            setColorFilter(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
         }
 
         // Блок с названием и описанием
@@ -209,7 +209,7 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             text = title
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, android.R.color.white))
+            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
             textSize = 16f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
@@ -220,7 +220,7 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             text = description
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, android.R.color.darker_gray))
+            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
             textSize = 13f
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
@@ -249,7 +249,7 @@ class WelcomeActivity : BaseActivity() {
             text = getString(R.string.permission_denied)
             textSize = 14f
             id = View.generateViewId()
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, android.R.color.holo_red_dark))
+            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_error))
         }
 
         // Сохраняем для обновления
@@ -263,7 +263,7 @@ class WelcomeActivity : BaseActivity() {
             )
             text = "›"
             textSize = 24f
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, android.R.color.darker_gray))
+            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
         }
 
         statusContainer.addView(statusView)
@@ -406,9 +406,9 @@ class WelcomeActivity : BaseActivity() {
             }
             statusView.setTextColor(
                 if (isGranted) {
-                    ContextCompat.getColor(this, android.R.color.holo_green_light)
+                    ContextCompat.getColor(this, R.color.status_granted)
                 } else {
-                    ContextCompat.getColor(this, android.R.color.holo_red_dark)
+                    ContextCompat.getColor(this, R.color.text_error)
                 }
             )
         }

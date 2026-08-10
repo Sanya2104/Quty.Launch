@@ -1,10 +1,9 @@
 <!-- res/layout/activity_store.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="@color/background_dark">
 
     <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
     <LinearLayout
@@ -13,14 +12,14 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp"
-        android:background="#1E1E1E">
+        android:background="@color/background_card">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/store_title"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -36,17 +35,30 @@
 
     </LinearLayout>
 
-    <!-- ===== ПЛЕЙСХОЛДЕР (с использованием app:drawableTopCompat) ===== -->
-    <TextView
+    <!-- ===== ПЛЕЙСХОЛДЕР (временное содержимое) ===== -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:alpha="0.3"
-        android:drawablePadding="24dp"
+        android:orientation="vertical"
         android:gravity="center"
-        android:padding="32dp"
-        android:text="@string/store_placeholder"
-        android:textColor="#388E3C"
-        android:textSize="16sp"
-        app:drawableTopCompat="@drawable/ic_store" />
+        android:padding="32dp">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_store"
+            android:contentDescription="@string/store_title"
+            android:alpha="0.3" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/store_placeholder"
+            android:textColor="@color/text_dim"
+            android:textSize="16sp"
+            android:gravity="center" />
+
+    </LinearLayout>
 
 </LinearLayout>

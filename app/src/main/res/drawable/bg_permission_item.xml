@@ -1,6 +1,5 @@
 <!-- res/drawable/bg_permission_item.xml -->
-
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#1E1E1E" />
+    <solid android:color="@color/background_permission_item" />
     <corners android:radius="6dp" />
 </shape>

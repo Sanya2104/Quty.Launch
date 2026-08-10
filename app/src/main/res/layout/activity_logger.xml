@@ -1,10 +1,9 @@
 <!-- res/layout/activity_logger.xml -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="@color/background_dark">
 
     <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
     <LinearLayout
@@ -13,14 +12,14 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp"
-        android:background="#1E1E1E">
+        android:background="@color/background_card">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/logger_title"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -94,14 +93,14 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:padding="8dp"
-        android:background="#332A2A"
+        android:background="@color/background_warning"
         android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/logger_paused"
-            android:textColor="#FF9800"
+            android:textColor="@color/status_warning"
             android:textSize="14sp"
             android:layout_marginStart="8dp" />
 
@@ -126,7 +125,7 @@
         android:padding="12dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:background="#1E1E1E">
+        android:background="@color/background_card">
 
         <!-- Статус (количество логов) -->
         <TextView
@@ -135,7 +134,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/logger_status"
-            android:textColor="#888888"
+            android:textColor="@color/text_muted"
             android:textSize="12sp" />
 
         <!-- Фильтр по уровню -->
@@ -146,7 +145,7 @@
             android:layout_marginStart="8dp"
             android:minWidth="100dp"
             android:background="@drawable/spinner_bg"
-            android:popupBackground="#1E1E1E"
+            android:popupBackground="@color/background_card"
             android:spinnerMode="dropdown" />
 
         <!-- Фильтр по источнику -->
@@ -157,7 +156,7 @@
             android:layout_marginStart="8dp"
             android:minWidth="100dp"
             android:background="@drawable/spinner_bg"
-            android:popupBackground="#1E1E1E"
+            android:popupBackground="@color/background_card"
             android:spinnerMode="dropdown" />
 
     </LinearLayout>

@@ -61,7 +61,7 @@ class SystemSettingsFragment : Fragment() {
             result.data?.data?.let { uri ->
                 installStatus.visibility = View.VISIBLE
                 installStatus.text = getString(R.string.checking_updates)
-                installStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                installStatus.setTextColor(resources.getColor(R.color.text_muted, null))
                 validateAndInstallApk(uri)
             }
         } else {
@@ -356,7 +356,7 @@ class SystemSettingsFragment : Fragment() {
                     val uri = apkList[which].second
                     installStatus.visibility = View.VISIBLE
                     installStatus.text = getString(R.string.checking_updates)
-                    installStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                    installStatus.setTextColor(resources.getColor(R.color.text_muted, null))
                     validateAndInstallApk(uri)
                 }
                 .setNegativeButton(getString(R.string.cancel), null)
@@ -375,7 +375,7 @@ class SystemSettingsFragment : Fragment() {
 
                 if (packageInfo == null) {
                     installStatus.text = getString(R.string.invalid_apk)
-                    installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    installStatus.setTextColor(resources.getColor(R.color.text_error, null))
                     view?.postDelayed({
                         installStatus.visibility = View.GONE
                     }, 3000)
@@ -384,7 +384,7 @@ class SystemSettingsFragment : Fragment() {
 
                 if (packageInfo.packageName != requireContext().packageName) {
                     installStatus.text = getString(R.string.apk_validation_failed)
-                    installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    installStatus.setTextColor(resources.getColor(R.color.text_error, null))
                     view?.postDelayed({
                         installStatus.visibility = View.GONE
                     }, 3000)
@@ -393,7 +393,7 @@ class SystemSettingsFragment : Fragment() {
 
                 val apkVersion = packageInfo.versionName ?: getString(R.string.version_unknown)
                 installStatus.text = getString(R.string.apk_validated_success, apkVersion)
-                installStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+                installStatus.setTextColor(resources.getColor(R.color.status_granted, null))
 
                 view?.postDelayed({
                     installStatus.visibility = View.GONE
@@ -403,7 +403,7 @@ class SystemSettingsFragment : Fragment() {
 
             } catch (_: Exception) {
                 installStatus.text = getString(R.string.invalid_apk)
-                installStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                installStatus.setTextColor(resources.getColor(R.color.text_error, null))
                 view?.postDelayed({
                     installStatus.visibility = View.GONE
                 }, 3000)
@@ -503,18 +503,18 @@ class SystemSettingsFragment : Fragment() {
     private fun checkForUpdates() {
         updateStatus.visibility = View.VISIBLE
         updateStatus.text = getString(R.string.checking_updates)
-        updateStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+        updateStatus.setTextColor(resources.getColor(R.color.text_muted, null))
 
         lifecycleScope.launch {
             val result = updateManager.checkForUpdates()
 
             if (result.hasUpdate && result.versionInfo != null) {
                 updateStatus.text = getString(R.string.update_available, result.versionInfo.version)
-                updateStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+                updateStatus.setTextColor(resources.getColor(R.color.status_granted, null))
                 showUpdateDialog(result.versionInfo)
             } else if (result.error != null) {
                 updateStatus.text = getString(R.string.update_error)
-                updateStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                updateStatus.setTextColor(resources.getColor(R.color.text_error, null))
 
                 val errorMessage = when {
                     result.error.contains("UnknownHostException") ||
@@ -535,7 +535,7 @@ class SystemSettingsFragment : Fragment() {
                 }, 3000)
             } else {
                 updateStatus.text = getString(R.string.no_updates)
-                updateStatus.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                updateStatus.setTextColor(resources.getColor(R.color.text_muted, null))
                 view?.postDelayed({
                     updateStatus.visibility = View.GONE
                 }, 3000)

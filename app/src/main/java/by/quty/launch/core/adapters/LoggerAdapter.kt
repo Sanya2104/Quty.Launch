@@ -58,9 +58,9 @@ class LoggerAdapter : ListAdapter<LogEntry, LoggerAdapter.LogViewHolder>(LogDiff
         holder.tvSource.text = entry.source
         holder.tvSource.setTextColor(
             if (entry.source == "WebView") {
-                ContextCompat.getColor(context, android.R.color.holo_blue_light)
+                ContextCompat.getColor(context, R.color.accent_blue)
             } else {
-                ContextCompat.getColor(context, android.R.color.darker_gray)
+                ContextCompat.getColor(context, R.color.text_dim)
             }
         )
     }
@@ -86,10 +86,10 @@ class LoggerAdapter : ListAdapter<LogEntry, LoggerAdapter.LogViewHolder>(LogDiff
      */
     private fun getLevelColor(context: android.content.Context, level: LogLevel): Int {
         return when (level) {
-            LogLevel.DEBUG -> ContextCompat.getColor(context, android.R.color.holo_green_light)
-            LogLevel.INFO -> ContextCompat.getColor(context, android.R.color.holo_blue_light)
-            LogLevel.WARN -> ContextCompat.getColor(context, android.R.color.holo_orange_light)
-            LogLevel.ERROR -> ContextCompat.getColor(context, android.R.color.holo_red_light)
+            LogLevel.DEBUG -> ContextCompat.getColor(context, R.color.accent_green)
+            LogLevel.INFO -> ContextCompat.getColor(context, R.color.accent_blue)
+            LogLevel.WARN -> ContextCompat.getColor(context, R.color.status_warning)
+            LogLevel.ERROR -> ContextCompat.getColor(context, R.color.text_error)
         }
     }
 

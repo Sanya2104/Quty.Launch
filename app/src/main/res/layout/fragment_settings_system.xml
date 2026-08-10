@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@color/background_dark"
     android:fillViewport="true"
     android:padding="16dp">
 
@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/system_info_title"
-            android:textColor="#CCCCCC"
+            android:textColor="@color/text_secondary"
             android:textSize="16sp"
             android:padding="16dp"
             android:paddingTop="8dp"/>
@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
+            android:background="@color/background_card"
             android:padding="16dp">
 
             <!-- Версия -->
@@ -39,7 +39,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/version_label"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/text_hint"
                     android:textSize="14sp" />
 
                 <TextView
@@ -47,7 +47,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/version_unknown"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
@@ -57,7 +57,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#333333"
+                android:background="@color/divider"
                 android:layout_marginVertical="4dp" />
 
             <!-- Код версии -->
@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/version_code_label"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/text_hint"
                     android:textSize="14sp" />
 
                 <TextView
@@ -80,7 +80,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/unknown_code"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
@@ -91,7 +91,7 @@
                 android:id="@+id/channel_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#333333"
+                android:background="@color/divider"
                 android:layout_marginVertical="4dp"
                 android:visibility="gone" />
 
@@ -109,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/channel_label"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/text_hint"
                     android:textSize="14sp" />
 
                 <TextView
@@ -117,7 +117,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/empty"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textAlignment="viewEnd" />
 
@@ -130,7 +130,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/update_info_title"
-            android:textColor="#CCCCCC"
+            android:textColor="@color/text_secondary"
             android:textSize="16sp"
             android:padding="16dp"
             android:paddingTop="8dp"/>
@@ -139,7 +139,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
+            android:background="@color/background_card"
             android:padding="16dp">
 
             <!-- Кнопка установки из файла -->
@@ -157,7 +157,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/install_from_file"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
 
                 <TextView
@@ -165,7 +165,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/empty"
-                    android:textColor="#4CAF50"
+                    android:textColor="@color/status_granted"
                     android:textSize="14sp"
                     android:visibility="gone"/>
 
@@ -175,7 +175,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#333333"
+                android:background="@color/divider"
                 android:layout_marginVertical="8dp"/>
 
             <!-- Кнопка проверки обновлений -->
@@ -193,7 +193,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/check_updates_online_button"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
 
                 <TextView
@@ -201,7 +201,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/empty"
-                    android:textColor="#4CAF50"
+                    android:textColor="@color/status_granted"
                     android:textSize="14sp"
                     android:visibility="gone"/>
 

@@ -130,7 +130,7 @@ class DisplaySettingsFragment : Fragment() {
         }
         orientationLockHint.text = hintText
         orientationLockHint.visibility = View.VISIBLE
-        orientationLockHint.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark))
+        orientationLockHint.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_warning))
 
         // Блокируем все RadioButton в группе
         for (i in 0 until orientationGroup.childCount) {

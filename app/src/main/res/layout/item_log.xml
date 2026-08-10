@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="8dp"
-    android:background="#1A1A1A"
+    android:background="@color/background_item"
     android:layout_marginBottom="4dp">
 
     <!-- Верхняя строка: Уровень + Время + Тег -->
@@ -25,7 +25,7 @@
             android:paddingBottom="2dp"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:background="@drawable/bg_log_level_debug"
             android:layout_marginEnd="8dp" />
 
@@ -34,7 +34,7 @@
             android:id="@+id/tv_log_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#666666"
+            android:textColor="@color/text_dim"
             android:textSize="11sp"
             android:layout_marginEnd="8dp" />
 
@@ -44,7 +44,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#AAAAAA"
+            android:textColor="@color/text_hint"
             android:textSize="12sp"
             android:textStyle="bold"
             android:maxLines="1"
@@ -55,7 +55,7 @@
             android:id="@+id/tv_log_source"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#666666"
+            android:textColor="@color/text_dim"
             android:textSize="11sp"
             android:layout_marginStart="8dp" />
 
@@ -66,7 +66,7 @@
         android:id="@+id/tv_log_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="14sp"
         android:layout_marginTop="4dp"
         android:maxLines="5"
