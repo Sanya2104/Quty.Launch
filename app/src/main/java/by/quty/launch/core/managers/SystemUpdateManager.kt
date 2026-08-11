@@ -88,7 +88,7 @@ class SystemUpdateManager(private val context: Context) {
             }
             packageInfo.longVersionCode
         } catch (e: Exception) {
-            Logger.e("SystemUpdateManager", "❌ Ошибка получения версии: ${e.message}")
+            Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_version_error, e.message))
             0L
         }
     }
@@ -103,7 +103,7 @@ class SystemUpdateManager(private val context: Context) {
      */
     suspend fun checkForUpdates(): UpdateCheckResult = withContext(Dispatchers.IO) {
         try {
-            Logger.d("SystemUpdateManager", "🔍 Проверка обновлений...")
+            Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_checking))
 
             val connection = URL(versionUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
@@ -118,7 +118,7 @@ class SystemUpdateManager(private val context: Context) {
                 val hasUpdate = versionInfo.versionCode > currentVersionCode
 
                 Logger.d("SystemUpdateManager",
-                    "📊 Текущая версия: $currentVersionCode, Доступна: ${versionInfo.versionCode}, Обновление: $hasUpdate"
+                    context.getString(R.string.log_system_update_version_check, currentVersionCode, versionInfo.versionCode, hasUpdate)
                 )
 
                 if (!hasUpdate) {
@@ -131,7 +131,7 @@ class SystemUpdateManager(private val context: Context) {
                     versionInfo = if (hasUpdate) versionInfo else null
                 )
             } else {
-                Logger.w("SystemUpdateManager", "⚠️ Сервер вернул код: ${connection.responseCode}")
+                Logger.w("SystemUpdateManager", context.getString(R.string.log_system_update_server_error, connection.responseCode))
                 UpdateCheckResult(
                     hasUpdate = false,
                     error = context.getString(R.string.server_error, connection.responseCode)
@@ -150,7 +150,7 @@ class SystemUpdateManager(private val context: Context) {
                 e.message?.contains("hostname") == true -> context.getString(R.string.no_internet_connection)
                 else -> e.message ?: context.getString(R.string.update_error)
             }
-            Logger.e("SystemUpdateManager", "❌ Ошибка проверки: ${e.message}")
+            Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_download_error, e.message))
             UpdateCheckResult(hasUpdate = false, error = errorMessage)
         }
     }
@@ -224,7 +224,7 @@ class SystemUpdateManager(private val context: Context) {
                 deletedCount++
             }
             if (deletedCount > 0) {
-                Logger.d("SystemUpdateManager", "🗑️ Удалено $deletedCount старых APK файлов")
+                Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_delete_old_apks, deletedCount))
             }
         } catch (_: Exception) {
             // Игнорируем ошибки
@@ -240,7 +240,7 @@ class SystemUpdateManager(private val context: Context) {
      */
     private fun markDownloadComplete(versionCode: Int) {
         prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
-        Logger.d("SystemUpdateManager", "✅ Отмечено завершение загрузки для версии $versionCode")
+        Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_mark_complete, versionCode))
     }
 
     /**
@@ -255,7 +255,7 @@ class SystemUpdateManager(private val context: Context) {
      */
     fun clearDownloadMark(versionCode: Int) {
         prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
-        Logger.d("SystemUpdateManager", "🗑️ Очищена метка загрузки для версии $versionCode")
+        Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_clear_mark, versionCode))
     }
 
     /**
@@ -278,7 +278,7 @@ class SystemUpdateManager(private val context: Context) {
             }
 
             if (removedCount > 0) {
-                Logger.d("SystemUpdateManager", "🗑️ Очищено $removedCount старых меток загрузки")
+                Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_cleanup_marks, removedCount))
             }
         } catch (_: Exception) {
             // Игнорируем ошибки
@@ -308,7 +308,7 @@ class SystemUpdateManager(private val context: Context) {
             if (!forceDownload) {
                 val (exists, existingUri) = checkIfApkExists(versionInfo)
                 if (exists && existingUri != null) {
-                    Logger.d("SystemUpdateManager", "✅ APK уже скачан: $fileName")
+                    Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_apk_exists, fileName))
                     withContext(Dispatchers.Main) {
                         listener.onSuccess(existingUri)
                     }
@@ -331,7 +331,7 @@ class SystemUpdateManager(private val context: Context) {
                 extension = "tmp"
             )
 
-            Logger.d("SystemUpdateManager", "📥 Начинаем скачивание APK: $fileName")
+            Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_download_start, fileName))
 
             // Скачиваем через UpdateHelper
             val file = UpdateHelper.downloadFile(
@@ -383,7 +383,7 @@ class SystemUpdateManager(private val context: Context) {
             file.delete()
 
             if (!success) {
-                Logger.e("SystemUpdateManager", "❌ Ошибка сохранения APK")
+                Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_apk_save_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
                 }
@@ -398,21 +398,21 @@ class SystemUpdateManager(private val context: Context) {
             val uri = storageManager.getUri(savedFile)
 
             if (uri == null) {
-                Logger.e("SystemUpdateManager", "❌ Не удалось получить URI для APK")
+                Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_uri_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
                 }
                 return@withContext false
             }
 
-            Logger.d("SystemUpdateManager", "✅ APK сохранён: $fileName")
+            Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_apk_saved, fileName))
             withContext(Dispatchers.Main) {
                 listener.onSuccess(uri)
             }
             true
 
         } catch (e: Exception) {
-            Logger.e("SystemUpdateManager", "❌ Ошибка скачивания APK: ${e.message}")
+            Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_download_error, e.message))
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))
             }
@@ -442,11 +442,11 @@ class SystemUpdateManager(private val context: Context) {
      */
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
-            Logger.d("SystemUpdateManager", "📲 Запуск установки APK")
+            Logger.d("SystemUpdateManager", context.getString(R.string.log_system_update_install_start))
 
             // Проверяем разрешение на установку (для Android 8+)
             if (!context.packageManager.canRequestPackageInstalls()) {
-                Logger.w("SystemUpdateManager", "⚠️ Нет разрешения на установку, открываем настройки")
+                Logger.w("SystemUpdateManager", context.getString(R.string.log_system_update_install_no_permission))
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
                 intent.data = "package:${context.packageName}".toUri()
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -470,7 +470,7 @@ class SystemUpdateManager(private val context: Context) {
             }
 
         } catch (e: Exception) {
-            Logger.e("SystemUpdateManager", "❌ Ошибка запуска установки: ${e.message}")
+            Logger.e("SystemUpdateManager", context.getString(R.string.log_system_update_install_error, e.message))
             Toast.makeText(
                 context,
                 context.getString(R.string.update_install_failed, e.message),

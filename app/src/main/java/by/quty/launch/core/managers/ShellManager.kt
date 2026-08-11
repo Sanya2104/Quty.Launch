@@ -488,7 +488,7 @@ class ShellManager(
                 }
             }
         } catch (e: Exception) {
-            Logger.e("ShellManager", "❌ Ошибка распаковки оболочки: ${e.message}")
+            Logger.e("ShellManager", context.getString(R.string.log_shell_manager_unzip_error, e.message))
         }
     }
 

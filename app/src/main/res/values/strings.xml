@@ -530,4 +530,26 @@
     <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
     <string name="log_logger_file_clear_error">Ошибка очистки файлов логов</string>
 
+    <!-- SystemUpdateManager логи -->
+    <string name="log_system_update_checking">Проверка обновлений…</string>
+    <string name="log_system_update_version_check" formatted="false">Текущая версия: %d, Доступна: %d, Обновление: %b</string>
+    <string name="log_system_update_server_error" formatted="false">Сервер вернул код: %d</string>
+    <string name="log_system_update_version_error">Ошибка получения версии: %s</string>
+    <string name="log_system_update_download_start">Начинаем скачивание APK: %s</string>
+    <string name="log_system_update_apk_exists">APK уже скачан: %s</string>
+    <string name="log_system_update_apk_saved">APK сохранён: %s</string>
+    <string name="log_system_update_apk_save_error">Ошибка сохранения APK</string>
+    <string name="log_system_update_uri_error">Не удалось получить URI для APK</string>
+    <string name="log_system_update_download_error">Ошибка скачивания APK: %s</string>
+    <string name="log_system_update_mark_complete" formatted="false">Отмечено завершение загрузки для версии %d</string>
+    <string name="log_system_update_clear_mark" formatted="false">Очищена метка загрузки для версии %d</string>
+    <string name="log_system_update_cleanup_marks" formatted="false">Очищено %d старых меток загрузки</string>
+    <string name="log_system_update_delete_old_apks" formatted="false">Удалено %d старых APK файлов</string>
+    <string name="log_system_update_install_start">Запуск установки APK</string>
+    <string name="log_system_update_install_no_permission">Нет разрешения на установку, открываем настройки</string>
+    <string name="log_system_update_install_error">Ошибка запуска установки: %s</string>
+
+    <!-- ShellManager логи -->
+    <string name="log_shell_manager_unzip_error">Ошибка распаковки оболочки: %s</string>
+
 </resources>
