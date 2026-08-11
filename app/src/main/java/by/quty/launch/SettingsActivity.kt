@@ -9,6 +9,7 @@ import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.viewpager2.widget.ViewPager2
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.adapters.SettingsPagerAdapter
 import by.quty.launch.core.fragments.DisplaySettingsFragment
@@ -57,11 +58,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var isRestarting = false
 
     companion object {
-        const val RESULT_SHELL_CHANGED = 1
-        const val EXTRA_SELECTED_SHELL = "selected_shell"
-        private const val DELAY_BEFORE_RESTART = 500L // Задержка перед перезапуском (мс)
+        // Результат изменения оболочки (из конфига)
+        const val RESULT_SHELL_CHANGED = CoreConfig.RESULT_SHELL_CHANGED
 
-        // Индексы вкладок
+        // Ключ для передачи выбранной оболочки в Intent (из конфига)
+        const val EXTRA_SELECTED_SHELL = CoreConfig.EXTRA_SELECTED_SHELL
+
+        // Задержка перед перезапуском (из конфига)
+        private const val DELAY_BEFORE_RESTART = CoreConfig.DELAY_BEFORE_RESTART_MS
+
+        // Индексы вкладок (оставляем локально)
         private const val TAB_SHELL = 0
     }
 

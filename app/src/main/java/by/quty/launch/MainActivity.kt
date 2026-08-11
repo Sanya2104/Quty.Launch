@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.lifecycleScope
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.logger.Logger
@@ -24,8 +25,11 @@ class MainActivity : BaseActivity() {
     private lateinit var shellManager: ShellManager
 
     companion object {
-        const val REQUEST_CODE_SETTINGS = 1001
-        private const val DELAY_BEFORE_RECREATE = 300L // Задержка перед перезапуском (мс)
+        // Код запроса для SettingsActivity (из конфига)
+        const val REQUEST_CODE_SETTINGS = CoreConfig.SETTINGS_REQUEST_CODE
+
+        // Задержка перед пересозданием активности (из конфига)
+        private const val DELAY_BEFORE_RECREATE = CoreConfig.DELAY_BEFORE_RECREATE_MS
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

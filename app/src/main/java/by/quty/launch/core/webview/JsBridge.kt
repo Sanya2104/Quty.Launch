@@ -4,6 +4,7 @@ package by.quty.launch.core.webview
 import android.content.Context
 import android.webkit.JavascriptInterface
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.*
@@ -22,8 +23,8 @@ class JsBridge(
     // WeakReference для предотвращения утечки памяти
     private var webViewRef: WeakReference<LauncherWebView>? = null
 
-    // Тайм-аут выполнения метода (10 секунд)
-    private val timeoutMs = 10000L
+    // Тайм-аут выполнения метода (из конфига)
+    private val timeoutMs = CoreConfig.JS_BRIDGE_TIMEOUT_MS
 
     /**
      * Устанавливает ссылку на WebView для отправки результатов обратно в JS

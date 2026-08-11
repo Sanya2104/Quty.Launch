@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
@@ -52,8 +53,11 @@ class ShellSettingsFragment : Fragment() {
     private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
-        const val EXTRA_SHELL_NAME = "shell_name"
-        private const val DELAY_BEFORE_UI_UPDATE = 100L
+        // Ключ для передачи имени оболочки в Intent (из конфига)
+        const val EXTRA_SHELL_NAME = CoreConfig.EXTRA_SHELL_NAME
+
+        // Задержка перед обновлением UI (из конфига)
+        private const val DELAY_BEFORE_UI_UPDATE = CoreConfig.DELAY_BEFORE_UI_UPDATE_MS
     }
 
     // Регистрируем ActivityResult для выбора файла оболочки

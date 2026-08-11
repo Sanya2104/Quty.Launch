@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import by.quty.launch.R
 import by.quty.launch.api.model.AppInfo
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,8 +29,11 @@ data class CachedApps(
 )
 
 object CacheManager {
-    private const val CACHE_FILE_NAME = "apps_cache"
-    private const val CACHE_VALIDITY_MS = 30 * 60 * 1000 // 30 Minutes
+    // Имя файла кэша (из конфига)
+    private const val CACHE_FILE_NAME = CoreConfig.CACHE_APPS_FILE_NAME
+
+    // Время жизни кэша (из конфига)
+    private const val CACHE_VALIDITY_MS = CoreConfig.CACHE_APPS_VALIDITY_MS
 
     // In-memory кэш (самый быстрый доступ)
     private var memoryCache: CachedApps? = null

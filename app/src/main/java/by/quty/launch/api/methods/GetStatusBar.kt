@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.StatusBarInfo
+import by.quty.launch.configs.ApiConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -35,9 +36,26 @@ class GetStatusBar(
     private val speedHistory = mutableListOf<Double>()
     private val tempHistory = mutableListOf<Float>()
 
-    // Количество значений для усреднения
-    private val speedHistorySize = 3      // для скорости интернета
-    private val tempHistorySize = 3       // для температуры CPU
+    // Количество значений для усреднения (из конфига)
+    private val speedHistorySize = ApiConfig.SPEED_HISTORY_SIZE
+    private val tempHistorySize = ApiConfig.TEMP_HISTORY_SIZE
+
+    // Пути к файлам температуры (системные, оставляем локально)
+    private val thermalPaths = listOf(
+        "/sys/class/thermal/thermal_zone0/temp",
+        "/sys/class/thermal/thermal_zone1/temp",
+        "/sys/class/thermal/thermal_zone2/temp",
+        "/sys/class/thermal/thermal_zone3/temp",
+        "/sys/class/thermal/thermal_zone4/temp",
+        "/sys/class/thermal/thermal_zone5/temp",
+        "/sys/devices/virtual/thermal/thermal_zone0/temp",
+        "/sys/devices/virtual/thermal/thermal_zone1/temp",
+        "/sys/devices/platform/msm_thermal/thermal_zone/temp",
+        "/sys/class/hwmon/hwmon0/temp1_input",
+        "/sys/class/hwmon/hwmon1/temp1_input",
+        "/sys/class/hwmon/hwmon0/temp2_input",
+        "/sys/class/power_supply/battery/temp"
+    )
 
     override fun parseParams(jsonString: String) = Unit
 
@@ -92,25 +110,6 @@ class GetStatusBar(
      */
     private fun getRawCpuTemp(): Float? {
         return try {
-            // Пути к файлам температуры (наиболее распространённые)
-            val thermalPaths = listOf(
-                // CPU temperature paths
-                "/sys/class/thermal/thermal_zone0/temp",
-                "/sys/class/thermal/thermal_zone1/temp",
-                "/sys/class/thermal/thermal_zone2/temp",
-                "/sys/class/thermal/thermal_zone3/temp",
-                "/sys/class/thermal/thermal_zone4/temp",
-                "/sys/class/thermal/thermal_zone5/temp",
-                "/sys/devices/virtual/thermal/thermal_zone0/temp",
-                "/sys/devices/virtual/thermal/thermal_zone1/temp",
-                "/sys/devices/platform/msm_thermal/thermal_zone/temp",
-                // Alternative paths
-                "/sys/class/hwmon/hwmon0/temp1_input",
-                "/sys/class/hwmon/hwmon1/temp1_input",
-                "/sys/class/hwmon/hwmon0/temp2_input",
-                "/sys/class/power_supply/battery/temp"  // fallback - температура батареи
-            )
-
             var bestTemp: Float? = null
             var bestScore = 0
 
@@ -130,8 +129,8 @@ class GetStatusBar(
                                 else -> value
                             }
 
-                            // Проверяем, что температура в разумных пределах (0-120°C)
-                            if (celsius in 0f..120f) {
+                            // Проверяем, что температура в разумных пределах (из конфига)
+                            if (celsius in ApiConfig.MIN_CPU_TEMP_CELSIUS.toFloat()..ApiConfig.MAX_CPU_TEMP_CELSIUS.toFloat()) {
                                 // Оцениваем качество источника
                                 val score = when {
                                     path.contains("cpu") || path.contains("thermal_zone") -> 3

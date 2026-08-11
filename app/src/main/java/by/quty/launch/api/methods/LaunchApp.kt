@@ -10,6 +10,7 @@ import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.SettingsActivity
 import by.quty.launch.LoggerActivity
 import by.quty.launch.StoreActivity
+import by.quty.launch.configs.ApiConfig
 import kotlinx.serialization.builtins.serializer
 
 class LaunchApp(
@@ -25,7 +26,7 @@ class LaunchApp(
             ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_package_required))
 
         when (packageName) {
-            "by.quty.launch.settings" -> {
+            ApiConfig.SETTINGS_PACKAGE -> {
                 // Открываем настройки
                 val intent = Intent(context, SettingsActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -33,13 +34,13 @@ class LaunchApp(
                 // Запускаем SettingsActivity
                 context.startActivity(intent)
             }
-            "by.quty.launch.logger" -> {
+            ApiConfig.LOGGER_PACKAGE -> {
                 // Открываем Логгер
                 val intent = Intent(context, LoggerActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
-            "by.quty.launch.store" -> {
+            ApiConfig.STORE_PACKAGE -> {
                 // Открываем Магазин оболочек
                 val intent = Intent(context, StoreActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

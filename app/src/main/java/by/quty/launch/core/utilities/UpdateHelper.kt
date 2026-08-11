@@ -4,6 +4,7 @@ package by.quty.launch.core.utilities
 import android.content.Context
 import android.os.StatFs
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -22,7 +23,8 @@ import java.net.URL
  */
 object UpdateHelper {
 
-    private const val BUFFER_SIZE = 8192
+    // Размер буфера при скачивании (из конфига)
+    private const val BUFFER_SIZE = CoreConfig.DOWNLOAD_BUFFER_SIZE
 
     // ============================================================
     // РАБОТА С ВЕРСИЯМИ
@@ -72,8 +74,8 @@ object UpdateHelper {
         try {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = "HEAD"
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
+            connection.connectTimeout = CoreConfig.CONNECT_TIMEOUT_MS
+            connection.readTimeout = CoreConfig.READ_TIMEOUT_MS
             connection.connect()
             val size = connection.contentLength.toLong()
             connection.disconnect()
@@ -124,8 +126,8 @@ object UpdateHelper {
         url: String,
         listener: DownloadListener,
         destination: Destination,
-        connectTimeout: Int = 15000,
-        readTimeout: Int = 30000
+        connectTimeout: Int = CoreConfig.CONNECT_TIMEOUT_MS,
+        readTimeout: Int = CoreConfig.READ_TIMEOUT_MS
     ): File? = withContext(Dispatchers.IO) {
         var connection: HttpURLConnection? = null
         var inputStream: java.io.InputStream? = null

@@ -3,6 +3,7 @@ package by.quty.launch.core.logger
 
 import android.content.Context
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageFileType
 import by.quty.launch.core.managers.StorageManager
@@ -29,18 +30,23 @@ import kotlin.time.Duration.Companion.milliseconds
  * Автоматическая ротация по размеру и количеству файлов
  *
  * Оптимизация: буферизированная запись — логи накапливаются в памяти
- * и записываются на диск пачками с задержкой 500 мс
+ * и записываются на диск пачками с задержкой
  */
 object LoggerFile {
 
+    // Техническая версия формата файла (оставляем локально)
     private const val VERSION = 1
-    private const val MAX_LOGS_IN_FILE = 1000
-    private val FLUSH_DELAY: Duration = 500.milliseconds
 
-    // Настройки по умолчанию
-    private var persistEnabled = true
-    private var maxFiles = 5
-    private var maxSizeMB = 5
+    // Максимальное количество логов в одном файле (из конфига)
+    private const val MAX_LOGS_IN_FILE = CoreConfig.LOGGER_MAX_IN_FILE
+
+    // Задержка перед записью буфера (из конфига)
+    private val FLUSH_DELAY: Duration = CoreConfig.LOGGER_FLUSH_DELAY_MS.milliseconds
+
+    // Настройки по умолчанию (из конфига)
+    private var persistEnabled = CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT
+    private var maxFiles = CoreConfig.LOGGER_MAX_FILES_DEFAULT
+    private var maxSizeMB = CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT
 
     // StorageManager - хранится в WeakReference для предотвращения утечек памяти
     private var storageManagerRef: WeakReference<StorageManager>? = null
@@ -84,9 +90,9 @@ object LoggerFile {
      */
     fun init(
         storageManager: StorageManager,
-        maxFiles: Int = 5,
-        maxSizeMB: Int = 5,
-        persistEnabled: Boolean = true,
+        maxFiles: Int = CoreConfig.LOGGER_MAX_FILES_DEFAULT,
+        maxSizeMB: Int = CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT,
+        persistEnabled: Boolean = CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT,
         context: Context
     ) {
         this.storageManagerRef = WeakReference(storageManager)

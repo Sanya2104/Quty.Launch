@@ -8,6 +8,7 @@ import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -56,22 +57,14 @@ class ShellManager(
 ) {
 
     companion object {
-        /** Расширение файла оболочки (с точкой) */
-        const val SHELL_EXTENSION_WITH_DOT = ".qutyshell"
+        /** Расширение файла оболочки (с точкой) - из конфига */
+        const val SHELL_EXTENSION_WITH_DOT = CoreConfig.SHELL_EXTENSION_WITH_DOT
 
-        /** Поддерживаемые расширения файлов оболочки (без точки) */
-        val SHELL_EXTENSIONS = listOf(
-            "qutyshell",
-            "qsp",
-            "qutyshellpack"
-        )
+        /** Поддерживаемые расширения файлов оболочки (без точки) - из конфига */
+        val SHELL_EXTENSIONS = CoreConfig.SHELL_EXTENSIONS
 
-        /** Поддерживаемые расширения файлов оболочки (с точкой) */
-        val SHELL_EXTENSIONS_WITH_DOT = listOf(
-            ".qutyshell",
-            ".qsp",
-            ".qutyshellpack"
-        )
+        /** Поддерживаемые расширения файлов оболочки (с точкой) - из конфига */
+        val SHELL_EXTENSIONS_WITH_DOT = CoreConfig.SHELL_EXTENSIONS_WITH_DOT
     }
 
     // Хранилище и менеджеры

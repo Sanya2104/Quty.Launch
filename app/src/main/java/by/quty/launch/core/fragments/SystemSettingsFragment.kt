@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageManager
@@ -49,8 +50,10 @@ class SystemSettingsFragment : Fragment() {
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
-    private val clickTimeoutMs = 3000L
-    private val clicksToActivate = 5
+
+    // Параметры активации DevMode (из конфига)
+    private val clickTimeoutMs = CoreConfig.DEV_MODE_CLICK_TIMEOUT_MS
+    private val clicksToActivate = CoreConfig.DEV_MODE_CLICKS_TO_ACTIVATE
 
     private var progressToast: Toast? = null
 

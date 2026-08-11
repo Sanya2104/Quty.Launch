@@ -13,6 +13,7 @@ import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.AppInfo
+import by.quty.launch.configs.ApiConfig
 import by.quty.launch.core.managers.CacheManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -80,7 +81,7 @@ class GetApps(
         customApps.add(
             AppInfo(
                 name = context.getString(R.string.api_getapps_settings_name),
-                packageName = "by.quty.launch.settings",
+                packageName = ApiConfig.SETTINGS_PACKAGE,
                 isCustom = true,
                 iconBase64 = settingsIconBase64  // иконка из ресурсов
             )
@@ -97,7 +98,7 @@ class GetApps(
             customApps.add(
                 AppInfo(
                     name = context.getString(R.string.logger_app_name),
-                    packageName = "by.quty.launch.logger",
+                    packageName = ApiConfig.LOGGER_PACKAGE,
                     isCustom = true,
                     iconBase64 = loggerIconBase64
                 )
@@ -111,7 +112,7 @@ class GetApps(
         customApps.add(
             AppInfo(
                 name = context.getString(R.string.store_app_name),
-                packageName = "by.quty.launch.store",
+                packageName = ApiConfig.STORE_PACKAGE,
                 isCustom = true,
                 iconBase64 = storeIconBase64
             )

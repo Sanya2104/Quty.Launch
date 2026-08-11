@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.edit
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
@@ -57,18 +58,11 @@ class SystemUpdateManager(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
     private val storageManager = StorageManager(context)
 
-    // URL для проверки обновлений
-    private val versionUrl = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/updates/version.json"
+    // URL для проверки обновлений (из конфига)
+    private val versionUrl = CoreConfig.UPDATE_SERVER_URL
 
     // SharedPreferences для меток завершённых загрузок
     private val prefs = context.getSharedPreferences("update_prefs", Context.MODE_PRIVATE)
-
-    companion object {
-        private const val APK_PREFIX = "Quty.Launch"
-        private const val DOWNLOAD_COMPLETE_KEY = "download_complete_"
-        private const val CONNECT_TIMEOUT_MS = 5000
-        private const val READ_TIMEOUT_MS = 5000
-    }
 
     init {
         cleanupOldDownloadMarks()
@@ -113,8 +107,8 @@ class SystemUpdateManager(private val context: Context) {
 
             val connection = URL(versionUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
-            connection.connectTimeout = CONNECT_TIMEOUT_MS
-            connection.readTimeout = READ_TIMEOUT_MS
+            connection.connectTimeout = CoreConfig.CONNECT_TIMEOUT_MS
+            connection.readTimeout = CoreConfig.READ_TIMEOUT_MS
 
             if (connection.responseCode == 200) {
                 val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
@@ -169,7 +163,7 @@ class SystemUpdateManager(private val context: Context) {
      * Получить имя APK файла для указанной версии
      */
     private fun getApkFileName(version: String): String {
-        return "$APK_PREFIX-$version.apk"
+        return "${CoreConfig.APK_FILE_PREFIX}-$version.apk"
     }
 
     /**
@@ -222,7 +216,7 @@ class SystemUpdateManager(private val context: Context) {
         try {
             val apkFiles = storageManager.list(
                 directory = StorageDirectory.UPDATES,
-                filter = { it.startsWith(APK_PREFIX) && it.endsWith(".apk") }
+                filter = { it.startsWith(CoreConfig.APK_FILE_PREFIX) && it.endsWith(".apk") }
             )
             var deletedCount = 0
             apkFiles.forEach { file ->
@@ -245,7 +239,7 @@ class SystemUpdateManager(private val context: Context) {
      * Сохраняет информацию об успешно скачанном файле
      */
     private fun markDownloadComplete(versionCode: Int) {
-        prefs.edit { putBoolean("$DOWNLOAD_COMPLETE_KEY$versionCode", true) }
+        prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
         Logger.d("SystemUpdateManager", "✅ Отмечено завершение загрузки для версии $versionCode")
     }
 
@@ -253,14 +247,14 @@ class SystemUpdateManager(private val context: Context) {
      * Проверяет, был ли файл успешно скачан
      */
     private fun isDownloadComplete(versionCode: Int): Boolean {
-        return prefs.getBoolean("$DOWNLOAD_COMPLETE_KEY$versionCode", false)
+        return prefs.getBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", false)
     }
 
     /**
      * Очищает метку о загрузке
      */
     fun clearDownloadMark(versionCode: Int) {
-        prefs.edit { remove("$DOWNLOAD_COMPLETE_KEY$versionCode") }
+        prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
         Logger.d("SystemUpdateManager", "🗑️ Очищена метка загрузки для версии $versionCode")
     }
 
@@ -274,8 +268,8 @@ class SystemUpdateManager(private val context: Context) {
             var removedCount = 0
 
             allKeys.forEach { key ->
-                if (key.startsWith(DOWNLOAD_COMPLETE_KEY)) {
-                    val versionCode = key.replace(DOWNLOAD_COMPLETE_KEY, "").toIntOrNull()
+                if (key.startsWith(CoreConfig.DOWNLOAD_COMPLETE_KEY)) {
+                    val versionCode = key.replace(CoreConfig.DOWNLOAD_COMPLETE_KEY, "").toIntOrNull()
                     if (versionCode != null && versionCode <= currentVersionCode) {
                         prefs.edit { remove(key) }
                         removedCount++
@@ -357,8 +351,8 @@ class SystemUpdateManager(private val context: Context) {
                     }
                 },
                 destination = UpdateHelper.Destination.CustomPath(tempFile.absolutePath),
-                connectTimeout = 15000,
-                readTimeout = 30000
+                connectTimeout = CoreConfig.CONNECT_TIMEOUT_MS,
+                readTimeout = CoreConfig.READ_TIMEOUT_MS
             )
 
             if (file == null || !file.exists()) {

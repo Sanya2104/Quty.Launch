@@ -27,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StorageManager
@@ -411,14 +412,14 @@ class DeveloperSettingsFragment : Fragment() {
         sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerMaxSize.adapter = sizeAdapter
 
-        // 2. Загружаем сохранённые настройки
+        // 2. Загружаем сохранённые настройки (с значениями по умолчанию из конфига)
         loadLogsSettingsWithoutTrigger()
 
         // 3. Устанавливаем слушатели
         spinnerMaxFiles.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (isLoadingSettings) return
-                val value = parent?.getItemAtPosition(position).toString().toIntOrNull() ?: 5
+                val value = parent?.getItemAtPosition(position).toString().toIntOrNull() ?: CoreConfig.LOGGER_MAX_FILES_DEFAULT
                 applyLogsSettings(maxFiles = value)
             }
 
@@ -428,7 +429,7 @@ class DeveloperSettingsFragment : Fragment() {
         spinnerMaxSize.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (isLoadingSettings) return
-                val value = parent?.getItemAtPosition(position).toString().replace(" MB", "").toIntOrNull() ?: 5
+                val value = parent?.getItemAtPosition(position).toString().replace(" MB", "").toIntOrNull() ?: CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT
                 applyLogsSettings(maxSizeMB = value)
             }
 
@@ -483,9 +484,9 @@ class DeveloperSettingsFragment : Fragment() {
 
         val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
 
-        val persistEnabled = prefs.getBoolean("persist_enabled", true)
-        val maxFiles = prefs.getInt("max_files", 5)
-        val maxSizeMB = prefs.getInt("max_size_mb", 5)
+        val persistEnabled = prefs.getBoolean("persist_enabled", CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT)
+        val maxFiles = prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
+        val maxSizeMB = prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
 
         switchPersist.isChecked = persistEnabled
 
@@ -519,8 +520,8 @@ class DeveloperSettingsFragment : Fragment() {
         applyRunnable = Runnable {
             val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
 
-            val currentMaxFiles = if (maxFiles > 0) maxFiles else prefs.getInt("max_files", 5)
-            val currentMaxSizeMB = if (maxSizeMB > 0) maxSizeMB else prefs.getInt("max_size_mb", 5)
+            val currentMaxFiles = if (maxFiles > 0) maxFiles else prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
+            val currentMaxSizeMB = if (maxSizeMB > 0) maxSizeMB else prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
 
             prefs.edit {
                 putInt("max_files", currentMaxFiles)
@@ -540,24 +541,24 @@ class DeveloperSettingsFragment : Fragment() {
     }
 
     /**
-     * Сбрасывает настройки логов к значениям по умолчанию
+     * Сбрасывает настройки логов к значениям по умолчанию (из конфига)
      */
     private fun resetLogsSettings() {
         val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
 
         prefs.edit {
-            putBoolean("persist_enabled", true)
-            putInt("max_files", 5)
-            putInt("max_size_mb", 5)
+            putBoolean("persist_enabled", CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT)
+            putInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
+            putInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
         }
 
         isLoadingSettings = true
-        switchPersist.isChecked = true
+        switchPersist.isChecked = CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT
         spinnerMaxFiles.setSelection(1, false)
         spinnerMaxSize.setSelection(1, false)
         isLoadingSettings = false
 
-        LoggerFile.init(storageManager, 5, 5, true, requireContext())
+        LoggerFile.init(storageManager, CoreConfig.LOGGER_MAX_FILES_DEFAULT, CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT, CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT, requireContext())
 
         Toast.makeText(requireContext(), R.string.dev_logs_reset_success, Toast.LENGTH_SHORT).show()
     }

@@ -12,6 +12,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.logger.Logger
 import java.io.File
 import java.io.FileInputStream
@@ -30,10 +31,10 @@ class LauncherWebView(context: Context) : WebView(context) {
     private var errorRetryCount = 0
     private var lastErrorUrl: String? = null
 
-    // Максимальное количество попыток перезагрузки
+    // Максимальное количество попыток перезагрузки (из конфига)
     private companion object {
-        private const val MAX_RETRY_COUNT = 3
-        private const val RETRY_DELAY_MS = 2000L
+        private const val MAX_RETRY_COUNT = CoreConfig.WEBVIEW_MAX_RETRY_COUNT
+        private const val RETRY_DELAY_MS = CoreConfig.WEBVIEW_RETRY_DELAY_MS
     }
 
     init {

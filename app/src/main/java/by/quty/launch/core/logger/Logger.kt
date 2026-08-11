@@ -4,6 +4,7 @@ package by.quty.launch.core.logger
 import android.content.Context
 import android.util.Log
 import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.StorageFileType
 import by.quty.launch.core.managers.StorageManager
 import kotlinx.coroutines.CoroutineScope
@@ -25,8 +26,8 @@ import java.util.Locale
  */
 object Logger {
 
-    // Максимальное количество логов в памяти
-    private const val MAX_LOGS = 1000
+    // Максимальное количество логов в памяти (из конфига)
+    private const val MAX_LOGS = CoreConfig.LOGGER_MAX_IN_MEMORY
 
     // Список всех логов (новые в начале)
     private val logs = mutableListOf<LogEntry>()
@@ -67,11 +68,11 @@ object Logger {
     fun init(context: Context) {
         appContext = context.applicationContext
 
-        // Загружаем настройки сохранения в файл
+        // Загружаем настройки сохранения в файл (значения по умолчанию из конфига)
         val prefs = context.getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
-        val persistEnabled = prefs.getBoolean("persist_enabled", true)
-        val maxFiles = prefs.getInt("max_files", 5)
-        val maxSizeMB = prefs.getInt("max_size_mb", 5)
+        val persistEnabled = prefs.getBoolean("persist_enabled", CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT)
+        val maxFiles = prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
+        val maxSizeMB = prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
 
         // Создаём StorageManager и передаём в LoggerFile
         val storageManager = StorageManager(context.applicationContext)
