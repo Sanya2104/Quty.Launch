@@ -676,9 +676,4 @@ class SystemSettingsFragment : Fragment() {
         }
     }
 
-    fun refreshInfo() {
-        setupVersionInfo()
-        updateStatus.visibility = View.GONE
-        installStatus.visibility = View.GONE
-    }
 }

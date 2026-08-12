@@ -30,10 +30,6 @@ class WelcomeActivity : BaseActivity() {
     // Код запроса разрешений (из конфига)
     private val permissionRequestCode = CoreConfig.PERMISSION_REQUEST_CODE
 
-    // Параметры активации DevMode (из конфига)
-    private val clickTimeoutMs = CoreConfig.DEV_MODE_CLICK_TIMEOUT_MS
-    private val clicksToActivate = CoreConfig.DEV_MODE_CLICKS_TO_ACTIVATE
-
     // UI элементы
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView

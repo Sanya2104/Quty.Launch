@@ -285,24 +285,27 @@ object LoggerFile {
 
     /**
      * Удаляет все файлы логов и очищает буфер
+     * @param storageManager экземпляр StorageManager (если null — использует сохраненный)
      */
-    suspend fun clearAll() {
+    suspend fun clearAll(storageManager: StorageManager? = null) {
+        val manager = storageManager ?: getStorageManager() ?: return
+
         // Очищаем буфер
         mutex.withLock {
             buffer.clear()
             flushJob?.cancel()
         }
 
-        val storageManager = getStorageManager() ?: return
         try {
-            storageManager.removeAll(
+            manager.removeAll(
                 directory = StorageDirectory.LOGS,
-                extension = storageManager.getExtension(StorageFileType.LOG).removePrefix(".")
+                extension = manager.getExtension(StorageFileType.LOG).removePrefix(".")
             )
             currentLogFile = null
             prepareCurrentLogFile()
-        } catch (_: Exception) {
-            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_file_clear_error))
+            android.util.Log.d("LoggerFile", appContext.getString(R.string.log_logger_cleared))
+        } catch (e: Exception) {
+            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_clear_error, e.message))
         }
     }
 
@@ -327,7 +330,8 @@ object LoggerFile {
 
         if (!enabled) {
             CoroutineScope(Dispatchers.IO).launch {
-                clearAll()
+                val storageManager = getStorageManager() ?: return@launch
+                clearAll(storageManager)
             }
             currentLogFile = null
         } else {

@@ -46,10 +46,16 @@ object Logger {
 
     /**
      * Получает StorageManager из WeakReference
-     * @return StorageManager или null, если сборщик мусора уже очистил ссылку
+     * Если ссылка очищена — создает новый экземпляр
      */
-    private fun getStorageManager(): StorageManager? {
-        return storageManagerRef?.get()
+    private fun getStorageManager(): StorageManager {
+        var storageManager = storageManagerRef?.get()
+        if (storageManager == null) {
+            // Создаем новый StorageManager, если ссылка потеряна
+            storageManager = StorageManager(appContext)
+            storageManagerRef = WeakReference(storageManager)
+        }
+        return storageManager
     }
 
     /**
@@ -95,10 +101,6 @@ object Logger {
     private fun restoreLogsFromFile() {
         try {
             val storageManager = getStorageManager()
-            if (storageManager == null) {
-                e("Logger", appContext.getString(R.string.log_logger_restore_error))
-                return
-            }
 
             val logFiles = LoggerFile.getLogFiles(storageManager)
             if (logFiles.isEmpty()) return
@@ -281,16 +283,23 @@ object Logger {
     }
 
     /**
-     * Очищает все логи
+     * Очищает все логи (память и файлы)
      */
     fun clear() {
+        // Очищаем память
         synchronized(logs) {
             logs.clear()
         }
 
-        // Очищаем файлы
-        CoroutineScope(Dispatchers.IO).launch {
-            LoggerFile.clearAll()
+        // Очищаем файлы с проверкой
+        try {
+            val storageManager = getStorageManager()
+            runBlocking {
+                LoggerFile.clearAll(storageManager)
+            }
+            d("Logger", appContext.getString(R.string.log_logger_cleared))
+        } catch (e: Exception) {
+            e("Logger", appContext.getString(R.string.log_logger_clear_error, e.message))
         }
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -354,9 +363,9 @@ object Logger {
      * @return путь к сохранённому файлу или null в случае ошибки
      */
     fun saveLogsToFile(): String? {
-        val storageManager = getStorageManager() ?: return null
-
         return try {
+            val storageManager = getStorageManager()
+
             // Формируем имя файла: log_YYYY-MM-DD_HH-MM-SS.json
             val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
             val fileName = "log_${dateFormat.format(Date())}"
@@ -374,7 +383,8 @@ object Logger {
 
             // Возвращаем путь к файлу
             logFile.absolutePath
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e("Logger", appContext.getString(R.string.log_logger_save_error, e.message))
             null
         }
     }

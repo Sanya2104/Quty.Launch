@@ -66,22 +66,6 @@ class LoggerAdapter : ListAdapter<LogEntry, LoggerAdapter.LogViewHolder>(LogDiff
     }
 
     /**
-     * Добавляет один лог в конец списка
-     */
-    fun addLog(entry: LogEntry) {
-        val currentList = currentList.toMutableList()
-        currentList.add(entry)
-        submitList(currentList)
-    }
-
-    /**
-     * Очищает все логи
-     */
-    fun clearLogs() {
-        submitList(emptyList())
-    }
-
-    /**
      * Возвращает цвет текста для уровня
      */
     private fun getLevelColor(context: android.content.Context, level: LogLevel): Int {

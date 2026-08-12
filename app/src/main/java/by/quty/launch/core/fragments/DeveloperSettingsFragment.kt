@@ -746,9 +746,13 @@ class DeveloperSettingsFragment : Fragment() {
     private fun clearLogs() {
         try {
             lifecycleScope.launch {
+                // Используем clear() который теперь правильно очищает и файлы
                 Logger.clear()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
+                    // Обновляем размер логов
+                    val logsSizeView = view?.findViewById<TextView>(R.id.dev_logs_size_value)
+                    logsSizeView?.let { updateLogsSize(it) }
                 }
             }
         } catch (_: Exception) {

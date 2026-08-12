@@ -521,14 +521,16 @@
     <string name="log_storage_files_delete_error">❌ Ошибка удаления файлов: %s</string>
     <string name="log_storage_uri_error">❌ Ошибка получения URI: %s</string>
 
+    <!-- LoggerFile логи -->
+    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
+
     <!-- Logger логи -->
     <string name="log_logger_initialized">Logger инициализирован</string>
     <string name="log_logger_restored">Восстановлено %d логов из файла</string>
     <string name="log_logger_restore_error">Ошибка восстановления логов из файла</string>
-
-    <!-- LoggerFile логи -->
-    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
-    <string name="log_logger_file_clear_error">Ошибка очистки файлов логов</string>
+    <string name="log_logger_cleared">Логи очищены</string>
+    <string name="log_logger_clear_error">Ошибка очистки логов: %s</string>
+    <string name="log_logger_save_error">Ошибка сохранения логов: %s</string>
 
     <!-- SystemUpdateManager логи -->
     <string name="log_system_update_checking">Проверка обновлений…</string>

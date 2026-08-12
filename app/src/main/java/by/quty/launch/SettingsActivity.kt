@@ -13,7 +13,6 @@ import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.adapters.SettingsPagerAdapter
 import by.quty.launch.core.fragments.DisplaySettingsFragment
-import by.quty.launch.core.fragments.SystemSettingsFragment
 import by.quty.launch.core.fragments.ShellSettingsFragment
 import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
@@ -39,7 +38,6 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         private set
     var displayFragment: DisplaySettingsFragment? = null
         private set
-    private var systemFragment: SystemSettingsFragment? = null
 
     // Переменные для отслеживания изменений
     private var originalShell: String? = null
@@ -142,16 +140,11 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     }
 
     /**
-     * Получить текущую позицию вкладки
-     */
-    fun getCurrentTabPosition(): Int = viewPager.currentItem
-
-    /**
      * Восстанавливает позицию вкладки из Intent
      * При обычном запуске — открывает "Оформление" (индекс 0)
      * При переключении DevMode — открывает "Система" (индекс 2) через Intent
      */
-    fun restoreTabPosition() {
+    private fun restoreTabPosition() {
         // Проверяем Intent (для переключения DevMode)
         val intentPosition = intent.getIntExtra("restore_tab_position", -1)
 
@@ -202,7 +195,6 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private fun updateFragmentReferences() {
         shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
         displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplaySettingsFragment
-        systemFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SYSTEM}") as? SystemSettingsFragment
     }
 
     /**
@@ -336,7 +328,6 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         updateFragmentReferences()
         shellFragment?.refreshShells()
         displayFragment?.refreshSettings()
-        systemFragment?.refreshInfo()
     }
 
     override fun onResume() {
