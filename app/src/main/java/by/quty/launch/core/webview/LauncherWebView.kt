@@ -20,9 +20,12 @@ import java.net.URLConnection
 
 @Suppress("DEPRECATION")
 @SuppressLint("SetJavaScriptEnabled")
-class LauncherWebView(context: Context) : WebView(context) {
+class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
-    private val activeShellDir = File(context.filesDir, "shells/active")
+    // Используем applicationContext для предотвращения утечек памяти
+    private val appContext = context.applicationContext
+
+    private val activeShellDir = File(appContext.filesDir, "shells/active")
 
     // Храним имя активной оболочки для корректной загрузки
     private var activeShellName: String? = null
@@ -51,6 +54,7 @@ class LauncherWebView(context: Context) : WebView(context) {
         // Используем аппаратное ускорение для современных CSS
         setLayerType(LAYER_TYPE_HARDWARE, null)
 
+        // Включаем отладку WebView
         setWebContentsDebuggingEnabled(true)
 
         // Настраиваем WebViewAssetLoader
@@ -85,8 +89,8 @@ class LauncherWebView(context: Context) : WebView(context) {
 
     private fun setupAssetLoader() {
         val assetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))
-            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(context))
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(appContext))
+            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(appContext))
             .build()
 
         webViewClient = object : WebViewClient() {
@@ -119,7 +123,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                     if (shellDir == null) {
                         Logger.e(
                             "LauncherWebView",
-                            context.getString(R.string.webview_dir_shell_not_found)
+                            appContext.getString(R.string.webview_dir_shell_not_found)
                         )
                         return null
                     }
@@ -152,7 +156,7 @@ class LauncherWebView(context: Context) : WebView(context) {
                     if (path.startsWith("shells/")) {
                         val assetPath = path.replace("shells/", "")
                         try {
-                            val inputStream = context.assets.open(assetPath)
+                            val inputStream = appContext.assets.open(assetPath)
                             val mimeType = URLConnection.guessContentTypeFromName(File(assetPath).name)
                                 ?: "text/html"
                             return WebResourceResponse(mimeType, "UTF-8", inputStream)
@@ -230,7 +234,7 @@ class LauncherWebView(context: Context) : WebView(context) {
 
                 Logger.e(
                     "LauncherWebView",
-                    context.getString(R.string.webview_error_loading, url, errorDesc)
+                    appContext.getString(R.string.webview_error_loading, url, errorDesc)
                 )
 
                 // Если это страница оболочки (не ресурс) — пробуем перезагрузить
@@ -265,14 +269,14 @@ class LauncherWebView(context: Context) : WebView(context) {
                 if (errorRetryCount > MAX_RETRY_COUNT) {
                     Logger.e(
                         "LauncherWebView",
-                        context.getString(R.string.webview_retry_limit_reached, url, errorRetryCount)
+                        appContext.getString(R.string.webview_retry_limit_reached, url, errorRetryCount)
                     )
                     return
                 }
 
                 Logger.d(
                     "LauncherWebView",
-                    context.getString(R.string.webview_retry_attempt, url, errorRetryCount, MAX_RETRY_COUNT)
+                    appContext.getString(R.string.webview_retry_attempt, url, errorRetryCount, MAX_RETRY_COUNT)
                 )
 
                 // Задержка перед перезагрузкой

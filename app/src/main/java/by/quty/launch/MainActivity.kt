@@ -41,7 +41,8 @@ class MainActivity : BaseActivity() {
         // Инициализация
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
         core = Core(this)
-        webView = LauncherWebView(this)
+        // Используем applicationContext для WebView (предотвращает утечки памяти)
+        webView = LauncherWebView(applicationContext)
         shellManager = ShellManager(this, configManager)
 
         val jsBridge = JsBridge(core, this)
