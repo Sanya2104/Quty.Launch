@@ -2,64 +2,25 @@
 package by.quty.launch.core.managers
 
 import android.content.Context
-import by.quty.launch.R
-import by.quty.launch.core.logger.Logger
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.io.IOException
+import by.quty.launch.configs.CoreConfig
 import androidx.core.content.edit
 
-@Serializable
-data class LauncherConfig(
-    val defaultShell: String = "default",
-    val defaultOrientation: String = "sensor",
-    val defaultFullscreen: Boolean = true,
-    val defaultStrictMode: Boolean = false
-)
-
-class ConfigManager(private val context: Context) {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        prettyPrint = true
-    }
+class ConfigManager(context: Context) {
 
     private val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
-    private var config: LauncherConfig = loadConfig()
 
-    /**
-     * Загружает конфигурацию из launcher.conf
-     * Если файл отсутствует или повреждён — использует значения по умолчанию
-     */
-    private fun loadConfig(): LauncherConfig {
-        return try {
-            val inputStream = context.assets.open("launcher.conf")
-            val jsonString = inputStream.bufferedReader().use { it.readText() }
+    // Значения по умолчанию из CoreConfig
+    fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
+    fun getDefaultOrientation(): String = CoreConfig.DEFAULT_ORIENTATION
+    fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
+    fun getDefaultStrictMode(): Boolean = CoreConfig.DEFAULT_STRICT_MODE
 
-            try {
-                json.decodeFromString<LauncherConfig>(jsonString)
-            } catch (e: Exception) {
-                // JSON повреждён — используем значения по умолчанию
-                Logger.e("ConfigManager", context.getString(R.string.config_parse_error, e.message))
-                LauncherConfig()
-            }
-        } catch (_: IOException) {
-            // Файла нет — используем default
-            LauncherConfig()
-        }
-    }
-
-    fun getDefaultShell(): String = config.defaultShell
-    fun getDefaultOrientation(): String = config.defaultOrientation
-    fun getDefaultFullscreen(): Boolean = config.defaultFullscreen
-    fun getDefaultStrictMode(): Boolean = config.defaultStrictMode
-
-    // Получения активной оболочки
+    // Получение активной оболочки
     fun getActiveShell(): String {
         return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
 
-    // Сохранения активной оболочки
+    // Сохранение активной оболочки
     fun setActiveShell(shellId: String) {
         prefs.edit { putString("active_shell", shellId) }
     }
