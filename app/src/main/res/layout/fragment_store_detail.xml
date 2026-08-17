@@ -1,0 +1,219 @@
+<!-- res/layout/fragment_store_detail.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_dark">
+
+    <!-- ===== ШАПКА ===== -->
+    <LinearLayout
+        style="@style/Toolbar"
+        android:paddingStart="@dimen/spacing_s"
+        android:paddingEnd="@dimen/spacing_s">
+
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
+            android:src="@drawable/ic_close"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            android:padding="@dimen/spacing_m" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/Text.Title.Medium"
+            android:text="@string/store_detail_title"
+            android:gravity="center" />
+
+        <!-- Пустой элемент для баланса -->
+        <View
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large" />
+
+    </LinearLayout>
+
+    <!-- ===== КОНТЕНТ ===== -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="@dimen/spacing_l"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Превью -->
+            <ImageView
+                android:id="@+id/shell_preview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:scaleType="centerCrop"
+                android:background="@color/background_dark"
+                android:contentDescription="@string/store_preview_description"
+                android:layout_marginBottom="@dimen/spacing_l"
+                tools:src="@drawable/ic_settings" />
+
+            <!-- Название -->
+            <TextView
+                android:id="@+id/shell_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Text.Title.Large"
+                android:textColor="@color/text_primary"
+                tools:text="@string/unknown" />
+
+            <!-- Автор -->
+            <TextView
+                android:id="@+id/shell_author"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Text.Body"
+                android:textColor="@color/text_dim"
+                android:text="@string/store_author_label" />
+
+            <!-- Информационная сетка -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                android:rowCount="3"
+                android:columnCount="2">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_dim"
+                    android:text="@string/store_version" />
+
+                <TextView
+                    android:id="@+id/shell_version"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_primary"
+                    tools:text="@string/unknown" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_dim"
+                    android:text="@string/store_date" />
+
+                <TextView
+                    android:id="@+id/shell_date"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_primary"
+                    tools:text="@string/unknown" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_dim"
+                    android:text="@string/store_downloads" />
+
+                <TextView
+                    android:id="@+id/shell_downloads"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_primary"
+                    tools:text="@string/unknown" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_dim"
+                    android:text="@string/store_size" />
+
+                <TextView
+                    android:id="@+id/shell_size"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Small"
+                    android:textColor="@color/text_primary"
+                    tools:text="@string/unknown" />
+
+            </GridLayout>
+
+            <!-- Описание -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                style="@style/Text.Title.XSmall"
+                android:text="@string/store_description" />
+
+            <TextView
+                android:id="@+id/shell_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xxs"
+                style="@style/Text.Body"
+                android:textColor="@color/text_hint"
+                tools:text="@string/unknown" />
+
+            <!-- Теги -->
+            <TextView
+                android:id="@+id/shell_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                style="@style/Text.Small"
+                android:textColor="@color/tab_indicator"
+                tools:text="@string/unknown" />
+
+            <!-- Совместимость -->
+            <TextView
+                android:id="@+id/shell_compat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                style="@style/Text.Small"
+                android:textColor="@color/status_warning"
+                tools:text="@string/unknown" />
+
+            <!-- Кнопка установки -->
+            <Button
+                android:id="@+id/btn_install"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button_large"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:text="@string/store_install"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_l"
+                android:fontFamily="sans-serif-medium"
+                android:backgroundTint="@color/button_primary" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

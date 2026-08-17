@@ -111,7 +111,7 @@ class GetApps(
 
         customApps.add(
             AppInfo(
-                name = context.getString(R.string.store_app_name),
+                name = context.getString(R.string.store_title),
                 packageName = ApiConfig.STORE_PACKAGE,
                 isCustom = true,
                 iconBase64 = storeIconBase64

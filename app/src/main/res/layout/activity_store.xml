@@ -1,55 +1,92 @@
 <!-- res/layout/activity_store.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background_dark">
 
-    <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
-    <LinearLayout
-        style="@style/Toolbar">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            style="@style/Text.Title.Medium"
-            android:text="@string/store_title" />
-
-        <ImageButton
-            android:id="@+id/btn_close"
-            android:layout_width="@dimen/icon_large"
-            android:layout_height="@dimen/icon_large"
-            android:src="@drawable/ic_close"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/close"
-            android:padding="@dimen/spacing_m" />
-
-    </LinearLayout>
-
-    <!-- ===== ПЛЕЙСХОЛДЕР ===== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="@dimen/spacing_xxl">
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="@dimen/icon_xlarge"
-            android:layout_height="@dimen/icon_xlarge"
-            android:src="@drawable/ic_store"
-            android:contentDescription="@string/store_title"
-            android:alpha="0.3" />
+        <!-- ===== ШАПКА ===== -->
+        <LinearLayout
+            style="@style/Toolbar">
 
-        <TextView
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/Text.Title.Medium"
+                android:text="@string/store_title" />
+
+            <ImageButton
+                android:id="@+id/btn_close"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:src="@drawable/ic_close"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/close"
+                android:padding="@dimen/spacing_m" />
+
+        </LinearLayout>
+
+        <!-- ===== ТАБЫ ===== -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Body.Dim"
-            android:text="@string/store_placeholder"
-            android:gravity="center" />
+            android:background="@color/background_card"
+            app:tabIndicatorColor="@color/tab_indicator"
+            app:tabIndicatorHeight="@dimen/spacing_xxs"
+            app:tabSelectedTextColor="@color/tab_text_selected"
+            app:tabTextColor="@color/tab_text_unselected"
+            app:tabPadding="@dimen/spacing_m"
+            app:tabMode="fixed"
+            app:tabGravity="fill"/>
+
+        <!-- ===== VIEWPAGER ===== -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- ===== ПРОГРЕСС ЗАГРУЗКИ ===== -->
+        <LinearLayout
+            android:id="@+id/progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="@dimen/spacing_xl"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:indeterminate="true" />
+
+            <TextView
+                android:id="@+id/progress_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                style="@style/Text.Body"
+                android:text="@string/store_loading" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+    <!-- ===== КОНТЕЙНЕР ДЛЯ ДЕТАЛЬНОГО ВИДА ===== -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background_dark"
+        android:visibility="gone" />
+
+</FrameLayout>

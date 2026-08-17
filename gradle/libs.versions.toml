@@ -2,15 +2,16 @@
 
 [versions]
 agp = "9.3.1"
+glide = "5.0.9"
 kotlin = "2.4.10"
-appcompat = "1.7.1"
+appcompat = "1.8.0"
 coreKtx = "1.19.0"
 lifecycleRuntimeKtx = "2.11.0"
 serializationJson = "1.11.0"
-androidxWebkit = "1.16.0"
+androidxWebkit = "1.17.0"
 material = "1.14.0"
 viewpager2 = "1.1.0"
-fragmentKtx = "1.8.9"
+fragmentKtx = "1.9.0"
 
 [libraries]
 # Core
@@ -19,6 +20,8 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 # Serialization
+compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
 
 # WebKit

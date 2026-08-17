@@ -1,0 +1,123 @@
+<!-- res/layout/item_store_shell.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/spacing_m"
+    android:background="@color/background_card"
+    android:layout_marginBottom="@dimen/spacing_s"
+    android:gravity="center_vertical">
+
+    <!-- ===== ПРЕВЬЮ ===== -->
+    <FrameLayout
+        android:layout_width="@dimen/icon_xlarge"
+        android:layout_height="@dimen/icon_xlarge"
+        android:layout_marginEnd="@dimen/spacing_m">
+
+        <ImageView
+            android:id="@+id/shell_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="@color/background_dark"
+            android:contentDescription="@string/store_preview_description"
+            tools:src="@drawable/ic_settings" />
+
+        <!-- ===== БЭЙДЖ "УСТАНОВЛЕНО" ===== -->
+        <View
+            android:id="@+id/installed_badge"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxs"
+            android:layout_gravity="bottom"
+            android:background="@color/status_granted"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- ===== ИНФОРМАЦИЯ ===== -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Название -->
+        <TextView
+            android:id="@+id/shell_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Text.Title.XSmall"
+            android:textColor="@color/text_primary"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Автор -->
+        <TextView
+            android:id="@+id/shell_author"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Text.Small"
+            android:textColor="@color/text_dim" />
+
+        <!-- Описание -->
+        <TextView
+            android:id="@+id/shell_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xxs"
+            style="@style/Text.Small"
+            android:textColor="@color/text_hint"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Скачивания и размер -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/spacing_xxs">
+
+            <TextView
+                android:id="@+id/shell_downloads"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Text.XSmall"
+                android:textColor="@color/text_dim"
+                tools:text="@string/unknown" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Text.XSmall"
+                android:textColor="@color/text_dim"
+                android:text="@string/store_bullet_separator" />
+
+            <TextView
+                android:id="@+id/shell_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Text.XSmall"
+                android:textColor="@color/text_dim"
+                tools:text="@string/unknown" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ===== КНОПКА ===== -->
+    <Button
+        android:id="@+id/btn_install"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/height_button"
+        android:minWidth="@dimen/spacing_xxl"
+        android:paddingStart="@dimen/spacing_l"
+        android:paddingEnd="@dimen/spacing_l"
+        android:text="@string/store_install"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_s"
+        android:fontFamily="sans-serif-medium"
+        android:backgroundTint="@color/button_primary"
+        tools:text="@string/store_install" />
+
+</LinearLayout>

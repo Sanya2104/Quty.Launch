@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 372
-    versionName = "0.0.118"
+    versionCode = 385
+    versionName = "0.0.119"
         versionNameSuffix = "Alpha"
     }
 
@@ -57,5 +57,9 @@ dependencies {
 
     // Fragment KTX
     implementation(libs.androidx.fragment.ktx)
+
+    // Glide
+    implementation(libs.glide)
+    annotationProcessor(libs.compiler)
 
 }

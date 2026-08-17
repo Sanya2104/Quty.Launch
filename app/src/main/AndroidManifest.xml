@@ -96,7 +96,7 @@
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
-        <!-- Магазин оболочек -->
+        <!-- Магазин -->
         <activity
             android:name=".StoreActivity"
             android:exported="false"

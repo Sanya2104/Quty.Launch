@@ -466,12 +466,44 @@
     <string name="api_launchapp_not_found">Приложение не найдено</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== МАГАЗИН ОБОЛОЧЕК ======================= -->
+    <!-- ==================== МАГАЗИН =============================== -->
     <!-- ============================================================ -->
 
-    <string name="store_title">Магазин оболочек</string>
-    <string name="store_app_name">Магазин оболочек</string>
-    <string name="store_placeholder">Здесь будут оболочки оформления</string>
+    <!-- Общие -->
+    <string name="store_title">Магазин</string>
+    <string name="store_tab_shells">Оболочки</string>
+    <string name="store_tab_my">Мои</string>
+    <string name="store_loading">Загрузка оболочек…</string>
+    <string name="store_load_error">Ошибка загрузки магазина</string>
+    <string name="store_empty_shells">Оболочек пока нет</string>
+    <string name="store_empty_installed">Нет установленных оболочек</string>
+
+    <!-- Карточка -->
+    <string name="store_install">Установить</string>
+    <string name="store_installed">Установлено</string>
+    <string name="store_bullet_separator">  •  </string>
+
+    <!-- Детальный вид -->
+    <string name="store_detail_title">Оболочка</string>
+    <string name="store_version">Версия</string>
+    <string name="store_date">Дата</string>
+    <string name="store_downloads">Скачиваний</string>
+    <string name="store_size">Размер</string>
+    <string name="store_description">Описание</string>
+    <string name="store_compat_required" formatted="false">⚠️ Требуется Quty.Launch версии %s или выше</string>
+    <string name="store_author_label">Автор: </string>
+    <string name="store_preview_description">Превью оболочки</string>
+
+    <!-- Установка -->
+    <string name="store_installing">Установка оболочки</string>
+    <string name="store_preparing">Подготовка…</string>
+    <string name="store_progress" formatted="false">Скачивание: %d%%</string>
+    <string name="store_install_success" formatted="false">Оболочка "%s" успешно установлена!</string>
+    <string name="store_install_error">Ошибка установки</string>
+    <string name="store_already_installed">Оболочка уже установлена</string>
+    <string name="store_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
+    <string name="store_download_error">Ошибка скачивания</string>
+    <string name="store_save_error">Ошибка сохранения оболочки</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ЛОГИ (TECHNICAL) ====================== -->
@@ -547,5 +579,21 @@
 
     <!-- ShellManager логи -->
     <string name="log_shell_manager_unzip_error">Ошибка распаковки оболочки: %s</string>
+
+    <!-- StoreManager логи -->
+    <string name="log_store_installed_shells_from_manager">✅ Установленные оболочки (из ShellManager): %s</string>
+    <string name="log_store_shell_installed_check" formatted="false">  📦 %s → установлена: %b</string>
+    <string name="log_store_shells_loaded">Загружено %d оболочек</string>
+    <string name="log_store_load_error">Ошибка загрузки: %d</string>
+    <string name="log_store_error">Ошибка: %s</string>
+    <string name="log_store_shell_installed">Оболочка установлена: %s</string>
+    <string name="log_store_install_error">Ошибка установки: %s</string>
+
+    <!-- ShellListFragment логи -->
+    <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
+    <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
+    <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
+    <string name="log_shell_list_empty">🔍 ПУСТО: показан emptyText</string>
+    <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
 
 </resources>
