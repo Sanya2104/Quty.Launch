@@ -19,7 +19,6 @@ data class ShellStoreItem(
     val screenshots: List<String> = emptyList(), // Скриншоты
     val downloadUrl: String,                // URL для скачивания .qutyshell
     val fileSize: String,                   // Размер файла
-    val downloads: Int = 0,                 // Количество скачиваний
     val isPremium: Boolean = false,         // Платная или бесплатная
     val tags: List<String> = emptyList(),   // Теги
     val minQutyLaunchVersion: String,       // Минимальная версия Quty.Launch

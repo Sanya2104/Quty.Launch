@@ -73,12 +73,12 @@ class ShellDetailFragment : Fragment() {
         val authorText: TextView = view.findViewById(R.id.shell_author)
         val versionText: TextView = view.findViewById(R.id.shell_version)
         val dateText: TextView = view.findViewById(R.id.shell_date)
-        val downloadsText: TextView = view.findViewById(R.id.shell_downloads)
         val sizeText: TextView = view.findViewById(R.id.shell_size)
         val descriptionText: TextView = view.findViewById(R.id.shell_description)
         val tagsText: TextView = view.findViewById(R.id.shell_tags)
         val compatText: TextView = view.findViewById(R.id.shell_compat)
         val installButton: Button = view.findViewById(R.id.btn_install)
+        val backButton: View = view.findViewById(R.id.btn_back)
         val closeButton: View = view.findViewById(R.id.btn_close)
 
         val shell = this.shell ?: return
@@ -88,7 +88,6 @@ class ShellDetailFragment : Fragment() {
         authorText.text = shell.author
         versionText.text = shell.version
         dateText.text = shell.datePublished
-        downloadsText.text = formatDownloads(shell.downloads)
         sizeText.text = shell.fileSize
         descriptionText.text = shell.description
 
@@ -121,8 +120,14 @@ class ShellDetailFragment : Fragment() {
             startInstallation(shell)
         }
 
-        closeButton.setOnClickListener {
+        // Кнопка "Назад" — возвращает к списку оболочек
+        backButton.setOnClickListener {
             (activity as? StoreActivity)?.hideDetail()
+        }
+
+        // Кнопка "Закрыть" — закрывает магазин полностью
+        closeButton.setOnClickListener {
+            activity?.finish()
         }
     }
 
@@ -181,13 +186,6 @@ class ShellDetailFragment : Fragment() {
                     ).show()
                 }
             })
-        }
-    }
-
-    private fun formatDownloads(count: Int): String {
-        return when {
-            count >= 1000 -> "${count / 1000}K"
-            else -> count.toString()
         }
     }
 }

@@ -39,7 +39,6 @@ class ShellStoreAdapter(
         private val previewImage: ImageView = itemView.findViewById(R.id.shell_preview)
         private val nameText: TextView = itemView.findViewById(R.id.shell_name)
         private val authorText: TextView = itemView.findViewById(R.id.shell_author)
-        private val downloadsText: TextView = itemView.findViewById(R.id.shell_downloads)
         private val sizeText: TextView = itemView.findViewById(R.id.shell_size)
         private val descriptionText: TextView = itemView.findViewById(R.id.shell_description)
         private val installButton: Button = itemView.findViewById(R.id.btn_install)
@@ -51,9 +50,6 @@ class ShellStoreAdapter(
 
             // Автор
             authorText.text = item.author
-
-            // Скачивания
-            downloadsText.text = formatDownloads(item.downloads)
 
             // Размер
             sizeText.text = item.fileSize
@@ -102,13 +98,6 @@ class ShellStoreAdapter(
                 if (!item.isInstalled) {
                     onInstallClick(item)
                 }
-            }
-        }
-
-        private fun formatDownloads(count: Int): String {
-            return when {
-                count >= 1000 -> "${count / 1000}K"
-                else -> count.toString()
             }
         }
     }

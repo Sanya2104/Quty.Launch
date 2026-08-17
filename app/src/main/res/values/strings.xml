@@ -12,6 +12,7 @@
     <string name="cancel">Отмена</string>
     <string name="close">Закрыть</string>
     <string name="delete">Удалить</string>
+    <string name="back">Назад</string>
     <string name="empty"> </string>
     <string name="unknown_code">\?</string>
 
@@ -487,7 +488,6 @@
     <string name="store_detail_title">Оболочка</string>
     <string name="store_version">Версия</string>
     <string name="store_date">Дата</string>
-    <string name="store_downloads">Скачиваний</string>
     <string name="store_size">Размер</string>
     <string name="store_description">Описание</string>
     <string name="store_compat_required" formatted="false">⚠️ Требуется Quty.Launch версии %s или выше</string>

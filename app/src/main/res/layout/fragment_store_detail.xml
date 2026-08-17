@@ -12,13 +12,14 @@
         android:paddingStart="@dimen/spacing_s"
         android:paddingEnd="@dimen/spacing_s">
 
+        <!-- КНОПКА НАЗАД -->
         <ImageButton
-            android:id="@+id/btn_close"
+            android:id="@+id/btn_back"
             android:layout_width="@dimen/icon_large"
             android:layout_height="@dimen/icon_large"
-            android:src="@drawable/ic_close"
+            android:src="@drawable/ic_back"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/close"
+            android:contentDescription="@string/back"
             android:padding="@dimen/spacing_m" />
 
         <TextView
@@ -29,10 +30,15 @@
             android:text="@string/store_detail_title"
             android:gravity="center" />
 
-        <!-- Пустой элемент для баланса -->
-        <View
+        <!-- КНОПКА ЗАКРЫТЬ -->
+        <ImageButton
+            android:id="@+id/btn_close"
             android:layout_width="@dimen/icon_large"
-            android:layout_height="@dimen/icon_large" />
+            android:layout_height="@dimen/icon_large"
+            android:src="@drawable/ic_close"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            android:padding="@dimen/spacing_m" />
 
     </LinearLayout>
 
@@ -83,7 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_m"
-                android:rowCount="3"
+                android:rowCount="2"
                 android:columnCount="2">
 
                 <TextView
@@ -114,25 +120,6 @@
 
                 <TextView
                     android:id="@+id/shell_date"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_marginTop="@dimen/spacing_xxs"
-                    style="@style/Text.Small"
-                    android:textColor="@color/text_primary"
-                    tools:text="@string/unknown" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_marginTop="@dimen/spacing_xxs"
-                    style="@style/Text.Small"
-                    android:textColor="@color/text_dim"
-                    android:text="@string/store_downloads" />
-
-                <TextView
-                    android:id="@+id/shell_downloads"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
