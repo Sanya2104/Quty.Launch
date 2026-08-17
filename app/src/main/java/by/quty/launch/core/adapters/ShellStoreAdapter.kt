@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
-import by.quty.launch.core.model.ShellStoreItem
+import by.quty.launch.core.model.ShellStoreModel
 import com.bumptech.glide.Glide
 
 /**
@@ -19,9 +19,9 @@ import com.bumptech.glide.Glide
  * Использует ListAdapter с DiffUtil для эффективного обновления
  */
 class ShellStoreAdapter(
-    private val onItemClick: (ShellStoreItem) -> Unit,
-    private val onInstallClick: (ShellStoreItem) -> Unit
-) : ListAdapter<ShellStoreItem, ShellStoreAdapter.ViewHolder>(DiffCallback()) {
+    private val onItemClick: (ShellStoreModel) -> Unit,
+    private val onInstallClick: (ShellStoreModel) -> Unit
+) : ListAdapter<ShellStoreModel, ShellStoreAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -44,7 +44,7 @@ class ShellStoreAdapter(
         private val installButton: Button = itemView.findViewById(R.id.btn_install)
         private val installedBadge: View = itemView.findViewById(R.id.installed_badge)
 
-        fun bind(item: ShellStoreItem) {
+        fun bind(item: ShellStoreModel) {
             // Название
             nameText.text = item.displayName
 
@@ -102,12 +102,12 @@ class ShellStoreAdapter(
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<ShellStoreItem>() {
-        override fun areItemsTheSame(oldItem: ShellStoreItem, newItem: ShellStoreItem): Boolean {
+    class DiffCallback : DiffUtil.ItemCallback<ShellStoreModel>() {
+        override fun areItemsTheSame(oldItem: ShellStoreModel, newItem: ShellStoreModel): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: ShellStoreItem, newItem: ShellStoreItem): Boolean {
+        override fun areContentsTheSame(oldItem: ShellStoreModel, newItem: ShellStoreModel): Boolean {
             return oldItem == newItem
         }
     }

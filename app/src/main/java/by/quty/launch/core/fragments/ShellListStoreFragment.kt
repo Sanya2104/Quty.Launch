@@ -1,4 +1,4 @@
-// *** core/fragments/ShellListFragment.kt *** //
+// *** core/fragments/ShellListStoreFragment.kt *** //
 package by.quty.launch.core.fragments
 
 import android.os.Bundle
@@ -15,14 +15,14 @@ import by.quty.launch.R
 import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.ShellStoreAdapter
 import by.quty.launch.core.managers.StoreManager
-import by.quty.launch.core.model.ShellStoreItem
+import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.launch
 
 /**
  * Фрагмент со списком оболочек для магазина
  */
-class ShellListFragment : Fragment() {
+class ShellListStoreFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
@@ -31,12 +31,12 @@ class ShellListFragment : Fragment() {
 
     private var storeManager: StoreManager? = null
     private var showOnlyInstalled: Boolean = false
-    private var shells: List<ShellStoreItem> = emptyList()
+    private var shells: List<ShellStoreModel> = emptyList()
     private var isViewCreated = false
 
     companion object {
-        fun newInstance(showOnlyInstalled: Boolean): ShellListFragment {
-            return ShellListFragment().apply {
+        fun newInstance(showOnlyInstalled: Boolean): ShellListStoreFragment {
+            return ShellListStoreFragment().apply {
                 arguments = Bundle().apply {
                     putBoolean("show_only_installed", showOnlyInstalled)
                 }
@@ -101,7 +101,7 @@ class ShellListFragment : Fragment() {
         val manager = storeManager ?: return
         if (!isViewCreated || !::recyclerView.isInitialized) return
 
-        Logger.d("ShellListFragment", getString(R.string.log_shell_list_update_data, manager.isDataLoaded()))
+        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_data, manager.isDataLoaded()))
 
         // Если данные уже загружены — используем кэш
         if (manager.isDataLoaded()) {
@@ -121,8 +121,8 @@ class ShellListFragment : Fragment() {
     }
 
     @Suppress("NotifyDataSetChanged")
-    private fun updateUI(allShells: List<ShellStoreItem>) {
-        Logger.d("ShellListFragment", getString(R.string.log_shell_list_update_ui, allShells.size))
+    private fun updateUI(allShells: List<ShellStoreModel>) {
+        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_ui, allShells.size))
 
         shells = if (showOnlyInstalled) {
             allShells.filter { it.isInstalled }
@@ -130,7 +130,7 @@ class ShellListFragment : Fragment() {
             allShells
         }
 
-        Logger.d("ShellListFragment", getString(R.string.log_shell_list_shells_size, shells.size))
+        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_shells_size, shells.size))
 
         if (shells.isEmpty()) {
             emptyText.visibility = View.VISIBLE
@@ -140,17 +140,17 @@ class ShellListFragment : Fragment() {
                 getString(R.string.store_empty_shells)
             }
             recyclerView.visibility = View.GONE
-            Logger.d("ShellListFragment", getString(R.string.log_shell_list_empty))
+            Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_empty))
         } else {
             emptyText.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
             adapter.submitList(shells.toList())
             adapter.notifyDataSetChanged()
-            Logger.d("ShellListFragment", getString(R.string.log_shell_list_adapter_count, adapter.itemCount))
+            Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_adapter_count, adapter.itemCount))
         }
     }
 
-    private fun installShell(shell: ShellStoreItem) {
+    private fun installShell(shell: ShellStoreModel) {
         val manager = storeManager ?: return
 
         val progressDialog = android.app.AlertDialog.Builder(requireContext())
@@ -177,7 +177,7 @@ class ShellListFragment : Fragment() {
                     // Обновляем также другой фрагмент
                     (activity as? StoreActivity)?.let { activity ->
                         activity.supportFragmentManager.fragments.forEach { fragment ->
-                            if (fragment is ShellListFragment && fragment != this@ShellListFragment) {
+                            if (fragment is ShellListStoreFragment && fragment != this@ShellListStoreFragment) {
                                 fragment.notifyDataChanged()
                             }
                         }

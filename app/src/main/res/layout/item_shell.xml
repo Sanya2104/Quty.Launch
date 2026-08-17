@@ -36,7 +36,8 @@
             style="@style/Text.Title.XSmall"
             android:textColor="@color/text_primary"
             android:maxLines="1"
-            android:ellipsize="end" />
+            android:ellipsize="end"
+            tools:text="@string/unknown" />
 
         <!-- Версия -->
         <TextView
@@ -59,7 +60,8 @@
             style="@style/Text.Small"
             android:textColor="@color/text_dim"
             android:maxLines="1"
-            android:ellipsize="end" />
+            android:ellipsize="end"
+            tools:text="@string/unknown" />
 
     </LinearLayout>
 

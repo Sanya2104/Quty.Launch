@@ -1,4 +1,4 @@
-// *** core/fragments/ShellDetailFragment.kt *** //
+// *** core/fragments/ShellDetailStoreFragment.kt *** //
 package by.quty.launch.core.fragments
 
 import android.os.Bundle
@@ -13,22 +13,22 @@ import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.StoreActivity
 import by.quty.launch.core.managers.StoreManager
-import by.quty.launch.core.model.ShellStoreItem
+import by.quty.launch.core.model.ShellStoreModel
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 
 /**
  * Фрагмент детального просмотра оболочки
  */
-class ShellDetailFragment : Fragment() {
+class ShellDetailStoreFragment : Fragment() {
 
     private lateinit var shellId: String
     private var storeManager: StoreManager? = null
-    private var shell: ShellStoreItem? = null
+    private var shell: ShellStoreModel? = null
 
     companion object {
-        fun newInstance(shellId: String): ShellDetailFragment {
-            return ShellDetailFragment().apply {
+        fun newInstance(shellId: String): ShellDetailStoreFragment {
+            return ShellDetailStoreFragment().apply {
                 arguments = Bundle().apply {
                     putString("shell_id", shellId)
                 }
@@ -50,7 +50,7 @@ class ShellDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_store_detail, container, false)
+        return inflater.inflate(R.layout.fragment_store_shell_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -131,7 +131,7 @@ class ShellDetailFragment : Fragment() {
         }
     }
 
-    private fun updateInstallButton(button: Button, shell: ShellStoreItem) {
+    private fun updateInstallButton(button: Button, shell: ShellStoreModel) {
         if (shell.isInstalled) {
             button.text = getString(R.string.store_installed)
             button.isEnabled = false
@@ -147,7 +147,7 @@ class ShellDetailFragment : Fragment() {
         }
     }
 
-    private fun startInstallation(shell: ShellStoreItem) {
+    private fun startInstallation(shell: ShellStoreModel) {
         val manager = storeManager ?: return
 
         val progressDialog = android.app.AlertDialog.Builder(requireContext())

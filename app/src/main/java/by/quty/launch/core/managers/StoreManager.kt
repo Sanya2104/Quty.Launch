@@ -2,7 +2,7 @@
 package by.quty.launch.core.managers
 
 import android.content.Context
-import by.quty.launch.core.model.ShellStoreItem
+import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.core.logger.Logger
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.R
@@ -24,13 +24,13 @@ class StoreManager(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
 
     // Кэш списка оболочек
-    private var cachedShells: List<ShellStoreItem>? = null
+    private var cachedShells: List<ShellStoreModel>? = null
 
     /**
      * Загружает список оболочек из репозитория
      * @return список оболочек или null в случае ошибки
      */
-    suspend fun fetchShells(): List<ShellStoreItem>? = withContext(Dispatchers.IO) {
+    suspend fun fetchShells(): List<ShellStoreModel>? = withContext(Dispatchers.IO) {
         try {
             cachedShells?.let { return@withContext it }
 
@@ -78,7 +78,7 @@ class StoreManager(private val context: Context) {
     /**
      * Получает оболочку по ID
      */
-    fun getShellById(id: String): ShellStoreItem? {
+    fun getShellById(id: String): ShellStoreModel? {
         return cachedShells?.find { it.id == id }
     }
 
@@ -89,7 +89,7 @@ class StoreManager(private val context: Context) {
      * @return true при успехе
      */
     suspend fun installShell(
-        shell: ShellStoreItem,
+        shell: ShellStoreModel,
         listener: DownloadListener
     ): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -276,7 +276,7 @@ class StoreManager(private val context: Context) {
      * Возвращает кэшированный список оболочек
      * Если кэш пуст — возвращает null
      */
-    fun getCachedShells(): List<ShellStoreItem>? = cachedShells
+    fun getCachedShells(): List<ShellStoreModel>? = cachedShells
 
     /**
      * Проверяет, загружены ли данные
@@ -289,7 +289,7 @@ class StoreManager(private val context: Context) {
 
     @kotlinx.serialization.Serializable
     data class ShellsWrapper(
-        val shells: List<ShellStoreItem>
+        val shells: List<ShellStoreModel>
     )
 
     interface DownloadListener {
