@@ -1,12 +1,11 @@
-// *** core/logger/LoggerFile.kt *** //
-package by.quty.launch.core.logger
+// *** core/managers/LoggerFileManager.kt *** //
+package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.managers.StorageDirectory
-import by.quty.launch.core.managers.StorageFileType
-import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.model.LogEntryModel
+import by.quty.launch.core.model.LogLevelModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,7 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Оптимизация: буферизированная запись — логи накапливаются в памяти
  * и записываются на диск пачками с задержкой
  */
-object LoggerFile {
+object LoggerFileManager {
 
     // Техническая версия формата файла (оставляем локально)
     private const val VERSION = 1
@@ -58,7 +57,7 @@ object LoggerFile {
     private val mutex = Mutex()
 
     // Буфер для накопления логов перед записью
-    private val buffer = mutableListOf<LogEntry>()
+    private val buffer = mutableListOf<LogEntryModel>()
 
     // Job для отложенной записи
     private var flushJob: Job? = null
@@ -113,10 +112,10 @@ object LoggerFile {
      * @param message сообщение
      * @param source источник (Kotlin/WebView)
      */
-    fun write(level: LogLevel, tag: String, message: String, source: String = "Kotlin") {
+    fun write(level: LogLevelModel, tag: String, message: String, source: String = "Kotlin") {
         if (!persistEnabled) return
 
-        val entry = LogEntry(
+        val entry = LogEntryModel(
             timestamp = System.currentTimeMillis(),
             level = level,
             tag = tag,
@@ -164,7 +163,7 @@ object LoggerFile {
     /**
      * Записывает список записей в файл
      */
-    private suspend fun writeEntriesToFile(entries: List<LogEntry>) {
+    private suspend fun writeEntriesToFile(entries: List<LogEntryModel>) {
         val storageManager = getStorageManager() ?: return
 
         try {
@@ -195,7 +194,7 @@ object LoggerFile {
             }
 
         } catch (_: Exception) {
-            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_file_write_error))
+            android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_file_write_error))
         }
     }
 
@@ -205,7 +204,7 @@ object LoggerFile {
      * @param file файл для чтения
      * @return список логов
      */
-    suspend fun readLogsFromFile(storageManager: StorageManager, file: File): List<LogEntry> {
+    suspend fun readLogsFromFile(storageManager: StorageManager, file: File): List<LogEntryModel> {
         return try {
             if (!file.exists()) return emptyList()
 
@@ -303,9 +302,9 @@ object LoggerFile {
             )
             currentLogFile = null
             prepareCurrentLogFile()
-            android.util.Log.d("LoggerFile", appContext.getString(R.string.log_logger_cleared))
+            android.util.Log.d("LoggerFileManager", appContext.getString(R.string.log_logger_cleared))
         } catch (e: Exception) {
-            android.util.Log.e("LoggerFile", appContext.getString(R.string.log_logger_clear_error, e.message))
+            android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_clear_error, e.message))
         }
     }
 
@@ -342,7 +341,7 @@ object LoggerFile {
     /**
      * Строит JSON из списка логов
      */
-    private fun buildJson(logs: List<LogEntry>): String {
+    private fun buildJson(logs: List<LogEntryModel>): String {
         val wrapper = LogsWrapper(VERSION, logs)
         return json.encodeToString(wrapper)
     }
@@ -353,6 +352,6 @@ object LoggerFile {
     @Serializable
     data class LogsWrapper(
         val version: Int,
-        val logs: List<LogEntry>? = null
+        val logs: List<LogEntryModel>? = null
     )
 }

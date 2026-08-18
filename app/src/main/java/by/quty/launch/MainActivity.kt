@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.logger.Logger
+import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 import kotlinx.coroutines.launch
@@ -36,7 +36,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         // Инициализация логгера
-        Logger.init(this)
+        LoggerManager.init(this)
 
         // Инициализация
         applyOrientation() // Применяем сохраненную ориентацию из BaseActivity

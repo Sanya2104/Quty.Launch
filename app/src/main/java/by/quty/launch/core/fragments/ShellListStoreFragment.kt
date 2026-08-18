@@ -16,7 +16,7 @@ import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.ShellStoreAdapter
 import by.quty.launch.core.managers.StoreManager
 import by.quty.launch.core.model.ShellStoreModel
-import by.quty.launch.core.logger.Logger
+import by.quty.launch.core.managers.LoggerManager
 import kotlinx.coroutines.launch
 
 /**
@@ -101,7 +101,7 @@ class ShellListStoreFragment : Fragment() {
         val manager = storeManager ?: return
         if (!isViewCreated || !::recyclerView.isInitialized) return
 
-        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_data, manager.isDataLoaded()))
+        LoggerManager.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_data, manager.isDataLoaded()))
 
         // Если данные уже загружены — используем кэш
         if (manager.isDataLoaded()) {
@@ -122,7 +122,7 @@ class ShellListStoreFragment : Fragment() {
 
     @Suppress("NotifyDataSetChanged")
     private fun updateUI(allShells: List<ShellStoreModel>) {
-        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_ui, allShells.size))
+        LoggerManager.d("ShellListStoreFragment", getString(R.string.log_shell_list_update_ui, allShells.size))
 
         shells = if (showOnlyInstalled) {
             allShells.filter { it.isInstalled }
@@ -130,7 +130,7 @@ class ShellListStoreFragment : Fragment() {
             allShells
         }
 
-        Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_shells_size, shells.size))
+        LoggerManager.d("ShellListStoreFragment", getString(R.string.log_shell_list_shells_size, shells.size))
 
         if (shells.isEmpty()) {
             emptyText.visibility = View.VISIBLE
@@ -140,13 +140,13 @@ class ShellListStoreFragment : Fragment() {
                 getString(R.string.store_empty_shells)
             }
             recyclerView.visibility = View.GONE
-            Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_empty))
+            LoggerManager.d("ShellListStoreFragment", getString(R.string.log_shell_list_empty))
         } else {
             emptyText.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
             adapter.submitList(shells.toList())
             adapter.notifyDataSetChanged()
-            Logger.d("ShellListStoreFragment", getString(R.string.log_shell_list_adapter_count, adapter.itemCount))
+            LoggerManager.d("ShellListStoreFragment", getString(R.string.log_shell_list_adapter_count, adapter.itemCount))
         }
     }
 

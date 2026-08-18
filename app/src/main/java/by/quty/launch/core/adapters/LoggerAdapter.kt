@@ -10,14 +10,14 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
-import by.quty.launch.core.logger.LogEntry
-import by.quty.launch.core.logger.LogLevel
+import by.quty.launch.core.model.LogEntryModel
+import by.quty.launch.core.model.LogLevelModel
 
 /**
  * Адаптер для отображения списка логов в RecyclerView
  * Использует DiffUtil для эффективного обновления
  */
-class LoggerAdapter : ListAdapter<LogEntry, LoggerAdapter.LogViewHolder>(LogDiffCallback()) {
+class LoggerAdapter : ListAdapter<LogEntryModel, LoggerAdapter.LogViewHolder>(LogDiffCallback()) {
 
     /**
      * ViewHolder для одного лога
@@ -68,37 +68,37 @@ class LoggerAdapter : ListAdapter<LogEntry, LoggerAdapter.LogViewHolder>(LogDiff
     /**
      * Возвращает цвет текста для уровня
      */
-    private fun getLevelColor(context: android.content.Context, level: LogLevel): Int {
+    private fun getLevelColor(context: android.content.Context, level: LogLevelModel): Int {
         return when (level) {
-            LogLevel.DEBUG -> ContextCompat.getColor(context, R.color.accent_green)
-            LogLevel.INFO -> ContextCompat.getColor(context, R.color.accent_blue)
-            LogLevel.WARN -> ContextCompat.getColor(context, R.color.status_warning)
-            LogLevel.ERROR -> ContextCompat.getColor(context, R.color.text_error)
+            LogLevelModel.DEBUG -> ContextCompat.getColor(context, R.color.accent_green)
+            LogLevelModel.INFO -> ContextCompat.getColor(context, R.color.accent_blue)
+            LogLevelModel.WARN -> ContextCompat.getColor(context, R.color.status_warning)
+            LogLevelModel.ERROR -> ContextCompat.getColor(context, R.color.text_error)
         }
     }
 
     /**
      * Возвращает цвет фона для уровня
      */
-    private fun getLevelBgColor(context: android.content.Context, level: LogLevel): Int {
+    private fun getLevelBgColor(context: android.content.Context, level: LogLevelModel): Int {
         return when (level) {
-            LogLevel.DEBUG -> ContextCompat.getColor(context, R.color.log_debug_bg)
-            LogLevel.INFO -> ContextCompat.getColor(context, R.color.log_info_bg)
-            LogLevel.WARN -> ContextCompat.getColor(context, R.color.log_warn_bg)
-            LogLevel.ERROR -> ContextCompat.getColor(context, R.color.log_error_bg)
+            LogLevelModel.DEBUG -> ContextCompat.getColor(context, R.color.log_debug_bg)
+            LogLevelModel.INFO -> ContextCompat.getColor(context, R.color.log_info_bg)
+            LogLevelModel.WARN -> ContextCompat.getColor(context, R.color.log_warn_bg)
+            LogLevelModel.ERROR -> ContextCompat.getColor(context, R.color.log_error_bg)
         }
     }
 
     /**
      * DiffUtil для эффективного обновления списка
      */
-    class LogDiffCallback : DiffUtil.ItemCallback<LogEntry>() {
-        override fun areItemsTheSame(oldItem: LogEntry, newItem: LogEntry): Boolean {
+    class LogDiffCallback : DiffUtil.ItemCallback<LogEntryModel>() {
+        override fun areItemsTheSame(oldItem: LogEntryModel, newItem: LogEntryModel): Boolean {
             // Используем timestamp + tag как уникальный идентификатор
             return oldItem.timestamp == newItem.timestamp && oldItem.tag == newItem.tag
         }
 
-        override fun areContentsTheSame(oldItem: LogEntry, newItem: LogEntry): Boolean {
+        override fun areContentsTheSame(oldItem: LogEntryModel, newItem: LogEntryModel): Boolean {
             return oldItem == newItem
         }
     }

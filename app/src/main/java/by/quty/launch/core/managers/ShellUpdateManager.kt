@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import by.quty.launch.R
-import by.quty.launch.core.logger.Logger
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -65,25 +64,25 @@ class ShellUpdateManager(private val context: Context) {
 
                 // Проверяем совместимость с Quty.Launch
                 if (!isLauncherCompatible(repoInfo.minQutyLaunchVersion)) {
-                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_incompatible))
+                    LoggerManager.d("ShellUpdateManager", context.getString(R.string.log_shell_update_incompatible))
                     return@withContext null
                 }
 
                 // Сравниваем версии
                 val currentVersion = shell.version ?: "0.0.0"
                 if (UpdateHelper.isNewerVersion(repoInfo.version, currentVersion)) {
-                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_found, repoInfo.version, currentVersion))
+                    LoggerManager.d("ShellUpdateManager", context.getString(R.string.log_shell_update_found, repoInfo.version, currentVersion))
                     repoInfo
                 } else {
-                    Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_not_found, currentVersion, repoInfo.version))
+                    LoggerManager.d("ShellUpdateManager", context.getString(R.string.log_shell_update_not_found, currentVersion, repoInfo.version))
                     null
                 }
             } else {
-                Logger.w("ShellUpdateManager", context.getString(R.string.log_shell_update_check_error, connection.responseCode))
+                LoggerManager.w("ShellUpdateManager", context.getString(R.string.log_shell_update_check_error, connection.responseCode))
                 null
             }
         } catch (e: Exception) {
-            Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_check_exception, e.message))
+            LoggerManager.e("ShellUpdateManager", context.getString(R.string.log_shell_update_check_exception, e.message))
             null
         }
     }
@@ -197,13 +196,13 @@ class ShellUpdateManager(private val context: Context) {
             file.delete()
 
             if (success) {
-                Logger.d("ShellUpdateManager", context.getString(R.string.log_shell_update_saved, fileName))
+                LoggerManager.d("ShellUpdateManager", context.getString(R.string.log_shell_update_saved, fileName))
                 withContext(Dispatchers.Main) {
                     listener.onSuccess()
                 }
                 true
             } else {
-                Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_save_error))
+                LoggerManager.e("ShellUpdateManager", context.getString(R.string.log_shell_update_save_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.shell_install_error))
                 }
@@ -211,7 +210,7 @@ class ShellUpdateManager(private val context: Context) {
             }
 
         } catch (e: Exception) {
-            Logger.e("ShellUpdateManager", context.getString(R.string.log_shell_update_download_error, e.message))
+            LoggerManager.e("ShellUpdateManager", context.getString(R.string.log_shell_update_download_error, e.message))
             tempFile?.delete()
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))

@@ -1,5 +1,5 @@
-// *** core/logger/LogEntry.kt *** //
-package by.quty.launch.core.logger
+// *** core/model/LogEntryModel.kt *** //
+package by.quty.launch.core.model
 
 import kotlinx.serialization.Serializable
 
@@ -8,9 +8,9 @@ import kotlinx.serialization.Serializable
  * Содержит всю информацию о одном лог-сообщении
  */
 @Serializable
-data class LogEntry(
+data class LogEntryModel(
     val timestamp: Long,                    // время в миллисекундах
-    val level: LogLevel,                    // уровень (DEBUG, INFO, WARN, ERROR)
+    val level: LogLevelModel,               // уровень (DEBUG, INFO, WARN, ERROR)
     val tag: String,                        // тег (откуда лог)
     val message: String,                    // сообщение
     val source: String = "Kotlin"           // источник ("Kotlin" или "WebView")

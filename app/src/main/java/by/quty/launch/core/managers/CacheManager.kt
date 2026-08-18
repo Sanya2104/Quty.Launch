@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import by.quty.launch.R
 import by.quty.launch.api.model.AppInfo
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -57,7 +56,7 @@ object CacheManager {
                 Intent.ACTION_PACKAGE_REMOVED,
                 Intent.ACTION_PACKAGE_REPLACED -> {
                     val message = context.getString(R.string.log_cache_manager_package_changed, action, packageName)
-                    Logger.d("CacheManager", message)
+                    LoggerManager.d("CacheManager", message)
                     invalidateCache(context)
                 }
             }
@@ -104,9 +103,9 @@ object CacheManager {
 
             context.applicationContext.registerReceiver(packageReceiver, filter)
             receiverRegistered = true
-            Logger.d("CacheManager", context.getString(R.string.log_cache_manager_receiver_registered))
+            LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_receiver_registered))
         } catch (e: Exception) {
-            Logger.e("CacheManager", context.getString(R.string.log_cache_manager_receiver_register_error, e.message))
+            LoggerManager.e("CacheManager", context.getString(R.string.log_cache_manager_receiver_register_error, e.message))
         }
     }
 
@@ -118,7 +117,7 @@ object CacheManager {
     fun invalidateCache(context: Context) {
         memoryCache = null
         isCacheDirty = true
-        Logger.d("CacheManager", context.getString(R.string.log_cache_manager_invalidated))
+        LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_invalidated))
     }
 
     /**
@@ -133,7 +132,7 @@ object CacheManager {
 
         // Если кэш помечен как грязный — пропускаем
         if (isCacheDirty) {
-            Logger.d("CacheManager", context.getString(R.string.log_cache_manager_skipped_dirty))
+            LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_skipped_dirty))
             return@withContext null
         }
 
@@ -176,7 +175,7 @@ object CacheManager {
             saveToDisk(storageManager, cached)
         }
 
-        Logger.d("CacheManager", context.getString(R.string.log_cache_manager_saved, apps.size))
+        LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_saved, apps.size))
     }
 
     /**
@@ -245,7 +244,7 @@ object CacheManager {
                     directory = StorageDirectory.CACHE,
                     name = CACHE_FILE_NAME
                 )
-                Logger.d("CacheManager", context.getString(R.string.log_cache_manager_cleared))
+                LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_cleared))
             } catch (_: Exception) {
                 // Игнорируем ошибки
             }

@@ -6,7 +6,7 @@ import android.webkit.JavascriptInterface
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
-import by.quty.launch.core.logger.Logger
+import by.quty.launch.core.managers.LoggerManager
 import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
@@ -83,9 +83,9 @@ class JsBridge(
         // Получаем WebView из WeakReference
         val webView = webViewRef?.get()
         if (webView == null) {
-            // WebView уничтожен — логируем через Logger
+            // WebView уничтожен — логируем через LoggerManager
             if (error != null) {
-                Logger.e("JsBridge", context.getString(R.string.js_bridge_webview_null, error.message))
+                LoggerManager.e("JsBridge", context.getString(R.string.js_bridge_webview_null, error.message))
             }
             return
         }
@@ -104,13 +104,13 @@ class JsBridge(
             try {
                 webView.evaluateJavascript(jsCode, null)
             } catch (e: Exception) {
-                Logger.e("JsBridge", context.getString(R.string.js_bridge_send_error, e.message))
+                LoggerManager.e("JsBridge", context.getString(R.string.js_bridge_send_error, e.message))
             }
         }
     }
 
     /**
-     * Принимает лог из JavaScript и отправляет в Logger
+     * Принимает лог из JavaScript и отправляет в LoggerManager
      * @param logData JSON строка с полями: level, message
      */
 
@@ -130,11 +130,11 @@ class JsBridge(
             val cleanMessage = data.message.replace("[JS_BRIDGE_LOG] ", "")
 
             when (data.level.lowercase()) {
-                "debug", "log" -> Logger.d(sourceTag, cleanMessage, "WebView")
-                "info" -> Logger.i(sourceTag, cleanMessage, "WebView")
-                "warn" -> Logger.w(sourceTag, cleanMessage, "WebView")
-                "error" -> Logger.e(sourceTag, cleanMessage, "WebView")
-                else -> Logger.d(sourceTag, cleanMessage, "WebView")
+                "debug", "log" -> LoggerManager.d(sourceTag, cleanMessage, "WebView")
+                "info" -> LoggerManager.i(sourceTag, cleanMessage, "WebView")
+                "warn" -> LoggerManager.w(sourceTag, cleanMessage, "WebView")
+                "error" -> LoggerManager.e(sourceTag, cleanMessage, "WebView")
+                else -> LoggerManager.d(sourceTag, cleanMessage, "WebView")
             }
         } catch (_: Exception) {
             // Игнорируем ошибки парсинга

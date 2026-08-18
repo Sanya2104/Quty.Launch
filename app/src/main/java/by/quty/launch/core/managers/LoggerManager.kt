@@ -1,12 +1,12 @@
-// *** core/logger/Logger.kt *** //
-package by.quty.launch.core.logger
+// *** core/managers/LoggerManager.kt *** //
+package by.quty.launch.core.managers
 
 import android.content.Context
 import android.util.Log
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.managers.StorageFileType
-import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.model.LogEntryModel
+import by.quty.launch.core.model.LogLevelModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,16 +21,16 @@ import java.util.Locale
  * Синглтон для сбора, хранения и управления логами
  *
  * Использование:
- * Logger.d("MainActivity", "onCreate вызван")
- * Logger.e("UpdateManager", "Ошибка: ${e.message}")
+ * LoggerManager.d("MainActivity", "onCreate вызван")
+ * LoggerManager.e("UpdateManager", "Ошибка: ${e.message}")
  */
-object Logger {
+object LoggerManager {
 
     // Максимальное количество логов в памяти (из конфига)
     private const val MAX_LOGS = CoreConfig.LOGGER_MAX_IN_MEMORY
 
     // Список всех логов (новые в начале)
-    private val logs = mutableListOf<LogEntry>()
+    private val logs = mutableListOf<LogEntryModel>()
 
     // Флаг паузы (если true — логи не собираются)
     private var isPaused = false
@@ -62,7 +62,7 @@ object Logger {
      * Интерфейс для уведомления об изменениях в логах
      */
     interface LogListener {
-        fun onLogAdded(entry: LogEntry)
+        fun onLogAdded(entry: LogEntryModel)
         fun onLogsCleared()
     }
 
@@ -80,19 +80,19 @@ object Logger {
         val maxFiles = prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
         val maxSizeMB = prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
 
-        // Создаём StorageManager и передаём в LoggerFile
+        // Создаём StorageManager и передаём в LoggerFileManager
         val storageManager = StorageManager(context.applicationContext)
         storageManagerRef = WeakReference(storageManager)
 
         // Инициализируем файловое ядро
-        LoggerFile.init(storageManager, maxFiles, maxSizeMB, persistEnabled, context.applicationContext)
+        LoggerFileManager.init(storageManager, maxFiles, maxSizeMB, persistEnabled, context.applicationContext)
 
         // Если сохранение включено — восстанавливаем логи из файла
         if (persistEnabled) {
             restoreLogsFromFile()
         }
 
-        d("Logger", appContext.getString(R.string.log_logger_initialized))
+        d("LoggerManager", appContext.getString(R.string.log_logger_initialized))
     }
 
     /**
@@ -102,15 +102,15 @@ object Logger {
         try {
             val storageManager = getStorageManager()
 
-            val logFiles = LoggerFile.getLogFiles(storageManager)
+            val logFiles = LoggerFileManager.getLogFiles(storageManager)
             if (logFiles.isEmpty()) return
 
             // Берём самый свежий файл (первый в списке)
             val latestFile = logFiles.firstOrNull() ?: return
 
-            // Читаем логи из файла через LoggerFile (синхронно)
+            // Читаем логи из файла через LoggerFileManager (синхронно)
             val restoredLogs = runBlocking {
-                LoggerFile.readLogsFromFile(storageManager, latestFile)
+                LoggerFileManager.readLogsFromFile(storageManager, latestFile)
             }
 
             // Добавляем в память (новые сверху)
@@ -131,9 +131,9 @@ object Logger {
                 }
             }
 
-            d("Logger", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
+            d("LoggerManager", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
         } catch (_: Exception) {
-            e("Logger", appContext.getString(R.string.log_logger_restore_error))
+            e("LoggerManager", appContext.getString(R.string.log_logger_restore_error))
         }
     }
 
@@ -156,7 +156,7 @@ object Logger {
     /**
      * Уведомляет всех слушателей о добавлении лога
      */
-    private fun notifyLogAdded(entry: LogEntry) {
+    private fun notifyLogAdded(entry: LogEntryModel) {
         listeners.forEach { it.onLogAdded(entry) }
     }
 
@@ -175,7 +175,7 @@ object Logger {
      */
     @Suppress("unused")
     fun d(tag: String, message: String, source: String = "Kotlin") {
-        addLog(LogLevel.DEBUG, tag, message, source)
+        addLog(LogLevelModel.DEBUG, tag, message, source)
     }
 
     /**
@@ -186,7 +186,7 @@ object Logger {
      */
     @Suppress("unused")
     fun i(tag: String, message: String, source: String = "Kotlin") {
-        addLog(LogLevel.INFO, tag, message, source)
+        addLog(LogLevelModel.INFO, tag, message, source)
     }
 
     /**
@@ -197,7 +197,7 @@ object Logger {
      */
     @Suppress("unused")
     fun w(tag: String, message: String, source: String = "Kotlin") {
-        addLog(LogLevel.WARN, tag, message, source)
+        addLog(LogLevelModel.WARN, tag, message, source)
     }
 
     /**
@@ -207,7 +207,7 @@ object Logger {
      * @param source источник (по умолчанию "Kotlin")
      */
     fun e(tag: String, message: String, source: String = "Kotlin") {
-        addLog(LogLevel.ERROR, tag, message, source)
+        addLog(LogLevelModel.ERROR, tag, message, source)
     }
 
     /**
@@ -217,7 +217,7 @@ object Logger {
      * @param throwable исключение
      */
     fun e(tag: String, message: String, throwable: Throwable) {
-        addLog(LogLevel.ERROR, tag, "$message: ${throwable.message}")
+        addLog(LogLevelModel.ERROR, tag, "$message: ${throwable.message}")
         // Также пишем в стандартный лог для обратной совместимости
         Log.e(tag, message, throwable)
     }
@@ -225,12 +225,12 @@ object Logger {
     /**
      * Внутренний метод добавления лога
      */
-    private fun addLog(level: LogLevel, tag: String, message: String, source: String = "Kotlin") {
+    private fun addLog(level: LogLevelModel, tag: String, message: String, source: String = "Kotlin") {
         // Если пауза — не добавляем логи
         if (isPaused) return
 
         // Создаём запись
-        val entry = LogEntry(
+        val entry = LogEntryModel(
             timestamp = System.currentTimeMillis(),
             level = level,
             tag = tag,
@@ -239,7 +239,7 @@ object Logger {
         )
 
         // 1. Записываем в файл (всегда, если включено)
-        LoggerFile.write(level, tag, message, source)
+        LoggerFileManager.write(level, tag, message, source)
 
         // 2. Добавляем в память (для UI) — новые в начало списка
         synchronized(logs) {
@@ -257,17 +257,17 @@ object Logger {
 
         // Также пишем в стандартный лог для обратной совместимости
         when (level) {
-            LogLevel.DEBUG -> Log.d(tag, message)
-            LogLevel.INFO -> Log.i(tag, message)
-            LogLevel.WARN -> Log.w(tag, message)
-            LogLevel.ERROR -> Log.e(tag, message)
+            LogLevelModel.DEBUG -> Log.d(tag, message)
+            LogLevelModel.INFO -> Log.i(tag, message)
+            LogLevelModel.WARN -> Log.w(tag, message)
+            LogLevelModel.ERROR -> Log.e(tag, message)
         }
     }
 
     /**
      * Возвращает копию списка всех логов (новые сверху)
      */
-    fun getLogs(): List<LogEntry> {
+    fun getLogs(): List<LogEntryModel> {
         return synchronized(logs) {
             logs.toList()
         }
@@ -295,11 +295,11 @@ object Logger {
         try {
             val storageManager = getStorageManager()
             runBlocking {
-                LoggerFile.clearAll(storageManager)
+                LoggerFileManager.clearAll(storageManager)
             }
-            d("Logger", appContext.getString(R.string.log_logger_cleared))
+            d("LoggerManager", appContext.getString(R.string.log_logger_cleared))
         } catch (e: Exception) {
-            e("Logger", appContext.getString(R.string.log_logger_clear_error, e.message))
+            e("LoggerManager", appContext.getString(R.string.log_logger_clear_error, e.message))
         }
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -384,7 +384,7 @@ object Logger {
             // Возвращаем путь к файлу
             logFile.absolutePath
         } catch (e: Exception) {
-            e("Logger", appContext.getString(R.string.log_logger_save_error, e.message))
+            e("LoggerManager", appContext.getString(R.string.log_logger_save_error, e.message))
             null
         }
     }

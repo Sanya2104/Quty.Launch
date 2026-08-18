@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import by.quty.launch.R
-import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -76,9 +75,9 @@ class StorageManager(private val context: Context) {
             if (!dir.exists()) {
                 val created = dir.mkdirs()
                 if (created) {
-                    Logger.d("StorageManager", context.getString(R.string.log_storage_dir_created, dir.absolutePath))
+                    LoggerManager.d("StorageManager", context.getString(R.string.log_storage_dir_created, dir.absolutePath))
                 } else {
-                    Logger.e("StorageManager", context.getString(R.string.log_storage_dir_create_failed, dir.absolutePath))
+                    LoggerManager.e("StorageManager", context.getString(R.string.log_storage_dir_create_failed, dir.absolutePath))
                 }
             }
         }
@@ -119,12 +118,12 @@ class StorageManager(private val context: Context) {
     suspend fun getString(file: File): String? = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
-                Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                 return@withContext null
             }
             file.readText()
         } catch (e: Exception) {
-            Logger.e("StorageManager", context.getString(R.string.log_storage_file_read_error, e.message))
+            LoggerManager.e("StorageManager", context.getString(R.string.log_storage_file_read_error, e.message))
             null
         }
     }
@@ -175,7 +174,7 @@ class StorageManager(private val context: Context) {
     fun getUri(file: File): Uri? {
         return try {
             if (!file.exists()) {
-                Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                 return null
             }
             FileProvider.getUriForFile(
@@ -184,7 +183,7 @@ class StorageManager(private val context: Context) {
                 file
             )
         } catch (e: Exception) {
-            Logger.e("StorageManager", context.getString(R.string.log_storage_uri_error, e.message))
+            LoggerManager.e("StorageManager", context.getString(R.string.log_storage_uri_error, e.message))
             null
         }
     }
@@ -204,15 +203,15 @@ class StorageManager(private val context: Context) {
         withContext(Dispatchers.IO) {
             try {
                 if (file.exists() && !overwrite) {
-                    Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                    LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                     return@withContext false
                 }
                 file.parentFile?.mkdirs()
                 file.writeText(content)
-                Logger.d("StorageManager", context.getString(R.string.log_storage_file_saved, file.absolutePath))
+                LoggerManager.d("StorageManager", context.getString(R.string.log_storage_file_saved, file.absolutePath))
                 true
             } catch (e: Exception) {
-                Logger.e("StorageManager", context.getString(R.string.log_storage_file_save_error, e.message))
+                LoggerManager.e("StorageManager", context.getString(R.string.log_storage_file_save_error, e.message))
                 false
             }
         }
@@ -235,17 +234,17 @@ class StorageManager(private val context: Context) {
         withContext(Dispatchers.IO) {
             try {
                 if (file.exists() && !overwrite) {
-                    Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                    LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                     return@withContext false
                 }
                 file.parentFile?.mkdirs()
                 FileOutputStream(file).use { output ->
                     inputStream.copyTo(output)
                 }
-                Logger.d("StorageManager", context.getString(R.string.log_storage_file_stream_saved, file.absolutePath))
+                LoggerManager.d("StorageManager", context.getString(R.string.log_storage_file_stream_saved, file.absolutePath))
                 true
             } catch (e: Exception) {
-                Logger.e("StorageManager", context.getString(R.string.log_storage_file_stream_save_error, e.message))
+                LoggerManager.e("StorageManager", context.getString(R.string.log_storage_file_stream_save_error, e.message))
                 false
             }
         }
@@ -268,15 +267,15 @@ class StorageManager(private val context: Context) {
         withContext(Dispatchers.IO) {
             try {
                 if (file.exists() && !overwrite) {
-                    Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                    LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                     return@withContext false
                 }
                 file.parentFile?.mkdirs()
                 file.writeBytes(data)
-                Logger.d("StorageManager", context.getString(R.string.log_storage_file_bytes_saved, file.absolutePath))
+                LoggerManager.d("StorageManager", context.getString(R.string.log_storage_file_bytes_saved, file.absolutePath))
                 true
             } catch (e: Exception) {
-                Logger.e("StorageManager", context.getString(R.string.log_storage_file_bytes_save_error, e.message))
+                LoggerManager.e("StorageManager", context.getString(R.string.log_storage_file_bytes_save_error, e.message))
                 false
             }
         }
@@ -318,16 +317,16 @@ class StorageManager(private val context: Context) {
     suspend fun remove(file: File): Boolean = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
-                Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
+                LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, file.absolutePath))
                 return@withContext false
             }
             val deleted = file.delete()
             if (deleted) {
-                Logger.d("StorageManager", context.getString(R.string.log_storage_file_deleted, file.absolutePath))
+                LoggerManager.d("StorageManager", context.getString(R.string.log_storage_file_deleted, file.absolutePath))
             }
             deleted
         } catch (e: Exception) {
-            Logger.e("StorageManager", context.getString(R.string.log_storage_file_delete_error, e.message))
+            LoggerManager.e("StorageManager", context.getString(R.string.log_storage_file_delete_error, e.message))
             false
         }
     }
@@ -350,7 +349,7 @@ class StorageManager(private val context: Context) {
             try {
                 val dir = getDirectory(directory)
                 if (!dir.exists()) {
-                    Logger.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, dir.absolutePath))
+                    LoggerManager.w("StorageManager", context.getString(R.string.log_storage_file_not_exists, dir.absolutePath))
                     return@withContext false
                 }
                 val deleted = if (recursive) {
@@ -359,13 +358,13 @@ class StorageManager(private val context: Context) {
                     dir.delete()
                 }
                 if (deleted) {
-                    Logger.d("StorageManager", context.getString(R.string.log_storage_dir_deleted, dir.absolutePath))
+                    LoggerManager.d("StorageManager", context.getString(R.string.log_storage_dir_deleted, dir.absolutePath))
                     // Пересоздаём директорию
                     dir.mkdirs()
                 }
                 deleted
             } catch (e: Exception) {
-                Logger.e("StorageManager", context.getString(R.string.log_storage_dir_delete_error, e.message))
+                LoggerManager.e("StorageManager", context.getString(R.string.log_storage_dir_delete_error, e.message))
                 false
             }
         }
@@ -387,11 +386,11 @@ class StorageManager(private val context: Context) {
                 }
             }
             if (allDeleted) {
-                Logger.d("StorageManager", context.getString(R.string.log_storage_files_deleted, directory.name))
+                LoggerManager.d("StorageManager", context.getString(R.string.log_storage_files_deleted, directory.name))
             }
             allDeleted
         } catch (e: Exception) {
-            Logger.e("StorageManager", context.getString(R.string.log_storage_files_delete_error, e.message))
+            LoggerManager.e("StorageManager", context.getString(R.string.log_storage_files_delete_error, e.message))
             false
         }
     }

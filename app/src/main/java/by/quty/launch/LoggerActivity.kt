@@ -16,8 +16,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.core.adapters.LoggerAdapter
-import by.quty.launch.core.logger.LogEntry
-import by.quty.launch.core.logger.Logger
+import by.quty.launch.core.managers.LoggerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,8 +54,8 @@ class LoggerActivity : BaseActivity() {
     }
 
     // Слушатель для обновления UI при добавлении логов
-    private val logListener = object : Logger.LogListener {
-        override fun onLogAdded(entry: LogEntry) {
+    private val logListener = object : LoggerManager.LogListener {
+        override fun onLogAdded(entry: by.quty.launch.core.model.LogEntryModel) {
             runOnUiThread {
                 applyFilters()
                 recyclerView.scrollToPosition(adapter.itemCount - 1)
@@ -113,7 +112,7 @@ class LoggerActivity : BaseActivity() {
         updateStatus()
 
         // Регистрируем слушатель
-        Logger.addListener(logListener)
+        LoggerManager.addListener(logListener)
 
         // Включаем иммерсивный режим
         window.decorView.post {
@@ -225,13 +224,13 @@ class LoggerActivity : BaseActivity() {
     private fun setupButtons() {
         // Кнопка "Пауза/Старт"
         btnPause.setOnClickListener {
-            if (Logger.isPaused()) {
-                Logger.resume()
+            if (LoggerManager.isPaused()) {
+                LoggerManager.resume()
                 btnPause.setImageResource(R.drawable.ic_pause)
                 pausePanel.visibility = View.GONE
                 Toast.makeText(this, R.string.logger_resumed, Toast.LENGTH_SHORT).show()
             } else {
-                Logger.pause()
+                LoggerManager.pause()
                 btnPause.setImageResource(R.drawable.ic_play)
                 pausePanel.visibility = View.VISIBLE
                 Toast.makeText(this, R.string.logger_paused, Toast.LENGTH_SHORT).show()
@@ -240,7 +239,7 @@ class LoggerActivity : BaseActivity() {
 
         // Кнопка "Копировать"
         btnCopy.setOnClickListener {
-            val logsText = Logger.formatLogsForCopy()
+            val logsText = LoggerManager.formatLogsForCopy()
             if (logsText.isNotEmpty()) {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText("Logs", logsText)
@@ -253,7 +252,7 @@ class LoggerActivity : BaseActivity() {
 
         // Кнопка "Поделиться"
         btnShare.setOnClickListener {
-            val logsText = Logger.formatLogsForShare()
+            val logsText = LoggerManager.formatLogsForShare()
             if (logsText.isNotEmpty()) {
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -269,7 +268,7 @@ class LoggerActivity : BaseActivity() {
         // Кнопка "Сохранить"
         btnSave.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
-                val filePath = Logger.saveLogsToFile()
+                val filePath = LoggerManager.saveLogsToFile()
                 withContext(Dispatchers.Main) {
                     if (filePath != null) {
                         Toast.makeText(
@@ -290,7 +289,7 @@ class LoggerActivity : BaseActivity() {
 
         // Кнопка "Очистить"
         btnClear.setOnClickListener {
-            Logger.clear()
+            LoggerManager.clear()
             Toast.makeText(this, R.string.logger_cleared, Toast.LENGTH_SHORT).show()
         }
 
@@ -304,7 +303,7 @@ class LoggerActivity : BaseActivity() {
      * Применяет фильтры к списку логов
      */
     private fun applyFilters() {
-        val allLogs = Logger.getLogs()
+        val allLogs = LoggerManager.getLogs()
         val allText = getString(R.string.logger_filter_all)
 
         val filtered = allLogs.filter { entry ->
@@ -324,13 +323,13 @@ class LoggerActivity : BaseActivity() {
      * @param totalCount общее количество логов
      */
     private fun updateStatus(filteredCount: Int = 0, totalCount: Int = 0) {
-        val count = if (totalCount > 0) totalCount else Logger.getLogCount()
+        val count = if (totalCount > 0) totalCount else LoggerManager.getLogCount()
         tvStatus.text = getString(R.string.logger_filter_status, filteredCount, count)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Logger.removeListener(logListener)
+        LoggerManager.removeListener(logListener)
     }
 
     override fun onResume() {
@@ -338,7 +337,7 @@ class LoggerActivity : BaseActivity() {
         applyFilters()
 
         // Восстанавливаем состояние паузы
-        if (Logger.isPaused()) {
+        if (LoggerManager.isPaused()) {
             btnPause.setImageResource(R.drawable.ic_play)
             pausePanel.visibility = View.VISIBLE
         } else {

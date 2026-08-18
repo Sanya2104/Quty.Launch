@@ -3,7 +3,6 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.core.model.ShellStoreModel
-import by.quty.launch.core.logger.Logger
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +42,7 @@ class StoreManager(private val context: Context) {
                 var jsonString = connection.inputStream.bufferedReader().use { it.readText() }
 
                 // Удаляем BOM, если он есть
-                if (jsonString.startsWith("\uFEFF")) {
+                if (jsonString.startsWith("\ufeff")) {
                     jsonString = jsonString.substring(1)
                 }
 
@@ -52,25 +51,25 @@ class StoreManager(private val context: Context) {
 
                 // Отмечаем установленные
                 val installedShells = shellManager.getAvailableShells().map { it.name }
-                Logger.d("StoreManager", context.getString(R.string.log_store_installed_shells_from_manager, installedShells))
+                LoggerManager.d("StoreManager", context.getString(R.string.log_store_installed_shells_from_manager, installedShells))
 
                 cachedShells = cachedShells?.map { shell ->
                     val isInstalled = installedShells.contains(shell.name)
-                    Logger.d("StoreManager", context.getString(R.string.log_store_shell_installed_check, shell.name, isInstalled))
+                    LoggerManager.d("StoreManager", context.getString(R.string.log_store_shell_installed_check, shell.name, isInstalled))
                     shell.copy(isInstalled = isInstalled)
                 }
                 cachedShells = cachedShells?.map { shell ->
                     shell.copy(isInstalled = installedShells.contains(shell.name))
                 }
 
-                Logger.d("StoreManager", context.getString(R.string.log_store_shells_loaded, cachedShells?.size ?: 0))
+                LoggerManager.d("StoreManager", context.getString(R.string.log_store_shells_loaded, cachedShells?.size ?: 0))
                 cachedShells
             } else {
-                Logger.e("StoreManager", context.getString(R.string.log_store_load_error, connection.responseCode))
+                LoggerManager.e("StoreManager", context.getString(R.string.log_store_load_error, connection.responseCode))
                 null
             }
         } catch (e: Exception) {
-            Logger.e("StoreManager", context.getString(R.string.log_store_error, e.message))
+            LoggerManager.e("StoreManager", context.getString(R.string.log_store_error, e.message))
             null
         }
     }
@@ -157,7 +156,7 @@ class StoreManager(private val context: Context) {
                 if (it.id == shell.id) it.copy(isInstalled = true) else it
             }
 
-            Logger.d("StoreManager", context.getString(R.string.log_store_shell_installed, shell.displayName))
+            LoggerManager.d("StoreManager", context.getString(R.string.log_store_shell_installed, shell.displayName))
 
             withContext(Dispatchers.Main) {
                 listener.onSuccess()
@@ -165,7 +164,7 @@ class StoreManager(private val context: Context) {
             true
 
         } catch (e: Exception) {
-            Logger.e("StoreManager", context.getString(R.string.log_store_install_error, e.message))
+            LoggerManager.e("StoreManager", context.getString(R.string.log_store_install_error, e.message))
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.store_install_error))
             }

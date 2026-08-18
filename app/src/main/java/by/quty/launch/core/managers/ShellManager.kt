@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.content.edit
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -488,7 +487,7 @@ class ShellManager(
                 }
             }
         } catch (e: Exception) {
-            Logger.e("ShellManager", context.getString(R.string.log_shell_manager_unzip_error, e.message))
+            LoggerManager.e("ShellManager", context.getString(R.string.log_shell_manager_unzip_error, e.message))
         }
     }
 

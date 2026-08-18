@@ -33,8 +33,8 @@ import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.CacheManager
-import by.quty.launch.core.logger.Logger
-import by.quty.launch.core.logger.LoggerFile
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.managers.LoggerFileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -440,7 +440,7 @@ class DeveloperSettingsFragment : Fragment() {
             val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
             prefs.edit { putBoolean("persist_enabled", isChecked) }
 
-            LoggerFile.setPersistEnabled(isChecked)
+            LoggerFileManager.setPersistEnabled(isChecked)
 
             if (isChecked) {
                 Toast.makeText(requireContext(), R.string.dev_logs_persist_enabled, Toast.LENGTH_SHORT).show()
@@ -528,7 +528,7 @@ class DeveloperSettingsFragment : Fragment() {
                 putInt("max_size_mb", currentMaxSizeMB)
             }
 
-            LoggerFile.reconfigure(currentMaxFiles, currentMaxSizeMB)
+            LoggerFileManager.reconfigure(currentMaxFiles, currentMaxSizeMB)
 
             val logsSizeView = view?.findViewById<TextView>(R.id.dev_logs_size_value)
             logsSizeView?.let { updateLogsSize(it) }
@@ -558,7 +558,7 @@ class DeveloperSettingsFragment : Fragment() {
         spinnerMaxSize.setSelection(1, false)
         isLoadingSettings = false
 
-        LoggerFile.init(storageManager, CoreConfig.LOGGER_MAX_FILES_DEFAULT, CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT, CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT, requireContext())
+        LoggerFileManager.init(storageManager, CoreConfig.LOGGER_MAX_FILES_DEFAULT, CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT, CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT, requireContext())
 
         Toast.makeText(requireContext(), R.string.dev_logs_reset_success, Toast.LENGTH_SHORT).show()
     }
@@ -747,7 +747,7 @@ class DeveloperSettingsFragment : Fragment() {
         try {
             lifecycleScope.launch {
                 // Используем clear() который теперь правильно очищает и файлы
-                Logger.clear()
+                LoggerManager.clear()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
                     // Обновляем размер логов

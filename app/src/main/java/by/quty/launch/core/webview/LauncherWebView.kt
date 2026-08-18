@@ -13,7 +13,7 @@ import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.logger.Logger
+import by.quty.launch.core.managers.LoggerManager
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
@@ -121,7 +121,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     // Определяем папку оболочки по имени активной оболочки
                     val shellDir = getActiveShellDir()
                     if (shellDir == null) {
-                        Logger.e(
+                        LoggerManager.e(
                             "LauncherWebView",
                             appContext.getString(R.string.webview_dir_shell_not_found)
                         )
@@ -232,7 +232,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 val url = failingUrl ?: "unknown"
                 val errorDesc = description ?: "unknown error"
 
-                Logger.e(
+                LoggerManager.e(
                     "LauncherWebView",
                     appContext.getString(R.string.webview_error_loading, url, errorDesc)
                 )
@@ -267,14 +267,14 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 // Если превышен лимит — не перезагружаем
                 if (errorRetryCount > MAX_RETRY_COUNT) {
-                    Logger.e(
+                    LoggerManager.e(
                         "LauncherWebView",
                         appContext.getString(R.string.webview_retry_limit_reached, url, errorRetryCount)
                     )
                     return
                 }
 
-                Logger.d(
+                LoggerManager.d(
                     "LauncherWebView",
                     appContext.getString(R.string.webview_retry_attempt, url, errorRetryCount, MAX_RETRY_COUNT)
                 )
