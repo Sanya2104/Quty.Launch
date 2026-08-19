@@ -19,9 +19,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.adapters.ColorSchemeAdapter
 import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
@@ -29,6 +32,7 @@ import by.quty.launch.core.managers.ShellUpdateManager
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.interfaces.SettingsEventListener
+import by.quty.launch.core.model.ColorScheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,6 +45,7 @@ class ShellSettingsFragment : Fragment() {
     private lateinit var shellManager: ShellManager
     private lateinit var storageManager: StorageManager
     private lateinit var shellsAdapter: ShellsAdapter
+    private lateinit var colorSchemeAdapter: ColorSchemeAdapter
     private var settingsEventListener: SettingsEventListener? = null
 
     // Флаг для предотвращения множественных применений оболочки
@@ -92,6 +97,7 @@ class ShellSettingsFragment : Fragment() {
         }
 
         setupShellSelector(view)
+        setupColorSchemeSelector(view)
         setupInstallButton(view)
     }
 
@@ -127,6 +133,44 @@ class ShellSettingsFragment : Fragment() {
 
         shellsAdapter = ShellsAdapter(shells)
         shellsList.adapter = shellsAdapter
+    }
+
+    /**
+     * Настройка выбора цветовой схемы
+     */
+    private fun setupColorSchemeSelector(view: View) {
+        val recyclerView = view.findViewById<RecyclerView>(R.id.color_scheme_list)
+
+        // Настройка RecyclerView (горизонтальный)
+        recyclerView.layoutManager = LinearLayoutManager(
+            requireContext(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+
+        val configManager = (activity as? SettingsActivity)?.configManager
+        val currentSchemeId = configManager?.getColorScheme() ?: ColorScheme.getDefaultScheme().id
+
+        colorSchemeAdapter = ColorSchemeAdapter { scheme ->
+            // Сохраняем выбранную схему
+            configManager?.setColorScheme(scheme.id)
+
+            // Отмечаем, что требуется перезагрузка
+            needsRestart = true
+
+            // Уведомляем Activity об изменении
+            settingsEventListener?.onSettingChanged()
+
+            // Показываем Toast
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.color_scheme_applied, scheme.displayName),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        recyclerView.adapter = colorSchemeAdapter
+        colorSchemeAdapter.setSelectedScheme(currentSchemeId)
     }
 
     /**

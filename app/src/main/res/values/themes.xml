@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/values/themes.xml -->
 <resources>
     <!-- ============================================================ -->
     <!-- ===== БАЗОВАЯ ТЕМА ========================================= -->
@@ -193,4 +193,51 @@
         <item name="android:popupBackground">@color/background_card</item>
         <item name="android:spinnerMode">dropdown</item>
     </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ ===================== -->
+    <!-- ============================================================ -->
+
+    <style name="Theme.QutyLaunch.Teal" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_teal_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
+        <item name="colorAccent">@color/scheme_teal_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Orange" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_orange_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_orange_primary</item>
+        <item name="colorAccent">@color/scheme_orange_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Purple" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_purple_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_purple_primary</item>
+        <item name="colorAccent">@color/scheme_purple_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Pink" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_pink_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_pink_primary</item>
+        <item name="colorAccent">@color/scheme_pink_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Blue" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_blue_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_blue_primary</item>
+        <item name="colorAccent">@color/scheme_blue_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Green" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_green_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_green_primary</item>
+        <item name="colorAccent">@color/scheme_green_accent</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_red_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_red_primary</item>
+        <item name="colorAccent">@color/scheme_red_accent</item>
+    </style>
+
 </resources>

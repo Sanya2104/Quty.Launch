@@ -3,6 +3,7 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.model.ColorScheme
 import androidx.core.content.edit
 
 class ConfigManager(context: Context) {
@@ -55,5 +56,51 @@ class ConfigManager(context: Context) {
     // Сохранение строгого режима
     fun setStrictModeEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("strict_mode", enabled) }
+    }
+
+    // ============================================================
+    // ЦВЕТОВАЯ СХЕМА
+    // ============================================================
+
+    /**
+     * Возвращает ID текущей цветовой схемы
+     */
+    fun getColorScheme(): String {
+        return prefs.getString("color_scheme", getDefaultColorScheme()) ?: getDefaultColorScheme()
+    }
+
+    /**
+     * Сохраняет ID цветовой схемы
+     */
+    fun setColorScheme(schemeId: String) {
+        prefs.edit { putString("color_scheme", schemeId) }
+    }
+
+    /**
+     * Возвращает ID цветовой схемы по умолчанию
+     */
+    fun getDefaultColorScheme(): String {
+        return CoreConfig.DEFAULT_COLOR_SCHEME
+    }
+
+    /**
+     * Возвращает primary цвет текущей схемы в HEX
+     */
+    fun getSchemePrimaryColor(): String {
+        return getColorSchemeObject().primaryColor
+    }
+
+    /**
+     * Возвращает accent цвет текущей схемы в HEX
+     */
+    fun getSchemeAccentColor(): String {
+        return getColorSchemeObject().accentColor
+    }
+
+    /**
+     * Возвращает объект текущей цветовой схемы
+     */
+    fun getColorSchemeObject(): ColorScheme {
+        return ColorScheme.getSchemeById(getColorScheme())
     }
 }

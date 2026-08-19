@@ -1,0 +1,22 @@
+<!-- res/layout/item_color_scheme.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_margin="@dimen/spacing_s">
+
+    <ImageView
+        android:id="@+id/color_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:background="@drawable/bg_color_scheme_item"
+        android:contentDescription="@string/color_scheme_preview_description" />
+
+    <View
+        android:id="@+id/selected_indicator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_color_scheme_selected"
+        android:visibility="gone" />
+
+</FrameLayout>

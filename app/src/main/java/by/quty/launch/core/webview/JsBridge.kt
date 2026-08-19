@@ -141,6 +141,58 @@ class JsBridge(
         }
     }
 
+    // ============================================================
+    // ПРИМЕНЕНИЕ ЦВЕТОВОЙ СХЕМЫ В WEBVIEW
+    // ============================================================
+
+    /**
+     * Применяет цветовую схему в WebView
+     * Вызывает JavaScript функцию applyColorScheme(primary, accent)
+     * @param primary primary цвет в HEX (#009688)
+     * @param accent accent цвет в HEX (#4CAF50)
+     */
+    @JavascriptInterface
+    fun applyColorScheme(primary: String, accent: String) {
+        val webView = webViewRef?.get()
+        if (webView == null) {
+            LoggerManager.e(
+                "JsBridge",
+                context.getString(R.string.log_js_bridge_webview_destroyed_color_scheme)
+            )
+            return
+        }
+
+        // Формируем JavaScript код для применения цветов
+        val jsCode = """
+            (function() {
+                // Проверяем, определена ли функция applyColorScheme
+                if (typeof window.applyColorScheme === 'function') {
+                    window.applyColorScheme('$primary', '$accent');
+                } else {
+                    // Fallback: применяем через CSS переменные
+                    document.documentElement.style.setProperty('--primary-color', '$primary');
+                    document.documentElement.style.setProperty('--accent-color', '$accent');
+                }
+            })();
+        """.trimIndent()
+
+        // Выполняем JavaScript в UI потоке
+        webView.post {
+            try {
+                webView.evaluateJavascript(jsCode, null)
+                LoggerManager.d(
+                    "JsBridge",
+                    context.getString(R.string.log_js_bridge_color_scheme_applied, primary, accent)
+                )
+            } catch (e: Exception) {
+                LoggerManager.e(
+                    "JsBridge",
+                    context.getString(R.string.log_js_bridge_color_scheme_error, e.message)
+                )
+            }
+        }
+    }
+
     /**
      * Структура данных для лога
      */

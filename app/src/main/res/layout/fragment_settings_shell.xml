@@ -26,12 +26,30 @@
         android:dividerHeight="@dimen/spacing_xxs"
         android:choiceMode="singleChoice"/>
 
+    <!-- ===== ЦВЕТОВАЯ СХЕМА ===== -->
+    <TextView
+        style="@style/Text.Title.XSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_l"
+        android:padding="@dimen/spacing_l"
+        android:text="@string/settings_color_scheme_title" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/color_scheme_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/spacing_s"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/spacing_s"
+        android:clipToPadding="false" />
+
     <Button
         android:id="@+id/btn_install_shell"
         style="@style/Button.Primary"
         android:layout_width="match_parent"
         android:layout_height="@dimen/height_button_large"
-        android:layout_marginTop="@dimen/spacing_l"
+        android:layout_marginTop="@dimen/spacing_s"
         android:text="@string/install_shell_from_file" />
 
 </LinearLayout>

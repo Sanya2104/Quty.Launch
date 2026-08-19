@@ -45,12 +45,14 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private var originalFullscreen: Boolean? = null
     private var originalStrictMode: Boolean? = null
     private var originalDevMode: Boolean? = null
+    private var originalColorScheme: String? = null
 
     // Текущие значения (могут меняться)
     private var currentShell: String? = null
     private var currentOrientation: String? = null
     private var currentFullscreen: Boolean? = null
     private var currentStrictMode: Boolean? = null
+    private var currentColorScheme: String? = null
 
     // Флаг для предотвращения множественных перезапусков
     private var isRestarting = false
@@ -81,6 +83,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         originalOrientation = configManager.getOrientation()
         originalFullscreen = configManager.isFullscreenEnabled()
         originalStrictMode = configManager.isStrictModeEnabled()
+        originalColorScheme = configManager.getColorScheme()
 
         // Сохраняем исходное состояние DevMode (фиксируется при первом открытии настроек)
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
@@ -91,6 +94,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         currentOrientation = originalOrientation
         currentFullscreen = originalFullscreen
         currentStrictMode = originalStrictMode
+        currentColorScheme = originalColorScheme
 
         // УСТАНАВЛИВАЕМ LAYOUT ПЕРЕД ВСЕМИ ОПЕРАЦИЯМИ С UI
         setContentView(R.layout.activity_settings)
@@ -247,7 +251,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
                 currentOrientation != originalOrientation ||
                 currentFullscreen != originalFullscreen ||
                 currentStrictMode != originalStrictMode ||
-                currentDevMode != originalDevMode
+                currentDevMode != originalDevMode ||
+                currentColorScheme != originalColorScheme
 
         return result
     }
@@ -319,6 +324,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     override fun onSettingChanged() {
         // При изменении настроек ничего не делаем
         // DevMode будет прочитан при выходе из настроек
+        // Цветовая схема обновляется через ShellSettingsFragment
+        currentColorScheme = configManager.getColorScheme()
     }
 
     /**

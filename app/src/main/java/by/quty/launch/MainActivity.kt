@@ -23,6 +23,7 @@ class MainActivity : BaseActivity() {
     private lateinit var core: Core
     private lateinit var webView: LauncherWebView
     private lateinit var shellManager: ShellManager
+    private lateinit var jsBridge: JsBridge
 
     companion object {
         // Код запроса для SettingsActivity (из конфига)
@@ -33,6 +34,10 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Применяем тему ДО super.onCreate() — это единственный способ
+        // Но configManager ещё не инициализирован, поэтому используем SharedPreferences напрямую
+        applyColorSchemeFromPrefs()
+
         super.onCreate(savedInstanceState)
 
         // Инициализация логгера
@@ -45,7 +50,7 @@ class MainActivity : BaseActivity() {
         webView = LauncherWebView(applicationContext)
         shellManager = ShellManager(this, configManager)
 
-        val jsBridge = JsBridge(core, this)
+        jsBridge = JsBridge(core, this)
         jsBridge.setWebView(webView)
         webView.addJavascriptInterface(jsBridge, "Android")
 
@@ -59,6 +64,27 @@ class MainActivity : BaseActivity() {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
         }
+    }
+
+    /**
+     * Применяет цветовую схему к активности
+     * Вызывается ДО super.onCreate(), поэтому используем SharedPreferences напрямую
+     */
+    private fun applyColorSchemeFromPrefs() {
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+        val schemeId = prefs.getString("color_scheme", CoreConfig.DEFAULT_COLOR_SCHEME) ?: CoreConfig.DEFAULT_COLOR_SCHEME
+
+        val themeRes = when (schemeId) {
+            "teal" -> R.style.Theme_QutyLaunch_Teal
+            "orange" -> R.style.Theme_QutyLaunch_Orange
+            "purple" -> R.style.Theme_QutyLaunch_Purple
+            "pink" -> R.style.Theme_QutyLaunch_Pink
+            "blue" -> R.style.Theme_QutyLaunch_Blue
+            "green" -> R.style.Theme_QutyLaunch_Green
+            "red" -> R.style.Theme_QutyLaunch_Red
+            else -> R.style.Theme_QutyLaunch_Teal
+        }
+        setTheme(themeRes)
     }
 
     /**
@@ -78,6 +104,13 @@ class MainActivity : BaseActivity() {
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
             )
+
+            // После загрузки оболочки отправляем цвета в WebView
+            webView.post {
+                val primary = configManager.getSchemePrimaryColor()
+                val accent = configManager.getSchemeAccentColor()
+                jsBridge.applyColorScheme(primary, accent)
+            }
         }
     }
 

@@ -124,6 +124,14 @@
     <string name="cannot_open_play_store">Не удалось открыть Google Play.\n Установите файловый менеджер вручную.</string>
 
     <!-- ============================================================ -->
+    <!-- ЦВЕТОВАЯ СХЕМА -->
+    <!-- ============================================================ -->
+
+    <string name="settings_color_scheme_title">Цветовая схема</string>
+    <string name="color_scheme_preview_description">Цветовая схема</string>
+    <string name="color_scheme_applied" formatted="false">Цветовая схема "%s" применена</string>
+
+    <!-- ============================================================ -->
     <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
     <!-- ============================================================ -->
 
@@ -595,5 +603,10 @@
     <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
     <string name="log_shell_list_empty">🔍 ПУСТО: показан emptyText</string>
     <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
+
+    <!-- JsBridge логи -->
+    <string name="log_js_bridge_webview_destroyed_color_scheme">WebView уничтожен, невозможно применить цветовую схему</string>
+    <string name="log_js_bridge_color_scheme_applied" formatted="false">Цветовая схема применена: primary=%s, accent=%s</string>
+    <string name="log_js_bridge_color_scheme_error" formatted="false">Не удалось применить цветовую схему: %s</string>
 
 </resources>

@@ -79,4 +79,36 @@
     <color name="button_clear_cache">#FF6F00</color>
     <color name="button_restart">#FF9800</color>
 
+    <!-- ============================================================ -->
+    <!-- ЦВЕТОВЫЕ СХЕМЫ (Color Schemes) -->
+    <!-- ============================================================ -->
+
+    <!-- Teal (по умолчанию) -->
+    <color name="scheme_teal_primary">#009688</color>
+    <color name="scheme_teal_accent">#4CAF50</color>
+
+    <!-- Orange -->
+    <color name="scheme_orange_primary">#FF9800</color>
+    <color name="scheme_orange_accent">#FF5722</color>
+
+    <!-- Purple -->
+    <color name="scheme_purple_primary">#9C27B0</color>
+    <color name="scheme_purple_accent">#E040FB</color>
+
+    <!-- Pink -->
+    <color name="scheme_pink_primary">#E91E63</color>
+    <color name="scheme_pink_accent">#F06292</color>
+
+    <!-- Blue -->
+    <color name="scheme_blue_primary">#2196F3</color>
+    <color name="scheme_blue_accent">#03A9F4</color>
+
+    <!-- Green -->
+    <color name="scheme_green_primary">#4CAF50</color>
+    <color name="scheme_green_accent">#8BC34A</color>
+
+    <!-- Red -->
+    <color name="scheme_red_primary">#F44336</color>
+    <color name="scheme_red_accent">#EF5350</color>
+
 </resources>
