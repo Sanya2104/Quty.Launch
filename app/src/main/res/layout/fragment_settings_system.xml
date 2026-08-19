@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     android:padding="@dimen/screen_padding_horizontal">
 
@@ -53,7 +53,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginVertical="@dimen/spacing_xxs" />
 
             <LinearLayout
@@ -83,7 +83,7 @@
                 android:id="@+id/channel_divider"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginVertical="@dimen/spacing_xxs"
                 android:visibility="gone" />
 
@@ -160,7 +160,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginVertical="@dimen/spacing_s" />
 
             <LinearLayout

@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="@dimen/spacing_m"
-    android:background="@color/background_card"
+    android:background="?attr/colorSurface"
     android:layout_marginBottom="@dimen/spacing_s"
     android:gravity="center_vertical">
 
@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:background="@color/background_dark"
+            android:background="?android:attr/colorBackground"
             android:contentDescription="@string/store_preview_description"
             tools:src="@drawable/ic_settings" />
 
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Text.Title.XSmall"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/textPrimaryColor"
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="@string/unknown" />
@@ -59,7 +59,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Text.Small"
-            android:textColor="@color/text_dim"
+            android:textColor="?attr/textDimColor"
             tools:text="@string/unknown" />
 
         <!-- Описание -->
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xxs"
             style="@style/Text.Small"
-            android:textColor="@color/text_hint"
+            android:textColor="?attr/textHintColor"
             android:maxLines="2"
             android:ellipsize="end"
             tools:text="@string/unknown" />
@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xxs"
             style="@style/Text.XSmall"
-            android:textColor="@color/text_dim"
+            android:textColor="?attr/textDimColor"
             tools:text="@string/unknown" />
 
     </LinearLayout>
@@ -98,7 +98,7 @@
         android:textColor="@color/text_primary"
         android:textSize="@dimen/text_s"
         android:fontFamily="sans-serif-medium"
-        android:backgroundTint="@color/button_primary"
+        android:backgroundTint="?attr/buttonPrimaryColor"
         tools:text="@string/store_install" />
 
 </LinearLayout>

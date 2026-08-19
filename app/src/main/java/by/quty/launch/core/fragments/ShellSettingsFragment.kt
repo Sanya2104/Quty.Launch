@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -155,11 +156,15 @@ class ShellSettingsFragment : Fragment() {
             // Сохраняем выбранную схему
             configManager?.setColorScheme(scheme.id)
 
-            // Отмечаем, что требуется перезагрузка
+            // Отмечаем, что требуется перезагрузка при выходе из настроек
             needsRestart = true
 
             // Уведомляем Activity об изменении
             settingsEventListener?.onSettingChanged()
+
+            // ===== ПРИМЕНЯЕМ СХЕМУ НА ЛЕТУ =====
+            // Пересоздаём SettingsActivity, чтобы применить тему мгновенно
+            (activity as? SettingsActivity)?.recreate()
 
             // Показываем Toast
             Toast.makeText(
@@ -534,6 +539,15 @@ class ShellSettingsFragment : Fragment() {
         }
     }
 
+    /**
+     * Получает цвет из атрибута темы
+     */
+    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+
     // ============================================================
     // ВНУТРЕННИЙ АДАПТЕР
     // ============================================================
@@ -594,7 +608,7 @@ class ShellSettingsFragment : Fragment() {
             // Подсвечиваем активную оболочку
             val isActive = shell.name == activeShell?.name
             if (isActive) {
-                view.setBackgroundColor(resources.getColor(R.color.shell_active_background, null))
+                view.setBackgroundColor(getColorFromAttribute(requireContext(), R.attr.shellActiveBackgroundColor))
             } else {
                 view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }

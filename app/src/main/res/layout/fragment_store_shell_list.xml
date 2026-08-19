@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark">
+    android:background="?android:attr/colorBackground">
 
     <!-- ===== СПИСОК ===== -->
     <androidx.recyclerview.widget.RecyclerView
@@ -31,11 +31,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         app:drawableTopCompat="@drawable/ic_store"
-        app:drawableTint="@color/text_dim"
+        app:drawableTint="?attr/textDimColor"
         android:drawablePadding="@dimen/spacing_l"
         android:alpha="0.3"
         style="@style/Text.Body"
-        android:textColor="@color/text_dim"
+        android:textColor="?attr/textDimColor"
         android:text="@string/store_empty_shells"
         android:gravity="center"
         android:visibility="gone"

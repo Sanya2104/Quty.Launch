@@ -101,5 +101,6 @@ class ColorSchemeAdapter(
             // Обработка клика
             itemView.setOnClickListener { onClick() }
         }
+
     }
 }

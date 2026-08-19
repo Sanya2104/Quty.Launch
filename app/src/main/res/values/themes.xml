@@ -17,6 +17,47 @@
 
         <!-- Растягиваем окно под системные панели -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- ============================================================ -->
+        <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ ==================================== -->
+        <!-- ============================================================ -->
+
+        <!-- Основные цвета Material (для стандартных виджетов) -->
+        <item name="colorPrimary">@color/scheme_teal_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
+        <item name="colorAccent">@color/scheme_teal_accent</item>
+
+        <!-- Для контролов (чекбоксы, радиокнопки, переключатели) -->
+        <item name="colorControlNormal">@color/text_dim</item>
+        <item name="colorControlActivated">@color/scheme_teal_primary</item>
+        <item name="colorControlHighlight">@color/scheme_teal_primary</item>
+
+        <!-- Для кнопок (ripple эффект) -->
+        <item name="colorButtonNormal">@color/scheme_teal_primary</item>
+
+        <!-- Атрибуты для UI (значения по умолчанию для teal) -->
+        <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="colorSurface">@color/background_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:colorBackground">@color/background_dark</item>
+
+        <!-- Кастомные атрибуты -->
+        <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
+        <item name="buttonSecondaryColor">@color/button_secondary</item>
+        <item name="buttonDangerColor">@color/button_danger</item>
+        <item name="buttonWarningColor">@color/button_warning</item>
+        <item name="buttonClearCacheColor">@color/button_clear_cache</item>
+        <item name="tabIndicatorColor">@color/scheme_teal_primary</item>
+        <item name="tabRippleColor">@color/scheme_teal_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_teal_primary</item>
+        <item name="textErrorColor">@color/text_error</item>
+        <item name="textPrimaryColor">@color/text_primary</item>
+        <item name="textSecondaryColor">@color/text_secondary</item>
+        <item name="textHintColor">@color/text_hint</item>
+        <item name="textMutedColor">@color/text_muted</item>
+        <item name="textDimColor">@color/text_dim</item>
+        <item name="statusWarningColor">@color/status_warning</item>
     </style>
 
     <!-- ============================================================ -->
@@ -34,7 +75,7 @@
 
     <style name="Text">
         <item name="android:textSize">@dimen/text_m</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
     </style>
 
     <!-- ============================================================ -->
@@ -42,7 +83,7 @@
     <!-- ============================================================ -->
 
     <style name="Text.Title">
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -56,12 +97,12 @@
 
     <style name="Text.Title.Small" parent="Text.Title">
         <item name="android:textSize">@dimen/title_small</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textColor">?attr/textSecondaryColor</item>
     </style>
 
     <style name="Text.Title.XSmall" parent="Text.Title">
         <item name="android:textSize">@dimen/title_xsmall</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textColor">?attr/textSecondaryColor</item>
     </style>
 
     <style name="Text.Body" parent="Text">
@@ -70,22 +111,22 @@
 
     <style name="Text.Body.Secondary" parent="Text">
         <item name="android:textSize">@dimen/text_m</item>
-        <item name="android:textColor">@color/text_hint</item>
+        <item name="android:textColor">?attr/textHintColor</item>
     </style>
 
     <style name="Text.Body.Dim" parent="Text">
         <item name="android:textSize">@dimen/text_m</item>
-        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:textColor">?attr/textDimColor</item>
     </style>
 
     <style name="Text.Small" parent="Text">
         <item name="android:textSize">@dimen/text_s</item>
-        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:textColor">?attr/textDimColor</item>
     </style>
 
     <style name="Text.XSmall" parent="Text">
         <item name="android:textSize">@dimen/text_xs</item>
-        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:textColor">?attr/textDimColor</item>
     </style>
 
     <!-- ============================================================ -->
@@ -97,7 +138,7 @@
         <item name="android:textSize">@dimen/text_l</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textAllCaps">false</item>
-        <item name="rippleColor">#33FFFFFF</item>
+        <item name="rippleColor">?attr/colorControlHighlight</item>
     </style>
 
     <!-- ============================================================ -->
@@ -107,35 +148,35 @@
     <style name="Button.Primary" parent="Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_button</item>
-        <item name="android:backgroundTint">@color/button_primary</item>
+        <item name="android:backgroundTint">?attr/buttonPrimaryColor</item>
         <item name="cornerRadius">@dimen/radius_circle</item>
     </style>
 
     <style name="Button.Secondary" parent="Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_button</item>
-        <item name="android:backgroundTint">@color/button_secondary</item>
+        <item name="android:backgroundTint">?attr/buttonSecondaryColor</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
     </style>
 
     <style name="Button.Danger" parent="Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_button</item>
-        <item name="android:backgroundTint">@color/button_danger</item>
+        <item name="android:backgroundTint">?attr/buttonDangerColor</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
     </style>
 
     <style name="Button.Warning" parent="Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_button</item>
-        <item name="android:backgroundTint">@color/button_warning</item>
+        <item name="android:backgroundTint">?attr/buttonWarningColor</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
     </style>
 
     <style name="Button.ClearCache" parent="Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_button</item>
-        <item name="android:backgroundTint">@color/button_clear_cache</item>
+        <item name="android:backgroundTint">?attr/buttonClearCacheColor</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
     </style>
 
@@ -146,7 +187,7 @@
     <style name="Card">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@color/background_card</item>
+        <item name="android:background">?attr/colorSurface</item>
         <item name="android:padding">@dimen/card_padding</item>
     </style>
 
@@ -157,13 +198,13 @@
     <style name="Screen">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:background">@color/background_dark</item>
+        <item name="android:background">?android:attr/colorBackground</item>
     </style>
 
     <style name="Screen.WithPadding">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:background">@color/background_dark</item>
+        <item name="android:background">?android:attr/colorBackground</item>
         <item name="android:padding">@dimen/screen_padding_horizontal</item>
     </style>
 
@@ -174,7 +215,7 @@
     <style name="Toolbar">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/height_toolbar</item>
-        <item name="android:background">@color/background_card</item>
+        <item name="android:background">?attr/colorSurface</item>
         <item name="android:paddingStart">@dimen/spacing_m</item>
         <item name="android:paddingEnd">@dimen/spacing_m</item>
         <item name="android:gravity">center_vertical</item>
@@ -190,7 +231,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minWidth">@dimen/spinner_min_width</item>
         <item name="android:background">@drawable/spinner_bg</item>
-        <item name="android:popupBackground">@color/background_card</item>
+        <item name="android:popupBackground">?attr/colorSurface</item>
         <item name="android:spinnerMode">dropdown</item>
     </style>
 
@@ -202,42 +243,91 @@
         <item name="colorPrimary">@color/scheme_teal_primary</item>
         <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
         <item name="colorAccent">@color/scheme_teal_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
+        <item name="colorControlActivated">@color/scheme_teal_primary</item>
+        <item name="colorControlHighlight">@color/scheme_teal_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_teal_primary</item>
+        <item name="tabRippleColor">@color/scheme_teal_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_teal_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Orange" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_orange_primary</item>
         <item name="colorPrimaryDark">@color/scheme_orange_primary</item>
         <item name="colorAccent">@color/scheme_orange_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_orange_primary</item>
+        <item name="colorControlActivated">@color/scheme_orange_primary</item>
+        <item name="colorControlHighlight">@color/scheme_orange_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_orange_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_orange_primary</item>
+        <item name="tabRippleColor">@color/scheme_orange_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_orange_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Purple" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_purple_primary</item>
         <item name="colorPrimaryDark">@color/scheme_purple_primary</item>
         <item name="colorAccent">@color/scheme_purple_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_purple_primary</item>
+        <item name="colorControlActivated">@color/scheme_purple_primary</item>
+        <item name="colorControlHighlight">@color/scheme_purple_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_purple_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_purple_primary</item>
+        <item name="tabRippleColor">@color/scheme_purple_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_purple_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Pink" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_pink_primary</item>
         <item name="colorPrimaryDark">@color/scheme_pink_primary</item>
         <item name="colorAccent">@color/scheme_pink_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_pink_primary</item>
+        <item name="colorControlActivated">@color/scheme_pink_primary</item>
+        <item name="colorControlHighlight">@color/scheme_pink_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_pink_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_pink_primary</item>
+        <item name="tabRippleColor">@color/scheme_pink_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_pink_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Blue" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_blue_primary</item>
         <item name="colorPrimaryDark">@color/scheme_blue_primary</item>
         <item name="colorAccent">@color/scheme_blue_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_blue_primary</item>
+        <item name="colorControlActivated">@color/scheme_blue_primary</item>
+        <item name="colorControlHighlight">@color/scheme_blue_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_blue_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_blue_primary</item>
+        <item name="tabRippleColor">@color/scheme_blue_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_blue_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Green" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_green_primary</item>
         <item name="colorPrimaryDark">@color/scheme_green_primary</item>
         <item name="colorAccent">@color/scheme_green_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_green_primary</item>
+        <item name="colorControlActivated">@color/scheme_green_primary</item>
+        <item name="colorControlHighlight">@color/scheme_green_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_green_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_green_primary</item>
+        <item name="tabRippleColor">@color/scheme_green_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_green_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_red_primary</item>
         <item name="colorPrimaryDark">@color/scheme_red_primary</item>
         <item name="colorAccent">@color/scheme_red_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_red_primary</item>
+        <item name="colorControlActivated">@color/scheme_red_primary</item>
+        <item name="colorControlHighlight">@color/scheme_red_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_red_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_red_primary</item>
+        <item name="tabRippleColor">@color/scheme_red_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_red_primary</item>
     </style>
 
 </resources>

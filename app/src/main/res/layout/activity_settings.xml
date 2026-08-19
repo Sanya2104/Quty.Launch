@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_dark">
+    android:background="?android:attr/colorBackground">
 
     <!-- ===== ШАПКА ===== -->
     <LinearLayout
@@ -25,7 +25,7 @@
             android:layout_height="@dimen/icon_large"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:text="✕"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/textPrimaryColor"
             android:textSize="@dimen/text_xxl"
             tools:ignore="HardcodedText" />
     </LinearLayout>
@@ -35,11 +35,12 @@
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background_card"
-        app:tabIndicatorColor="@color/tab_indicator"
+        android:background="?attr/colorSurface"
+        app:tabIndicatorColor="?attr/tabIndicatorColor"
         app:tabIndicatorHeight="@dimen/spacing_xxs"
-        app:tabSelectedTextColor="@color/tab_text_selected"
+        app:tabSelectedTextColor="?attr/textPrimaryColor"
         app:tabTextColor="@color/tab_text_unselected"
+        app:tabRippleColor="?attr/tabRippleColor"
         app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
         app:tabPadding="@dimen/spacing_m"
         app:tabMode="fixed"

@@ -1,0 +1,31 @@
+<!-- res/values/attrs.xml -->
+<resources>
+    <!-- ============================================================ -->
+    <!-- ===== КАСТОМНЫЕ АТРИБУТЫ ДЛЯ ЦВЕТОВОЙ СХЕМЫ =============== -->
+    <!-- ============================================================ -->
+
+    <!-- Кнопки -->
+    <attr name="buttonPrimaryColor" format="color" />
+    <attr name="buttonSecondaryColor" format="color" />
+    <attr name="buttonDangerColor" format="color" />
+    <attr name="buttonWarningColor" format="color" />
+    <attr name="buttonClearCacheColor" format="color" />
+
+    <!-- TabLayout -->
+    <attr name="tabIndicatorColor" format="color" />
+    <attr name="tabRippleColor" format="color" />
+
+    <!-- Shell -->
+    <attr name="shellActiveBackgroundColor" format="color" />
+
+    <!-- Текст -->
+    <attr name="textErrorColor" format="color" />
+    <attr name="textPrimaryColor" format="color" />
+    <attr name="textSecondaryColor" format="color" />
+    <attr name="textHintColor" format="color" />
+    <attr name="textMutedColor" format="color" />
+    <attr name="textDimColor" format="color" />
+
+    <!-- Цвета статусов (для кода) -->
+    <attr name="statusWarningColor" format="color" />
+</resources>

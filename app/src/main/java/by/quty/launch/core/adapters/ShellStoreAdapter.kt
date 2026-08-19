@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -45,6 +46,8 @@ class ShellStoreAdapter(
         private val installedBadge: View = itemView.findViewById(R.id.installed_badge)
 
         fun bind(item: ShellStoreModel) {
+            val context = itemView.context
+
             // Название
             nameText.text = item.displayName
 
@@ -73,17 +76,17 @@ class ShellStoreAdapter(
 
             // Статус установки
             if (item.isInstalled) {
-                installButton.text = itemView.context.getString(R.string.store_installed)
+                installButton.text = context.getString(R.string.store_installed)
                 installButton.isEnabled = false
                 installButton.setBackgroundColor(
-                    itemView.context.getColor(R.color.status_granted)
+                    ContextCompat.getColor(context, R.color.status_granted)
                 )
                 installedBadge.visibility = View.VISIBLE
             } else {
-                installButton.text = itemView.context.getString(R.string.store_install)
+                installButton.text = context.getString(R.string.store_install)
                 installButton.isEnabled = true
                 installButton.setBackgroundColor(
-                    itemView.context.getColor(R.color.button_primary)
+                    getColorFromAttribute(context, R.attr.buttonPrimaryColor)
                 )
                 installedBadge.visibility = View.GONE
             }
@@ -99,6 +102,15 @@ class ShellStoreAdapter(
                     onInstallClick(item)
                 }
             }
+        }
+
+        /**
+         * Получает цвет из атрибута темы
+         */
+        private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+            val typedValue = android.util.TypedValue()
+            context.theme.resolveAttribute(attr, typedValue, true)
+            return typedValue.data
         }
     }
 

@@ -192,7 +192,7 @@ class WelcomeActivity : BaseActivity() {
                 marginEnd = resources.getDimension(R.dimen.spacing_l).toInt()
             }
             setImageResource(iconRes)
-            setColorFilter(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
+            setColorFilter(getColorFromAttribute(R.attr.textPrimaryColor))
         }
 
         // Блок с названием и описанием
@@ -211,7 +211,7 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             text = title
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_primary))
+            setTextColor(getColorFromAttribute(R.attr.textPrimaryColor))
             textSize = resources.getDimension(R.dimen.text_l) / resources.displayMetrics.density
             typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
@@ -222,7 +222,7 @@ class WelcomeActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
             text = description
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
+            setTextColor(getColorFromAttribute(R.attr.textDimColor))
             textSize = resources.getDimension(R.dimen.text_s) / resources.displayMetrics.density
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
@@ -251,7 +251,7 @@ class WelcomeActivity : BaseActivity() {
             text = getString(R.string.permission_denied)
             textSize = resources.getDimension(R.dimen.text_m) / resources.displayMetrics.density
             id = View.generateViewId()
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_error))
+            setTextColor(getColorFromAttribute(R.attr.textErrorColor))
         }
 
         // Сохраняем для обновления
@@ -265,7 +265,7 @@ class WelcomeActivity : BaseActivity() {
             )
             text = "›"
             textSize = resources.getDimension(R.dimen.text_xxl) / resources.displayMetrics.density
-            setTextColor(ContextCompat.getColor(this@WelcomeActivity, R.color.text_dim))
+            setTextColor(getColorFromAttribute(R.attr.textDimColor))
         }
 
         statusContainer.addView(statusView)
@@ -403,7 +403,7 @@ class WelcomeActivity : BaseActivity() {
                 if (isGranted) {
                     ContextCompat.getColor(this, R.color.status_granted)
                 } else {
-                    ContextCompat.getColor(this, R.color.text_error)
+                    getColorFromAttribute(R.attr.textErrorColor)
                 }
             )
         }
@@ -489,6 +489,15 @@ class WelcomeActivity : BaseActivity() {
         if (PermissionManager.hasAllRequiredPermissions(this)) {
             finishAndGoToMain()
         }
+    }
+
+    /**
+     * Получает цвет из атрибута темы
+     */
+    private fun getColorFromAttribute(attr: Int): Int {
+        val typedValue = android.util.TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 
     // Внутренний класс для данных разрешения

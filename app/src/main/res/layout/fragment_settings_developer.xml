@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     android:padding="@dimen/screen_padding_horizontal">
 
@@ -166,7 +166,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginVertical="@dimen/spacing_s" />
 
             <LinearLayout
@@ -282,7 +282,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s" />
 
@@ -314,7 +314,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s" />
 
@@ -346,7 +346,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s" />
 
@@ -361,7 +361,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s"
                 android:layout_marginTop="@dimen/spacing_s" />
@@ -406,7 +406,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s"
                 android:layout_marginVertical="@dimen/spacing_s" />
@@ -435,7 +435,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s"
                 android:layout_marginVertical="@dimen/spacing_s" />
@@ -464,7 +464,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spacing_xxs"
-                android:background="@color/divider"
+                android:background="?attr/textDimColor"
                 android:layout_marginStart="@dimen/spacing_s"
                 android:layout_marginEnd="@dimen/spacing_s"
                 android:layout_marginVertical="@dimen/spacing_s" />

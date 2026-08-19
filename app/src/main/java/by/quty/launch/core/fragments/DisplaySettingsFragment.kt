@@ -4,6 +4,7 @@ package by.quty.launch.core.fragments
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,6 @@ import android.widget.CheckBox
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
@@ -130,7 +130,7 @@ class DisplaySettingsFragment : Fragment() {
         }
         orientationLockHint.text = hintText
         orientationLockHint.visibility = View.VISIBLE
-        orientationLockHint.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_warning))
+        orientationLockHint.setTextColor(getColorFromAttribute(requireContext(), R.attr.statusWarningColor))
 
         // Блокируем все RadioButton в группе
         for (i in 0 until orientationGroup.childCount) {
@@ -250,5 +250,14 @@ class DisplaySettingsFragment : Fragment() {
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
+    }
+
+    /**
+     * Получает цвет из атрибута темы
+     */
+    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }

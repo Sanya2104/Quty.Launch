@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     android:scrollbars="none">
 
@@ -57,7 +57,7 @@
                 android:layout_weight="1"
                 android:progress="0"
                 android:max="100"
-                android:progressTint="@color/button_primary"
+                android:progressTint="?attr/buttonPrimaryColor"
                 android:background="@color/background_input" />
 
             <TextView
@@ -105,7 +105,7 @@
                 android:layout_height="wrap_content"
                 style="@style/Text.Title.Small"
                 android:text="@string/welcome_permission_denied_title"
-                android:textColor="@color/text_error"
+                android:textColor="?attr/textErrorColor"
                 android:gravity="center" />
 
             <TextView
@@ -134,7 +134,6 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="@dimen/spacing_s"
                     android:text="@string/welcome_button_retry"
-                    android:backgroundTint="@color/text_error"
                     app:cornerRadius="@dimen/radius_circle" />
 
                 <Button

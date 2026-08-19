@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_dark"
+    android:background="?android:attr/colorBackground"
     android:padding="@dimen/screen_padding_horizontal"
     tools:ignore="VisualLintBounds">
 
@@ -21,8 +21,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@color/background_card"
-        android:divider="@color/divider"
+        android:background="?attr/colorSurface"
+        android:divider="?attr/textDimColor"
         android:dividerHeight="@dimen/spacing_xxs"
         android:choiceMode="singleChoice"/>
 

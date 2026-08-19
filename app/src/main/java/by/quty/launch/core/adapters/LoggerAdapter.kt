@@ -60,7 +60,7 @@ class LoggerAdapter : ListAdapter<LogEntryModel, LoggerAdapter.LogViewHolder>(Lo
             if (entry.source == "WebView") {
                 ContextCompat.getColor(context, R.color.accent_blue)
             } else {
-                ContextCompat.getColor(context, R.color.text_dim)
+                getColorFromAttribute(context, R.attr.textDimColor)
             }
         )
     }
@@ -87,6 +87,15 @@ class LoggerAdapter : ListAdapter<LogEntryModel, LoggerAdapter.LogViewHolder>(Lo
             LogLevelModel.WARN -> ContextCompat.getColor(context, R.color.log_warn_bg)
             LogLevelModel.ERROR -> ContextCompat.getColor(context, R.color.log_error_bg)
         }
+    }
+
+    /**
+     * Получает цвет из атрибута темы
+     */
+    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+        val typedValue = android.util.TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 
     /**

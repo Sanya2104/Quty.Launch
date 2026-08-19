@@ -12,6 +12,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ConfigManager
 
 /**
@@ -37,6 +38,9 @@ abstract class BaseActivity : AppCompatActivity() {
     private var isListenerAttached = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Применяем цветовую схему ДО super.onCreate()
+        applyColorSchemeFromPrefs()
+
         super.onCreate(savedInstanceState)
 
         // Проверяем, был ли пройден онбординг
@@ -54,6 +58,27 @@ abstract class BaseActivity : AppCompatActivity() {
 
         // Инициализируем менеджер конфигурации при создании активности
         _configManager = ConfigManager(this)
+    }
+
+    /**
+     * Применяет цветовую схему к активности
+     * Вызывается ДО super.onCreate()
+     */
+    private fun applyColorSchemeFromPrefs() {
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+        val schemeId = prefs.getString("color_scheme", CoreConfig.DEFAULT_COLOR_SCHEME) ?: CoreConfig.DEFAULT_COLOR_SCHEME
+
+        val themeRes = when (schemeId) {
+            "teal" -> R.style.Theme_QutyLaunch_Teal
+            "orange" -> R.style.Theme_QutyLaunch_Orange
+            "purple" -> R.style.Theme_QutyLaunch_Purple
+            "pink" -> R.style.Theme_QutyLaunch_Pink
+            "blue" -> R.style.Theme_QutyLaunch_Blue
+            "green" -> R.style.Theme_QutyLaunch_Green
+            "red" -> R.style.Theme_QutyLaunch_Red
+            else -> R.style.Theme_QutyLaunch_Teal
+        }
+        setTheme(themeRes)
     }
 
     /**

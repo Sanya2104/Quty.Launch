@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_dark">
+    android:background="?android:attr/colorBackground">
 
     <!-- ===== ШАПКА ===== -->
     <LinearLayout
@@ -61,7 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:scaleType="centerCrop"
-                android:background="@color/background_dark"
+                android:background="?android:attr/colorBackground"
                 android:contentDescription="@string/store_preview_description"
                 android:layout_marginBottom="@dimen/spacing_l"
                 tools:src="@drawable/ic_settings" />
@@ -72,7 +72,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Text.Title.Large"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/textPrimaryColor"
                 tools:text="@string/unknown" />
 
             <!-- Автор -->
@@ -81,7 +81,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Text.Body"
-                android:textColor="@color/text_dim"
+                android:textColor="?attr/textDimColor"
                 android:text="@string/store_author_label" />
 
             <!-- Информационная сетка -->
@@ -97,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_dim"
+                    android:textColor="?attr/textDimColor"
                     android:text="@string/store_version" />
 
                 <TextView
@@ -106,7 +106,7 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/textPrimaryColor"
                     tools:text="@string/unknown" />
 
                 <TextView
@@ -115,7 +115,7 @@
                     android:layout_columnWeight="1"
                     android:layout_marginTop="@dimen/spacing_xxs"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_dim"
+                    android:textColor="?attr/textDimColor"
                     android:text="@string/store_date" />
 
                 <TextView
@@ -125,7 +125,7 @@
                     android:layout_columnWeight="1"
                     android:layout_marginTop="@dimen/spacing_xxs"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/textPrimaryColor"
                     tools:text="@string/unknown" />
 
                 <TextView
@@ -134,7 +134,7 @@
                     android:layout_columnWeight="1"
                     android:layout_marginTop="@dimen/spacing_xxs"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_dim"
+                    android:textColor="?attr/textDimColor"
                     android:text="@string/store_size" />
 
                 <TextView
@@ -144,7 +144,7 @@
                     android:layout_columnWeight="1"
                     android:layout_marginTop="@dimen/spacing_xxs"
                     style="@style/Text.Small"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/textPrimaryColor"
                     tools:text="@string/unknown" />
 
             </GridLayout>
@@ -163,7 +163,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xxs"
                 style="@style/Text.Body"
-                android:textColor="@color/text_hint"
+                android:textColor="?attr/textHintColor"
                 tools:text="@string/unknown" />
 
             <!-- Теги -->
@@ -173,7 +173,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_l"
                 style="@style/Text.Small"
-                android:textColor="@color/tab_indicator"
+                android:textColor="?attr/tabIndicatorColor"
                 tools:text="@string/unknown" />
 
             <!-- Совместимость -->
@@ -197,7 +197,7 @@
                 android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_l"
                 android:fontFamily="sans-serif-medium"
-                android:backgroundTint="@color/button_primary" />
+                android:backgroundTint="?attr/buttonPrimaryColor" />
 
         </LinearLayout>
 

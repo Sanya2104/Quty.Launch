@@ -15,15 +15,11 @@
     <!-- ЦВЕТА ИНТЕРФЕЙСА -->
     <!-- ============================================================ -->
 
-    <!-- Shell selection -->
-    <color name="shell_active_background">#009688</color>
-
-    <!-- TabLayout -->
-    <color name="tab_indicator">#009688</color>
-    <color name="tab_text_selected">#009688</color>
+    <!-- TabLayout (цвета для текста) -->
+    <color name="tab_text_selected">@color/text_primary</color>
     <color name="tab_text_unselected">#8A8A8A</color>
 
-    <!-- Logger backgrounds -->
+    <!-- Logger backgrounds (остаются статическими для уровней логов) -->
     <color name="log_debug_bg">#1B5E20</color>
     <color name="log_info_bg">#0D47A1</color>
     <color name="log_warn_bg">#E65100</color>
@@ -59,25 +55,18 @@
     <color name="status_denied">#FF6B6B</color>
     <color name="status_warning">#FF9800</color>
 
-    <!-- Акценты -->
-    <color name="accent_orange">#FF9800</color>
-    <color name="accent_red">#D32F2F</color>
-    <color name="accent_red_dark">#B71C1C</color>
-    <color name="accent_yellow_dark">#FF6F00</color>
+    <!-- Акценты (используются в коде для логов и источников) -->
     <color name="accent_green">#4CAF50</color>
     <color name="accent_blue">#2196F3</color>
 
-    <!-- Spinner -->
-    <color name="spinner_background">#2A2A2A</color>
-    <color name="spinner_stroke">#444444</color>
+    <!-- ============================================================ -->
+    <!-- КНОПКИ (статичные, не зависящие от схемы) -->
+    <!-- ============================================================ -->
 
-    <!-- Кнопки -->
-    <color name="button_primary">#009688</color>
     <color name="button_secondary">#4A4A4A</color>
     <color name="button_danger">#D32F2F</color>
     <color name="button_warning">#FF9800</color>
     <color name="button_clear_cache">#FF6F00</color>
-    <color name="button_restart">#FF9800</color>
 
     <!-- ============================================================ -->
     <!-- ЦВЕТОВЫЕ СХЕМЫ (Color Schemes) -->

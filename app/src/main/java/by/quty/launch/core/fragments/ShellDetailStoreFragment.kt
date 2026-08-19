@@ -2,12 +2,14 @@
 package by.quty.launch.core.fragments
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
@@ -132,17 +134,19 @@ class ShellDetailStoreFragment : Fragment() {
     }
 
     private fun updateInstallButton(button: Button, shell: ShellStoreModel) {
+        val context = requireContext()
+
         if (shell.isInstalled) {
             button.text = getString(R.string.store_installed)
             button.isEnabled = false
             button.setBackgroundColor(
-                requireContext().getColor(R.color.status_granted)
+                ContextCompat.getColor(context, R.color.status_granted)
             )
         } else {
             button.text = getString(R.string.store_install)
             button.isEnabled = true
             button.setBackgroundColor(
-                requireContext().getColor(R.color.button_primary)
+                getColorFromAttribute(context, R.attr.buttonPrimaryColor)
             )
         }
     }
@@ -187,5 +191,14 @@ class ShellDetailStoreFragment : Fragment() {
                 }
             })
         }
+    }
+
+    /**
+     * Получает цвет из атрибута темы
+     */
+    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }
