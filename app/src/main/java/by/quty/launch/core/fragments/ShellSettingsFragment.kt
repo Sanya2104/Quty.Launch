@@ -166,12 +166,7 @@ class ShellSettingsFragment : Fragment() {
             // Пересоздаём SettingsActivity, чтобы применить тему мгновенно
             (activity as? SettingsActivity)?.recreate()
 
-            // Показываем Toast
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.color_scheme_applied, scheme.displayName),
-                Toast.LENGTH_SHORT
-            ).show()
+            // Toast показывается внутри адаптера, чтобы избежать накопления
         }
 
         recyclerView.adapter = colorSchemeAdapter

@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 396
-    versionName = "0.0.122"
+    versionCode = 398
+    versionName = "0.0.123"
         versionNameSuffix = "Alpha"
     }
 
@@ -62,4 +62,6 @@ dependencies {
     implementation(libs.glide)
     annotationProcessor(libs.compiler)
 
+    // CardView
+    implementation(libs.androidx.cardview)
 }

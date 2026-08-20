@@ -2,6 +2,7 @@
 
 [versions]
 agp = "9.3.1"
+cardview = "1.0.0"
 glide = "5.0.9"
 kotlin = "2.4.10"
 appcompat = "1.8.0"
@@ -15,6 +16,7 @@ fragmentKtx = "1.9.0"
 
 [libraries]
 # Core
+androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

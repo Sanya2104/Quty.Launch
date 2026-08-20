@@ -129,7 +129,7 @@
 
     <string name="settings_color_scheme_title">Цветовая схема</string>
     <string name="color_scheme_preview_description">Цветовая схема</string>
-    <string name="color_scheme_applied" formatted="false">Цветовая схема "%s" применена</string>
+    <string name="color_scheme_applied" formatted="false">Цветовая схема «"%s"» применена</string>
 
     <!-- ============================================================ -->
     <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
