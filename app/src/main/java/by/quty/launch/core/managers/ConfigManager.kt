@@ -3,7 +3,7 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.model.ColorScheme
+import by.quty.launch.core.model.ColorSchemeModel
 import androidx.core.content.edit
 
 class ConfigManager(context: Context) {
@@ -77,7 +77,7 @@ class ConfigManager(context: Context) {
     }
 
     /**
-     * Возвращает ID цветовой схемы по умолчанию
+     * Возвращает цветовую схему по умолчанию
      */
     fun getDefaultColorScheme(): String {
         return CoreConfig.DEFAULT_COLOR_SCHEME
@@ -100,7 +100,7 @@ class ConfigManager(context: Context) {
     /**
      * Возвращает объект текущей цветовой схемы
      */
-    fun getColorSchemeObject(): ColorScheme {
-        return ColorScheme.getSchemeById(getColorScheme())
+    fun getColorSchemeObject(): ColorSchemeModel {
+        return ColorSchemeModel.getSchemeById(getColorScheme())
     }
 }

@@ -223,18 +223,24 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     /**
      * Проверяет флаг перезагрузки из ShellSettingsFragment и показывает диалог
+     * Диалог показывается в ЛЮБОМ случае, если были изменения
      */
     private fun checkAndShowRestartDialog() {
         // Получаем флаг из ShellSettingsFragment
         val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+
+        // Проверяем, есть ли изменения, требующие перезапуска (оболочка, ориентация и т.д.)
         val needsRestart = shellFragment?.getNeedsRestart() ?: false
 
         // Проверяем также изменения в настройках
         val settingsChanged = hasSettingsChanged()
 
+        // Если есть ЛЮБЫЕ изменения — показываем диалог
         if (needsRestart || settingsChanged) {
             showRestartDialog()
         } else {
+            // Сбрасываем флаг изменения цветовой схемы, если он был установлен
+            shellFragment?.resetColorSchemeChangedFlag()
             finish()
         }
     }
@@ -247,14 +253,12 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         val currentDevMode = prefs.getBoolean("developer_mode", false)
 
-        val result = currentShell != originalShell ||
+        return currentShell != originalShell ||
                 currentOrientation != originalOrientation ||
                 currentFullscreen != originalFullscreen ||
                 currentStrictMode != originalStrictMode ||
                 currentDevMode != originalDevMode ||
                 currentColorScheme != originalColorScheme
-
-        return result
     }
 
     /**
@@ -269,12 +273,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
             .setMessage(getString(R.string.dialog_apply_settings_message))
             .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
                 isRestarting = true
+                // Сбрасываем флаг изменения цветовой схемы
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+                shellFragment?.resetColorSchemeChangedFlag()
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
                 // Сбрасываем флаг, чтобы диалог не появлялся снова при следующем закрытии
                 val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
                 shellFragment?.setNeedsRestart(false)
+                shellFragment?.resetColorSchemeChangedFlag()
                 // Просто закрываем диалог, остаёмся в настройках
                 // Ничего не делаем
 

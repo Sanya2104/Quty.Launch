@@ -2,6 +2,7 @@
 package by.quty.launch.core.fragments
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -17,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -33,7 +35,7 @@ import by.quty.launch.core.managers.ShellUpdateManager
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.interfaces.SettingsEventListener
-import by.quty.launch.core.model.ColorScheme
+import by.quty.launch.core.model.ColorSchemeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +66,9 @@ class ShellSettingsFragment : Fragment() {
 
         // Задержка перед обновлением UI (из конфига)
         private const val DELAY_BEFORE_UI_UPDATE = CoreConfig.DELAY_BEFORE_UI_UPDATE_MS
+
+        // Ключ для SharedPreferences флага изменения цветовой схемы
+        private const val PREF_COLOR_SCHEME_CHANGED = "color_scheme_changed"
     }
 
     // Регистрируем ActivityResult для выбора файла оболочки
@@ -123,7 +128,20 @@ class ShellSettingsFragment : Fragment() {
     /**
      * Возвращает флаг необходимости перезагрузки
      */
-    fun getNeedsRestart(): Boolean = needsRestart
+    fun getNeedsRestart(): Boolean {
+        // Проверяем также флаг изменения цветовой схемы из SharedPreferences
+        val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+        val colorSchemeChanged = prefs.getBoolean(PREF_COLOR_SCHEME_CHANGED, false)
+        return needsRestart || colorSchemeChanged
+    }
+
+    /**
+     * Сбрасывает флаг изменения цветовой схемы
+     */
+    fun resetColorSchemeChangedFlag() {
+        val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+        prefs.edit { putBoolean(PREF_COLOR_SCHEME_CHANGED, false) }
+    }
 
     /**
      * Настройка выбора оболочки оформления с превью и информацией
@@ -150,13 +168,17 @@ class ShellSettingsFragment : Fragment() {
         )
 
         val configManager = (activity as? SettingsActivity)?.configManager
-        val currentSchemeId = configManager?.getColorScheme() ?: ColorScheme.getDefaultScheme().id
+        val currentSchemeId = configManager?.getColorScheme() ?: ColorSchemeModel.getDefaultScheme().id
 
         colorSchemeAdapter = ColorSchemeAdapter { scheme ->
             // Сохраняем выбранную схему
             configManager?.setColorScheme(scheme.id)
 
-            // Отмечаем, что требуется перезагрузка при выходе из настроек
+            // Сохраняем флаг изменения цветовой схемы в SharedPreferences
+            val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putBoolean(PREF_COLOR_SCHEME_CHANGED, true) }
+
+            // Отмечаем, что требуется перезагрузка
             needsRestart = true
 
             // Уведомляем Activity об изменении
@@ -166,7 +188,7 @@ class ShellSettingsFragment : Fragment() {
             // Пересоздаём SettingsActivity, чтобы применить тему мгновенно
             (activity as? SettingsActivity)?.recreate()
 
-            // Toast показывается внутри адаптера, чтобы избежать накопления
+            // Toast показывается внутри адаптера
         }
 
         recyclerView.adapter = colorSchemeAdapter
@@ -537,7 +559,7 @@ class ShellSettingsFragment : Fragment() {
     /**
      * Получает цвет из атрибута темы
      */
-    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+    private fun getColorFromAttribute(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data

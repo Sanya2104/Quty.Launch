@@ -69,13 +69,15 @@ abstract class BaseActivity : AppCompatActivity() {
         val schemeId = prefs.getString("color_scheme", CoreConfig.DEFAULT_COLOR_SCHEME) ?: CoreConfig.DEFAULT_COLOR_SCHEME
 
         val themeRes = when (schemeId) {
-            "teal" -> R.style.Theme_QutyLaunch_Teal
+            "red" -> R.style.Theme_QutyLaunch_Red
             "orange" -> R.style.Theme_QutyLaunch_Orange
+            "lime" -> R.style.Theme_QutyLaunch_Lime
+            "green" -> R.style.Theme_QutyLaunch_Green
+            "teal" -> R.style.Theme_QutyLaunch_Teal
+            "cyan" -> R.style.Theme_QutyLaunch_Cyan
+            "blue" -> R.style.Theme_QutyLaunch_Blue
             "purple" -> R.style.Theme_QutyLaunch_Purple
             "pink" -> R.style.Theme_QutyLaunch_Pink
-            "blue" -> R.style.Theme_QutyLaunch_Blue
-            "green" -> R.style.Theme_QutyLaunch_Green
-            "red" -> R.style.Theme_QutyLaunch_Red
             else -> R.style.Theme_QutyLaunch_Teal
         }
         setTheme(themeRes)

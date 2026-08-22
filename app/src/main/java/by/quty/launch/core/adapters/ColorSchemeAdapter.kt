@@ -9,18 +9,18 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
-import by.quty.launch.core.model.ColorScheme
+import by.quty.launch.core.model.ColorSchemeModel
 
 /**
  * Адаптер для отображения цветовых схем в виде квадратиков
  * Используется в настройках оформления
  */
 class ColorSchemeAdapter(
-    private val onSchemeSelected: (ColorScheme) -> Unit
+    private val onSchemeSelected: (ColorSchemeModel) -> Unit
 ) : RecyclerView.Adapter<ColorSchemeAdapter.ViewHolder>() {
 
-    private var schemes: List<ColorScheme> = ColorScheme.getAllSchemes()
-    private var selectedSchemeId: String = ColorScheme.getDefaultScheme().id
+    private var schemes: List<ColorSchemeModel> = ColorSchemeModel.getAllSchemes()
+    private var selectedSchemeId: String = ColorSchemeModel.getDefaultScheme().id
 
     // Единый Toast для предотвращения накопления
     private var toast: Toast? = null
@@ -54,8 +54,8 @@ class ColorSchemeAdapter(
                 notifyItemChanged(position)
             }
 
-            // Показываем Toast с мгновенной заменой
-            showToast(holder.itemView.context, scheme.displayName)
+            // Показываем Toast с названием из ресурсов
+            showToast(holder.itemView.context, scheme)
 
             onSchemeSelected(scheme)
         }
@@ -85,14 +85,17 @@ class ColorSchemeAdapter(
     /**
      * Показывает Toast с мгновенной заменой предыдущего
      */
-    private fun showToast(context: android.content.Context, schemeName: String) {
+    private fun showToast(context: android.content.Context, scheme: ColorSchemeModel) {
         // Отменяем предыдущий Toast, если он был
         toast?.cancel()
+
+        // Получаем название из ресурсов
+        val displayName = scheme.getDisplayName(context)
 
         // Создаём новый Toast
         toast = Toast.makeText(
             context,
-            context.getString(R.string.color_scheme_applied, schemeName),
+            context.getString(R.string.color_scheme_applied, displayName),
             Toast.LENGTH_SHORT
         )
 
@@ -104,7 +107,7 @@ class ColorSchemeAdapter(
         private val colorView: ImageView = itemView.findViewById(R.id.color_preview)
         private val selectedIndicator: View = itemView.findViewById(R.id.selected_indicator)
 
-        fun bind(scheme: ColorScheme, isSelected: Boolean, onClick: () -> Unit) {
+        fun bind(scheme: ColorSchemeModel, isSelected: Boolean, onClick: () -> Unit) {
             val context = itemView.context
 
             // Устанавливаем цвет фона

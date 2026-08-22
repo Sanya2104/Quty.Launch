@@ -239,17 +239,17 @@
     <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ ===================== -->
     <!-- ============================================================ -->
 
-    <style name="Theme.QutyLaunch.Teal" parent="Theme.QutyLaunch">
-        <item name="colorPrimary">@color/scheme_teal_primary</item>
-        <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
-        <item name="colorAccent">@color/scheme_teal_accent</item>
-        <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
-        <item name="colorControlActivated">@color/scheme_teal_primary</item>
-        <item name="colorControlHighlight">@color/scheme_teal_primary</item>
-        <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
-        <item name="tabIndicatorColor">@color/scheme_teal_primary</item>
-        <item name="tabRippleColor">@color/scheme_teal_primary</item>
-        <item name="shellActiveBackgroundColor">@color/scheme_teal_primary</item>
+    <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_red_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_red_primary</item>
+        <item name="colorAccent">@color/scheme_red_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_red_primary</item>
+        <item name="colorControlActivated">@color/scheme_red_primary</item>
+        <item name="colorControlHighlight">@color/scheme_red_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_red_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_red_primary</item>
+        <item name="tabRippleColor">@color/scheme_red_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_red_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Orange" parent="Theme.QutyLaunch">
@@ -263,6 +263,71 @@
         <item name="tabIndicatorColor">@color/scheme_orange_primary</item>
         <item name="tabRippleColor">@color/scheme_orange_primary</item>
         <item name="shellActiveBackgroundColor">@color/scheme_orange_primary</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Lime" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_lime_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_lime_primary</item>
+        <item name="colorAccent">@color/scheme_lime_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_lime_primary</item>
+        <item name="colorControlActivated">@color/scheme_lime_primary</item>
+        <item name="colorControlHighlight">@color/scheme_lime_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_lime_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_lime_primary</item>
+        <item name="tabRippleColor">@color/scheme_lime_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_lime_primary</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Green" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_green_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_green_primary</item>
+        <item name="colorAccent">@color/scheme_green_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_green_primary</item>
+        <item name="colorControlActivated">@color/scheme_green_primary</item>
+        <item name="colorControlHighlight">@color/scheme_green_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_green_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_green_primary</item>
+        <item name="tabRippleColor">@color/scheme_green_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_green_primary</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Teal" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_teal_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
+        <item name="colorAccent">@color/scheme_teal_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
+        <item name="colorControlActivated">@color/scheme_teal_primary</item>
+        <item name="colorControlHighlight">@color/scheme_teal_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_teal_primary</item>
+        <item name="tabRippleColor">@color/scheme_teal_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_teal_primary</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Cyan" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_cyan_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_cyan_primary</item>
+        <item name="colorAccent">@color/scheme_cyan_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_cyan_primary</item>
+        <item name="colorControlActivated">@color/scheme_cyan_primary</item>
+        <item name="colorControlHighlight">@color/scheme_cyan_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_cyan_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_cyan_primary</item>
+        <item name="tabRippleColor">@color/scheme_cyan_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_cyan_primary</item>
+    </style>
+
+    <style name="Theme.QutyLaunch.Blue" parent="Theme.QutyLaunch">
+        <item name="colorPrimary">@color/scheme_blue_primary</item>
+        <item name="colorPrimaryDark">@color/scheme_blue_primary</item>
+        <item name="colorAccent">@color/scheme_blue_accent</item>
+        <item name="colorPrimarySurface">@color/scheme_blue_primary</item>
+        <item name="colorControlActivated">@color/scheme_blue_primary</item>
+        <item name="colorControlHighlight">@color/scheme_blue_primary</item>
+        <item name="buttonPrimaryColor">@color/scheme_blue_primary</item>
+        <item name="tabIndicatorColor">@color/scheme_blue_primary</item>
+        <item name="tabRippleColor">@color/scheme_blue_primary</item>
+        <item name="shellActiveBackgroundColor">@color/scheme_blue_primary</item>
     </style>
 
     <style name="Theme.QutyLaunch.Purple" parent="Theme.QutyLaunch">
@@ -289,45 +354,6 @@
         <item name="tabIndicatorColor">@color/scheme_pink_primary</item>
         <item name="tabRippleColor">@color/scheme_pink_primary</item>
         <item name="shellActiveBackgroundColor">@color/scheme_pink_primary</item>
-    </style>
-
-    <style name="Theme.QutyLaunch.Blue" parent="Theme.QutyLaunch">
-        <item name="colorPrimary">@color/scheme_blue_primary</item>
-        <item name="colorPrimaryDark">@color/scheme_blue_primary</item>
-        <item name="colorAccent">@color/scheme_blue_accent</item>
-        <item name="colorPrimarySurface">@color/scheme_blue_primary</item>
-        <item name="colorControlActivated">@color/scheme_blue_primary</item>
-        <item name="colorControlHighlight">@color/scheme_blue_primary</item>
-        <item name="buttonPrimaryColor">@color/scheme_blue_primary</item>
-        <item name="tabIndicatorColor">@color/scheme_blue_primary</item>
-        <item name="tabRippleColor">@color/scheme_blue_primary</item>
-        <item name="shellActiveBackgroundColor">@color/scheme_blue_primary</item>
-    </style>
-
-    <style name="Theme.QutyLaunch.Green" parent="Theme.QutyLaunch">
-        <item name="colorPrimary">@color/scheme_green_primary</item>
-        <item name="colorPrimaryDark">@color/scheme_green_primary</item>
-        <item name="colorAccent">@color/scheme_green_accent</item>
-        <item name="colorPrimarySurface">@color/scheme_green_primary</item>
-        <item name="colorControlActivated">@color/scheme_green_primary</item>
-        <item name="colorControlHighlight">@color/scheme_green_primary</item>
-        <item name="buttonPrimaryColor">@color/scheme_green_primary</item>
-        <item name="tabIndicatorColor">@color/scheme_green_primary</item>
-        <item name="tabRippleColor">@color/scheme_green_primary</item>
-        <item name="shellActiveBackgroundColor">@color/scheme_green_primary</item>
-    </style>
-
-    <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">
-        <item name="colorPrimary">@color/scheme_red_primary</item>
-        <item name="colorPrimaryDark">@color/scheme_red_primary</item>
-        <item name="colorAccent">@color/scheme_red_accent</item>
-        <item name="colorPrimarySurface">@color/scheme_red_primary</item>
-        <item name="colorControlActivated">@color/scheme_red_primary</item>
-        <item name="colorControlHighlight">@color/scheme_red_primary</item>
-        <item name="buttonPrimaryColor">@color/scheme_red_primary</item>
-        <item name="tabIndicatorColor">@color/scheme_red_primary</item>
-        <item name="tabRippleColor">@color/scheme_red_primary</item>
-        <item name="shellActiveBackgroundColor">@color/scheme_red_primary</item>
     </style>
 
 </resources>

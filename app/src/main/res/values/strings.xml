@@ -131,6 +131,17 @@
     <string name="color_scheme_preview_description">Цветовая схема</string>
     <string name="color_scheme_applied" formatted="false">Цветовая схема «"%s"» применена</string>
 
+    <!-- Названия цветовых схем -->
+    <string name="color_scheme_red">Красный</string>
+    <string name="color_scheme_orange">Оранжевый</string>
+    <string name="color_scheme_lime">Лаймовый</string>
+    <string name="color_scheme_green">Зелёный</string>
+    <string name="color_scheme_teal">Бирюзовый</string>
+    <string name="color_scheme_cyan">Голубой</string>
+    <string name="color_scheme_blue">Синий</string>
+    <string name="color_scheme_purple">Фиолетовый</string>
+    <string name="color_scheme_pink">Розовый</string>
+
     <!-- ============================================================ -->
     <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
     <!-- ============================================================ -->
