@@ -1,22 +1,31 @@
-// *** core/fragments/ShellSettingsFragment.kt *** //
-package by.quty.launch.core.fragments
+package by.quty.launch.core.fragments.settings
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.BaseAdapter
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.PopupMenu
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -28,13 +37,13 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.adapters.ColorSchemeAdapter
+import by.quty.launch.core.interfaces.SettingsEventListener
 import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
 import by.quty.launch.core.managers.ShellUpdateManager
-import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.managers.StorageDirectory
-import by.quty.launch.core.interfaces.SettingsEventListener
+import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.model.ColorSchemeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,7 +52,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.zip.ZipFile
 
-class ShellSettingsFragment : Fragment() {
+class ShellFragment : Fragment() {
 
     private lateinit var shellManager: ShellManager
     private lateinit var storageManager: StorageManager
@@ -75,7 +84,7 @@ class ShellSettingsFragment : Fragment() {
     private val selectShellLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
+        if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
                 installShellFromUri(uri)
             }
@@ -175,7 +184,8 @@ class ShellSettingsFragment : Fragment() {
             configManager?.setColorScheme(scheme.id)
 
             // Сохраняем флаг изменения цветовой схемы в SharedPreferences
-            val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+            val prefs =
+                requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
             prefs.edit { putBoolean(PREF_COLOR_SCHEME_CHANGED, true) }
 
             // Отмечаем, что требуется перезагрузка
@@ -261,7 +271,8 @@ class ShellSettingsFragment : Fragment() {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                putExtra(
+                    Intent.EXTRA_MIME_TYPES, arrayOf(
                     "application/zip",
                     "application/octet-stream"
                 ))
@@ -282,7 +293,8 @@ class ShellSettingsFragment : Fragment() {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                putExtra(
+                    Intent.EXTRA_MIME_TYPES, arrayOf(
                     "application/zip",
                     "application/octet-stream"
                 ))
@@ -320,7 +332,10 @@ class ShellSettingsFragment : Fragment() {
             startActivity(intent)
         } catch (_: Exception) {
             try {
-                val intent = Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$packageName".toUri())
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    "https://play.google.com/store/apps/details?id=$packageName".toUri()
+                )
                 startActivity(intent)
             } catch (_: Exception) {
                 Toast.makeText(
@@ -377,7 +392,7 @@ class ShellSettingsFragment : Fragment() {
             val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
             cursor?.use {
                 if (it.moveToFirst()) {
-                    val displayNameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    val displayNameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                     if (displayNameIndex >= 0) {
                         return it.getString(displayNameIndex)
                     }
@@ -635,7 +650,7 @@ class ShellSettingsFragment : Fragment() {
             if (isActive) {
                 view.setBackgroundColor(getColorFromAttribute(requireContext(), R.attr.shellActiveBackgroundColor))
             } else {
-                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                view.setBackgroundColor(Color.TRANSPARENT)
             }
 
             // Устанавливаем клик на всю строку
@@ -938,7 +953,7 @@ class ShellSettingsFragment : Fragment() {
                         }
 
                         if (needRestart) {
-                            this@ShellSettingsFragment.needsRestart = true
+                            this@ShellFragment.needsRestart = true
                         }
 
                         val message = if (isBuiltInUpdate) {

@@ -1,6 +1,6 @@
-// *** core/fragments/DisplaySettingsFragment.kt *** //
-package by.quty.launch.core.fragments
+package by.quty.launch.core.fragments.settings
 
+import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,11 +15,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.core.interfaces.SettingsEventListener
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.interfaces.SettingsEventListener
 
-class DisplaySettingsFragment : Fragment() {
+class DisplayFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
@@ -255,7 +255,7 @@ class DisplaySettingsFragment : Fragment() {
     /**
      * Получает цвет из атрибута темы
      */
-    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+    private fun getColorFromAttribute(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data

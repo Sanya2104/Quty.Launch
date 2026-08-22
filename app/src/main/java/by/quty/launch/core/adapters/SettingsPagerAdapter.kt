@@ -5,10 +5,10 @@ import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import by.quty.launch.core.fragments.DeveloperSettingsFragment
-import by.quty.launch.core.fragments.DisplaySettingsFragment
-import by.quty.launch.core.fragments.SystemSettingsFragment
-import by.quty.launch.core.fragments.ShellSettingsFragment
+import by.quty.launch.core.fragments.settings.DeveloperFragment
+import by.quty.launch.core.fragments.settings.DisplayFragment
+import by.quty.launch.core.fragments.settings.SystemFragment
+import by.quty.launch.core.fragments.settings.ShellFragment
 
 class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
@@ -33,10 +33,10 @@ class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(ac
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            TAB_SHELL -> ShellSettingsFragment()
-            TAB_DISPLAY -> DisplaySettingsFragment()
-            TAB_SYSTEM -> SystemSettingsFragment()
-            TAB_DEVELOPER -> DeveloperSettingsFragment()
+            TAB_SHELL -> ShellFragment()
+            TAB_DISPLAY -> DisplayFragment()
+            TAB_SYSTEM -> SystemFragment()
+            TAB_DEVELOPER -> DeveloperFragment()
             else -> throw IllegalArgumentException("Invalid tab position: $position")
         }
     }

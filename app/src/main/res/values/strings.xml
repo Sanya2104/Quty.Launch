@@ -608,7 +608,7 @@
     <string name="log_store_shell_installed">Оболочка установлена: %s</string>
     <string name="log_store_install_error">Ошибка установки: %s</string>
 
-    <!-- ShellListStoreFragment логи -->
+    <!-- ShellListFragment логи -->
     <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
     <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
     <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>

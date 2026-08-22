@@ -1,10 +1,10 @@
-// *** core/fragments/DeveloperSettingsFragment.kt *** //
-package by.quty.launch.core.fragments
+package by.quty.launch.core.fragments.settings
 
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -28,21 +28,22 @@ import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.managers.ConfigManager
-import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.managers.StorageManager
-import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.CacheManager
-import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.LoggerFileManager
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.StorageDirectory
+import by.quty.launch.core.managers.StorageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.File
+import java.util.zip.ZipFile
 
-class DeveloperSettingsFragment : Fragment() {
+class DeveloperFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
@@ -167,7 +168,7 @@ class DeveloperSettingsFragment : Fragment() {
                 }
 
                 try {
-                    java.util.zip.ZipFile(file).use { zip ->
+                    ZipFile(file).use { zip ->
                         val entry = zip.getEntry("manifest.json") ?: run {
                             Toast.makeText(requireContext(), R.string.dev_shell_manifest_not_found, Toast.LENGTH_SHORT).show()
                             return
@@ -327,7 +328,11 @@ class DeveloperSettingsFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     val cacheSizeView = view?.findViewById<TextView>(R.id.dev_cache_size_value)
                     cacheSizeView?.let { updateCacheSize(it) }
-                    Toast.makeText(requireContext(), R.string.dev_clear_apps_cache_success, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.dev_clear_apps_cache_success,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         } catch (_: Exception) {
@@ -372,7 +377,11 @@ class DeveloperSettingsFragment : Fragment() {
                 storageManager.remove(StorageDirectory.BACKUPS, recursive = true)
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), R.string.dev_clear_data_success, Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.dev_clear_data_success,
+                        Toast.LENGTH_LONG
+                    ).show()
                     Handler(Looper.getMainLooper()).postDelayed({
                         restartApp()
                     }, 1500)
@@ -630,15 +639,21 @@ class DeveloperSettingsFragment : Fragment() {
                 val content = storageManager.getString(file)
                 withContext(Dispatchers.Main) {
                     if (content.isNullOrEmpty()) {
-                        Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.dev_logs_empty,
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@withContext
                     }
 
-                    val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clipboard =
+                        requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("LogFile", content)
                     clipboard.setPrimaryClip(clip)
 
-                    Toast.makeText(requireContext(), R.string.dev_logs_copied, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.dev_logs_copied, Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         } catch (_: Exception) {
@@ -655,12 +670,19 @@ class DeveloperSettingsFragment : Fragment() {
                 val content = storageManager.getString(file)
                 withContext(Dispatchers.Main) {
                     if (content.isNullOrEmpty()) {
-                        Toast.makeText(requireContext(), R.string.dev_logs_empty, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.dev_logs_empty,
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@withContext
                     }
 
                     val displayContent = if (content.length > 5000) {
-                        content.take(5000) + getString(R.string.dev_logs_file_truncated, storageManager.formatSize(file.length()))
+                        content.take(5000) + getString(
+                            R.string.dev_logs_file_truncated,
+                            storageManager.formatSize(file.length())
+                        )
                     } else {
                         content
                     }
@@ -694,13 +716,13 @@ class DeveloperSettingsFragment : Fragment() {
                 return
             }
 
-            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            startActivity(android.content.Intent.createChooser(shareIntent, getString(R.string.dev_logs_share_title)))
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.dev_logs_share_title)))
         } catch (_: Exception) {
             Toast.makeText(requireContext(), R.string.dev_logs_share_error, Toast.LENGTH_SHORT).show()
         }
@@ -729,9 +751,17 @@ class DeveloperSettingsFragment : Fragment() {
                 val deleted = storageManager.remove(file)
                 withContext(Dispatchers.Main) {
                     if (deleted) {
-                        Toast.makeText(requireContext(), R.string.dev_logs_deleted, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.dev_logs_deleted,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(requireContext(), R.string.dev_logs_delete_error, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.dev_logs_delete_error,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -749,7 +779,8 @@ class DeveloperSettingsFragment : Fragment() {
                 // Используем clear() который теперь правильно очищает и файлы
                 LoggerManager.clear()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.dev_logs_cleared, Toast.LENGTH_SHORT)
+                        .show()
                     // Обновляем размер логов
                     val logsSizeView = view?.findViewById<TextView>(R.id.dev_logs_size_value)
                     logsSizeView?.let { updateLogsSize(it) }
@@ -777,8 +808,8 @@ class DeveloperSettingsFragment : Fragment() {
     // ============================================================
 
     private fun restartApp() {
-        val intent = android.content.Intent(requireContext(), MainActivity::class.java)
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         requireActivity().finish()
     }

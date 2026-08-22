@@ -1,6 +1,6 @@
-// *** core/fragments/SystemSettingsFragment.kt *** //
-package by.quty.launch.core.fragments
+package by.quty.launch.core.fragments.settings
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -34,7 +34,7 @@ import java.io.File
  * Фрагмент системных настроек
  * Отображает информацию о системе и управление обновлениями
  */
-class SystemSettingsFragment : Fragment() {
+class SystemFragment : Fragment() {
 
     private lateinit var versionTextView: TextView
     private lateinit var versionCodeTextView: TextView
@@ -60,7 +60,7 @@ class SystemSettingsFragment : Fragment() {
     private val selectApkLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
+        if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
                 installStatus.visibility = View.VISIBLE
                 installStatus.text = getString(R.string.checking_updates)
@@ -553,17 +553,21 @@ class SystemSettingsFragment : Fragment() {
         val (currentVersionName, currentSuffix) = splitVersionName(currentFullVersionName)
 
         val messageWithVersionInfo = buildString {
-            append(getString(R.string.update_dialog_message,
+            append(getString(
+                R.string.update_dialog_message,
                 versionInfo.changelog, versionInfo.releaseDate, versionInfo.size))
             append("\n\n")
-            append(getString(R.string.update_version_info,
+            append(getString(
+                R.string.update_version_info,
                 versionInfo.version, versionInfo.versionCode.toString()))
             append("\n")
             if (currentSuffix.isNotEmpty()) {
-                append(getString(R.string.current_version_info_with_channel,
+                append(getString(
+                    R.string.current_version_info_with_channel,
                     currentVersionName, currentVersionCode.toString(), currentSuffix))
             } else {
-                append(getString(R.string.current_version_info,
+                append(getString(
+                    R.string.current_version_info,
                     currentVersionName, currentVersionCode.toString()))
             }
         }

@@ -1,6 +1,7 @@
-// *** core/fragments/ShellDetailStoreFragment.kt *** //
-package by.quty.launch.core.fragments
+package by.quty.launch.core.fragments.store
 
+import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -22,15 +24,15 @@ import kotlinx.coroutines.launch
 /**
  * Фрагмент детального просмотра оболочки
  */
-class ShellDetailStoreFragment : Fragment() {
+class ShellDetailFragment : Fragment() {
 
     private lateinit var shellId: String
     private var storeManager: StoreManager? = null
     private var shell: ShellStoreModel? = null
 
     companion object {
-        fun newInstance(shellId: String): ShellDetailStoreFragment {
-            return ShellDetailStoreFragment().apply {
+        fun newInstance(shellId: String): ShellDetailFragment {
+            return ShellDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString("shell_id", shellId)
                 }
@@ -154,7 +156,7 @@ class ShellDetailStoreFragment : Fragment() {
     private fun startInstallation(shell: ShellStoreModel) {
         val manager = storeManager ?: return
 
-        val progressDialog = android.app.AlertDialog.Builder(requireContext())
+        val progressDialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.store_installing))
             .setMessage(getString(R.string.store_preparing))
             .setCancelable(false)
@@ -174,19 +176,19 @@ class ShellDetailStoreFragment : Fragment() {
                         requireView().findViewById(R.id.btn_install),
                         shell.copy(isInstalled = true)
                     )
-                    android.widget.Toast.makeText(
+                    Toast.makeText(
                         requireContext(),
                         getString(R.string.store_install_success, shell.displayName),
-                        android.widget.Toast.LENGTH_LONG
+                        Toast.LENGTH_LONG
                     ).show()
                 }
 
                 override fun onError(message: String) {
                     progressDialog.dismiss()
-                    android.widget.Toast.makeText(
+                    Toast.makeText(
                         requireContext(),
                         message,
-                        android.widget.Toast.LENGTH_LONG
+                        Toast.LENGTH_LONG
                     ).show()
                 }
             })
@@ -196,7 +198,7 @@ class ShellDetailStoreFragment : Fragment() {
     /**
      * Получает цвет из атрибута темы
      */
-    private fun getColorFromAttribute(context: android.content.Context, attr: Int): Int {
+    private fun getColorFromAttribute(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data

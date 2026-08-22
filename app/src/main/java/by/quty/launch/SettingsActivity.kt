@@ -12,8 +12,8 @@ import androidx.viewpager2.widget.ViewPager2
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.adapters.SettingsPagerAdapter
-import by.quty.launch.core.fragments.DisplaySettingsFragment
-import by.quty.launch.core.fragments.ShellSettingsFragment
+import by.quty.launch.core.fragments.settings.DisplayFragment
+import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -34,9 +34,9 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private lateinit var pagerAdapter: SettingsPagerAdapter
 
     // Ссылки на фрагменты для обновления
-    var shellFragment: ShellSettingsFragment? = null
+    var shellFragment: ShellFragment? = null
         private set
-    var displayFragment: DisplaySettingsFragment? = null
+    var displayFragment: DisplayFragment? = null
         private set
 
     // Переменные для отслеживания изменений
@@ -197,8 +197,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Обновление ссылок на фрагменты
      */
     private fun updateFragmentReferences() {
-        shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
-        displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplaySettingsFragment
+        shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
+        displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplayFragment
     }
 
     /**
@@ -222,12 +222,12 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     }
 
     /**
-     * Проверяет флаг перезагрузки из ShellSettingsFragment и показывает диалог
+     * Проверяет флаг перезагрузки из ShellFragment и показывает диалог
      * Диалог показывается в ЛЮБОМ случае, если были изменения
      */
     private fun checkAndShowRestartDialog() {
-        // Получаем флаг из ShellSettingsFragment
-        val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+        // Получаем флаг из ShellFragment
+        val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
 
         // Проверяем, есть ли изменения, требующие перезапуска (оболочка, ориентация и т.д.)
         val needsRestart = shellFragment?.getNeedsRestart() ?: false
@@ -274,13 +274,13 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
             .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
                 isRestarting = true
                 // Сбрасываем флаг изменения цветовой схемы
-                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
                 shellFragment?.resetColorSchemeChangedFlag()
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
                 // Сбрасываем флаг, чтобы диалог не появлялся снова при следующем закрытии
-                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellSettingsFragment
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
                 shellFragment?.setNeedsRestart(false)
                 shellFragment?.resetColorSchemeChangedFlag()
                 // Просто закрываем диалог, остаёмся в настройках
@@ -332,7 +332,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     override fun onSettingChanged() {
         // При изменении настроек ничего не делаем
         // DevMode будет прочитан при выходе из настроек
-        // Цветовая схема обновляется через ShellSettingsFragment
+        // Цветовая схема обновляется через ShellFragment
         currentColorScheme = configManager.getColorScheme()
     }
 

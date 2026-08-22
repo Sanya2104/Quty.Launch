@@ -14,8 +14,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import by.quty.launch.core.fragments.ShellDetailStoreFragment
-import by.quty.launch.core.fragments.ShellListStoreFragment
+import by.quty.launch.core.fragments.store.ShellDetailFragment
+import by.quty.launch.core.fragments.store.ShellListFragment
 import by.quty.launch.core.managers.StoreManager
 import kotlinx.coroutines.launch
 import androidx.core.view.isVisible
@@ -128,7 +128,7 @@ class StoreActivity : BaseActivity() {
                         supportFragmentManager.findFragmentByTag("f1")
                     )
                     fragments.forEach { fragment ->
-                        (fragment as? ShellListStoreFragment)?.notifyDataChanged()
+                        (fragment as? ShellListFragment)?.notifyDataChanged()
                     }
                 }
             }
@@ -158,7 +158,7 @@ class StoreActivity : BaseActivity() {
      * Открывает детальный вид оболочки
      */
     fun showDetail(shellId: String) {
-        val fragment = ShellDetailStoreFragment.newInstance(shellId)
+        val fragment = ShellDetailFragment.newInstance(shellId)
         fragment.setStoreManager(storeManager)
 
         // Добавляем фрагмент в backStack для обработки системной кнопки "Назад"
@@ -204,13 +204,13 @@ class StoreActivity : BaseActivity() {
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                TAB_SHELLS -> ShellListStoreFragment.newInstance(false).apply {
+                TAB_SHELLS -> ShellListFragment.newInstance(false).apply {
                     setStoreManager(storeManager)
                 }
-                TAB_MY -> ShellListStoreFragment.newInstance(true).apply {
+                TAB_MY -> ShellListFragment.newInstance(true).apply {
                     setStoreManager(storeManager)
                 }
-                else -> ShellListStoreFragment.newInstance(false)
+                else -> ShellListFragment.newInstance(false)
             }
         }
     }
