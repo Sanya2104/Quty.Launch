@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
@@ -21,9 +20,6 @@ class ColorSchemeAdapter(
 
     private var schemes: List<ColorSchemeModel> = ColorSchemeModel.getAllSchemes()
     private var selectedSchemeId: String = ColorSchemeModel.getDefaultScheme().id
-
-    // Единый Toast для предотвращения накопления
-    private var toast: Toast? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -54,9 +50,6 @@ class ColorSchemeAdapter(
                 notifyItemChanged(position)
             }
 
-            // Показываем Toast с названием из ресурсов
-            showToast(holder.itemView.context, scheme)
-
             onSchemeSelected(scheme)
         }
     }
@@ -80,27 +73,6 @@ class ColorSchemeAdapter(
                 notifyItemChanged(newPosition)
             }
         }
-    }
-
-    /**
-     * Показывает Toast с мгновенной заменой предыдущего
-     */
-    private fun showToast(context: android.content.Context, scheme: ColorSchemeModel) {
-        // Отменяем предыдущий Toast, если он был
-        toast?.cancel()
-
-        // Получаем название из ресурсов
-        val displayName = scheme.getDisplayName(context)
-
-        // Создаём новый Toast
-        toast = Toast.makeText(
-            context,
-            context.getString(R.string.color_scheme_applied, displayName),
-            Toast.LENGTH_SHORT
-        )
-
-        // Показываем
-        toast?.show()
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

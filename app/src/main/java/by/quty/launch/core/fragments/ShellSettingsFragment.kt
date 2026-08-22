@@ -184,11 +184,19 @@ class ShellSettingsFragment : Fragment() {
             // Уведомляем Activity об изменении
             settingsEventListener?.onSettingChanged()
 
-            // ===== ПРИМЕНЯЕМ СХЕМУ НА ЛЕТУ =====
-            // Пересоздаём SettingsActivity, чтобы применить тему мгновенно
-            (activity as? SettingsActivity)?.recreate()
+            // ===== ПОКАЗЫВАЕМ TOAST ЧЕРЕЗ APPLICATION CONTEXT =====
+            // Application Context не пересоздаётся при recreate()
+            val appContext = requireContext().applicationContext
+            val displayName = scheme.getDisplayName(appContext)
 
-            // Toast показывается внутри адаптера
+            Toast.makeText(
+                appContext,
+                appContext.getString(R.string.color_scheme_applied, displayName),
+                Toast.LENGTH_SHORT
+            ).show()
+
+            // ===== ПРИМЕНЯЕМ СХЕМУ МГНОВЕННО =====
+            (activity as? SettingsActivity)?.recreate()
         }
 
         recyclerView.adapter = colorSchemeAdapter
