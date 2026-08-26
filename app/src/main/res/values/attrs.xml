@@ -4,6 +4,10 @@
     <!-- ===== КАСТОМНЫЕ АТРИБУТЫ ДЛЯ ЦВЕТОВОЙ СХЕМЫ =============== -->
     <!-- ============================================================ -->
 
+    <!-- Поверхности (фоны карточек, панелей) -->
+    <attr name="colorSurface" format="color" />
+    <attr name="colorOnSurface" format="color" />
+
     <!-- Кнопки -->
     <attr name="buttonPrimaryColor" format="color" />
     <attr name="buttonSecondaryColor" format="color" />

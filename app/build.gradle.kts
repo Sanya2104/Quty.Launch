@@ -15,7 +15,7 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 412
+    versionCode = 417
     versionName = "0.0.128"
         versionNameSuffix = "Alpha"
     }
@@ -68,4 +68,7 @@ dependencies {
 
     // CardView
     implementation(libs.androidx.cardview)
+
+    // SlidingPaneLayout для двухпанельного режима
+    implementation(libs.androidx.slidingpanelayout)
 }

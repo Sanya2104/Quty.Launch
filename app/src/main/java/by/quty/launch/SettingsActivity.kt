@@ -4,9 +4,8 @@ package by.quty.launch
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.StringRes
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.settings.AboutFragment
 import by.quty.launch.core.fragments.settings.DeveloperFragment
@@ -14,16 +13,18 @@ import by.quty.launch.core.fragments.settings.GeneralFragment
 import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.model.SettingsMenuModel
+import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.databinding.ActivitySettingsBinding
 
 /**
- * Новая активность Настроек Quty.Launch с меню-списком
- * Создана параллельно с ParametersActivity
+ * Новая активность Настроек Quty.Launch с двухпанельным режимом
+ * - На телефонах: список меню, клик → открывается фрагмент на всю ширину
+ * - На планшетах: слева меню, справа содержимое
  */
 class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
-    private var isRootScreen = true
+    private var selectedItemId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,64 +33,38 @@ class SettingsActivity : BaseActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbar()
+        setupSlidingPane()
+        setupMenu()
+        setupCloseButton()
         setupBackPressedDispatcher()
-        showMenu()
-    }
 
-    /**
-     * Настройка тулбара
-     */
-    private fun setupToolbar() {
-        // Кнопка "Назад" — возвращает в меню (через диспетчер)
-        binding.btnBack.setOnClickListener {
-            // Эмулируем нажатие системной кнопки "Назад"
-            onBackPressedDispatcher.onBackPressed()
-        }
-
-        // Кнопка "Закрыть" — закрывает настройки
-        binding.btnClose.setOnClickListener {
-            finish()
-        }
-    }
-
-    /**
-     * Настройка диспетчера для обработки нажатия системной кнопки "Назад"
-     */
-    private fun setupBackPressedDispatcher() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (!isRootScreen) {
-                    // Если не на корневом экране — возвращаемся в меню
-                    supportFragmentManager.popBackStack()
-                    isRootScreen = true
-
-                    // Скрываем кнопку "Назад", показываем заголовок "Настройки"
-                    binding.btnBack.visibility = View.GONE
-                    binding.tvTitle.text = getString(R.string.settings_title)
-
-                    // Показываем RecyclerView
-                    binding.recyclerMenu.visibility = View.VISIBLE
-                } else {
-                    // Если на корневом экране — закрываем настройки
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
-                }
+        // Восстанавливаем состояние при повороте
+        if (savedInstanceState != null) {
+            val restoredId = savedInstanceState.getInt("selected_item_id", -1)
+            if (restoredId != -1) {
+                selectMenuItem(restoredId)
             }
-        })
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("selected_item_id", selectedItemId)
     }
 
     /**
-     * Показывает главное меню
+     * Настройка SlidingPaneLayout
      */
-    private fun showMenu() {
-        isRootScreen = true
+    private fun setupSlidingPane() {
+        binding.slidingPaneLayout.apply {
+            lockMode = SlidingPaneLayout.LOCK_MODE_UNLOCKED
+        }
+    }
 
-        // Скрываем кнопку "Назад", показываем заголовок "Настройки"
-        binding.btnBack.visibility = View.GONE
-        binding.tvTitle.text = getString(R.string.settings_title)
-
+    /**
+     * Настройка меню
+     */
+    private fun setupMenu() {
         // Создаём список пунктов меню
         val menuItems = listOf(
             SettingsMenuModel(
@@ -129,62 +104,120 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // Настраиваем RecyclerView
-        val adapter = SettingsMenuAdapter(menuItems) { item ->
-            openFragment(item.fragment, item.title)
-        }
+        // Настраиваем адаптер
+        val adapter = SettingsMenuAdapter(
+            items = menuItems,
+            onItemClick = { item ->
+                selectMenuItem(item.id)
+            }
+        )
 
         binding.recyclerMenu.layoutManager = LinearLayoutManager(this)
         binding.recyclerMenu.adapter = adapter
-        binding.recyclerMenu.visibility = View.VISIBLE
-    }
 
-    /**
-     * Открывает фрагмент
-     * @param fragmentClass класс фрагмента
-     * @param titleRes ресурс заголовка
-     */
-    private fun openFragment(fragmentClass: Class<out Fragment>, @StringRes titleRes: Int) {
-        isRootScreen = false
-
-        // Показываем кнопку "Назад", меняем заголовок
-        binding.btnBack.visibility = View.VISIBLE
-        binding.tvTitle.text = getString(titleRes)
-
-        // Скрываем RecyclerView
-        binding.recyclerMenu.visibility = View.GONE
-
-        // Создаём фрагмент через FragmentFactory (без deprecated newInstance())
-        val fragment = supportFragmentManager.fragmentFactory.instantiate(
-            fragmentClass.classLoader!!,
-            fragmentClass.name
-        )
-
-        // Добавляем фрагмент
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.container, fragment)
-            .addToBackStack(null)
-            .commit()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        // Очищаем backStack при уничтожении
-        try {
-            supportFragmentManager.popBackStackImmediate(null, 0)
-        } catch (_: Exception) {
-            // Игнорируем
+        // Если двухпанельный режим — выбираем первый пункт
+        if (binding.slidingPaneLayout.isSlideable) {
+            if (selectedItemId == -1) {
+                selectMenuItem(menuItems.first().id)
+            }
         }
     }
 
     /**
-     * Включаем иммерсивный режим
+     * Выбор пункта меню
      */
+    private fun selectMenuItem(itemId: Int) {
+        LoggerManager.d("SettingsActivity", "selectMenuItem: $itemId")
+
+        selectedItemId = itemId
+
+        val menuItems = (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.getItems() ?: return
+        val selectedItem = menuItems.find { it.id == itemId } ?: return
+
+        LoggerManager.d("SettingsActivity", "Selected: ${selectedItem.fragment.simpleName}")
+
+        // Показываем контейнер для фрагмента, скрываем заглушку
+        binding.fragmentContainer.visibility = View.VISIBLE
+        binding.placeholder.visibility = View.GONE
+
+        try {
+            val fragment = supportFragmentManager.fragmentFactory.instantiate(
+                selectedItem.fragment.classLoader!!,
+                selectedItem.fragment.name
+            )
+            LoggerManager.d("SettingsActivity", "Fragment created: ${fragment.javaClass.simpleName}")
+
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit()
+        } catch (e: Exception) {
+            LoggerManager.e("SettingsActivity", "Error creating fragment", e)
+        }
+
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(itemId)
+
+        val isSlideable = binding.slidingPaneLayout.isSlideable
+        val isOpen = binding.slidingPaneLayout.isOpen
+
+        LoggerManager.d("SettingsActivity", "isSlideable: $isSlideable")
+        LoggerManager.d("SettingsActivity", "isOpen: $isOpen")
+
+        when {
+            // Широкий экран (планшет) — открываем панель, чтобы показать контент
+            isSlideable -> {
+                LoggerManager.d("SettingsActivity", "Opening pane (tablet mode)")
+                binding.slidingPaneLayout.openPane()
+            }
+            // Узкий экран (телефон) — закрываем панель после выбора
+            else -> {
+                LoggerManager.d("SettingsActivity", "Closing pane (phone mode)")
+                binding.slidingPaneLayout.closePane()
+            }
+        }
+    }
+
+    /**
+     * Настройка кнопки закрытия
+     */
+    private fun setupCloseButton() {
+        binding.btnClose.setOnClickListener {
+            finish()
+        }
+    }
+
+    /**
+     * Настройка диспетчера для обработки нажатия системной кнопки "Назад"
+     */
+    private fun setupBackPressedDispatcher() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Если панель открыта и это телефон — закрываем панель
+                if (!binding.slidingPaneLayout.isSlideable && binding.slidingPaneLayout.isOpen) {
+                    binding.slidingPaneLayout.closePane()
+                    return
+                }
+                // Иначе — закрываем настройки
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        })
+    }
+
     override fun onResume() {
         super.onResume()
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            supportFragmentManager.popBackStackImmediate(null, 0)
+        } catch (_: Exception) {
+            // Игнорируем
         }
     }
 }

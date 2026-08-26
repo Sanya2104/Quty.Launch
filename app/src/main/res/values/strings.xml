@@ -51,8 +51,16 @@
     <!-- Кнопки -->
     <string name="settings_close">Закрыть</string>
 
+    <!-- Заглушка для пустого состояния -->
+    <string name="settings_placeholder_title">Выберите пункт меню</string>
+    <string name="settings_placeholder_desc">Выберите раздел из списка слева,\nчтобы открыть его настройки</string>
 
-
+    <!-- Описания фрагментов (для заглушек) -->
+    <string name="settings_general_desc">Здесь будут настройки:\n• Полноэкранный режим\n• Строгий режим\n• Ориентация экрана</string>
+    <string name="settings_personalization_desc">Здесь будут:\n• Список оболочек\n• Цветовые схемы\n• Кнопка "Магазин"</string>
+    <string name="settings_updates_desc">Здесь будут:\n• Информация о версии\n• Проверка обновлений\n• Локальная установка APK</string>
+    <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
+    <string name="settings_about_desc">Здесь будет:\n• Иконка приложения\n• Версия и код версии\n• Канал сборки\n• Модель устройства\n• Версия Android\n• SDK уровень\n• Информация об оболочке</string>
 
 
 

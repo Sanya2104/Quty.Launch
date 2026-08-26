@@ -12,25 +12,24 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Заглушка -->
+        <!-- Заголовок -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xl"
             style="@style/Text.Title.Medium"
-            android:text="Основное"
-            android:gravity="center"
-            tools:ignore="HardcodedText" />
+            android:text="@string/settings_general_title"
+            android:gravity="center" />
 
+        <!-- Описание -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_m"
             style="@style/Text.Body.Secondary"
-            android:text="Здесь будут настройки:\n• Полноэкранный режим\n• Строгий режим\n• Ориентация экрана"
+            android:text="@string/settings_general_desc"
             android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_s"
-            tools:ignore="HardcodedText" />
+            android:lineSpacingExtra="@dimen/spacing_s" />
 
     </LinearLayout>
 

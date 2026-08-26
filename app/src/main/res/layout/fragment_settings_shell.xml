@@ -8,24 +8,23 @@
     android:padding="@dimen/screen_padding_horizontal"
     tools:ignore="VisualLintBounds">
 
-    <!-- Заглушка -->
+    <!-- Заголовок -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_xl"
         style="@style/Text.Title.Medium"
-        android:text="Персонализация"
-        android:gravity="center"
-        tools:ignore="HardcodedText" />
+        android:text="@string/settings_personalization_title"
+        android:gravity="center" />
 
+    <!-- Описание -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_m"
         style="@style/Text.Body.Secondary"
-        android:text="Здесь будут:\n• Список оболочек\n• Цветовые схемы\n• Кнопка \Магазин\"
+        android:text="@string/settings_personalization_desc"
         android:gravity="center"
-        android:lineSpacingExtra="@dimen/spacing_s"
-        tools:ignore="HardcodedText" />
+        android:lineSpacingExtra="@dimen/spacing_s" />
 
 </LinearLayout>
