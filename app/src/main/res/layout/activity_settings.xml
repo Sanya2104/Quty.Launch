@@ -1,0 +1,65 @@
+<!-- res/layout/activity_settings.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground">
+
+    <!-- ===== ШАПКА ===== -->
+    <LinearLayout
+        style="@style/Toolbar"
+        android:paddingStart="@dimen/spacing_m"
+        android:paddingEnd="@dimen/spacing_m">
+
+        <!-- Кнопка "Назад" (скрыта в корневом списке) -->
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
+            android:src="@drawable/ic_back"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back"
+            android:padding="@dimen/spacing_s"
+            android:visibility="gone" />
+
+        <!-- Заголовок -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/spacing_s"
+            style="@style/Text.Title.Large"
+            android:text="@string/settings_title" />
+
+        <!-- Кнопка "Закрыть" -->
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
+            android:src="@drawable/ic_close"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/settings_close"
+            android:padding="@dimen/spacing_s" />
+
+    </LinearLayout>
+
+    <!-- ===== КОНТЕЙНЕР ДЛЯ СПИСКА/ФРАГМЕНТА ===== -->
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- RecyclerView для списка меню -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_menu"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="@dimen/spacing_s"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+    </FrameLayout>
+
+</LinearLayout>

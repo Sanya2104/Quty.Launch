@@ -10,6 +10,7 @@ import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.ParametersActivity
 import by.quty.launch.LoggerActivity
 import by.quty.launch.StoreActivity
+import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.ApiConfig
 import kotlinx.serialization.builtins.serializer
 
@@ -29,6 +30,12 @@ class LaunchApp(
             ApiConfig.PARAMETERS_PACKAGE -> {
                 // Открываем Параметры
                 val intent = Intent(context, ParametersActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            ApiConfig.SETTINGS_PACKAGE -> {
+                // Открываем Настройки
+                val intent = Intent(context, SettingsActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }

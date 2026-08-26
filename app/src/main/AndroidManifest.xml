@@ -77,10 +77,17 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
         </activity>
 
-        <!-- Экран настроек -->
+        <!-- Настройки -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.Translucent">
+        </activity>
+
+        <!-- Параметры -->
         <activity
             android:name=".ParametersActivity"
             android:exported="false"

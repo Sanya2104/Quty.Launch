@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 411
-    versionName = "0.0.127"
+    versionCode = 412
+    versionName = "0.0.128"
         versionNameSuffix = "Alpha"
     }
 
@@ -29,6 +29,10 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 
     compileOptions {

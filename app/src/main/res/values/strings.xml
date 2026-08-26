@@ -23,6 +23,45 @@
     <string name="unknown">Неизвестно</string>
 
     <!-- ============================================================ -->
+    <!-- ==================== НАСТРОЙКИ (SETTINGS) =================== -->
+    <!-- ============================================================ -->
+
+    <!-- Заголовки -->
+    <string name="settings_title">Настройки</string>
+
+    <!-- Пункты меню -->
+    <string name="settings_menu_main">Основное</string>
+    <string name="settings_menu_main_desc">Полноэкранный режим, ориентация</string>
+    <string name="settings_menu_personalization">Персонализация</string>
+    <string name="settings_menu_personalization_desc">Оболочки и цветовые схемы</string>
+    <string name="settings_menu_updates">Центр обновления</string>
+    <string name="settings_menu_updates_desc">Проверка обновлений</string>
+    <string name="settings_menu_developer">Разработчикам</string>
+    <string name="settings_menu_developer_desc">Инструменты и отладка</string>
+    <string name="settings_menu_about">О системе</string>
+    <string name="settings_menu_about_desc">Версия, устройство</string>
+
+    <!-- Заголовки фрагментов -->
+    <string name="settings_general_title">Основное</string>
+    <string name="settings_personalization_title">Персонализация</string>
+    <string name="settings_updates_title">Центр обновления</string>
+    <string name="settings_developer_title">Разработчикам</string>
+    <string name="settings_about_title">О системе</string>
+
+    <!-- Кнопки -->
+    <string name="settings_close">Закрыть</string>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- ============================================================ -->
     <!-- ==================== ПАРАМЕТРЫ =================== -->
     <!-- ============================================================ -->
 
@@ -478,6 +517,7 @@
     <!-- ============================================================ -->
 
     <!-- GetApps -->
+    <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
     <string name="api_getapps_parameters_name">Параметры Quty.Launch</string>
 
     <!-- LaunchApp -->

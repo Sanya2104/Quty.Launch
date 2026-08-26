@@ -1,0 +1,60 @@
+<!-- res/layout/item_settings_menu.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/item_padding"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/height_button_large">
+
+    <!-- Иконка -->
+    <ImageView
+        android:id="@+id/iv_icon"
+        android:layout_width="@dimen/icon_medium"
+        android:layout_height="@dimen/icon_medium"
+        android:layout_marginEnd="@dimen/spacing_l"
+        android:src="@drawable/ic_settings"
+        android:contentDescription="@string/empty"
+        tools:ignore="ContentDescription" />
+
+    <!-- Текстовая информация -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Заголовок -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Text.Body"
+            android:textColor="?attr/textPrimaryColor"
+            android:textStyle="bold"
+            tools:text="@string/settings_menu_main" />
+
+        <!-- Описание -->
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Text.Small"
+            android:textColor="?attr/textDimColor"
+            tools:text="@string/settings_menu_main_desc" />
+
+    </LinearLayout>
+
+    <!-- Стрелка -->
+    <ImageView
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:src="@drawable/ic_arrow_forward"
+        android:contentDescription="@string/empty"
+        app:tint="?attr/textDimColor"
+        tools:ignore="ContentDescription" />
+
+</LinearLayout>

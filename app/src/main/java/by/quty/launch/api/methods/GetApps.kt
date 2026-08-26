@@ -74,7 +74,20 @@ class GetApps(
         // Кастомные приложения
         val customApps = mutableListOf<AppInfo>()
 
-        // 1. Параметры Quty.Launch
+        // 1. Настройки Quty.Launch
+        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
+        val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_settings_name),
+                packageName = ApiConfig.SETTINGS_PACKAGE,
+                isCustom = true,
+                iconBase64 = settingsIconBase64 // иконка из ресурсов
+            )
+        )
+
+        // 2. Параметры Quty.Launch
         val parametersIcon = ContextCompat.getDrawable(context, R.drawable.ic_parameters)
         val parametersIconBase64 = parametersIcon?.let { drawableToBase64(it) }
 
@@ -83,11 +96,11 @@ class GetApps(
                 name = context.getString(R.string.api_getapps_parameters_name),
                 packageName = ApiConfig.PARAMETERS_PACKAGE,
                 isCustom = true,
-                iconBase64 = parametersIconBase64  // иконка из ресурсов
+                iconBase64 = parametersIconBase64 // иконка из ресурсов
             )
         )
 
-        // 2. Логгер (только в DevMode)
+        // 3. Логгер (только в DevMode)
         val prefs = context.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)
 
@@ -105,7 +118,7 @@ class GetApps(
             )
         }
 
-        // 3. Магазин оболочек (всегда доступен)
+        // 4. Магазин оболочек (всегда доступен)
         val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 

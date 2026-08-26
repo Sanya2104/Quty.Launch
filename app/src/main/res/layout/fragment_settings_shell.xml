@@ -1,0 +1,31 @@
+<!-- res/layout/fragment_settings_shell.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground"
+    android:padding="@dimen/screen_padding_horizontal"
+    tools:ignore="VisualLintBounds">
+
+    <!-- Заглушка -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xl"
+        style="@style/Text.Title.Medium"
+        android:text="Персонализация"
+        android:gravity="center"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_m"
+        style="@style/Text.Body.Secondary"
+        android:text="Здесь будут:\n• Список оболочек\n• Цветовые схемы\n• Кнопка \Магазин\"
+        android:gravity="center"
+        android:lineSpacingExtra="@dimen/spacing_s"
+        tools:ignore="HardcodedText" />
+
+</LinearLayout>
