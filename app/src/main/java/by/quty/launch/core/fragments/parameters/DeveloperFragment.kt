@@ -1,4 +1,4 @@
-package by.quty.launch.core.fragments.settings
+package by.quty.launch.core.fragments.parameters
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -25,8 +25,8 @@ import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.MainActivity
+import by.quty.launch.ParametersActivity
 import by.quty.launch.R
-import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
@@ -69,15 +69,15 @@ class DeveloperFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings_developer, container, false)
+        return inflater.inflate(R.layout.fragment_parameters_developer, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        (activity as? SettingsActivity)?.let { settingsActivity ->
-            configManager = settingsActivity.configManager
-            shellManager = settingsActivity.shellManager
+        (activity as? ParametersActivity)?.let { parametersActivity ->
+            configManager = parametersActivity.configManager
+            shellManager = parametersActivity.shellManager
             storageManager = StorageManager(requireContext())
         }
 

@@ -64,7 +64,7 @@
                 android:background="?android:attr/colorBackground"
                 android:contentDescription="@string/store_preview_description"
                 android:layout_marginBottom="@dimen/spacing_l"
-                tools:src="@drawable/ic_settings" />
+                tools:src="@drawable/ic_parameters" />
 
             <!-- Название -->
             <TextView

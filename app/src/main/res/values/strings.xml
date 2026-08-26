@@ -23,30 +23,33 @@
     <string name="unknown">Неизвестно</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== SETTINGS ACTIVITY ====================== -->
+    <!-- ==================== ПАРАМЕТРЫ =================== -->
     <!-- ============================================================ -->
 
     <!-- Заголовки -->
-    <string name="settings_title">Настройки Quty.Launch</string>
+    <string name="parameters_title">Параметры</string>
 
     <!-- Названия вкладок -->
-    <string name="tab_shell">Оформление</string>
-    <string name="tab_display">Экран</string>
-    <string name="tab_system">Система</string>
-    <string name="tab_developer">DevMode</string>
+    <string name="tab_parameters_shell">Оформление</string>
+    <string name="tab_parameters_display">Экран</string>
+    <string name="tab_parameters_system">Система</string>
+    <string name="tab_parameters_developer">DevMode</string>
 
     <!-- Диалоги -->
-    <string name="dialog_apply_settings_title">Применить настройки</string>
-    <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
+    <string name="dialog_apply_parameters_title">Применить параметры</string>
+    <string name="dialog_apply_parameters_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
     <string name="dialog_restart">Перезапустить</string>
     <string name="dialog_later">Позже</string>
+
+    <!-- Заголовки разделов -->
+    <string name="parameters_shell_title">Выберите оболочку оформления:</string>
+    <string name="parameters_orientation_title">Ориентация экрана</string>
+    <string name="parameters_additional_title">Дополнительные параметры</string>
+    <string name="parameters_color_scheme_title">Цветовая схема</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ОБОЛОЧКА ОФОРМЛЕНИЯ ======================== -->
     <!-- ============================================================ -->
-
-    <!-- Заголовок -->
-    <string name="settings_shell_title">Выберите оболочку оформления:</string>
 
     <!-- Установка оболочки из файла -->
     <string name="install_shell_from_file">Импортировать оболочку</string>
@@ -127,7 +130,6 @@
     <!-- ЦВЕТОВАЯ СХЕМА -->
     <!-- ============================================================ -->
 
-    <string name="settings_color_scheme_title">Цветовая схема</string>
     <string name="color_scheme_preview_description">Цветовая схема</string>
     <string name="color_scheme_applied" formatted="false">Цветовая схема «"%s"» применена</string>
 
@@ -145,9 +147,6 @@
     <!-- ============================================================ -->
     <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
     <!-- ============================================================ -->
-
-    <string name="settings_orientation_title">Ориентация экрана</string>
-    <string name="settings_additional_title">Дополнительные настройки</string>
 
     <!-- Ориентация -->
     <string name="orientation_auto">Авто (следовать за системой)</string>
@@ -479,7 +478,7 @@
     <!-- ============================================================ -->
 
     <!-- GetApps -->
-    <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
+    <string name="api_getapps_parameters_name">Параметры Quty.Launch</string>
 
     <!-- LaunchApp -->
     <string name="api_launchapp_package_required">Требуется имя пакета</string>

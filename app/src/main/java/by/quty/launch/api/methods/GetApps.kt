@@ -74,16 +74,16 @@ class GetApps(
         // Кастомные приложения
         val customApps = mutableListOf<AppInfo>()
 
-        // 1. Настройки Quty.Launch
-        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
-        val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
+        // 1. Параметры Quty.Launch
+        val parametersIcon = ContextCompat.getDrawable(context, R.drawable.ic_parameters)
+        val parametersIconBase64 = parametersIcon?.let { drawableToBase64(it) }
 
         customApps.add(
             AppInfo(
-                name = context.getString(R.string.api_getapps_settings_name),
-                packageName = ApiConfig.SETTINGS_PACKAGE,
+                name = context.getString(R.string.api_getapps_parameters_name),
+                packageName = ApiConfig.PARAMETERS_PACKAGE,
                 isCustom = true,
-                iconBase64 = settingsIconBase64  // иконка из ресурсов
+                iconBase64 = parametersIconBase64  // иконка из ресурсов
             )
         )
 

@@ -15,7 +15,7 @@
         android:layout_height="@dimen/icon_large"
         android:scaleType="centerCrop"
         android:background="@android:color/transparent"
-        android:src="@drawable/ic_settings"
+        android:src="@drawable/ic_parameters"
         android:contentDescription="TODO"
         tools:ignore="ContentDescription,HardcodedText" />
 

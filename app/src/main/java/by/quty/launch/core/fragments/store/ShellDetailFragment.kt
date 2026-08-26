@@ -108,8 +108,8 @@ class ShellDetailFragment : Fragment() {
         // Превью
         Glide.with(this)
             .load(shell.previewUrl)
-            .placeholder(R.drawable.ic_settings)
-            .error(R.drawable.ic_settings)
+            .placeholder(R.drawable.ic_parameters)
+            .error(R.drawable.ic_parameters)
             .centerCrop()
             .into(previewImage)
 

@@ -7,7 +7,7 @@ import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
-import by.quty.launch.SettingsActivity
+import by.quty.launch.ParametersActivity
 import by.quty.launch.LoggerActivity
 import by.quty.launch.StoreActivity
 import by.quty.launch.configs.ApiConfig
@@ -26,12 +26,10 @@ class LaunchApp(
             ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_package_required))
 
         when (packageName) {
-            ApiConfig.SETTINGS_PACKAGE -> {
-                // Открываем настройки
-                val intent = Intent(context, SettingsActivity::class.java)
+            ApiConfig.PARAMETERS_PACKAGE -> {
+                // Открываем Параметры
+                val intent = Intent(context, ParametersActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-                // Запускаем SettingsActivity
                 context.startActivity(intent)
             }
             ApiConfig.LOGGER_PACKAGE -> {

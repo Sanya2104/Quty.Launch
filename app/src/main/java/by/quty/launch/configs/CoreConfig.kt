@@ -124,8 +124,8 @@ object CoreConfig {
     /** Код запроса разрешений */
     const val PERMISSION_REQUEST_CODE = 100
 
-    /** Код запроса для SettingsActivity */
-    const val SETTINGS_REQUEST_CODE = 1001
+    /** Код запроса для ParametersActivity */
+    const val PARAMETERS_REQUEST_CODE = 1001
 
     /** Результат изменения оболочки */
     const val RESULT_SHELL_CHANGED = 1

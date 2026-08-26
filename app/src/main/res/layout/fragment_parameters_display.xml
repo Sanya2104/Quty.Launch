@@ -1,4 +1,4 @@
-<!-- res/layout/fragment_settings_display.xml -->
+<!-- res/layout/fragment_parameters_display.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
             android:paddingTop="@dimen/spacing_s"
-            android:text="@string/settings_orientation_title" />
+            android:text="@string/parameters_orientation_title" />
 
         <LinearLayout
             style="@style/Card"
@@ -84,7 +84,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
             android:paddingTop="@dimen/spacing_xl"
-            android:text="@string/settings_additional_title" />
+            android:text="@string/parameters_additional_title" />
 
         <LinearLayout
             style="@style/Card"

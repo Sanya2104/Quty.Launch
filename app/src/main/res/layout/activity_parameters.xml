@@ -1,4 +1,4 @@
-<!-- res/layout/activity_settings.xml -->
+<!-- res/layout/activity_parameters.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             style="@style/Text.Title.Large"
-            android:text="@string/settings_title" />
+            android:text="@string/parameters_title" />
 
         <Button
             android:id="@+id/close_button"

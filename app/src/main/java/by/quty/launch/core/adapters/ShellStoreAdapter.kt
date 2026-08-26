@@ -66,12 +66,12 @@ class ShellStoreAdapter(
             try {
                 Glide.with(itemView.context)
                     .load(item.previewUrl)
-                    .placeholder(R.drawable.ic_settings)
-                    .error(R.drawable.ic_settings)
+                    .placeholder(R.drawable.ic_parameters)
+                    .error(R.drawable.ic_parameters)
                     .centerCrop()
                     .into(previewImage)
             } catch (_: Exception) {
-                previewImage.setImageResource(R.drawable.ic_settings)
+                previewImage.setImageResource(R.drawable.ic_parameters)
             }
 
             // Статус установки

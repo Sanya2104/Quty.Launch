@@ -1,16 +1,16 @@
-// *** core/adapters/SettingsPagerAdapter.kt *** //
+// *** core/adapters/ParametersPagerAdapter.kt *** //
 package by.quty.launch.core.adapters
 
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import by.quty.launch.core.fragments.settings.DeveloperFragment
-import by.quty.launch.core.fragments.settings.DisplayFragment
-import by.quty.launch.core.fragments.settings.SystemFragment
-import by.quty.launch.core.fragments.settings.ShellFragment
+import by.quty.launch.core.fragments.parameters.DeveloperFragment
+import by.quty.launch.core.fragments.parameters.DisplayFragment
+import by.quty.launch.core.fragments.parameters.SystemFragment
+import by.quty.launch.core.fragments.parameters.ShellFragment
 
-class SettingsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
+class ParametersPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
     companion object {
         private const val NUM_TABS_BASE = 3

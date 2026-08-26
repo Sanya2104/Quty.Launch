@@ -1,4 +1,4 @@
-package by.quty.launch.core.fragments.settings
+package by.quty.launch.core.fragments.parameters
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -33,11 +33,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import by.quty.launch.ParametersActivity
 import by.quty.launch.R
-import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.adapters.ColorSchemeAdapter
-import by.quty.launch.core.interfaces.SettingsEventListener
+import by.quty.launch.core.interfaces.ParametersEventListener
 import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.ShellRepoInfo
@@ -58,7 +58,7 @@ class ShellFragment : Fragment() {
     private lateinit var storageManager: StorageManager
     private lateinit var shellsAdapter: ShellsAdapter
     private lateinit var colorSchemeAdapter: ColorSchemeAdapter
-    private var settingsEventListener: SettingsEventListener? = null
+    private var parametersEventListener: ParametersEventListener? = null
 
     // Флаг для предотвращения множественных применений оболочки
     private var isApplyingShell = false
@@ -96,18 +96,18 @@ class ShellFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings_shell, container, false)
+        return inflater.inflate(R.layout.fragment_parameters_shell, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем SettingsActivity как listener
-        settingsEventListener = activity as? SettingsEventListener
+        // Получаем ParametersActivity как listener
+        parametersEventListener = activity as? ParametersEventListener
 
         // Инициализируем менеджеры через активность
-        (activity as? SettingsActivity)?.let { settingsActivity ->
-            shellManager = settingsActivity.shellManager
+        (activity as? ParametersActivity)?.let { parametersActivity ->
+            shellManager = parametersActivity.shellManager
             storageManager = StorageManager(requireContext())
         }
 
@@ -176,7 +176,7 @@ class ShellFragment : Fragment() {
             false
         )
 
-        val configManager = (activity as? SettingsActivity)?.configManager
+        val configManager = (activity as? ParametersActivity)?.configManager
         val currentSchemeId = configManager?.getColorScheme() ?: ColorSchemeModel.getDefaultScheme().id
 
         colorSchemeAdapter = ColorSchemeAdapter { scheme ->
@@ -192,7 +192,7 @@ class ShellFragment : Fragment() {
             needsRestart = true
 
             // Уведомляем Activity об изменении
-            settingsEventListener?.onSettingChanged()
+            parametersEventListener?.onSettingChanged()
 
             // ===== ПОКАЗЫВАЕМ TOAST ЧЕРЕЗ APPLICATION CONTEXT =====
             // Application Context не пересоздаётся при recreate()
@@ -206,7 +206,7 @@ class ShellFragment : Fragment() {
             ).show()
 
             // ===== ПРИМЕНЯЕМ СХЕМУ МГНОВЕННО =====
-            (activity as? SettingsActivity)?.recreate()
+            (activity as? ParametersActivity)?.recreate()
         }
 
         recyclerView.adapter = colorSchemeAdapter
@@ -233,12 +233,12 @@ class ShellFragment : Fragment() {
                     isApplyingShell = false
                 }, DELAY_BEFORE_UI_UPDATE)
 
-                settingsEventListener?.onShellChanged(shell.name)
-                settingsEventListener?.onSettingChanged()
+                parametersEventListener?.onShellChanged(shell.name)
+                parametersEventListener?.onSettingChanged()
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    (activity as? SettingsActivity)?.let { settingsActivity ->
-                        settingsActivity.displayFragment?.updateOrientationLockState()
+                    (activity as? ParametersActivity)?.let { parametersActivity ->
+                        parametersActivity.displayFragment?.updateOrientationLockState()
                     }
                 }, DELAY_BEFORE_UI_UPDATE)
 
@@ -251,7 +251,7 @@ class ShellFragment : Fragment() {
 
                 val resultIntent = Intent()
                 resultIntent.putExtra(EXTRA_SHELL_NAME, shell.name)
-                requireActivity().setResult(SettingsActivity.RESULT_SHELL_CHANGED, resultIntent)
+                requireActivity().setResult(ParametersActivity.RESULT_SHELL_CHANGED, resultIntent)
             }
         }
     }
@@ -636,10 +636,10 @@ class ShellFragment : Fragment() {
                     previewView.setImageBitmap(bitmap)
                     previewView.visibility = View.VISIBLE
                 } catch (_: Exception) {
-                    previewView.setImageResource(R.drawable.ic_settings)
+                    previewView.setImageResource(R.drawable.ic_parameters)
                 }
             } else {
-                previewView.setImageResource(R.drawable.ic_settings)
+                previewView.setImageResource(R.drawable.ic_parameters)
             }
 
             // Получаем актуальную активную оболочку

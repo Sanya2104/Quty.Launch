@@ -1,4 +1,4 @@
-package by.quty.launch.core.fragments.settings
+package by.quty.launch.core.fragments.parameters
 
 import android.content.Context
 import android.os.Bundle
@@ -13,9 +13,9 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import by.quty.launch.ParametersActivity
 import by.quty.launch.R
-import by.quty.launch.SettingsActivity
-import by.quty.launch.core.interfaces.SettingsEventListener
+import by.quty.launch.core.interfaces.ParametersEventListener
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
@@ -27,7 +27,7 @@ class DisplayFragment : Fragment() {
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
     private lateinit var orientationLockHint: TextView // Подсказка о блокировке ориентации
-    private var settingsEventListener: SettingsEventListener? = null
+    private var parametersEventListener: ParametersEventListener? = null
 
     // Флаг для предотвращения множественных обновлений
     private var isUpdating = false
@@ -37,19 +37,19 @@ class DisplayFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings_display, container, false)
+        return inflater.inflate(R.layout.fragment_parameters_display, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем SettingsActivity как listener
-        settingsEventListener = activity as? SettingsEventListener
+        // Получаем ParametersActivity как listener
+        parametersEventListener = activity as? ParametersEventListener
 
         // Получаем ConfigManager и ShellManager через активность
-        (activity as? SettingsActivity)?.let { settingsActivity ->
-            configManager = settingsActivity.configManager
-            shellManager = settingsActivity.shellManager
+        (activity as? ParametersActivity)?.let { parametersActivity ->
+            configManager = parametersActivity.configManager
+            shellManager = parametersActivity.shellManager
         }
 
         orientationGroup = view.findViewById(R.id.orientation_group)
@@ -93,8 +93,8 @@ class DisplayFragment : Fragment() {
             configManager.setOrientation(orientation)
 
             // Уведомляем Activity об изменении
-            settingsEventListener?.onOrientationChanged(orientation)
-            settingsEventListener?.onSettingChanged()
+            parametersEventListener?.onOrientationChanged(orientation)
+            parametersEventListener?.onSettingChanged()
         }
     }
 
@@ -187,8 +187,8 @@ class DisplayFragment : Fragment() {
             updateStrictModeState()
 
             // Уведомляем Activity об изменении
-            settingsEventListener?.onFullscreenChanged(isChecked)
-            settingsEventListener?.onSettingChanged()
+            parametersEventListener?.onFullscreenChanged(isChecked)
+            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(
                 requireContext(),
@@ -209,8 +209,8 @@ class DisplayFragment : Fragment() {
             configManager.setStrictModeEnabled(isChecked)
 
             // Уведомляем Activity об изменении
-            settingsEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
-            settingsEventListener?.onSettingChanged()
+            parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
+            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(
                 requireContext(),
@@ -233,7 +233,7 @@ class DisplayFragment : Fragment() {
     /**
      * Обновление состояния (вызывается из Activity при необходимости)
      */
-    fun refreshSettings() {
+    fun refreshParameters() {
         // Обновляем состояние блокировки ориентации
         updateOrientationLockState()
 

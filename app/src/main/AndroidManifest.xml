@@ -82,7 +82,7 @@
 
         <!-- Экран настроек -->
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ParametersActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.AppCompat.Translucent">

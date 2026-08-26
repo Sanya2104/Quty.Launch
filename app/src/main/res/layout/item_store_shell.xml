@@ -22,7 +22,7 @@
             android:scaleType="centerCrop"
             android:background="?android:attr/colorBackground"
             android:contentDescription="@string/store_preview_description"
-            tools:src="@drawable/ic_settings" />
+            tools:src="@drawable/ic_parameters" />
 
         <!-- ===== БЭЙДЖ "УСТАНОВЛЕНО" ===== -->
         <View

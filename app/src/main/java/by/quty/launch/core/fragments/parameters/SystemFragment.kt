@@ -1,4 +1,4 @@
-package by.quty.launch.core.fragments.settings
+package by.quty.launch.core.fragments.parameters
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -19,8 +19,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import by.quty.launch.ParametersActivity
 import by.quty.launch.R
-import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.StorageDirectory
@@ -77,7 +77,7 @@ class SystemFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_settings_system, container, false)
+        return inflater.inflate(R.layout.fragment_parameters_system, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -211,7 +211,7 @@ class SystemFragment : Fragment() {
             return
         }
 
-        (activity as? SettingsActivity)?.refreshPagerAdapter()
+        (activity as? ParametersActivity)?.refreshPagerAdapter()
     }
 
     private fun splitVersionName(fullVersionName: String): Pair<String, String> {

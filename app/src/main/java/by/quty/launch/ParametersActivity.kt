@@ -1,4 +1,4 @@
-// *** SettingsActivity.kt *** //
+// *** ParametersActivity.kt *** //
 package by.quty.launch
 
 import android.content.Intent
@@ -10,19 +10,19 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.viewpager2.widget.ViewPager2
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.adapters.ParametersPagerAdapter
+import by.quty.launch.core.fragments.parameters.DisplayFragment
+import by.quty.launch.core.fragments.parameters.ShellFragment
+import by.quty.launch.core.interfaces.ParametersEventListener
 import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.adapters.SettingsPagerAdapter
-import by.quty.launch.core.fragments.settings.DisplayFragment
-import by.quty.launch.core.fragments.settings.ShellFragment
-import by.quty.launch.core.interfaces.SettingsEventListener
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
 /**
- * Активность настроек Quty.Launch с вкладками
+ * Активность параметров Quty.Launch с вкладками
  * Позволяет выбирать оболочку оформления, ориентацию экрана и полноэкранный режим
  */
-class SettingsActivity : BaseActivity(), SettingsEventListener {
+class ParametersActivity : BaseActivity(), ParametersEventListener {
 
     // Менеджеры - используем configManager из BaseActivity через геттер
     lateinit var shellManager: ShellManager
@@ -31,7 +31,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     private lateinit var tabLayout: TabLayout
     private lateinit var viewPager: ViewPager2
     private lateinit var closeButton: Button
-    private lateinit var pagerAdapter: SettingsPagerAdapter
+    private lateinit var pagerAdapter: ParametersPagerAdapter
 
     // Ссылки на фрагменты для обновления
     var shellFragment: ShellFragment? = null
@@ -85,7 +85,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         originalStrictMode = configManager.isStrictModeEnabled()
         originalColorScheme = configManager.getColorScheme()
 
-        // Сохраняем исходное состояние DevMode (фиксируется при первом открытии настроек)
+        // Сохраняем исходное состояние DevMode (фиксируется при первом открытии параметров)
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         originalDevMode = prefs.getBoolean("developer_mode", false)
 
@@ -97,7 +97,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         currentColorScheme = originalColorScheme
 
         // УСТАНАВЛИВАЕМ LAYOUT ПЕРЕД ВСЕМИ ОПЕРАЦИЯМИ С UI
-        setContentView(R.layout.activity_settings)
+        setContentView(R.layout.activity_parameters)
 
         // Инициализация UI
         tabLayout = findViewById(R.id.tab_layout)
@@ -120,16 +120,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Настройка ViewPager2 с TabLayout
      */
     private fun setupViewPager() {
-        pagerAdapter = SettingsPagerAdapter(this)
+        pagerAdapter = ParametersPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
         // Привязываем TabLayout к ViewPager2
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
-                SettingsPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_shell)
-                SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
-                SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
-                SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
+                ParametersPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_parameters_shell)
+                ParametersPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_parameters_display)
+                ParametersPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_parameters_system)
+                ParametersPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_parameters_developer)
             }
         }.attach()
 
@@ -173,16 +173,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         val currentPosition = viewPager.currentItem
 
         // Создаём новый адаптер
-        pagerAdapter = SettingsPagerAdapter(this)
+        pagerAdapter = ParametersPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
         // Перепривязываем TabLayout
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
-                SettingsPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_shell)
-                SettingsPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_display)
-                SettingsPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_system)
-                SettingsPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_developer)
+                ParametersPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_parameters_shell)
+                ParametersPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_parameters_display)
+                ParametersPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_parameters_system)
+                ParametersPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_parameters_developer)
             }
         }.attach()
 
@@ -197,8 +197,8 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Обновление ссылок на фрагменты
      */
     private fun updateFragmentReferences() {
-        shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
-        displayFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_DISPLAY}") as? DisplayFragment
+        shellFragment = supportFragmentManager.findFragmentByTag("f${ParametersPagerAdapter.TAB_SHELL}") as? ShellFragment
+        displayFragment = supportFragmentManager.findFragmentByTag("f${ParametersPagerAdapter.TAB_DISPLAY}") as? DisplayFragment
     }
 
     /**
@@ -227,16 +227,16 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      */
     private fun checkAndShowRestartDialog() {
         // Получаем флаг из ShellFragment
-        val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
+        val shellFragment = supportFragmentManager.findFragmentByTag("f${ParametersPagerAdapter.TAB_SHELL}") as? ShellFragment
 
         // Проверяем, есть ли изменения, требующие перезапуска (оболочка, ориентация и т.д.)
         val needsRestart = shellFragment?.getNeedsRestart() ?: false
 
         // Проверяем также изменения в настройках
-        val settingsChanged = hasSettingsChanged()
+        val parametersChanged = hasParametersChanged()
 
         // Если есть ЛЮБЫЕ изменения — показываем диалог
-        if (needsRestart || settingsChanged) {
+        if (needsRestart || parametersChanged) {
             showRestartDialog()
         } else {
             // Сбрасываем флаг изменения цветовой схемы, если он был установлен
@@ -249,7 +249,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
      * Проверка, были ли изменены настройки
      * DevMode читается напрямую из SharedPreferences при каждом вызове
      */
-    private fun hasSettingsChanged(): Boolean {
+    private fun hasParametersChanged(): Boolean {
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         val currentDevMode = prefs.getBoolean("developer_mode", false)
 
@@ -269,21 +269,21 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         if (isRestarting) return
 
         AlertDialog.Builder(this)
-            .setTitle(getString(R.string.dialog_apply_settings_title))
-            .setMessage(getString(R.string.dialog_apply_settings_message))
+            .setTitle(getString(R.string.dialog_apply_parameters_title))
+            .setMessage(getString(R.string.dialog_apply_parameters_message))
             .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
                 isRestarting = true
                 // Сбрасываем флаг изменения цветовой схемы
-                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${ParametersPagerAdapter.TAB_SHELL}") as? ShellFragment
                 shellFragment?.resetColorSchemeChangedFlag()
                 restartApp()
             }
             .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
                 // Сбрасываем флаг, чтобы диалог не появлялся снова при следующем закрытии
-                val shellFragment = supportFragmentManager.findFragmentByTag("f${SettingsPagerAdapter.TAB_SHELL}") as? ShellFragment
+                val shellFragment = supportFragmentManager.findFragmentByTag("f${ParametersPagerAdapter.TAB_SHELL}") as? ShellFragment
                 shellFragment?.setNeedsRestart(false)
                 shellFragment?.resetColorSchemeChangedFlag()
-                // Просто закрываем диалог, остаёмся в настройках
+                // Просто закрываем диалог, остаёмся в параметрах
                 // Ничего не делаем
 
                 // finish закомментирован чтобы невозможно было выйти без обязательного перезапуска
@@ -313,7 +313,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
         }, DELAY_BEFORE_RESTART)
     }
 
-    // ===== Методы интерфейса SettingsEventListener =====
+    // ===== Методы интерфейса ParametersEventListener =====
 
     override fun onShellChanged(shellName: String) {
         currentShell = shellName
@@ -331,7 +331,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
 
     override fun onSettingChanged() {
         // При изменении настроек ничего не делаем
-        // DevMode будет прочитан при выходе из настроек
+        // DevMode будет прочитан при выходе из параметров
         // Цветовая схема обновляется через ShellFragment
         currentColorScheme = configManager.getColorScheme()
     }
@@ -342,7 +342,7 @@ class SettingsActivity : BaseActivity(), SettingsEventListener {
     fun refreshAllFragments() {
         updateFragmentReferences()
         shellFragment?.refreshShells()
-        displayFragment?.refreshSettings()
+        displayFragment?.refreshParameters()
     }
 
     override fun onResume() {

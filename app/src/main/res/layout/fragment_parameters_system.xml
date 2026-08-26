@@ -1,4 +1,4 @@
-<!-- res/layout/fragment_settings_system.xml -->
+<!-- res/layout/fragment_parameters_system.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

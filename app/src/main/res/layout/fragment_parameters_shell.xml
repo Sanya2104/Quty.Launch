@@ -1,4 +1,4 @@
-<!-- res/layout/fragment_settings_shell.xml -->
+<!-- res/layout/fragment_parameters_shell.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/spacing_l"
         android:paddingTop="@dimen/spacing_s"
-        android:text="@string/settings_shell_title" />
+        android:text="@string/parameters_shell_title" />
 
     <ListView
         android:id="@+id/shells_list"
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_l"
         android:padding="@dimen/spacing_l"
-        android:text="@string/settings_color_scheme_title" />
+        android:text="@string/parameters_color_scheme_title" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/color_scheme_list"

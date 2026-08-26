@@ -26,8 +26,8 @@ class MainActivity : BaseActivity() {
     private lateinit var jsBridge: JsBridge
 
     companion object {
-        // Код запроса для SettingsActivity (из конфига)
-        const val REQUEST_CODE_SETTINGS = CoreConfig.SETTINGS_REQUEST_CODE
+        // Код запроса для ParametersActivity (из конфига)
+        const val REQUEST_CODE_PARAMETERS = CoreConfig.PARAMETERS_REQUEST_CODE
 
         // Задержка перед пересозданием активности (из конфига)
         private const val DELAY_BEFORE_RECREATE = CoreConfig.DELAY_BEFORE_RECREATE_MS
@@ -93,7 +93,7 @@ class MainActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         // Обрабатываем только изменение оболочки
-        if (requestCode == REQUEST_CODE_SETTINGS && resultCode == SettingsActivity.RESULT_SHELL_CHANGED) {
+        if (requestCode == REQUEST_CODE_PARAMETERS && resultCode == ParametersActivity.RESULT_SHELL_CHANGED) {
             // Перезагружаем оболочку с задержкой, чтобы избежать мерцания
             Handler(Looper.getMainLooper()).postDelayed({
                 loadShell()
