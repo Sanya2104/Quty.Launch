@@ -1,102 +1,51 @@
 <!-- res/layout/activity_settings.xml -->
-<androidx.slidingpanelayout.widget.SlidingPaneLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/sliding_pane_layout"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="?android:attr/colorBackground">
 
-    <!-- ===== ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) ===== -->
+    <!-- Шапка -->
     <LinearLayout
-        android:id="@+id/menu_pane"
-        android:layout_width="280dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:orientation="vertical"
-        android:background="?attr/colorSurface">
+        style="@style/Toolbar"
+        android:paddingStart="@dimen/spacing_m"
+        android:paddingEnd="@dimen/spacing_m"
+        android:minHeight="@dimen/height_toolbar">
 
-        <!-- Шапка меню -->
-        <LinearLayout
-            style="@style/Toolbar"
-            android:paddingStart="@dimen/spacing_m"
-            android:paddingEnd="@dimen/spacing_m"
-            android:minHeight="@dimen/height_toolbar">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/Text.Title.Large"
+            android:text="@string/settings_title" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                style="@style/Text.Title.Large"
-                android:text="@string/settings_title" />
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
+            android:src="@drawable/ic_close"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/settings_close"
+            android:padding="@dimen/spacing_s" />
 
-            <ImageButton
-                android:id="@+id/btn_close"
-                android:layout_width="@dimen/icon_large"
-                android:layout_height="@dimen/icon_large"
-                android:src="@drawable/ic_close"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/settings_close"
-                android:padding="@dimen/spacing_s" />
+    </LinearLayout>
 
-        </LinearLayout>
+    <!-- Контейнер -->
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <!-- Список меню -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_menu"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:padding="@dimen/spacing_s"
             android:clipToPadding="false"
-            android:scrollbars="vertical" />
-
-    </LinearLayout>
-
-    <!-- ===== ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ) ===== -->
-    <FrameLayout
-        android:id="@+id/content_pane"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?android:attr/colorBackground">
-
-        <!-- Заглушка для пустого состояния -->
-        <LinearLayout
-            android:id="@+id/placeholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="@dimen/spacing_xl">
-
-            <ImageView
-                android:layout_width="@dimen/icon_xlarge"
-                android:layout_height="@dimen/icon_xlarge"
-                android:src="@drawable/ic_settings"
-                app:tint="?attr/textDimColor"
-                android:contentDescription="@string/empty"
-                android:alpha="0.3" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_l"
-                style="@style/Text.Title.Medium"
-                android:text="@string/settings_placeholder_title"
-                android:textColor="?attr/textDimColor"
-                android:gravity="center" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_s"
-                style="@style/Text.Body.Secondary"
-                android:text="@string/settings_placeholder_desc"
-                android:textColor="?attr/textDimColor"
-                android:gravity="center"
-                android:lineSpacingExtra="@dimen/spacing_s" />
-
-        </LinearLayout>
+            android:scrollbars="vertical"
+            android:visibility="visible" />
 
         <!-- Контейнер для фрагментов -->
         <FrameLayout
@@ -107,4 +56,4 @@
 
     </FrameLayout>
 
-</androidx.slidingpanelayout.widget.SlidingPaneLayout>
+</LinearLayout>
