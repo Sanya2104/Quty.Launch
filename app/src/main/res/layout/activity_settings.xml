@@ -1,58 +1,123 @@
 <!-- res/layout/activity_settings.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
     android:background="?android:attr/colorBackground">
 
-    <!-- Шапка -->
+    <!-- ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) -->
     <LinearLayout
-        style="@style/Toolbar"
-        android:paddingStart="@dimen/spacing_m"
-        android:paddingEnd="@dimen/spacing_m"
-        android:minHeight="@dimen/height_toolbar">
+        android:id="@+id/menu_pane"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="?attr/colorSurface">
 
-        <TextView
-            android:layout_width="0dp"
+        <LinearLayout
+            style="@style/Toolbar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            style="@style/Text.Title.Large"
-            android:text="@string/settings_title" />
+            android:paddingStart="@dimen/spacing_m"
+            android:paddingEnd="@dimen/spacing_m"
+            android:minHeight="@dimen/height_toolbar">
 
-        <ImageButton
-            android:id="@+id/btn_close"
-            android:layout_width="@dimen/icon_large"
-            android:layout_height="@dimen/icon_large"
-            android:src="@drawable/ic_close"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/settings_close"
-            android:padding="@dimen/spacing_s" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/Text.Title.Large"
+                android:text="@string/settings_title" />
 
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/btn_close"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:src="@drawable/ic_close"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/settings_close"
+                android:padding="@dimen/spacing_s" />
 
-    <!-- Контейнер -->
-    <FrameLayout
-        android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        </LinearLayout>
 
-        <!-- Список меню -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_menu"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:padding="@dimen/spacing_s"
             android:clipToPadding="false"
-            android:scrollbars="vertical"
-            android:visibility="visible" />
+            android:scrollbars="vertical" />
 
-        <!-- Контейнер для фрагментов -->
-        <FrameLayout
-            android:id="@+id/fragment_container"
+    </LinearLayout>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ) -->
+    <FrameLayout
+        android:id="@+id/content_pane"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/content_toolbar"
+                style="@style/Toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_m"
+                android:minHeight="@dimen/height_toolbar"
+                android:visibility="gone"
+                android:elevation="4dp"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageButton
+                    android:id="@+id/btn_back_content"
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:src="@drawable/ic_back"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/back"
+                    android:padding="@dimen/spacing_s" />
+
+                <TextView
+                    android:id="@+id/content_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    style="@style/Text.Title.Large"
+                    android:text="" />
+
+                <ImageButton
+                    android:id="@+id/btn_close_content"
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:src="@drawable/ic_close"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/settings_close"
+                    android:padding="@dimen/spacing_s" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/content_toolbar"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
 
