@@ -118,14 +118,19 @@ class SettingsActivity : BaseActivity() {
 
         checkMode()
 
-        // При переходе из телефона в планшет восстанавливаем последний выбранный пункт
-        if (!previousTabletMode && isTabletMode && selectedItemId != -1) {
-            val item = menuItems.find { it.id == selectedItemId }
-
-            if (item != null) {
-                showItem(item)
-                return
+        // Если переключились на планшет
+        if (!previousTabletMode && isTabletMode) {
+            if (selectedItemId == -1) {
+                // Ничего не выбрано — показываем первый пункт
+                showItem(menuItems.first())
+            } else {
+                // Есть выбранный пункт — восстанавливаем его
+                val item = menuItems.find { it.id == selectedItemId }
+                if (item != null) {
+                    showItem(item)
+                }
             }
+            return
         }
 
         applyMode()
