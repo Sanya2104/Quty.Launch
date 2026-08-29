@@ -27,46 +27,67 @@ class SettingsActivity : BaseActivity() {
 
     // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
-        (300 * resources.displayMetrics.density).toInt()
+        (340 * resources.displayMetrics.density).toInt()
     }
 
-    // Список пунктов меню (создаётся один раз)
+    // Список пунктов меню с цветами (создаётся один раз)
     private val menuItems: List<SettingsMenuModel> by lazy {
         listOf(
+            // === ГРУППА 1: Основное ===
             SettingsMenuModel(
                 1,
                 R.drawable.ic_settings,
                 R.string.settings_menu_main,
                 R.string.settings_menu_main_desc,
-                GeneralFragment::class.java
+                GeneralFragment::class.java,
+                R.color.scheme_teal_primary,
+                true
             ),
+            // === РАЗДЕЛИТЕЛЬ ===
+            SettingsMenuModel(
+                -1, 0, 0, 0, GeneralFragment::class.java, 0
+            ),
+            // === ГРУППА 2: Персонализация ===
             SettingsMenuModel(
                 2,
                 R.drawable.ic_palette,
                 R.string.settings_menu_personalization,
                 R.string.settings_menu_personalization_desc,
-                ShellFragment::class.java
+                ShellFragment::class.java,
+                R.color.scheme_purple_primary,
+                false
             ),
+            // === РАЗДЕЛИТЕЛЬ ===
+            SettingsMenuModel(
+                -2, 0, 0, 0, GeneralFragment::class.java, 0
+            ),
+            // === ГРУППА 3: Система ===
             SettingsMenuModel(
                 3,
                 R.drawable.ic_download,
                 R.string.settings_menu_updates,
                 R.string.settings_menu_updates_desc,
-                UpdateFragment::class.java
+                UpdateFragment::class.java,
+                R.color.scheme_orange_primary,
+                true
             ),
             SettingsMenuModel(
                 4,
                 R.drawable.ic_developer,
                 R.string.settings_menu_developer,
                 R.string.settings_menu_developer_desc,
-                DeveloperFragment::class.java
+                DeveloperFragment::class.java,
+                R.color.scheme_red_primary,
+                true
             ),
             SettingsMenuModel(
                 5,
                 R.drawable.ic_info,
                 R.string.settings_menu_about,
                 R.string.settings_menu_about_desc,
-                AboutFragment::class.java
+                AboutFragment::class.java,
+                R.color.scheme_blue_primary,
+                true
             )
         )
     }
@@ -156,7 +177,7 @@ class SettingsActivity : BaseActivity() {
             binding.contentPane.layoutParams as LinearLayout.LayoutParams
 
         if (isTabletMode) {
-            // === ПЛАНШЕТ: меню слева 300dp, контент справа ===
+            // === ПЛАНШЕТ: меню слева 340dp, контент справа ===
             menuParams.width = menuWidthPx
             menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             menuParams.weight = 0f

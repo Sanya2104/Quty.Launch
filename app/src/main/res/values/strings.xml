@@ -31,7 +31,7 @@
 
     <!-- Пункты меню -->
     <string name="settings_menu_main">Основное</string>
-    <string name="settings_menu_main_desc">Полноэкранный режим, ориентация</string>
+    <string name="settings_menu_main_desc">Быстрые настройки</string>
     <string name="settings_menu_personalization">Персонализация</string>
     <string name="settings_menu_personalization_desc">Оболочки и цветовые схемы</string>
     <string name="settings_menu_updates">Центр обновления</string>

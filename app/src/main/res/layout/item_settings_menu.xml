@@ -8,31 +8,50 @@
     android:padding="@dimen/item_padding"
     android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:minHeight="@dimen/height_button_large">
+    android:minHeight="@dimen/height_button"
+    android:elevation="2dp">
 
-    <!-- Иконка -->
-    <ImageView
-        android:id="@+id/iv_icon"
+    <!-- Иконка с цветным скруглённым фоном (CardView) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/icon_container"
         android:layout_width="@dimen/icon_medium"
         android:layout_height="@dimen/icon_medium"
-        android:layout_marginEnd="@dimen/spacing_l"
-        android:src="@drawable/ic_settings"
-        android:contentDescription="@string/empty"
-        tools:ignore="ContentDescription" />
+        android:layout_marginEnd="@dimen/spacing_m"
+        app:cardCornerRadius="@dimen/radius_medium"
+        app:cardElevation="0dp">
 
-    <!-- Текстовая информация -->
+        <View
+            android:id="@+id/icon_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.8" />
+
+        <ImageView
+            android:id="@+id/iv_icon"
+            android:layout_width="@dimen/icon_small"
+            android:layout_height="@dimen/icon_small"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_settings"
+            android:contentDescription="@string/empty"
+            app:tint="@color/white"
+            tools:ignore="ContentDescription" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Текст -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginEnd="@dimen/spacing_s">
 
-        <!-- Заголовок -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Text.Body"
+            android:textSize="@dimen/text_l"
             android:textColor="?attr/textPrimaryColor"
             android:textStyle="bold"
             tools:text="@string/settings_menu_main" />
@@ -43,6 +62,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Text.Small"
+            android:textSize="@dimen/text_m"
             android:textColor="?attr/textDimColor"
             tools:text="@string/settings_menu_main_desc" />
 
