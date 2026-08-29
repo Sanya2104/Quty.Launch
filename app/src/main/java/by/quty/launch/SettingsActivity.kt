@@ -9,11 +9,12 @@ import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
-import by.quty.launch.core.fragments.settings.AboutFragment
-import by.quty.launch.core.fragments.settings.DeveloperFragment
 import by.quty.launch.core.fragments.settings.GeneralFragment
+import by.quty.launch.core.fragments.settings.StorageFragment
 import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
+import by.quty.launch.core.fragments.settings.DeveloperFragment
+import by.quty.launch.core.fragments.settings.AboutFragment
 import by.quty.launch.core.model.SettingsMenuModel
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.databinding.ActivitySettingsBinding
@@ -40,7 +41,7 @@ class SettingsActivity : BaseActivity() {
                 R.string.settings_menu_main,
                 R.string.settings_menu_main_desc,
                 GeneralFragment::class.java,
-                R.color.scheme_teal_primary,
+                R.color.scheme_green_primary,
                 true
             ),
             // === РАЗДЕЛИТЕЛЬ ===
@@ -62,6 +63,15 @@ class SettingsActivity : BaseActivity() {
                 -2, 0, 0, 0, GeneralFragment::class.java, 0
             ),
             // === ГРУППА 3: Система ===
+            SettingsMenuModel(
+                6,
+                R.drawable.ic_storage,
+                R.string.settings_menu_storage,
+                R.string.settings_menu_storage_desc,
+                StorageFragment::class.java,
+                R.color.scheme_cyan_primary,
+                true
+            ),
             SettingsMenuModel(
                 3,
                 R.drawable.ic_download,

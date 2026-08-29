@@ -1,0 +1,36 @@
+<!-- res/layout/fragment_settings_storage.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:padding="@dimen/screen_padding_horizontal">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Заголовок -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xl"
+            style="@style/Text.Title.Medium"
+            android:text="@string/settings_storage_title"
+            android:gravity="center" />
+
+        <!-- Описание (заглушка) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_m"
+            style="@style/Text.Body.Secondary"
+            android:text="@string/settings_storage_desc"
+            android:gravity="center"
+            android:lineSpacingExtra="@dimen/spacing_s" />
+
+    </LinearLayout>
+
+</ScrollView>

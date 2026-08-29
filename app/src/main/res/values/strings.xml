@@ -34,6 +34,8 @@
     <string name="settings_menu_main_desc">Быстрые настройки</string>
     <string name="settings_menu_personalization">Персонализация</string>
     <string name="settings_menu_personalization_desc">Оболочки и цветовые схемы</string>
+    <string name="settings_menu_storage">Память и данные</string>
+    <string name="settings_menu_storage_desc">Управление данными и настройками</string>
     <string name="settings_menu_updates">Центр обновления</string>
     <string name="settings_menu_updates_desc">Проверка обновлений</string>
     <string name="settings_menu_developer">Разработчикам</string>
@@ -44,6 +46,7 @@
     <!-- Заголовки фрагментов -->
     <string name="settings_general_title">Основное</string>
     <string name="settings_personalization_title">Персонализация</string>
+    <string name="settings_storage_title">Память и данные</string>
     <string name="settings_updates_title">Центр обновления</string>
     <string name="settings_developer_title">Разработчикам</string>
     <string name="settings_about_title">О системе</string>
@@ -58,6 +61,7 @@
     <!-- Описания фрагментов (для заглушек) -->
     <string name="settings_general_desc">Здесь будут настройки:\n• Полноэкранный режим\n• Строгий режим\n• Ориентация экрана</string>
     <string name="settings_personalization_desc">Здесь будут:\n• Список оболочек\n• Цветовые схемы\n• Кнопка "Магазин"</string>
+    <string name="settings_storage_desc">Здесь будет:\n• Занятое место (приложение, кэш, оболочки, логи)\n• Свободное место\n• Очистка данных\n• Экспорт/Импорт настроек</string>
     <string name="settings_updates_desc">Здесь будут:\n• Информация о версии\n• Проверка обновлений\n• Локальная установка APK</string>
     <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
     <string name="settings_about_desc">Здесь будет:\n• Иконка приложения\n• Версия и код версии\n• Канал сборки\n• Модель устройства\n• Версия Android\n• SDK уровень\n• Информация об оболочке</string>
