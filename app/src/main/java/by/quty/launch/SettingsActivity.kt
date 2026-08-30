@@ -14,6 +14,7 @@ import by.quty.launch.core.fragments.settings.StorageFragment
 import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.fragments.settings.DeveloperFragment
+import by.quty.launch.core.fragments.settings.RecoveryFragment
 import by.quty.launch.core.fragments.settings.AboutFragment
 import by.quty.launch.core.model.SettingsMenuModel
 import by.quty.launch.core.managers.LoggerManager
@@ -88,6 +89,15 @@ class SettingsActivity : BaseActivity() {
                 R.string.settings_menu_developer_desc,
                 DeveloperFragment::class.java,
                 R.color.scheme_red_primary,
+                true
+            ),
+            SettingsMenuModel(
+                7,
+                R.drawable.ic_recovery,
+                R.string.settings_menu_recovery,
+                R.string.settings_menu_recovery_desc,
+                RecoveryFragment::class.java,
+                R.color.scheme_teal_primary,
                 true
             ),
             SettingsMenuModel(
