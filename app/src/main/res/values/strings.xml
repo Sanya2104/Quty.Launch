@@ -34,7 +34,7 @@
     <string name="settings_menu_main_desc">Быстрые настройки</string>
     <string name="settings_menu_personalization">Персонализация</string>
     <string name="settings_menu_personalization_desc">Оболочки и цветовые схемы</string>
-    <string name="settings_menu_storage">Память и данные</string>
+    <string name="settings_menu_storage">Память</string>
     <string name="settings_menu_storage_desc">Управление данными</string>
     <string name="settings_menu_updates">Центр обновления</string>
     <string name="settings_menu_updates_desc">Проверка обновлений</string>
@@ -48,7 +48,7 @@
     <!-- Заголовки фрагментов -->
     <string name="settings_general_title">Основное</string>
     <string name="settings_personalization_title">Персонализация</string>
-    <string name="settings_storage_title">Память и данные</string>
+    <string name="settings_storage_title">Память</string>
     <string name="settings_updates_title">Центр обновления</string>
     <string name="settings_developer_title">Разработчикам</string>
     <string name="settings_recovery_title">Восстановление и сброс</string>
@@ -70,11 +70,24 @@
     <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
     <string name="settings_about_desc">Здесь будет:\n• Иконка приложения\n• Версия и код версии\n• Канал сборки\n• Модель устройства\n• Версия Android\n• SDK уровень\n• Информация об оболочке</string>
 
+    <!-- ============================================================ -->
+    <!-- ===== ТЕМА ================================================= -->
+    <!-- ============================================================ -->
 
+    <string name="settings_theme_title">Тема оформления</string>
+    <string name="settings_theme_dark">🌙 Тёмная тема</string>
+    <string name="settings_theme_light">☀️ Светлая тема</string>
 
+    <!-- ============================================================ -->
+    <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
+    <!-- ============================================================ -->
 
-
-
+    <string name="toast_theme_dark_enabled">Тёмная тема включена</string>
+    <string name="toast_theme_light_enabled">Светлая тема включена</string>
+    <string name="toast_fullscreen_enabled">Полноэкранный режим включён</string>
+    <string name="toast_fullscreen_disabled">Полноэкранный режим выключен</string>
+    <string name="toast_strict_mode_enabled">Строгий режим включён</string>
+    <string name="toast_strict_mode_disabled">Строгий режим выключен</string>
 
 
     <!-- ============================================================ -->

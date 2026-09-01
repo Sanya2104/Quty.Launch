@@ -1,0 +1,46 @@
+<!-- res/values-night/colors.xml -->
+<resources>
+    <!-- ============================================================ -->
+    <!-- СВЕТЛАЯ ТЕМА (LIGHT THEME)                                    -->
+    <!-- Переопределяем только то, что отличается от DARK             -->
+    <!-- ============================================================ -->
+
+    <!-- ============================================================ -->
+    <!-- ОСНОВНЫЕ ЦВЕТА ТЕМЫ (LIGHT) -->
+    <!-- ============================================================ -->
+
+    <!-- Фоны (Light) -->
+    <color name="background_dark">#F5F5F5</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="background_item">#F0F0F0</color>
+    <color name="background_input">#E8E8E8</color>
+    <color name="background_warning">#FFF3E0</color>
+    <color name="background_error">#FFEBEE</color>
+    <color name="background_permission_item">#FFFFFF</color>
+
+    <!-- Текст (Light) -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#424242</color>
+    <color name="text_hint">#757575</color>
+    <color name="text_muted">#9E9E9E</color>
+    <color name="text_dim">#BDBDBD</color>
+    <color name="text_error">#D32F2F</color>
+
+    <!-- Разделители и обводки (Light) -->
+    <color name="divider">#E0E0E0</color>
+    <color name="stroke">#CCCCCC</color>
+
+    <!-- Кнопки (Light) -->
+    <color name="button_secondary">#E0E0E0</color>
+    <color name="button_danger">#D32F2F</color>
+    <color name="button_warning">#FF9800</color>
+    <color name="button_clear_cache">#FF6F00</color>
+
+    <!-- ============================================================ -->
+    <!-- ЦВЕТОВЫЕ СХЕМЫ - НЕ МЕНЯЮТСЯ! (используются из values/)      -->
+    <!-- ============================================================ -->
+
+    <!-- Все scheme_* цвета остаются теми же, что и в dark -->
+    <!-- Они определены в values/colors.xml и НЕ переопределяются здесь -->
+
+</resources>

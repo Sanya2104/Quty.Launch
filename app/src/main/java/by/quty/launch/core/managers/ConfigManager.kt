@@ -1,4 +1,3 @@
-// *** core/managers/ConfigManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.content.Context
@@ -102,5 +101,29 @@ class ConfigManager(context: Context) {
      */
     fun getColorSchemeObject(): ColorSchemeModel {
         return ColorSchemeModel.getSchemeById(getColorScheme())
+    }
+
+    // ============================================================
+    // ТЕМА (DARK / LIGHT)
+    // ============================================================
+
+    companion object {
+        private const val KEY_THEME_DARK = "theme_dark"
+        private const val DEFAULT_THEME_DARK = true
+    }
+
+    /**
+     * Возвращает true если включена тёмная тема
+     */
+    fun isDarkTheme(): Boolean {
+        return prefs.getBoolean(KEY_THEME_DARK, DEFAULT_THEME_DARK)
+    }
+
+    /**
+     * Сохраняет настройку темы
+     * @param isDark true = тёмная, false = светлая
+     */
+    fun setDarkTheme(isDark: Boolean) {
+        prefs.edit { putBoolean(KEY_THEME_DARK, isDark) }
     }
 }

@@ -142,12 +142,12 @@ class JsBridge(
     }
 
     // ============================================================
-    // ПРИМЕНЕНИЕ ЦВЕТОВОЙ СХЕМЫ В WEBVIEW
+    // ПРИМЕНЕНИЕ ЦВЕТОВОЙ СХЕМЫ И ТЕМЫ В WEBVIEW
     // ============================================================
 
     /**
-     * Применяет цветовую схему в WebView
-     * Вызывает JavaScript функцию applyColorScheme(primary, accent)
+     * Применяет цветовую схему и тему в WebView
+     * Вызывает JavaScript функцию applyColorScheme(primary, accent, theme)
      * @param primary primary цвет в HEX (#009688)
      * @param accent accent цвет в HEX (#4CAF50)
      */
@@ -162,16 +162,26 @@ class JsBridge(
             return
         }
 
-        // Формируем JavaScript код для применения цветов
+        // Получаем текущую тему (Dark/Light)
+        val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("theme_dark", true)
+        val theme = if (isDark) "dark" else "light"
+
+        // Формируем JavaScript код для применения цветов и темы
         val jsCode = """
             (function() {
                 // Проверяем, определена ли функция applyColorScheme
                 if (typeof window.applyColorScheme === 'function') {
-                    window.applyColorScheme('$primary', '$accent');
+                    window.applyColorScheme('$primary', '$accent', '$theme');
                 } else {
                     // Fallback: применяем через CSS переменные
                     document.documentElement.style.setProperty('--primary-color', '$primary');
                     document.documentElement.style.setProperty('--accent-color', '$accent');
+                    document.documentElement.style.setProperty('--theme', '$theme');
+                    
+                    // Добавляем классы для темы
+                    document.body.classList.toggle('dark-theme', '$theme' === 'dark');
+                    document.body.classList.toggle('light-theme', '$theme' === 'light');
                 }
             })();
         """.trimIndent()
@@ -182,7 +192,7 @@ class JsBridge(
                 webView.evaluateJavascript(jsCode, null)
                 LoggerManager.d(
                     "JsBridge",
-                    context.getString(R.string.log_js_bridge_color_scheme_applied, primary, accent)
+                    context.getString(R.string.log_js_bridge_color_scheme_applied, primary, accent) + ", theme: $theme"
                 )
             } catch (e: Exception) {
                 LoggerManager.e(

@@ -1,4 +1,3 @@
-// *** BaseActivity.kt *** //
 package by.quty.launch
 
 import android.annotation.SuppressLint
@@ -10,6 +9,7 @@ import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import by.quty.launch.configs.CoreConfig
@@ -38,6 +38,8 @@ abstract class BaseActivity : AppCompatActivity() {
     private var isListenerAttached = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Применяем тему ДО super.onCreate()
+        applyThemeFromPrefs()
         // Применяем цветовую схему ДО super.onCreate()
         applyColorSchemeFromPrefs()
 
@@ -58,6 +60,21 @@ abstract class BaseActivity : AppCompatActivity() {
 
         // Инициализируем менеджер конфигурации при создании активности
         _configManager = ConfigManager(this)
+    }
+
+    /**
+     * Применяет тему (Dark/Light) ДО super.onCreate()
+     * Использует AppCompatDelegate для нативного переключения
+     */
+    private fun applyThemeFromPrefs() {
+        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+        val isDark = prefs.getBoolean("theme_dark", true)
+
+        if (isDark) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
     }
 
     /**

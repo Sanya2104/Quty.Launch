@@ -1,6 +1,5 @@
 <!-- res/layout/fragment_settings_general.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -12,24 +11,132 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Заголовок -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Title.Medium"
-            android:text="@string/settings_general_title"
-            android:gravity="center" />
+        <!-- ============================================================ -->
+        <!-- ===== ТЕМА ОФОРМЛЕНИЯ ===================================== -->
+        <!-- ============================================================ -->
 
-        <!-- Описание -->
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_m"
-            style="@style/Text.Body.Secondary"
-            android:text="@string/settings_general_desc"
-            android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_s" />
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            android:text="@string/settings_theme_title" />
+
+        <LinearLayout
+            style="@style/Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/theme_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/height_button"
+                style="@style/Text.Body"
+                android:text="@string/settings_theme_dark"
+                android:checked="true" />
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== ОРИЕНТАЦИЯ ЭКРАНА =================================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/parameters_orientation_title" />
+
+        <LinearLayout
+            style="@style/Card"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l">
+
+            <RadioGroup
+                android:id="@+id/orientation_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/orientation_sensor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/orientation_auto" />
+
+                <RadioButton
+                    android:id="@+id/orientation_portrait"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/orientation_portrait" />
+
+                <RadioButton
+                    android:id="@+id/orientation_landscape"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/orientation_landscape" />
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ============================ -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/parameters_additional_title" />
+
+        <LinearLayout
+            style="@style/Card"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l">
+
+            <CheckBox
+                android:id="@+id/fullscreen_checkbox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:enabled="true"
+                android:minHeight="@dimen/height_button"
+                style="@style/Text.Body"
+                android:text="@string/additional_fullscreen" />
+
+            <CheckBox
+                android:id="@+id/strict_mode_checkbox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:alpha="0.5"
+                android:checked="false"
+                android:enabled="false"
+                android:minHeight="@dimen/height_button"
+                style="@style/Text.Body"
+                android:text="@string/additional_strict_mode" />
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 
