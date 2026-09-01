@@ -30,14 +30,37 @@
             android:orientation="vertical"
             android:padding="@dimen/spacing_l">
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/theme_switch"
+            <RadioGroup
+                android:id="@+id/theme_mode_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="@dimen/height_button"
-                style="@style/Text.Body"
-                android:text="@string/settings_theme_dark"
-                android:checked="true" />
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/theme_light"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/settings_theme_light" />
+
+                <RadioButton
+                    android:id="@+id/theme_dark"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/settings_theme_dark" />
+
+                <RadioButton
+                    android:id="@+id/theme_system"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/height_button"
+                    style="@style/Text.Body"
+                    android:text="@string/settings_theme_system" />
+
+            </RadioGroup>
 
         </LinearLayout>
 

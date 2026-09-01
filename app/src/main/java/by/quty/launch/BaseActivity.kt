@@ -63,18 +63,19 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * Применяет тему (Dark/Light) ДО super.onCreate()
-     * Использует AppCompatDelegate для нативного переключения
+     * Применяет тему (Light/Dark/System) ДО super.onCreate()
      */
     private fun applyThemeFromPrefs() {
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
-        val isDark = prefs.getBoolean("theme_dark", true)
+        val mode = prefs.getString("theme_mode", CoreConfig.DEFAULT_THEME_MODE) ?: CoreConfig.DEFAULT_THEME_MODE
 
-        if (isDark) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        val nightMode = when (mode) {
+            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "system" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            else -> AppCompatDelegate.MODE_NIGHT_NO
         }
+        AppCompatDelegate.setDefaultNightMode(nightMode)
     }
 
     /**

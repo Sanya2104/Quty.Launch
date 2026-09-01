@@ -1,7 +1,7 @@
 <!-- res/values-night/themes.xml -->
 <resources>
     <!-- ============================================================ -->
-    <!-- ===== БАЗОВАЯ ТЕМА (LIGHT) ================================= -->
+    <!-- ===== БАЗОВАЯ ТЕМА (DARK) ================================== -->
     <!-- ============================================================ -->
 
     <style name="Theme.QutyLaunch" parent="Theme.AppCompat.NoActionBar">
@@ -9,12 +9,17 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
 
+        <!-- Для Android 13: обрабатываем вырез камеры -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+
+        <!-- Важно! Запрещаем системе добавлять отступы -->
         <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Растягиваем окно под системные панели -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
         <!-- ============================================================ -->
-        <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (LIGHT) ============================ -->
+        <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (DARK) ============================ -->
         <!-- ============================================================ -->
 
         <!-- Основные цвета Material (для стандартных виджетов) -->
@@ -22,12 +27,12 @@
         <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
         <item name="colorAccent">@color/scheme_teal_accent</item>
 
-        <!-- Для контролов -->
+        <!-- Для контролов (чекбоксы, радиокнопки, переключатели) -->
         <item name="colorControlNormal">@color/text_dim</item>
         <item name="colorControlActivated">@color/scheme_teal_primary</item>
         <item name="colorControlHighlight">@color/scheme_teal_primary</item>
 
-        <!-- Для кнопок -->
+        <!-- Для кнопок (ripple эффект) -->
         <item name="colorButtonNormal">@color/scheme_teal_primary</item>
 
         <!-- Атрибуты для UI (значения по умолчанию для teal) -->
@@ -37,7 +42,7 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:colorBackground">@color/background_dark</item>
 
-        <!-- Кастомные атрибуты (LIGHT) -->
+        <!-- Кастомные атрибуты (DARK) -->
         <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
         <item name="buttonSecondaryColor">@color/button_secondary</item>
         <item name="buttonDangerColor">@color/button_danger</item>
@@ -54,7 +59,7 @@
         <item name="textDimColor">@color/text_dim</item>
         <item name="statusWarningColor">@color/status_warning</item>
 
-        <!-- Новые атрибуты для фонов (LIGHT) -->
+        <!-- Новые атрибуты для фонов (DARK) -->
         <item name="backgroundWarning">@color/background_warning</item>
         <item name="backgroundError">@color/background_error</item>
         <item name="backgroundInput">@color/background_input</item>
@@ -62,18 +67,190 @@
         <item name="dividerColor">@color/divider</item>
         <item name="strokeColor">@color/stroke</item>
 
-        <!-- Цвета для иконок (LIGHT) -->
-        <item name="iconTintColor">@color/text_primary_light</item>
+        <!-- Цвета для иконок (DARK) -->
+        <item name="iconTintColor">@color/text_primary</item>
         <item name="iconTintActiveColor">@color/scheme_teal_primary</item>
-        <item name="iconTintInactiveColor">@color/text_dim_light</item>
+        <item name="iconTintInactiveColor">@color/text_dim</item>
     </style>
 
     <!-- ============================================================ -->
-    <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ (LIGHT) ============= -->
+    <!-- ===== ТЕМА ДЛЯ ДИАЛОГОВ ==================================== -->
     <!-- ============================================================ -->
 
-    <!-- Все 9 тем копируются из values/themes.xml -->
-    <!-- Они уже используют атрибуты, поэтому просто переопределяем базовую тему -->
+    <style name="Theme.AppCompat.Translucent" parent="Theme.QutyLaunch">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== БАЗОВЫЙ СТИЛЬ ТЕКСТА ================================= -->
+    <!-- ============================================================ -->
+
+    <style name="Text">
+        <item name="android:textSize">@dimen/text_m</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ ТЕКСТА ========================================= -->
+    <!-- ============================================================ -->
+
+    <style name="Text.Title">
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Text.Title.Large" parent="Text.Title">
+        <item name="android:textSize">@dimen/title_large</item>
+    </style>
+
+    <style name="Text.Title.Medium" parent="Text.Title">
+        <item name="android:textSize">@dimen/title_medium</item>
+    </style>
+
+    <style name="Text.Title.Small" parent="Text.Title">
+        <item name="android:textSize">@dimen/title_small</item>
+        <item name="android:textColor">?attr/textSecondaryColor</item>
+    </style>
+
+    <style name="Text.Title.XSmall" parent="Text.Title">
+        <item name="android:textSize">@dimen/title_xsmall</item>
+        <item name="android:textColor">?attr/textSecondaryColor</item>
+    </style>
+
+    <style name="Text.Body" parent="Text">
+        <item name="android:textSize">@dimen/text_m</item>
+    </style>
+
+    <style name="Text.Body.Secondary" parent="Text">
+        <item name="android:textSize">@dimen/text_m</item>
+        <item name="android:textColor">?attr/textHintColor</item>
+    </style>
+
+    <style name="Text.Body.Dim" parent="Text">
+        <item name="android:textSize">@dimen/text_m</item>
+        <item name="android:textColor">?attr/textDimColor</item>
+    </style>
+
+    <style name="Text.Small" parent="Text">
+        <item name="android:textSize">@dimen/text_s</item>
+        <item name="android:textColor">?attr/textDimColor</item>
+    </style>
+
+    <style name="Text.XSmall" parent="Text">
+        <item name="android:textSize">@dimen/text_xs</item>
+        <item name="android:textColor">?attr/textDimColor</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== БАЗОВЫЙ СТИЛЬ КНОПКИ ================================= -->
+    <!-- ============================================================ -->
+
+    <style name="Button">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_l</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="rippleColor">?attr/colorControlHighlight</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ КНОПОК ========================================= -->
+    <!-- ============================================================ -->
+
+    <style name="Button.Primary" parent="Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_button</item>
+        <item name="android:backgroundTint">?attr/buttonPrimaryColor</item>
+        <item name="cornerRadius">@dimen/radius_circle</item>
+    </style>
+
+    <style name="Button.Secondary" parent="Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_button</item>
+        <item name="android:backgroundTint">?attr/buttonSecondaryColor</item>
+        <item name="cornerRadius">@dimen/radius_medium</item>
+    </style>
+
+    <style name="Button.Danger" parent="Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_button</item>
+        <item name="android:backgroundTint">?attr/buttonDangerColor</item>
+        <item name="cornerRadius">@dimen/radius_medium</item>
+    </style>
+
+    <style name="Button.Warning" parent="Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_button</item>
+        <item name="android:backgroundTint">?attr/buttonWarningColor</item>
+        <item name="cornerRadius">@dimen/radius_medium</item>
+    </style>
+
+    <style name="Button.ClearCache" parent="Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_button</item>
+        <item name="android:backgroundTint">?attr/buttonClearCacheColor</item>
+        <item name="cornerRadius">@dimen/radius_medium</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ КАРТОЧЕК ======================================= -->
+    <!-- ============================================================ -->
+
+    <style name="Card">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="android:padding">@dimen/card_padding</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ ЭКРАНОВ ======================================== -->
+    <!-- ============================================================ -->
+
+    <style name="Screen">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">?android:attr/colorBackground</item>
+    </style>
+
+    <style name="Screen.WithPadding">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:padding">@dimen/screen_padding_horizontal</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ TOOLBAR ======================================== -->
+    <!-- ============================================================ -->
+
+    <style name="Toolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/height_toolbar</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="android:paddingStart">@dimen/spacing_m</item>
+        <item name="android:paddingEnd">@dimen/spacing_m</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛИ SPINNER ======================================== -->
+    <!-- ============================================================ -->
+
+    <style name="Spinner">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">@dimen/spinner_min_width</item>
+        <item name="android:background">@drawable/spinner_bg</item>
+        <item name="android:popupBackground">?attr/colorSurface</item>
+        <item name="android:spinnerMode">dropdown</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ (DARK) ============= -->
+    <!-- ============================================================ -->
 
     <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">
         <item name="colorPrimary">@color/scheme_red_primary</item>

@@ -1,19 +1,24 @@
+// *** core/managers/ConfigManager.kt *** //
 package by.quty.launch.core.managers
 
 import android.content.Context
+import android.content.res.Configuration
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.ColorSchemeModel
-import androidx.core.content.edit
 
 class ConfigManager(context: Context) {
 
     private val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+    private val appContext = context.applicationContext
 
     // Значения по умолчанию из CoreConfig
     fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
     fun getDefaultOrientation(): String = CoreConfig.DEFAULT_ORIENTATION
     fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
     fun getDefaultStrictMode(): Boolean = CoreConfig.DEFAULT_STRICT_MODE
+    fun getDefaultThemeMode(): String = CoreConfig.DEFAULT_THEME_MODE
 
     // Получение активной оболочки
     fun getActiveShell(): String {
@@ -47,7 +52,6 @@ class ConfigManager(context: Context) {
 
     // Получение строгого режима
     fun isStrictModeEnabled(): Boolean {
-        // Строгий режим работает только если включен полноэкранный
         if (!isFullscreenEnabled()) return false
         return prefs.getBoolean("strict_mode", getDefaultStrictMode())
     }
@@ -61,69 +65,87 @@ class ConfigManager(context: Context) {
     // ЦВЕТОВАЯ СХЕМА
     // ============================================================
 
-    /**
-     * Возвращает ID текущей цветовой схемы
-     */
     fun getColorScheme(): String {
         return prefs.getString("color_scheme", getDefaultColorScheme()) ?: getDefaultColorScheme()
     }
 
-    /**
-     * Сохраняет ID цветовой схемы
-     */
     fun setColorScheme(schemeId: String) {
         prefs.edit { putString("color_scheme", schemeId) }
     }
 
-    /**
-     * Возвращает цветовую схему по умолчанию
-     */
     fun getDefaultColorScheme(): String {
         return CoreConfig.DEFAULT_COLOR_SCHEME
     }
 
-    /**
-     * Возвращает primary цвет текущей схемы в HEX
-     */
     fun getSchemePrimaryColor(): String {
         return getColorSchemeObject().primaryColor
     }
 
-    /**
-     * Возвращает accent цвет текущей схемы в HEX
-     */
     fun getSchemeAccentColor(): String {
         return getColorSchemeObject().accentColor
     }
 
-    /**
-     * Возвращает объект текущей цветовой схемы
-     */
     fun getColorSchemeObject(): ColorSchemeModel {
         return ColorSchemeModel.getSchemeById(getColorScheme())
     }
 
     // ============================================================
-    // ТЕМА (DARK / LIGHT)
+    // ТЕМА (LIGHT / DARK / SYSTEM)
     // ============================================================
 
     companion object {
-        private const val KEY_THEME_DARK = "theme_dark"
-        private const val DEFAULT_THEME_DARK = true
+        private const val KEY_THEME_MODE = "theme_mode"
     }
 
     /**
-     * Возвращает true если включена тёмная тема
+     * Возвращает режим темы: "light", "dark" или "system"
      */
+    fun getThemeMode(): String {
+        return prefs.getString(KEY_THEME_MODE, getDefaultThemeMode()) ?: getDefaultThemeMode()
+    }
+
+    /**
+     * Сохраняет режим темы
+     * @param mode "light", "dark" или "system"
+     */
+    fun setThemeMode(mode: String) {
+        prefs.edit { putString(KEY_THEME_MODE, mode) }
+    }
+
+    /**
+     * Возвращает true если должна быть включена тёмная тема.
+     * Используется в GeneralFragment для отображения состояния переключателя.
+     */
+    @Suppress("unused")
     fun isDarkTheme(): Boolean {
-        return prefs.getBoolean(KEY_THEME_DARK, DEFAULT_THEME_DARK)
+        return when (getThemeMode()) {
+            "dark" -> true
+            "light" -> false
+            "system" -> isSystemInDarkMode()
+            else -> false
+        }
     }
 
     /**
-     * Сохраняет настройку темы
-     * @param isDark true = тёмная, false = светлая
+     * Проверяет, включена ли тёмная тема в системе
      */
-    fun setDarkTheme(isDark: Boolean) {
-        prefs.edit { putBoolean(KEY_THEME_DARK, isDark) }
+    private fun isSystemInDarkMode(): Boolean {
+        val resources = appContext.resources
+        val config = resources.configuration
+        return (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    }
+
+    /**
+     * Применяет тему через AppCompatDelegate
+     * Вызывается из BaseActivity
+     */
+    fun applyTheme() {
+        val mode = when (getThemeMode()) {
+            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "system" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            else -> AppCompatDelegate.MODE_NIGHT_NO
+        }
+        AppCompatDelegate.setDefaultNightMode(mode)
     }
 }

@@ -75,15 +75,17 @@
     <!-- ============================================================ -->
 
     <string name="settings_theme_title">Тема оформления</string>
-    <string name="settings_theme_dark">🌙 Тёмная тема</string>
-    <string name="settings_theme_light">☀️ Светлая тема</string>
+    <string name="settings_theme_light">☀️ Светлая</string>
+    <string name="settings_theme_dark">🌙 Тёмная</string>
+    <string name="settings_theme_system">📱 Системная</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
     <!-- ============================================================ -->
 
-    <string name="toast_theme_dark_enabled">Тёмная тема включена</string>
     <string name="toast_theme_light_enabled">Светлая тема включена</string>
+    <string name="toast_theme_dark_enabled">Тёмная тема включена</string>
+    <string name="toast_theme_system_enabled">Режим "Следовать за системой" включен</string>
     <string name="toast_fullscreen_enabled">Полноэкранный режим включён</string>
     <string name="toast_fullscreen_disabled">Полноэкранный режим выключен</string>
     <string name="toast_strict_mode_enabled">Строгий режим включён</string>

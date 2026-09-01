@@ -1,7 +1,7 @@
 <!-- res/values/themes.xml -->
 <resources>
     <!-- ============================================================ -->
-    <!-- ===== БАЗОВАЯ ТЕМА (DARK) ================================== -->
+    <!-- ===== БАЗОВАЯ ТЕМА (LIGHT) ================================= -->
     <!-- ============================================================ -->
 
     <style name="Theme.QutyLaunch" parent="Theme.AppCompat.NoActionBar">
@@ -9,17 +9,12 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
 
-        <!-- Для Android 13: обрабатываем вырез камеры -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-
-        <!-- Важно! Запрещаем системе добавлять отступы -->
         <item name="android:fitsSystemWindows">false</item>
-
-        <!-- Растягиваем окно под системные панели -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
         <!-- ============================================================ -->
-        <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (DARK) ============================ -->
+        <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (LIGHT) ============================ -->
         <!-- ============================================================ -->
 
         <!-- Основные цвета Material (для стандартных виджетов) -->
@@ -27,12 +22,12 @@
         <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
         <item name="colorAccent">@color/scheme_teal_accent</item>
 
-        <!-- Для контролов (чекбоксы, радиокнопки, переключатели) -->
+        <!-- Для контролов -->
         <item name="colorControlNormal">@color/text_dim</item>
         <item name="colorControlActivated">@color/scheme_teal_primary</item>
         <item name="colorControlHighlight">@color/scheme_teal_primary</item>
 
-        <!-- Для кнопок (ripple эффект) -->
+        <!-- Для кнопок -->
         <item name="colorButtonNormal">@color/scheme_teal_primary</item>
 
         <!-- Атрибуты для UI (значения по умолчанию для teal) -->
@@ -42,7 +37,7 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:colorBackground">@color/background_dark</item>
 
-        <!-- Кастомные атрибуты (DARK) -->
+        <!-- Кастомные атрибуты (LIGHT) -->
         <item name="buttonPrimaryColor">@color/scheme_teal_primary</item>
         <item name="buttonSecondaryColor">@color/button_secondary</item>
         <item name="buttonDangerColor">@color/button_danger</item>
@@ -59,7 +54,7 @@
         <item name="textDimColor">@color/text_dim</item>
         <item name="statusWarningColor">@color/status_warning</item>
 
-        <!-- Новые атрибуты для фонов (DARK) -->
+        <!-- Новые атрибуты для фонов (LIGHT) -->
         <item name="backgroundWarning">@color/background_warning</item>
         <item name="backgroundError">@color/background_error</item>
         <item name="backgroundInput">@color/background_input</item>
@@ -67,7 +62,7 @@
         <item name="dividerColor">@color/divider</item>
         <item name="strokeColor">@color/stroke</item>
 
-        <!-- Цвета для иконок (DARK) -->
+        <!-- Цвета для иконок (LIGHT) -->
         <item name="iconTintColor">@color/text_primary</item>
         <item name="iconTintActiveColor">@color/scheme_teal_primary</item>
         <item name="iconTintInactiveColor">@color/text_dim</item>
@@ -249,7 +244,7 @@
     </style>
 
     <!-- ============================================================ -->
-    <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ (DARK) ============= -->
+    <!-- ===== ТЕМЫ С РАЗНЫМИ ЦВЕТОВЫМИ СХЕМАМИ (LIGHT) ============= -->
     <!-- ============================================================ -->
 
     <style name="Theme.QutyLaunch.Red" parent="Theme.QutyLaunch">

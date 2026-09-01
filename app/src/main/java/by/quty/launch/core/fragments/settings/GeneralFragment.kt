@@ -1,4 +1,3 @@
-// *** core/fragments/settings/GeneralFragment.kt *** //
 package by.quty.launch.core.fragments.settings
 
 import android.os.Bundle
@@ -8,8 +7,6 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.RadioGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
@@ -19,7 +16,7 @@ import by.quty.launch.core.managers.ShellManager
 
 /**
  * Фрагмент "Основное" для Настроек
- * Содержит: переключение темы (Dark/Light), полноэкранный режим, строгий режим, ориентация
+ * Содержит: переключение темы (Light/Dark/System), полноэкранный режим, строгий режим, ориентация
  */
 class GeneralFragment : Fragment() {
 
@@ -27,7 +24,7 @@ class GeneralFragment : Fragment() {
     private lateinit var shellManager: ShellManager
 
     // UI элементы
-    private lateinit var themeSwitch: SwitchCompat
+    private lateinit var themeModeGroup: RadioGroup
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
@@ -57,12 +54,12 @@ class GeneralFragment : Fragment() {
         }
 
         // Инициализация UI
-        themeSwitch = view.findViewById(R.id.theme_switch)
+        themeModeGroup = view.findViewById(R.id.theme_mode_group)
         orientationGroup = view.findViewById(R.id.orientation_group)
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
         strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
 
-        setupThemeSwitch()
+        setupThemeModeSelector()
         setupOrientationSelector()
         setupFullscreenSelector()
         setupStrictModeSelector()
@@ -72,51 +69,43 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ТЕМА (DARK / LIGHT)
+    // ТЕМА (LIGHT / DARK / SYSTEM)
     // ============================================================
 
-    private fun setupThemeSwitch() {
-        val isDark = configManager.isDarkTheme()
-        themeSwitch.isChecked = isDark
+    private fun setupThemeModeSelector() {
+        val mode = configManager.getThemeMode()
 
-        // Используем строки из ресурсов
-        themeSwitch.text = if (isDark) {
-            getString(R.string.settings_theme_dark)
-        } else {
-            getString(R.string.settings_theme_light)
+        when (mode) {
+            "light" -> themeModeGroup.check(R.id.theme_light)
+            "dark" -> themeModeGroup.check(R.id.theme_dark)
+            "system" -> themeModeGroup.check(R.id.theme_system)
+            else -> themeModeGroup.check(R.id.theme_light)
         }
 
-        themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+        themeModeGroup.setOnCheckedChangeListener { _, checkedId ->
+            if (isUpdating) return@setOnCheckedChangeListener
+
+            val mode = when (checkedId) {
+                R.id.theme_light -> "light"
+                R.id.theme_dark -> "dark"
+                R.id.theme_system -> "system"
+                else -> "light"
+            }
+
             // Сохраняем настройку
-            configManager.setDarkTheme(isChecked)
+            configManager.setThemeMode(mode)
+            configManager.applyTheme()
 
-            // Применяем тему через AppCompatDelegate
-            if (isChecked) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            // Показываем тост
+            val message = when (mode) {
+                "light" -> getString(R.string.toast_theme_light_enabled)
+                "dark" -> getString(R.string.toast_theme_dark_enabled)
+                "system" -> getString(R.string.toast_theme_system_enabled)
+                else -> ""
             }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
-            // Обновляем текст из ресурсов
-            themeSwitch.text = if (isChecked) {
-                getString(R.string.settings_theme_dark)
-            } else {
-                getString(R.string.settings_theme_light)
-            }
-
-            // Используем строки из ресурсов для Toast
-            Toast.makeText(
-                requireContext(),
-                if (isChecked) {
-                    getString(R.string.toast_theme_dark_enabled)
-                } else {
-                    getString(R.string.toast_theme_light_enabled)
-                },
-                Toast.LENGTH_SHORT
-            ).show()
-
-            // Перезапускаем активность для применения темы
-            activity?.recreate()
+            // Перезапускаем активность для применения темы            activity?.recreate()
         }
     }
 
@@ -169,7 +158,6 @@ class GeneralFragment : Fragment() {
             parametersEventListener?.onFullscreenChanged(isChecked)
             parametersEventListener?.onSettingChanged()
 
-            // Используем строки из ресурсов для Toast
             Toast.makeText(
                 requireContext(),
                 if (isChecked) {
@@ -196,7 +184,6 @@ class GeneralFragment : Fragment() {
             parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
             parametersEventListener?.onSettingChanged()
 
-            // Используем строки из ресурсов для Toast
             Toast.makeText(
                 requireContext(),
                 if (isChecked) {
@@ -223,12 +210,12 @@ class GeneralFragment : Fragment() {
         isUpdating = true
 
         // Обновляем тему
-        val isDark = configManager.isDarkTheme()
-        themeSwitch.isChecked = isDark
-        themeSwitch.text = if (isDark) {
-            getString(R.string.settings_theme_dark)
-        } else {
-            getString(R.string.settings_theme_light)
+        val mode = configManager.getThemeMode()
+        when (mode) {
+            "light" -> themeModeGroup.check(R.id.theme_light)
+            "dark" -> themeModeGroup.check(R.id.theme_dark)
+            "system" -> themeModeGroup.check(R.id.theme_system)
+            else -> themeModeGroup.check(R.id.theme_light)
         }
 
         // Обновляем ориентацию
