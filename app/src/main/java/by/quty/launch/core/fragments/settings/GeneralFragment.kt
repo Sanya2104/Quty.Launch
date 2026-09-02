@@ -1,3 +1,4 @@
+// *** core/fragments/settings/GeneralFragment.kt *** //
 package by.quty.launch.core.fragments.settings
 
 import android.os.Bundle
@@ -33,6 +34,9 @@ class GeneralFragment : Fragment() {
     // Флаг для предотвращения множественных обновлений
     private var isUpdating = false
 
+    // Флаг, что требуется перезагрузка
+    private var needsRestart = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,16 +48,13 @@ class GeneralFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем ParametersEventListener (если активность его реализует)
         parametersEventListener = activity as? ParametersEventListener
 
-        // Получаем менеджеры через активность
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
             shellManager = ShellManager(requireContext(), configManager)
         }
 
-        // Инициализация UI
         themeModeGroup = view.findViewById(R.id.theme_mode_group)
         orientationGroup = view.findViewById(R.id.orientation_group)
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
@@ -64,7 +65,6 @@ class GeneralFragment : Fragment() {
         setupFullscreenSelector()
         setupStrictModeSelector()
 
-        // Обновляем состояние UI
         refreshParameters()
     }
 
@@ -92,11 +92,12 @@ class GeneralFragment : Fragment() {
                 else -> "light"
             }
 
-            // Сохраняем настройку
             configManager.setThemeMode(mode)
             configManager.applyTheme()
 
-            // Показываем тост
+            // Отмечаем, что требуется перезагрузка
+            needsRestart = true
+
             val message = when (mode) {
                 "light" -> getString(R.string.toast_theme_light_enabled)
                 "dark" -> getString(R.string.toast_theme_dark_enabled)
@@ -104,8 +105,6 @@ class GeneralFragment : Fragment() {
                 else -> ""
             }
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-
-            // Перезапускаем активность для применения темы            activity?.recreate()
         }
     }
 
@@ -132,6 +131,9 @@ class GeneralFragment : Fragment() {
             }
             configManager.setOrientation(orientation)
 
+            // Отмечаем, что требуется перезагрузка
+            needsRestart = true
+
             parametersEventListener?.onOrientationChanged(orientation)
             parametersEventListener?.onSettingChanged()
         }
@@ -154,6 +156,9 @@ class GeneralFragment : Fragment() {
             }
 
             updateStrictModeState()
+
+            // Отмечаем, что требуется перезагрузка
+            needsRestart = true
 
             parametersEventListener?.onFullscreenChanged(isChecked)
             parametersEventListener?.onSettingChanged()
@@ -180,6 +185,9 @@ class GeneralFragment : Fragment() {
 
         strictModeCheckbox.setOnCheckedChangeListener { _, isChecked ->
             configManager.setStrictModeEnabled(isChecked)
+
+            // Отмечаем, что требуется перезагрузка
+            needsRestart = true
 
             parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
             parametersEventListener?.onSettingChanged()
@@ -209,7 +217,6 @@ class GeneralFragment : Fragment() {
     fun refreshParameters() {
         isUpdating = true
 
-        // Обновляем тему
         val mode = configManager.getThemeMode()
         when (mode) {
             "light" -> themeModeGroup.check(R.id.theme_light)
@@ -218,7 +225,6 @@ class GeneralFragment : Fragment() {
             else -> themeModeGroup.check(R.id.theme_light)
         }
 
-        // Обновляем ориентацию
         val currentOrientation = configManager.getOrientation()
         when (currentOrientation) {
             "portrait" -> orientationGroup.check(R.id.orientation_portrait)
@@ -226,12 +232,23 @@ class GeneralFragment : Fragment() {
             else -> orientationGroup.check(R.id.orientation_sensor)
         }
 
-        // Обновляем полноэкранный и строгий режимы
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
         isUpdating = false
+    }
+
+    /**
+     * Возвращает флаг необходимости перезагрузки
+     */
+    fun getNeedsRestart(): Boolean = needsRestart
+
+    /**
+     * Устанавливает флаг необходимости перезагрузки
+     */
+    fun setNeedsRestart(value: Boolean) {
+        needsRestart = value
     }
 
     override fun onResume() {

@@ -1,12 +1,16 @@
 // *** SettingsActivity.kt *** //
 package by.quty.launch
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.settings.GeneralFragment
@@ -26,6 +30,12 @@ class SettingsActivity : BaseActivity() {
     private var isFragmentVisible = false
     private var isTabletMode = false
     private var selectedItemId = -1
+
+    // Флаг для предотвращения множественных перезапусков
+    private var isRestarting = false
+
+    // Флаг, что были изменения, требующие перезапуска
+    private var needsRestart = false
 
     // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
@@ -319,11 +329,11 @@ class SettingsActivity : BaseActivity() {
 
     private fun setupButtons() {
         binding.btnClose.setOnClickListener {
-            finish()
+            checkAndShowRestartDialog()
         }
 
         binding.btnCloseContent.setOnClickListener {
-            finish()
+            checkAndShowRestartDialog()
         }
 
         binding.btnBackContent.setOnClickListener {
@@ -358,19 +368,95 @@ class SettingsActivity : BaseActivity() {
                         return
                     }
 
-                    /*
-                     * В планшетном режиме меню постоянно отображается
-                     * слева, поэтому Back закрывает Activity.
-                     *
-                     * Также закрываем Activity в телефонном режиме,
-                     * когда открыто меню.
-                     */
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
+                    // В планшетном режиме или при закрытом фрагменте — проверяем изменения
+                    checkAndShowRestartDialog()
                 }
             }
         )
+    }
+
+    // ============================================================
+    // ДИАЛОГ ПЕРЕЗАПУСКА
+    // ============================================================
+
+    /**
+     * Проверяет, были ли изменения, требующие перезапуска
+     */
+    private fun checkAndShowRestartDialog() {
+        // Получаем текущий фрагмент из контейнера
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+
+        var needsRestartFromGeneral = false
+        var needsRestartFromShell = false
+
+        when (currentFragment) {
+            is GeneralFragment -> {
+                needsRestartFromGeneral = currentFragment.getNeedsRestart()
+            }
+            is ShellFragment -> {
+                needsRestartFromShell = currentFragment.getNeedsRestart()
+            }
+            else -> {
+                // Ничего не делаем
+            }
+        }
+
+        needsRestart = needsRestartFromGeneral || needsRestartFromShell
+
+        if (needsRestart) {
+            showRestartDialog()
+        } else {
+            // Если изменений нет — просто закрываем
+            finish()
+        }
+    }
+
+    /**
+     * Показывает диалог с предложением перезапустить приложение
+     */
+    private fun showRestartDialog() {
+        if (isRestarting) return
+
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dialog_apply_parameters_title))
+            .setMessage(getString(R.string.dialog_apply_parameters_message))
+            .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
+                isRestarting = true
+                restartApp()
+            }
+            .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
+                // Сбрасываем флаги, чтобы диалог не появлялся снова при следующем закрытии
+                val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+                when (currentFragment) {
+                    is GeneralFragment -> {
+                        currentFragment.setNeedsRestart(false)
+                    }
+                    is ShellFragment -> {
+                        currentFragment.setNeedsRestart(false)
+                    }
+                    else -> {
+                        // Ничего не делаем
+                    }
+                }
+
+                // ❌ НЕ ЗАКРЫВАЕМ АКТИВНОСТЬ — остаёмся в настройках
+                // finish() - УБРАНО!
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    /**
+     * Перезапуск приложения с задержкой
+     */
+    private fun restartApp() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivity(intent)
+            finish()
+        }, 500)
     }
 
     private fun showItem(item: SettingsMenuModel) {

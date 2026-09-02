@@ -9,14 +9,13 @@ import androidx.fragment.app.Fragment
 import by.quty.launch.R
 
 /**
- * Фрагмент "Персонализация" для новых Настроек
+ * Фрагмент "Персонализация" для Настроек
  * Содержит: список оболочек, цветовые схемы, кнопка "Магазин"
- * 
- * TODO: Перенести функционал из ShellFragment (parameters)
- * - Убрать ориентацию (она в GeneralFragment)
- * - Добавить кнопку "Магазин" → StoreActivity
  */
 class ShellFragment : Fragment() {
+
+    // Флаг, что требуется перезагрузка
+    private var needsRestart = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,4 +25,15 @@ class ShellFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_shell, container, false)
     }
 
+    /**
+     * Возвращает флаг необходимости перезагрузки
+     */
+    fun getNeedsRestart(): Boolean = needsRestart
+
+    /**
+     * Устанавливает флаг необходимости перезагрузки
+     */
+    fun setNeedsRestart(value: Boolean) {
+        needsRestart = value
+    }
 }
