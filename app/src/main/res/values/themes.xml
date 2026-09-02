@@ -66,6 +66,10 @@
         <item name="iconTintColor">@color/text_primary</item>
         <item name="iconTintActiveColor">@color/scheme_teal_primary</item>
         <item name="iconTintInactiveColor">@color/text_dim</item>
+
+        <!-- ===== GLASSMORPHISM (DARK) ===== -->
+        <item name="glassBg">#30FFFFFF</item>
+        <item name="glassBorder">#50FFFFFF</item>
     </style>
 
     <!-- ============================================================ -->

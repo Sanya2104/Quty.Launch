@@ -1,0 +1,12 @@
+<!-- res/drawable/bg_glass_dialog.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Полупрозрачный фон (стеклянный эффект) -->
+    <solid android:color="?attr/glassBg" />
+    <!-- Скругление -->
+    <corners android:radius="24dp" />
+    <!-- Обводка -->
+    <stroke
+        android:width="0.5dp"
+        android:color="?attr/glassBorder" />
+</shape>

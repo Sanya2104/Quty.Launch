@@ -35,6 +35,8 @@ class GeneralFragment : Fragment() {
     private var isUpdating = false
 
     // Флаг, что требуется перезагрузка
+    // Сохраняем его для совместимости с существующим API Fragment.
+    // Основным источником состояния теперь является SettingsActivity.
     private var needsRestart = false
 
     override fun onCreateView(
@@ -53,6 +55,12 @@ class GeneralFragment : Fragment() {
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
             shellManager = ShellManager(requireContext(), configManager)
+
+            /*
+             * Восстанавливаем локальное состояние из Activity,
+             * если Fragment был пересоздан.
+             */
+            needsRestart = settingsActivity.getNeedsRestart()
         }
 
         themeModeGroup = view.findViewById(R.id.theme_mode_group)
@@ -96,7 +104,7 @@ class GeneralFragment : Fragment() {
             configManager.applyTheme()
 
             // Отмечаем, что требуется перезагрузка
-            needsRestart = true
+            markRestartRequired()
 
             val message = when (mode) {
                 "light" -> getString(R.string.toast_theme_light_enabled)
@@ -132,7 +140,7 @@ class GeneralFragment : Fragment() {
             configManager.setOrientation(orientation)
 
             // Отмечаем, что требуется перезагрузка
-            needsRestart = true
+            markRestartRequired()
 
             parametersEventListener?.onOrientationChanged(orientation)
             parametersEventListener?.onSettingChanged()
@@ -158,7 +166,7 @@ class GeneralFragment : Fragment() {
             updateStrictModeState()
 
             // Отмечаем, что требуется перезагрузка
-            needsRestart = true
+            markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(isChecked)
             parametersEventListener?.onSettingChanged()
@@ -183,11 +191,14 @@ class GeneralFragment : Fragment() {
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
-        strictModeCheckbox.setOnCheckedChangeListener { _, isChecked ->
+        strictModeCheckbox.setOnCheckedChangeListener {_, isChecked ->
+
+            if (isUpdating) return@setOnCheckedChangeListener
+            
             configManager.setStrictModeEnabled(isChecked)
 
             // Отмечаем, что требуется перезагрузка
-            needsRestart = true
+            markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
             parametersEventListener?.onSettingChanged()
@@ -207,6 +218,19 @@ class GeneralFragment : Fragment() {
     // ============================================================
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ============================================================
+
+    /**
+     * Отмечает изменение настройки, требующее перезагрузки.
+     *
+     * Основное состояние передаётся в SettingsActivity,
+     * поэтому оно не зависит от жизненного цикла Fragment.
+     */
+    private fun markRestartRequired() {
+        needsRestart = true
+
+        (activity as? SettingsActivity)
+            ?.markRestartRequired()
+    }
 
     private fun updateStrictModeState() {
         val fullscreenEnabled = fullscreenCheckbox.isChecked
@@ -236,23 +260,27 @@ class GeneralFragment : Fragment() {
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
+        /*
+         * НЕ сбрасываем needsRestart здесь.
+         * refreshParameters() только синхронизирует UI
+         * с ConfigManager. Изменение состояния перезапуска
+         * должно сохраняться до тех пор, пока приложение
+         * действительно не будет перезапущено.
+         */
         isUpdating = false
-    }
-
-    /**
-     * Возвращает флаг необходимости перезагрузки
-     */
-    fun getNeedsRestart(): Boolean = needsRestart
-
-    /**
-     * Устанавливает флаг необходимости перезагрузки
-     */
-    fun setNeedsRestart(value: Boolean) {
-        needsRestart = value
     }
 
     override fun onResume() {
         super.onResume()
+
+        /*
+         * Синхронизируем локальный флаг с Activity.
+         * Это необходимо, если Fragment был пересоздан.
+         */
+        (activity as? SettingsActivity)?.let {
+            needsRestart = it.getNeedsRestart()
+        }
+
         refreshParameters()
     }
 }

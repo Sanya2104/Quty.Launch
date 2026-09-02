@@ -690,4 +690,11 @@
     <string name="log_js_bridge_color_scheme_applied" formatted="false">Цветовая схема применена: primary=%s, accent=%s</string>
     <string name="log_js_bridge_color_scheme_error" formatted="false">Не удалось применить цветовую схему: %s</string>
 
+    <!-- SettingsActivity логи -->
+    <string name="log_settings_restored_needs_restart" formatted="false">Restored needsRestart: %b</string>
+    <string name="log_settings_width_tablet" formatted="false">width: %.2fdp, tablet: %b</string>
+    <string name="log_settings_restart_required">Restart required: setting changed</string>
+    <string name="log_settings_checking_restart_state" formatted="false">Checking restart state: needsRestart=%b</string>
+    <string name="log_settings_error">Error</string>
+
 </resources>

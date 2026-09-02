@@ -1,0 +1,8 @@
+<!-- res/drawable/bg_glass_icon.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/glassBg" />
+    <stroke
+        android:width="0.5dp"
+        android:color="?attr/glassBorder" />
+</shape>

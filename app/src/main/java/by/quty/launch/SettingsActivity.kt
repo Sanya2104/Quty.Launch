@@ -3,11 +3,15 @@ package by.quty.launch
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -35,6 +39,8 @@ class SettingsActivity : BaseActivity() {
     private var isRestarting = false
 
     // Флаг, что были изменения, требующие перезапуска
+    // Хранится в Activity, а не во Fragment.
+    // Это позволяет сохранить состояние даже при пересоздании Fragment.
     private var needsRestart = false
 
     // Ширина меню в пикселях для планшетного режима
@@ -55,10 +61,12 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_green_primary,
                 true
             ),
+
             // === РАЗДЕЛИТЕЛЬ ===
             SettingsMenuModel(
                 -1, 0, 0, 0, GeneralFragment::class.java, 0
             ),
+
             // === ГРУППА 2: Персонализация ===
             SettingsMenuModel(
                 2,
@@ -69,10 +77,12 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_purple_primary,
                 false
             ),
+
             // === РАЗДЕЛИТЕЛЬ ===
             SettingsMenuModel(
                 -2, 0, 0, 0, GeneralFragment::class.java, 0
             ),
+
             // === ГРУППА 3: Система ===
             SettingsMenuModel(
                 6,
@@ -83,6 +93,7 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_cyan_primary,
                 true
             ),
+
             SettingsMenuModel(
                 3,
                 R.drawable.ic_download,
@@ -92,6 +103,7 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_orange_primary,
                 true
             ),
+
             SettingsMenuModel(
                 4,
                 R.drawable.ic_developer,
@@ -101,6 +113,7 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_red_primary,
                 true
             ),
+
             SettingsMenuModel(
                 7,
                 R.drawable.ic_recovery,
@@ -110,6 +123,7 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_teal_primary,
                 true
             ),
+
             SettingsMenuModel(
                 5,
                 R.drawable.ic_info,
@@ -138,6 +152,14 @@ class SettingsActivity : BaseActivity() {
             selectedItemId = savedInstanceState.getInt("selected_item_id", -1)
             isFragmentVisible = savedInstanceState.getBoolean("fragment_visible", false)
 
+            /*
+             * Восстанавливаем состояние необходимости перезапуска.
+             *
+             * Ранее этот флаг находился только внутри Fragment,
+             * поэтому после пересоздания Fragment состояние могло потеряться.
+             */
+            needsRestart = savedInstanceState.getBoolean("needs_restart", false)
+
             if (isFragmentVisible && selectedItemId != -1) {
                 val item = menuItems.find { it.id == selectedItemId }
 
@@ -153,6 +175,11 @@ class SettingsActivity : BaseActivity() {
         }
 
         applyMode()
+
+        LoggerManager.d(
+            "SettingsActivity",
+            getString(R.string.log_settings_restored_needs_restart, needsRestart)
+        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -160,6 +187,14 @@ class SettingsActivity : BaseActivity() {
 
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
+
+        /*
+         * Сохраняем флаг необходимости перезапуска.
+         *
+         * Это важно при изменении ориентации, темы или другой
+         * конфигурации, когда Android может пересоздать Activity.
+         */
+        outState.putBoolean("needs_restart", needsRestart)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -195,7 +230,7 @@ class SettingsActivity : BaseActivity() {
 
         LoggerManager.d(
             "SettingsActivity",
-            "width: ${widthDp}dp, tablet: $isTabletMode"
+            getString(R.string.log_settings_width_tablet, widthDp, isTabletMode)
         )
     }
 
@@ -356,13 +391,13 @@ class SettingsActivity : BaseActivity() {
                             ?.setSelectedItem(-1)
 
                         /*
-                        * В телефонном режиме возвращаемся
-                        * из фрагмента обратно в меню.
-                        *
-                        * selectedItemId НЕ сбрасываем,
-                        * чтобы сохранить последний выбор для
-                        * возможного перехода в планшетный режим.
-                        */
+                         * В телефонном режиме возвращаемся
+                         * из фрагмента обратно в меню.
+                         *
+                         * selectedItemId НЕ сбрасываем,
+                         * чтобы сохранить последний выбор для
+                         * возможного перехода в планшетный режим.
+                         */
                         isFragmentVisible = false
                         applyMode()
                         return
@@ -376,32 +411,54 @@ class SettingsActivity : BaseActivity() {
     }
 
     // ============================================================
+    // СОСТОЯНИЕ НАСТРОЕК
+    // ============================================================
+
+    /**
+     * Отмечает, что пользователь изменил настройку,
+     * которая требует перезапуска приложения.
+     *
+     * Флаг хранится в SettingsActivity, а не в Fragment.
+     * Поэтому переключение между разделами, пересоздание Fragment
+     * или изменение конфигурации не теряет состояние.
+     */
+    fun markRestartRequired() {
+        if (!needsRestart) {
+            needsRestart = true
+
+            LoggerManager.d(
+                "SettingsActivity",
+                getString(R.string.log_settings_restart_required)
+            )
+        }
+    }
+
+    /**
+     * Возвращает текущее состояние необходимости перезапуска.
+     */
+    fun getNeedsRestart(): Boolean {
+        return needsRestart
+    }
+
+    // ============================================================
     // ДИАЛОГ ПЕРЕЗАПУСКА
     // ============================================================
 
     /**
-     * Проверяет, были ли изменения, требующие перезапуска
+     * Проверяет, были ли изменения, требующие перезапуска.
+     *
+     * ВАЖНО:
+     * Состояние больше не определяется через текущий Fragment.
+     *
+     * Ранее использовался findFragmentByTag()/findFragmentById(),
+     * из-за чего состояние могло теряться при пересоздании Fragment
+     * или при переключении между разделами.
      */
     private fun checkAndShowRestartDialog() {
-        // Получаем текущий фрагмент из контейнера
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-
-        var needsRestartFromGeneral = false
-        var needsRestartFromShell = false
-
-        when (currentFragment) {
-            is GeneralFragment -> {
-                needsRestartFromGeneral = currentFragment.getNeedsRestart()
-            }
-            is ShellFragment -> {
-                needsRestartFromShell = currentFragment.getNeedsRestart()
-            }
-            else -> {
-                // Ничего не делаем
-            }
-        }
-
-        needsRestart = needsRestartFromGeneral || needsRestartFromShell
+        LoggerManager.d(
+            "SettingsActivity",
+            getString(R.string.log_settings_checking_restart_state, needsRestart)
+        )
 
         if (needsRestart) {
             showRestartDialog()
@@ -412,38 +469,67 @@ class SettingsActivity : BaseActivity() {
     }
 
     /**
-     * Показывает диалог с предложением перезапустить приложение
+     * Показывает кастомный Glassmorphism диалог с предложением перезапустить приложение
      */
     private fun showRestartDialog() {
         if (isRestarting) return
 
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.dialog_apply_parameters_title))
-            .setMessage(getString(R.string.dialog_apply_parameters_message))
-            .setPositiveButton(getString(R.string.dialog_restart)) { _, _ ->
-                isRestarting = true
-                restartApp()
-            }
-            .setNegativeButton(getString(R.string.dialog_later)) { _, _ ->
-                // Сбрасываем флаги, чтобы диалог не появлялся снова при следующем закрытии
-                val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-                when (currentFragment) {
-                    is GeneralFragment -> {
-                        currentFragment.setNeedsRestart(false)
-                    }
-                    is ShellFragment -> {
-                        currentFragment.setNeedsRestart(false)
-                    }
-                    else -> {
-                        // Ничего не делаем
-                    }
-                }
+        val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
 
-                // ❌ НЕ ЗАКРЫВАЕМ АКТИВНОСТЬ — остаёмся в настройках
-                // finish() - УБРАНО!
-            }
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
             .setCancelable(false)
-            .show()
+            .create()
+
+        // Делаем фон диалога прозрачным
+        dialog.window?.setBackgroundDrawableResource(
+            android.R.color.transparent
+        )
+
+        // ===== РАЗМЫТИЕ ФОНА ДЛЯ ANDROID 12+ =====
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val decorView = window?.decorView?.rootView
+
+            decorView?.let { view ->
+                val renderEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
+                view.setRenderEffect(renderEffect)
+                dialog.setOnDismissListener {
+                    view.setRenderEffect(null)
+                }
+            }
+        }
+
+        // Настраиваем кнопки
+        dialogView.findViewById<Button>(R.id.btn_restart).setOnClickListener {
+            dialog.dismiss()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window?.decorView?.rootView?.setRenderEffect(null)
+            }
+
+            isRestarting = true
+
+            restartApp()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_later).setOnClickListener {
+            dialog.dismiss()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window?.decorView?.rootView?.setRenderEffect(null)
+            }
+
+            /*
+             * НЕ СБРАСЫВАЕМ needsRestart!
+             *
+             * Пользователь выбрал "Позже", поэтому изменения
+             * всё ещё требуют перезапуска.
+             *
+             * При следующем закрытии настроек диалог снова появится.
+             */
+        }
+
+        dialog.show()
     }
 
     /**
@@ -467,17 +553,22 @@ class SettingsActivity : BaseActivity() {
 
         try {
             val fragment = supportFragmentManager.fragmentFactory.instantiate(
-                item.fragment.classLoader!!,
-                item.fragment.name
-            )
+                    item.fragment.classLoader!!,
+                    item.fragment.name
+                )
+
+            // Явно задаём тег на основе ID пункта меню
+            val tag = "f${item.id}"
 
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, fragment)
+                .replace(R.id.fragment_container, fragment, tag)
+                .addToBackStack(null)
                 .commit()
+
         } catch (e: Exception) {
             LoggerManager.e(
                 "SettingsActivity",
-                "Error",
+                getString(R.string.log_settings_error),
                 e
             )
         }
