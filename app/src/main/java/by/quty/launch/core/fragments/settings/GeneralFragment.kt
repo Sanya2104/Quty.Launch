@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -24,8 +25,11 @@ class GeneralFragment : Fragment() {
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
 
-    // UI элементы
-    private lateinit var themeModeGroup: RadioGroup
+    // UI элементы для темы
+    private lateinit var themeLightCard: LinearLayout
+    private lateinit var themeDarkCard: LinearLayout
+    private lateinit var themeSystemCard: LinearLayout
+
     private lateinit var orientationGroup: RadioGroup
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
@@ -35,8 +39,6 @@ class GeneralFragment : Fragment() {
     private var isUpdating = false
 
     // Флаг, что требуется перезагрузка
-    // Сохраняем его для совместимости с существующим API Fragment.
-    // Основным источником состояния теперь является SettingsActivity.
     private var needsRestart = false
 
     override fun onCreateView(
@@ -63,12 +65,17 @@ class GeneralFragment : Fragment() {
             needsRestart = settingsActivity.getNeedsRestart()
         }
 
-        themeModeGroup = view.findViewById(R.id.theme_mode_group)
+        // Тема
+        themeLightCard = view.findViewById(R.id.theme_light_card)
+        themeDarkCard = view.findViewById(R.id.theme_dark_card)
+        themeSystemCard = view.findViewById(R.id.theme_system_card)
+
+        // Остальное
         orientationGroup = view.findViewById(R.id.orientation_group)
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
         strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
 
-        setupThemeModeSelector()
+        setupThemeSelector()
         setupOrientationSelector()
         setupFullscreenSelector()
         setupStrictModeSelector()
@@ -77,43 +84,67 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ТЕМА (LIGHT / DARK / SYSTEM)
+    // ТЕМА (LIGHT / DARK / SYSTEM) - ПЛИТКИ С РАМКОЙ
     // ============================================================
 
-    private fun setupThemeModeSelector() {
+    private fun setupThemeSelector() {
         val mode = configManager.getThemeMode()
+        selectTheme(mode)
 
+        themeLightCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectTheme("light")
+            applyTheme("light")
+        }
+
+        themeDarkCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectTheme("dark")
+            applyTheme("dark")
+        }
+
+        themeSystemCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectTheme("system")
+            applyTheme("system")
+        }
+    }
+
+    private fun selectTheme(mode: String) {
+        // Сбрасываем все рамки
+        themeLightCard.setBackgroundResource(R.drawable.bg_theme_card)
+        themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card)
+        themeSystemCard.setBackgroundResource(R.drawable.bg_theme_card)
+
+        // Подсвечиваем выбранный
         when (mode) {
-            "light" -> themeModeGroup.check(R.id.theme_light)
-            "dark" -> themeModeGroup.check(R.id.theme_dark)
-            "system" -> themeModeGroup.check(R.id.theme_system)
-            else -> themeModeGroup.check(R.id.theme_light)
-        }
-
-        themeModeGroup.setOnCheckedChangeListener { _, checkedId ->
-            if (isUpdating) return@setOnCheckedChangeListener
-
-            val mode = when (checkedId) {
-                R.id.theme_light -> "light"
-                R.id.theme_dark -> "dark"
-                R.id.theme_system -> "system"
-                else -> "light"
+            "light" -> {
+                themeLightCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
             }
-
-            configManager.setThemeMode(mode)
-            configManager.applyTheme()
-
-            // Отмечаем, что требуется перезагрузка
-            markRestartRequired()
-
-            val message = when (mode) {
-                "light" -> getString(R.string.toast_theme_light_enabled)
-                "dark" -> getString(R.string.toast_theme_dark_enabled)
-                "system" -> getString(R.string.toast_theme_system_enabled)
-                else -> ""
+            "dark" -> {
+                themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
             }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            "system" -> {
+                themeSystemCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            }
         }
+    }
+
+    private fun applyTheme(mode: String) {
+        if (isUpdating) return
+
+        configManager.setThemeMode(mode)
+        configManager.applyTheme()
+
+        markRestartRequired()
+
+        val message = when (mode) {
+            "light" -> getString(R.string.toast_theme_light_enabled)
+            "dark" -> getString(R.string.toast_theme_dark_enabled)
+            "system" -> getString(R.string.toast_theme_system_enabled)
+            else -> ""
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     // ============================================================
@@ -165,7 +196,6 @@ class GeneralFragment : Fragment() {
 
             updateStrictModeState()
 
-            // Отмечаем, что требуется перезагрузка
             markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(isChecked)
@@ -192,9 +222,8 @@ class GeneralFragment : Fragment() {
         updateStrictModeState()
 
         strictModeCheckbox.setOnCheckedChangeListener {_, isChecked ->
-
             if (isUpdating) return@setOnCheckedChangeListener
-            
+
             configManager.setStrictModeEnabled(isChecked)
 
             // Отмечаем, что требуется перезагрузка
@@ -227,9 +256,7 @@ class GeneralFragment : Fragment() {
      */
     private fun markRestartRequired() {
         needsRestart = true
-
-        (activity as? SettingsActivity)
-            ?.markRestartRequired()
+        (activity as? SettingsActivity)?.markRestartRequired()
     }
 
     private fun updateStrictModeState() {
@@ -242,12 +269,7 @@ class GeneralFragment : Fragment() {
         isUpdating = true
 
         val mode = configManager.getThemeMode()
-        when (mode) {
-            "light" -> themeModeGroup.check(R.id.theme_light)
-            "dark" -> themeModeGroup.check(R.id.theme_dark)
-            "system" -> themeModeGroup.check(R.id.theme_system)
-            else -> themeModeGroup.check(R.id.theme_light)
-        }
+        selectTheme(mode)
 
         val currentOrientation = configManager.getOrientation()
         when (currentOrientation) {
@@ -280,7 +302,6 @@ class GeneralFragment : Fragment() {
         (activity as? SettingsActivity)?.let {
             needsRestart = it.getNeedsRestart()
         }
-
         refreshParameters()
     }
 }

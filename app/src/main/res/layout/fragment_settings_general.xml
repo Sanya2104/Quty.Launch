@@ -24,43 +24,138 @@
             android:text="@string/settings_theme_title" />
 
         <LinearLayout
-            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/spacing_l">
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="@dimen/spacing_s">
 
-            <RadioGroup
-                android:id="@+id/theme_mode_group"
-                android:layout_width="match_parent"
+            <!-- Светлая тема -->
+            <LinearLayout
+                android:id="@+id/theme_light_card"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="130dp">
 
-                <RadioButton
-                    android:id="@+id/theme_light"
-                    android:layout_width="match_parent"
+                <ImageView
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:src="@drawable/ic_theme_light"
+                    android:contentDescription="@string/settings_theme_light" />
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/settings_theme_light" />
+                    android:layout_marginTop="@dimen/spacing_s"
+                    android:text="@string/settings_theme_light"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
 
-                <RadioButton
-                    android:id="@+id/theme_dark"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/settings_theme_dark" />
+                    android:text="@string/settings_theme_light_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
 
-                <RadioButton
-                    android:id="@+id/theme_system"
-                    android:layout_width="match_parent"
+            </LinearLayout>
+
+            <!-- Тёмная тема -->
+            <LinearLayout
+                android:id="@+id/theme_dark_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="130dp">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:src="@drawable/ic_theme_dark"
+                    android:contentDescription="@string/settings_theme_dark" />
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/settings_theme_system" />
+                    android:layout_marginTop="@dimen/spacing_s"
+                    android:text="@string/settings_theme_dark"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
 
-            </RadioGroup>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_theme_dark_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- Системная тема -->
+            <LinearLayout
+                android:id="@+id/theme_system_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="130dp">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:src="@drawable/ic_theme_system"
+                    android:contentDescription="@string/settings_theme_system" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_s"
+                    android:text="@string/settings_theme_system"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_theme_system_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

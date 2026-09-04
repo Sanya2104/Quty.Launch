@@ -75,9 +75,12 @@
     <!-- ============================================================ -->
 
     <string name="settings_theme_title">Тема оформления</string>
-    <string name="settings_theme_light">☀️ Светлая</string>
-    <string name="settings_theme_dark">🌙 Тёмная</string>
-    <string name="settings_theme_system">📱 Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_light_desc">Всегда светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_theme_dark_desc">Всегда тёмная</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_system_desc">Следует за системой</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
