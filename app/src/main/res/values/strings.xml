@@ -691,10 +691,10 @@
     <string name="log_js_bridge_color_scheme_error" formatted="false">Не удалось применить цветовую схему: %s</string>
 
     <!-- SettingsActivity логи -->
-    <string name="log_settings_restored_needs_restart" formatted="false">Restored needsRestart: %b</string>
-    <string name="log_settings_width_tablet" formatted="false">width: %.2fdp, tablet: %b</string>
-    <string name="log_settings_restart_required">Restart required: setting changed</string>
-    <string name="log_settings_checking_restart_state" formatted="false">Checking restart state: needsRestart=%b</string>
-    <string name="log_settings_error">Error</string>
+    <string name="log_settings_restored_needs_restart" formatted="false">Восстановлено, требуется перезапуск: %b</string>
+    <string name="log_settings_width_tablet" formatted="false">Ширина: %.2fdp, Планшет: %b</string>
+    <string name="log_settings_restart_required">Требуется перезапуск: настройка изменена</string>
+    <string name="log_settings_checking_restart_state" formatted="false">Проверка состояния перезапуска: needsRestart=%b</string>
+    <string name="log_settings_error">Ошибка</string>
 
 </resources>

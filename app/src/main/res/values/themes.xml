@@ -67,9 +67,9 @@
         <item name="iconTintActiveColor">@color/scheme_teal_primary</item>
         <item name="iconTintInactiveColor">@color/text_dim</item>
 
-        <!-- ===== GLASSMORPHISM (DARK) ===== -->
-        <item name="glassBg">#30FFFFFF</item>
-        <item name="glassBorder">#50FFFFFF</item>
+        <!-- ===== GLASSMORPHISM (ANDROID 10-11, LIGHT, NO BLUR) ===== -->
+        <item name="glassBg">#DDFFFFFF</item>
+        <item name="glassBorder">#EEFFFFFF</item>
     </style>
 
     <!-- ============================================================ -->

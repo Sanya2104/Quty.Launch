@@ -39,8 +39,6 @@ class SettingsActivity : BaseActivity() {
     private var isRestarting = false
 
     // Флаг, что были изменения, требующие перезапуска
-    // Хранится в Activity, а не во Fragment.
-    // Это позволяет сохранить состояние даже при пересоздании Fragment.
     private var needsRestart = false
 
     // Ширина меню в пикселях для планшетного режима
@@ -61,12 +59,10 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_green_primary,
                 true
             ),
-
             // === РАЗДЕЛИТЕЛЬ ===
             SettingsMenuModel(
                 -1, 0, 0, 0, GeneralFragment::class.java, 0
             ),
-
             // === ГРУППА 2: Персонализация ===
             SettingsMenuModel(
                 2,
@@ -77,12 +73,10 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_purple_primary,
                 false
             ),
-
             // === РАЗДЕЛИТЕЛЬ ===
             SettingsMenuModel(
                 -2, 0, 0, 0, GeneralFragment::class.java, 0
             ),
-
             // === ГРУППА 3: Система ===
             SettingsMenuModel(
                 6,
@@ -93,7 +87,6 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_cyan_primary,
                 true
             ),
-
             SettingsMenuModel(
                 3,
                 R.drawable.ic_download,
@@ -103,7 +96,6 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_orange_primary,
                 true
             ),
-
             SettingsMenuModel(
                 4,
                 R.drawable.ic_developer,
@@ -113,7 +105,6 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_red_primary,
                 true
             ),
-
             SettingsMenuModel(
                 7,
                 R.drawable.ic_recovery,
@@ -123,7 +114,6 @@ class SettingsActivity : BaseActivity() {
                 R.color.scheme_teal_primary,
                 true
             ),
-
             SettingsMenuModel(
                 5,
                 R.drawable.ic_info,
@@ -162,7 +152,6 @@ class SettingsActivity : BaseActivity() {
 
             if (isFragmentVisible && selectedItemId != -1) {
                 val item = menuItems.find { it.id == selectedItemId }
-
                 if (item != null) {
                     restoreFragment(item)
                 }
@@ -184,7 +173,6 @@ class SettingsActivity : BaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
 
@@ -199,9 +187,7 @@ class SettingsActivity : BaseActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-
         val previousTabletMode = isTabletMode
-
         checkMode()
 
         // Если переключились на планшет
@@ -218,28 +204,18 @@ class SettingsActivity : BaseActivity() {
             }
             return
         }
-
         applyMode()
     }
 
     private fun checkMode() {
-        val widthDp =
-            resources.displayMetrics.widthPixels / resources.displayMetrics.density
-
+        val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
-
-        LoggerManager.d(
-            "SettingsActivity",
-            getString(R.string.log_settings_width_tablet, widthDp, isTabletMode)
-        )
+        LoggerManager.d("SettingsActivity", getString(R.string.log_settings_width_tablet, widthDp, isTabletMode))
     }
 
     private fun applyMode() {
-        val menuParams =
-            binding.menuPane.layoutParams as LinearLayout.LayoutParams
-
-        val contentParams =
-            binding.contentPane.layoutParams as LinearLayout.LayoutParams
+        val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
+        val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
 
         if (isTabletMode) {
             // === ПЛАНШЕТ: меню слева 340dp, контент справа ===
@@ -260,7 +236,6 @@ class SettingsActivity : BaseActivity() {
              */
             binding.btnClose.visibility = View.GONE
             binding.btnCloseContent.visibility = View.VISIBLE
-
         } else {
             // === ТЕЛЕФОН: только одна панель на весь экран ===
             menuParams.width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -304,9 +279,7 @@ class SettingsActivity : BaseActivity() {
                  * В планшетном режиме активный пункт меню
                  * подсвечивается.
                  */
-                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-                    ?.setSelectedItem(selectedItemId)
-
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
             } else {
                 binding.recyclerMenu.visibility = View.GONE
                 binding.btnBackContent.visibility = View.VISIBLE
@@ -315,10 +288,8 @@ class SettingsActivity : BaseActivity() {
                  * В телефонном режиме активный пункт меню
                  * не должен подсвечиваться.
                  */
-                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-                    ?.setSelectedItem(-1)
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
             }
-
         } else {
             binding.fragmentContainer.visibility = View.GONE
             binding.recyclerMenu.visibility = View.VISIBLE
@@ -334,30 +305,22 @@ class SettingsActivity : BaseActivity() {
              * когда фрагмент ещё не выбран.
              */
             if (!isTabletMode) {
-                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-                    ?.setSelectedItem(-1)
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
             } else if (selectedItemId != -1) {
-                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-                    ?.setSelectedItem(selectedItemId)
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
             }
         }
     }
 
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
-
-        return if (item != null) {
-            getString(item.title)
-        } else {
-            ""
-        }
+        return if (item != null) getString(item.title) else ""
     }
 
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
         }
-
         binding.recyclerMenu.layoutManager = LinearLayoutManager(this)
         binding.recyclerMenu.adapter = adapter
     }
@@ -366,11 +329,9 @@ class SettingsActivity : BaseActivity() {
         binding.btnClose.setOnClickListener {
             checkAndShowRestartDialog()
         }
-
         binding.btnCloseContent.setOnClickListener {
             checkAndShowRestartDialog()
         }
-
         binding.btnBackContent.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
@@ -380,15 +341,13 @@ class SettingsActivity : BaseActivity() {
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
-
                 override fun handleOnBackPressed() {
                     if (!isTabletMode && isFragmentVisible) {
                         /*
                          * Сначала сбрасываем подсветку активного пункта меню,
                          * чтобы избежать моргания.
                          */
-                        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-                            ?.setSelectedItem(-1)
+                        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
 
                         /*
                          * В телефонном режиме возвращаемся
@@ -425,11 +384,7 @@ class SettingsActivity : BaseActivity() {
     fun markRestartRequired() {
         if (!needsRestart) {
             needsRestart = true
-
-            LoggerManager.d(
-                "SettingsActivity",
-                getString(R.string.log_settings_restart_required)
-            )
+            LoggerManager.d("SettingsActivity", getString(R.string.log_settings_restart_required))
         }
     }
 
@@ -475,21 +430,17 @@ class SettingsActivity : BaseActivity() {
         if (isRestarting) return
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
-
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         // Делаем фон диалога прозрачным
-        dialog.window?.setBackgroundDrawableResource(
-            android.R.color.transparent
-        )
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        // ===== РАЗМЫТИЕ ФОНА ДЛЯ ANDROID 12+ =====
+        // ===== РАЗМЫТИЕ ДЛЯ ANDROID 12+ =====
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val decorView = window?.decorView?.rootView
-
             decorView?.let { view ->
                 val renderEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
                 view.setRenderEffect(renderEffect)
@@ -502,19 +453,15 @@ class SettingsActivity : BaseActivity() {
         // Настраиваем кнопки
         dialogView.findViewById<Button>(R.id.btn_restart).setOnClickListener {
             dialog.dismiss()
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 window?.decorView?.rootView?.setRenderEffect(null)
             }
-
             isRestarting = true
-
             restartApp()
         }
 
         dialogView.findViewById<Button>(R.id.btn_later).setOnClickListener {
             dialog.dismiss()
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 window?.decorView?.rootView?.setRenderEffect(null)
             }
@@ -538,7 +485,6 @@ class SettingsActivity : BaseActivity() {
     private fun restartApp() {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(intent)
             finish()
@@ -548,64 +494,47 @@ class SettingsActivity : BaseActivity() {
     private fun showItem(item: SettingsMenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
-
         binding.contentTitle.text = getString(item.title)
 
         try {
             val fragment = supportFragmentManager.fragmentFactory.instantiate(
-                    item.fragment.classLoader!!,
-                    item.fragment.name
-                )
-
-            // Явно задаём тег на основе ID пункта меню
-            val tag = "f${item.id}"
-
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, fragment, tag)
-                .addToBackStack(null)
-                .commit()
-
-        } catch (e: Exception) {
-            LoggerManager.e(
-                "SettingsActivity",
-                getString(R.string.log_settings_error),
-                e
+                item.fragment.classLoader!!,
+                item.fragment.name
             )
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit()
+        } catch (e: Exception) {
+            LoggerManager.e("SettingsActivity", getString(R.string.log_settings_error), e)
         }
 
         /*
          * Подсветка активного пункта меню разрешена
          * только в планшетном режиме.
          */
-        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-            ?.setSelectedItem(
-                if (isTabletMode) item.id else -1
-            )
-
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
         applyMode()
     }
 
     private fun restoreFragment(item: SettingsMenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
-
         binding.contentTitle.text = getString(item.title)
 
         /*
          * Подсветка активного пункта меню разрешена
          * только в планшетном режиме.
          */
-        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)
-            ?.setSelectedItem(
-                if (isTabletMode) item.id else -1
-            )
-
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
         applyMode()
     }
 
     override fun onResume() {
         super.onResume()
-
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
@@ -614,7 +543,6 @@ class SettingsActivity : BaseActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-
         try {
             supportFragmentManager.popBackStackImmediate(null, 0)
         } catch (_: Exception) {
