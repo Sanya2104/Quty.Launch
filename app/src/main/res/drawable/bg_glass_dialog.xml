@@ -4,7 +4,7 @@
     <!-- Полупрозрачный фон (стеклянный эффект) -->
     <solid android:color="?attr/glassBg" />
     <!-- Скругление -->
-    <corners android:radius="24dp" />
+    <corners android:radius="@dimen/radius_xxlarge" />
     <!-- Обводка -->
     <stroke
         android:width="0.5dp"

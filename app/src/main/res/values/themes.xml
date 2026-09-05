@@ -70,6 +70,7 @@
         <!-- ===== GLASSMORPHISM (ANDROID 10-11, LIGHT, NO BLUR) ===== -->
         <item name="glassBg">#DDFFFFFF</item>
         <item name="glassBorder">#EEFFFFFF</item>
+        <item name="glassItem">#10919191</item>
     </style>
 
     <!-- ============================================================ -->

@@ -106,23 +106,19 @@ class GeneralFragment : Fragment() {
         themeLightCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("light")
-            // Только сохраняем в конфиг, но НЕ применяем сразу
-            configManager.setThemeMode("light")
-            markRestartRequired()
+            applyTheme("light")
         }
 
         themeDarkCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("dark")
-            configManager.setThemeMode("dark")
-            markRestartRequired()
+            applyTheme("dark")
         }
 
         themeSystemCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("system")
-            configManager.setThemeMode("system")
-            markRestartRequired()
+            applyTheme("system")
         }
     }
 
@@ -138,6 +134,24 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    private fun applyTheme(mode: String) {
+        if (isUpdating) return
+
+        configManager.setThemeMode(mode)
+        configManager.applyTheme()
+
+        markRestartRequired()
+
+        val message = when (mode) {
+            "light" -> getString(R.string.toast_theme_light_enabled)
+            "dark" -> getString(R.string.toast_theme_dark_enabled)
+            "system" -> getString(R.string.toast_theme_system_enabled)
+            else -> ""
+        }
+
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
     // ============================================================
     // ОРИЕНТАЦИЯ - ПЛИТКИ С РАМКОЙ + БЛОКИРОВКА ОТ ОБОЛОЧКИ
     // ============================================================
@@ -149,10 +163,13 @@ class GeneralFragment : Fragment() {
         orientationAutoCard.setOnClickListener {
             if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("sensor")
+            // Только сохраняем ориентацию, НЕ перезапускаем сразу
             configManager.setOrientation("sensor")
             markRestartRequired()
             parametersEventListener?.onOrientationChanged("sensor")
             parametersEventListener?.onSettingChanged()
+
+            Toast.makeText(requireContext(), getString(R.string.toast_orientation_auto), Toast.LENGTH_SHORT).show()
         }
 
         orientationPortraitCard.setOnClickListener {
@@ -162,6 +179,8 @@ class GeneralFragment : Fragment() {
             markRestartRequired()
             parametersEventListener?.onOrientationChanged("portrait")
             parametersEventListener?.onSettingChanged()
+
+            Toast.makeText(requireContext(), getString(R.string.toast_orientation_portrait), Toast.LENGTH_SHORT).show()
         }
 
         orientationLandscapeCard.setOnClickListener {
@@ -171,6 +190,8 @@ class GeneralFragment : Fragment() {
             markRestartRequired()
             parametersEventListener?.onOrientationChanged("landscape")
             parametersEventListener?.onSettingChanged()
+
+            Toast.makeText(requireContext(), getString(R.string.toast_orientation_landscape), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -315,7 +336,7 @@ class GeneralFragment : Fragment() {
         val mode = configManager.getThemeMode()
         selectTheme(mode)
 
-        // Ориентация
+        // Ориентация (обновляем с учётом блокировки)
         updateOrientationLockState()
 
         // Полноэкранный и строгий

@@ -76,6 +76,7 @@
     <dimen name="radius_medium">8dp</dimen>
     <dimen name="radius_large">12dp</dimen>
     <dimen name="radius_xlarge">16dp</dimen>
+    <dimen name="radius_xxlarge">22dp</dimen>
     <dimen name="radius_circle">28dp</dimen>
     <dimen name="radius_full">999dp</dimen>
 

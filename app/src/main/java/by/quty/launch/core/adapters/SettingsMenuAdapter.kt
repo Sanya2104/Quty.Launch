@@ -114,11 +114,13 @@ class SettingsMenuAdapter(
             binding.tvTitle.text = context.getString(item.title)
             binding.tvDescription.text = context.getString(item.description)
 
-            // === ТОЛЬКО СТЕКЛЯННЫЙ ЭФФЕКТ ===
+            // === ВЫДЕЛЕНИЕ АКТИВНОГО ПУНКТА ===
             if (isSelected) {
-                binding.root.setBackgroundResource(R.drawable.bg_glass_item)
+                // Используем фон с подсветкой
+                binding.root.setBackgroundResource(R.drawable.bg_settings_menu_item_selected)
             } else {
-                binding.root.setBackgroundResource(0)
+                // Обычный фон - прозрачный или с лёгким наведением
+                binding.root.setBackgroundResource(R.drawable.bg_settings_menu_item)
             }
 
             binding.root.setOnClickListener {

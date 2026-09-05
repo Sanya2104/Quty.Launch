@@ -1,6 +1,6 @@
 <!-- res/drawable/bg_color_scheme_item.xml -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <corners android:radius="8dp" />
+    <corners android:radius="@dimen/radius_medium" />
     <stroke
         android:width="2dp"
         android:color="?attr/textDimColor" />

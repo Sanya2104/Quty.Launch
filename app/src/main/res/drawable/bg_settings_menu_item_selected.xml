@@ -1,0 +1,9 @@
+<!-- res/drawable/bg_settings_menu_item_selected.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/radius_large" />
+
+    <!-- Полупрозрачный фон с лёгким оттенком акцентного цвета -->
+    <solid android:color="?attr/glassItem" />
+
+</shape>
