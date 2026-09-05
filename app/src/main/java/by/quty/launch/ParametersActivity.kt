@@ -75,8 +75,8 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
         super.onCreate(savedInstanceState)
 
         // Инициализация
-        applyOrientation()
         shellManager = ShellManager(this, configManager)
+        applyOrientation(shellManager)
 
         // Сохраняем исходные настройки
         originalShell = configManager.getActiveShell()
@@ -298,6 +298,8 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
      */
     private fun restartApp() {
         // Создаем Intent для MainActivity
+        configManager.setRestartForOrientationFlag()
+
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
@@ -348,6 +350,8 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
     override fun onResume() {
         super.onResume()
         // Обновляем фрагменты при возврате в активность
+
+        applyOrientation(shellManager)
         refreshAllFragments()
     }
 

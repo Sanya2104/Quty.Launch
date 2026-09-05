@@ -171,6 +171,22 @@
             android:paddingTop="@dimen/spacing_xl"
             android:text="@string/parameters_orientation_title" />
 
+        <!-- Подсказка о блокировке ориентации с закруглением -->
+        <TextView
+            android:id="@+id/orientation_lock_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:background="@drawable/bg_orientation_lock_hint"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginBottom="@dimen/spacing_s"
+            style="@style/Text.Body"
+            android:text="@string/orientation_lock_hint_default"
+            android:textColor="@color/status_warning" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

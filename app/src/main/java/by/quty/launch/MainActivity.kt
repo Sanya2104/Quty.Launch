@@ -8,8 +8,8 @@ import android.os.Looper
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
-import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 import kotlinx.coroutines.launch
@@ -30,21 +30,30 @@ class MainActivity : BaseActivity() {
         const val REQUEST_CODE_PARAMETERS = CoreConfig.PARAMETERS_REQUEST_CODE
 
         // Задержка перед пересозданием активности (из конфига)
-        private const val DELAY_BEFORE_RECREATE = CoreConfig.DELAY_BEFORE_RECREATE_MS
+        private const val DELAY_BEFORE_RELOAD = CoreConfig.DELAY_BEFORE_RECREATE_MS
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализация логгера
+        // Проверяем, нужно ли перезапустить приложение для применения ориентации
+        if (configManager.needRestartForOrientation()) {
+            configManager.clearRestartForOrientationFlag()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(intent)
+            finish()
+            return
+        }
+
         LoggerManager.init(this)
 
-        // Инициализация
-        applyOrientation() // Применяем сохраненную ориентацию из BaseActivity
+        shellManager = ShellManager(this, configManager)
+        applyOrientation(shellManager)
+
         core = Core(this)
         // Используем applicationContext для WebView (предотвращает утечки памяти)
         webView = LauncherWebView(applicationContext)
-        shellManager = ShellManager(this, configManager)
 
         jsBridge = JsBridge(core, this)
         jsBridge.setWebView(webView)
@@ -52,7 +61,6 @@ class MainActivity : BaseActivity() {
 
         // Загружаем оболочку
         loadShell()
-
         setContentView(webView)
 
         // Включаем иммерсивный режим ПОСЛЕ того, как View создан
@@ -64,9 +72,6 @@ class MainActivity : BaseActivity() {
 
     /**
      * Загрузка активной оболочки в WebView
-     * Получает оболочку из ShellManager и загружает соответствующий index.html
-     * - Загрузка оболочки в корутине
-     * - setActiveShell() - suspend функция, не блокирует UI
      */
     private fun loadShell() {
         lifecycleScope.launch {
@@ -74,7 +79,9 @@ class MainActivity : BaseActivity() {
             // Вызов suspend функции в фоновом потоке
             shellManager.setActiveShell(shellToActivate)
 
-            // Загрузка WebView в UI потоке
+            // После установки оболочки повторно применяем ориентацию
+            applyOrientation(shellManager)
+
             webView.loadShell(
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
@@ -97,33 +104,23 @@ class MainActivity : BaseActivity() {
             // Перезагружаем оболочку с задержкой, чтобы избежать мерцания
             Handler(Looper.getMainLooper()).postDelayed({
                 loadShell()
-            }, DELAY_BEFORE_RECREATE)
+            }, DELAY_BEFORE_RELOAD)
         }
     }
 
     override fun onResume() {
         super.onResume()
 
-        // Проверяем, не изменилась ли ориентация в настройках
-        val savedOrientation = configManager.getOrientation()
-        val currentOrientation = getCurrentOrientationString()
-
-        // Получаем принудительную ориентацию из SharedPreferences
-        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
-        val forcedOrientation = prefs.getString("forced_orientation", null)
-
-        // Определяем, какая ориентация должна быть применена
-        val expectedOrientation = when (forcedOrientation) {
-            "portrait" -> "portrait"
-            "landscape" -> "landscape"
-            else -> savedOrientation
+        // При возврате в активность ПРИНУДИТЕЛЬНО применяем ориентацию
+        if (::shellManager.isInitialized) {
+            applyOrientation(shellManager)
+        } else {
+            applyOrientation()
         }
 
-        // Если ориентация изменилась - перезапускаем активность с задержкой
-        if (expectedOrientation != currentOrientation) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                recreate()
-            }, DELAY_BEFORE_RECREATE)
+        window.decorView.post {
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
         }
     }
 }

@@ -17,20 +17,24 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
-import by.quty.launch.core.fragments.settings.GeneralFragment
-import by.quty.launch.core.fragments.settings.StorageFragment
-import by.quty.launch.core.fragments.settings.ShellFragment
-import by.quty.launch.core.fragments.settings.UpdateFragment
-import by.quty.launch.core.fragments.settings.DeveloperFragment
-import by.quty.launch.core.fragments.settings.RecoveryFragment
 import by.quty.launch.core.fragments.settings.AboutFragment
-import by.quty.launch.core.model.SettingsMenuModel
+import by.quty.launch.core.fragments.settings.DeveloperFragment
+import by.quty.launch.core.fragments.settings.GeneralFragment
+import by.quty.launch.core.fragments.settings.RecoveryFragment
+import by.quty.launch.core.fragments.settings.ShellFragment
+import by.quty.launch.core.fragments.settings.StorageFragment
+import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.model.SettingsMenuModel
 import by.quty.launch.databinding.ActivitySettingsBinding
 
 class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
+
+    private lateinit var shellManager: ShellManager
+
     private var isFragmentVisible = false
     private var isTabletMode = false
     private var selectedItemId = -1
@@ -128,7 +132,9 @@ class SettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applyOrientation()
+
+        shellManager = ShellManager(this, configManager)
+        applyOrientation(shellManager)
 
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -173,6 +179,7 @@ class SettingsActivity : BaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
 
@@ -187,6 +194,9 @@ class SettingsActivity : BaseActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+
+        applyOrientation(shellManager)
+
         val previousTabletMode = isTabletMode
         checkMode()
 
@@ -204,6 +214,7 @@ class SettingsActivity : BaseActivity() {
             }
             return
         }
+
         applyMode()
     }
 
@@ -236,6 +247,7 @@ class SettingsActivity : BaseActivity() {
              */
             binding.btnClose.visibility = View.GONE
             binding.btnCloseContent.visibility = View.VISIBLE
+
         } else {
             // === ТЕЛЕФОН: только одна панель на весь экран ===
             menuParams.width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -248,7 +260,6 @@ class SettingsActivity : BaseActivity() {
 
             /*
              * В телефонном режиме оба крестика работают
-             * как и раньше.
              */
             binding.btnClose.visibility = View.VISIBLE
             binding.btnCloseContent.visibility = View.VISIBLE
@@ -290,6 +301,7 @@ class SettingsActivity : BaseActivity() {
                  */
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
             }
+
         } else {
             binding.fragmentContainer.visibility = View.GONE
             binding.recyclerMenu.visibility = View.VISIBLE
@@ -321,6 +333,7 @@ class SettingsActivity : BaseActivity() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
         }
+
         binding.recyclerMenu.layoutManager = LinearLayoutManager(this)
         binding.recyclerMenu.adapter = adapter
     }
@@ -329,9 +342,11 @@ class SettingsActivity : BaseActivity() {
         binding.btnClose.setOnClickListener {
             checkAndShowRestartDialog()
         }
+
         binding.btnCloseContent.setOnClickListener {
             checkAndShowRestartDialog()
         }
+
         binding.btnBackContent.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
@@ -491,6 +506,11 @@ class SettingsActivity : BaseActivity() {
         }, 500)
     }
 
+    fun restartAppWithOrientation() {
+        configManager.setRestartForOrientationFlag()
+        restartApp()
+    }
+
     private fun showItem(item: SettingsMenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -501,9 +521,12 @@ class SettingsActivity : BaseActivity() {
                 item.fragment.classLoader!!,
                 item.fragment.name
             )
-            supportFragmentManager.beginTransaction()
+
+            supportFragmentManager
+                .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit()
+
         } catch (e: Exception) {
             LoggerManager.e("SettingsActivity", getString(R.string.log_settings_error), e)
         }
@@ -515,6 +538,7 @@ class SettingsActivity : BaseActivity() {
         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
             if (isTabletMode) item.id else -1
         )
+
         applyMode()
     }
 
@@ -530,11 +554,15 @@ class SettingsActivity : BaseActivity() {
         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
             if (isTabletMode) item.id else -1
         )
+
         applyMode()
     }
 
     override fun onResume() {
         super.onResume()
+
+        applyOrientation(shellManager)
+
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
@@ -542,10 +570,11 @@ class SettingsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         try {
             supportFragmentManager.popBackStackImmediate(null, 0)
         } catch (_: Exception) {
         }
+
+        super.onDestroy()
     }
 }

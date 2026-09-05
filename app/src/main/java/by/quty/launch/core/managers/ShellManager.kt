@@ -351,6 +351,7 @@ class ShellManager(
         return try {
             val inputStream = context.assets.open("shells/$shellFolder/$previewPath")
             val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
             bitmap?.let { bitmapToBase64(it) }
         } catch (_: Exception) {
             null

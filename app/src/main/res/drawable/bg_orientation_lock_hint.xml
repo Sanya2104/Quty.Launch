@@ -1,0 +1,5 @@
+<!-- res/drawable/bg_orientation_lock_hint.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/background_warning" />
+    <corners android:radius="@dimen/radius_medium" />
+</shape>

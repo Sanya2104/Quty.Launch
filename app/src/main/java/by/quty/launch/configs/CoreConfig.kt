@@ -12,7 +12,7 @@ object CoreConfig {
     // ============================================================
 
     /** Оболочка по умолчанию */
-    const val DEFAULT_SHELL = "QutyLauncher"
+    const val DEFAULT_SHELL = "QutyAuto"
 
     /** Ориентация по умолчанию */
     const val DEFAULT_ORIENTATION = "sensor"

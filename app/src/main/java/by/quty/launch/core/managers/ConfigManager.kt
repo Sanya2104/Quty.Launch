@@ -95,6 +95,7 @@ class ConfigManager(context: Context) {
 
     companion object {
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
     }
 
     /**
@@ -147,5 +148,17 @@ class ConfigManager(context: Context) {
             else -> AppCompatDelegate.MODE_NIGHT_NO
         }
         AppCompatDelegate.setDefaultNightMode(mode)
+    }
+
+    fun needRestartForOrientation(): Boolean {
+        return prefs.getBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false)
+    }
+
+    fun clearRestartForOrientationFlag() {
+        prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false) }
+    }
+
+    fun setRestartForOrientationFlag() {
+        prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
     }
 }

@@ -1,12 +1,17 @@
 // *** core/fragments/settings/GeneralFragment.kt *** //
 package by.quty.launch.core.fragments.settings
 
+import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
@@ -33,6 +38,7 @@ class GeneralFragment : Fragment() {
     private lateinit var orientationAutoCard: LinearLayout
     private lateinit var orientationPortraitCard: LinearLayout
     private lateinit var orientationLandscapeCard: LinearLayout
+    private lateinit var orientationLockHint: TextView
 
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
@@ -72,6 +78,7 @@ class GeneralFragment : Fragment() {
         orientationAutoCard = view.findViewById(R.id.orientation_auto_card)
         orientationPortraitCard = view.findViewById(R.id.orientation_portrait_card)
         orientationLandscapeCard = view.findViewById(R.id.orientation_landscape_card)
+        orientationLockHint = view.findViewById(R.id.orientation_lock_hint)
 
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
         strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
@@ -80,6 +87,10 @@ class GeneralFragment : Fragment() {
         setupOrientationSelector()
         setupFullscreenSelector()
         setupStrictModeSelector()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            updateOrientationLockState()
+        }, 50)
 
         refreshParameters()
     }
@@ -137,6 +148,7 @@ class GeneralFragment : Fragment() {
             "system" -> getString(R.string.toast_theme_system_enabled)
             else -> ""
         }
+
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
@@ -149,19 +161,19 @@ class GeneralFragment : Fragment() {
         selectOrientation(orientation)
 
         orientationAutoCard.setOnClickListener {
-            if (isUpdating) return@setOnClickListener
+            if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("sensor")
             applyOrientation("sensor")
         }
 
         orientationPortraitCard.setOnClickListener {
-            if (isUpdating) return@setOnClickListener
+            if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("portrait")
             applyOrientation("portrait")
         }
 
         orientationLandscapeCard.setOnClickListener {
-            if (isUpdating) return@setOnClickListener
+            if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("landscape")
             applyOrientation("landscape")
         }
@@ -183,11 +195,15 @@ class GeneralFragment : Fragment() {
         if (isUpdating) return
 
         configManager.setOrientation(orientation)
+        configManager.setRestartForOrientationFlag()
 
         markRestartRequired()
 
         parametersEventListener?.onOrientationChanged(orientation)
         parametersEventListener?.onSettingChanged()
+
+        // Запускаем перезапуск приложения для применения ориентации
+        (activity as? SettingsActivity)?.restartAppWithOrientation()
 
         val message = when (orientation) {
             "sensor" -> getString(R.string.toast_orientation_auto)
@@ -195,12 +211,64 @@ class GeneralFragment : Fragment() {
             "landscape" -> getString(R.string.toast_orientation_landscape)
             else -> ""
         }
+
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     // ============================================================
     // ПОЛНОЭКРАННЫЙ РЕЖИМ
     // ============================================================
+    private fun updateOrientationLockState() {
+        isUpdating = true
+
+        val forcedOrientation = shellManager.getForcedOrientationFromActiveShell()
+
+        if (forcedOrientation == "portrait" || forcedOrientation == "landscape") {
+            lockOrientationSelector(forcedOrientation)
+        } else {
+            unlockOrientationSelector()
+        }
+
+        isUpdating = false
+    }
+
+    private fun lockOrientationSelector(forcedOrientation: String) {
+        val hintText = when (forcedOrientation) {
+            "portrait" -> getString(R.string.orientation_lock_hint_portrait)
+            "landscape" -> getString(R.string.orientation_lock_hint_landscape)
+            else -> getString(R.string.orientation_lock_hint_default)
+        }
+
+        orientationLockHint.text = hintText
+        orientationLockHint.visibility = View.VISIBLE
+        orientationLockHint.setTextColor(getColorFromAttribute(requireContext(), R.attr.statusWarningColor))
+
+        orientationAutoCard.isEnabled = false
+        orientationAutoCard.alpha = 0.5f
+        orientationPortraitCard.isEnabled = false
+        orientationPortraitCard.alpha = 0.5f
+        orientationLandscapeCard.isEnabled = false
+        orientationLandscapeCard.alpha = 0.5f
+
+        when (forcedOrientation) {
+            "portrait" -> selectOrientation("portrait")
+            "landscape" -> selectOrientation("landscape")
+        }
+    }
+
+    private fun unlockOrientationSelector() {
+        orientationLockHint.visibility = View.GONE
+
+        orientationAutoCard.isEnabled = true
+        orientationAutoCard.alpha = 1.0f
+        orientationPortraitCard.isEnabled = true
+        orientationPortraitCard.alpha = 1.0f
+        orientationLandscapeCard.isEnabled = true
+        orientationLandscapeCard.alpha = 1.0f
+
+        val currentOrientation = configManager.getOrientation()
+        selectOrientation(currentOrientation)
+    }
 
     private fun setupFullscreenSelector() {
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
@@ -215,7 +283,6 @@ class GeneralFragment : Fragment() {
             }
 
             updateStrictModeState()
-
             markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(isChecked)
@@ -223,11 +290,7 @@ class GeneralFragment : Fragment() {
 
             Toast.makeText(
                 requireContext(),
-                if (isChecked) {
-                    getString(R.string.toast_fullscreen_enabled)
-                } else {
-                    getString(R.string.toast_fullscreen_disabled)
-                },
+                if (isChecked) getString(R.string.toast_fullscreen_enabled) else getString(R.string.toast_fullscreen_disabled),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -241,11 +304,10 @@ class GeneralFragment : Fragment() {
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
-        strictModeCheckbox.setOnCheckedChangeListener {_, isChecked ->
+        strictModeCheckbox.setOnCheckedChangeListener { _, isChecked ->
             if (isUpdating) return@setOnCheckedChangeListener
 
             configManager.setStrictModeEnabled(isChecked)
-
             markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
@@ -253,11 +315,7 @@ class GeneralFragment : Fragment() {
 
             Toast.makeText(
                 requireContext(),
-                if (isChecked) {
-                    getString(R.string.toast_strict_mode_enabled)
-                } else {
-                    getString(R.string.toast_strict_mode_disabled)
-                },
+                if (isChecked) getString(R.string.toast_strict_mode_enabled) else getString(R.string.toast_strict_mode_disabled),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -286,8 +344,7 @@ class GeneralFragment : Fragment() {
         selectTheme(mode)
 
         // Ориентация
-        val orientation = configManager.getOrientation()
-        selectOrientation(orientation)
+        updateOrientationLockState()
 
         // Полноэкранный и строгий
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
@@ -299,9 +356,17 @@ class GeneralFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+
         (activity as? SettingsActivity)?.let {
             needsRestart = it.getNeedsRestart()
         }
+
         refreshParameters()
+    }
+
+    private fun getColorFromAttribute(context: Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }

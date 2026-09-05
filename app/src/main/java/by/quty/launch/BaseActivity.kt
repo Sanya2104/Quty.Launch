@@ -1,8 +1,9 @@
+// *** BaseActivity.kt *** //
 package by.quty.launch
 
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
-import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -14,6 +15,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
 
 /**
  * Базовый класс для всех активностей приложения
@@ -26,13 +28,7 @@ abstract class BaseActivity : AppCompatActivity() {
      * Инициализируется в onCreate и доступен во всех дочерних активностях
      */
     private lateinit var _configManager: ConfigManager
-
-    /**
-     * Публичный геттер для ConfigManager
-     * Используется для доступа из фрагментов
-     */
-    val configManager: ConfigManager
-        get() = _configManager
+    val configManager: ConfigManager get() = _configManager
 
     // Флаг, что слушатель активен
     private var isListenerAttached = false
@@ -45,21 +41,19 @@ abstract class BaseActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // Проверяем, был ли пройден онбординг
+        _configManager = ConfigManager(this)
+
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
         val onboardingCompleted = prefs.getBoolean("onboarding_completed", false)
 
         if (!onboardingCompleted && this !is WelcomeActivity) {
             // Если онбординг не пройден, а мы не в WelcomeActivity — перенаправляем
-            val intent = Intent(this, WelcomeActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            val intent = android.content.Intent(this, WelcomeActivity::class.java)
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
             return
         }
-
-        // Инициализируем менеджер конфигурации при создании активности
-        _configManager = ConfigManager(this)
     }
 
     /**
@@ -139,8 +133,7 @@ abstract class BaseActivity : AppCompatActivity() {
         val insetsController = window.insetsController
         if (insetsController != null) {
             // Скрываем статус бар и навигацию
-            insetsController.hide(WindowInsetsCompat.Type.statusBars()
-                    or WindowInsetsCompat.Type.navigationBars())
+            insetsController.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
 
             if (strictMode) {
                 // Строгий режим: панели НЕ появляются при свайпе
@@ -165,19 +158,14 @@ abstract class BaseActivity : AppCompatActivity() {
         }
 
         // Обрабатываем вырез камеры
-        window.attributes.layoutInDisplayCutoutMode =
-            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
     }
 
     /**
      * Настраивает слушатель для строгого режима (Android 11+)
-     * Использует OnApplyWindowInsetsListener вместо устаревшего OnSystemUiVisibilityChangeListener
      */
     @SuppressLint("WrongConstant")
-    private fun setupStrictModeListenerModern(
-        window: android.view.Window,
-        insetsController: WindowInsetsController
-    ) {
+    private fun setupStrictModeListenerModern(window: android.view.Window, insetsController: WindowInsetsController) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
         // Удаляем старый слушатель, если был
@@ -195,8 +183,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
                 // Если панели появились — скрываем их снова
                 if (isStatusBarVisible || isNavBarVisible) {
-                    insetsController.hide(WindowInsetsCompat.Type.statusBars()
-                            or WindowInsetsCompat.Type.navigationBars())
+                    insetsController.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
                 }
             }
 
@@ -302,53 +289,54 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * Применение сохраненной ориентации экрана
-     * Сначала проверяет, не задаёт ли оболочка принудительную ориентацию
-     * Если да - применяет её, иначе использует настройки пользователя
+     * ПРИМЕНЯЕТ ЭФФЕКТИВНУЮ ОРИЕНТАЦИЮ
+     *
+     * Приоритет:
+     * 1. Если оболочка задаёт ориентацию (portrait/landscape) - используем её
+     * 2. Иначе используем настройку пользователя из ConfigManager
      */
-    protected fun applyOrientation() {
-        val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+    protected fun applyOrientation(shellManager: ShellManager? = null) {
+        // Получаем ориентацию из ConfigManager (настройка пользователя)
+        val userOrientation = configManager.getOrientation()
 
-        // Проверяем, есть ли принудительная ориентация от оболочки
-        val forcedOrientation = prefs.getString("forced_orientation", null)
+        // Проверяем, задаёт ли оболочка принудительную ориентацию
+        val forcedOrientation = shellManager?.getForcedOrientationFromActiveShell()
 
-        val orientationToApply = when (forcedOrientation) {
+        // Если оболочка задаёт portrait или landscape - используем её
+        val orientation = when (forcedOrientation) {
+            "portrait", "landscape" -> forcedOrientation
+            else -> userOrientation
+        }
+
+        val targetOrientation = when (orientation) {
             "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             "sensor" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
-            else -> {
-                // Если нет принудительной ориентации - используем настройки пользователя
-                val userOrientation = configManager.getOrientation()
-                when (userOrientation) {
-                    "portrait" -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
-                }
-            }
+            "user" -> ActivityInfo.SCREEN_ORIENTATION_USER
+            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
         }
 
-        requestedOrientation = orientationToApply
+        // ПРИНУДИТЕЛЬНО применяем ориентацию
+        requestedOrientation = targetOrientation
     }
 
-    /**
-     * Получение строкового представления текущей ориентации
-     * @return String - "portrait", "landscape" или "sensor"
-     */
-    protected fun getCurrentOrientationString(): String {
-        return when (requestedOrientation) {
-            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> "portrait"
-            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> "landscape"
-            else -> "sensor"
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        window?.decorView?.post {
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
         }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         // Удаляем слушатели при уничтожении активности
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window?.let { removeStrictModeListenerModern(it) }
         } else {
             window?.decorView?.let { removeStrictModeListenerLegacy(it) }
         }
+
+        super.onDestroy()
     }
 }
