@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.LinearLayout
-import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
@@ -18,7 +17,7 @@ import by.quty.launch.core.managers.ShellManager
 
 /**
  * Фрагмент "Основное" для Настроек
- * Содержит: переключение темы (Light/Dark/System), полноэкранный режим, строгий режим, ориентация
+ * Содержит: переключение темы (Light/Dark/System), ориентация экрана, полноэкранный режим, строгий режим
  */
 class GeneralFragment : Fragment() {
 
@@ -30,7 +29,11 @@ class GeneralFragment : Fragment() {
     private lateinit var themeDarkCard: LinearLayout
     private lateinit var themeSystemCard: LinearLayout
 
-    private lateinit var orientationGroup: RadioGroup
+    // UI элементы для ориентации
+    private lateinit var orientationAutoCard: LinearLayout
+    private lateinit var orientationPortraitCard: LinearLayout
+    private lateinit var orientationLandscapeCard: LinearLayout
+
     private lateinit var fullscreenCheckbox: CheckBox
     private lateinit var strictModeCheckbox: CheckBox
     private var parametersEventListener: ParametersEventListener? = null
@@ -57,11 +60,6 @@ class GeneralFragment : Fragment() {
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
             shellManager = ShellManager(requireContext(), configManager)
-
-            /*
-             * Восстанавливаем локальное состояние из Activity,
-             * если Fragment был пересоздан.
-             */
             needsRestart = settingsActivity.getNeedsRestart()
         }
 
@@ -70,8 +68,11 @@ class GeneralFragment : Fragment() {
         themeDarkCard = view.findViewById(R.id.theme_dark_card)
         themeSystemCard = view.findViewById(R.id.theme_system_card)
 
-        // Остальное
-        orientationGroup = view.findViewById(R.id.orientation_group)
+        // Ориентация
+        orientationAutoCard = view.findViewById(R.id.orientation_auto_card)
+        orientationPortraitCard = view.findViewById(R.id.orientation_portrait_card)
+        orientationLandscapeCard = view.findViewById(R.id.orientation_landscape_card)
+
         fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
         strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
 
@@ -111,22 +112,14 @@ class GeneralFragment : Fragment() {
     }
 
     private fun selectTheme(mode: String) {
-        // Сбрасываем все рамки
         themeLightCard.setBackgroundResource(R.drawable.bg_theme_card)
         themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card)
         themeSystemCard.setBackgroundResource(R.drawable.bg_theme_card)
 
-        // Подсвечиваем выбранный
         when (mode) {
-            "light" -> {
-                themeLightCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
-            }
-            "dark" -> {
-                themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
-            }
-            "system" -> {
-                themeSystemCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
-            }
+            "light" -> themeLightCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            "dark" -> themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            "system" -> themeSystemCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
         }
     }
 
@@ -148,34 +141,61 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ОРИЕНТАЦИЯ
+    // ОРИЕНТАЦИЯ - ПЛИТКИ С РАМКОЙ
     // ============================================================
 
     private fun setupOrientationSelector() {
-        val currentOrientation = configManager.getOrientation()
+        val orientation = configManager.getOrientation()
+        selectOrientation(orientation)
 
-        when (currentOrientation) {
-            "portrait" -> orientationGroup.check(R.id.orientation_portrait)
-            "landscape" -> orientationGroup.check(R.id.orientation_landscape)
-            else -> orientationGroup.check(R.id.orientation_sensor)
+        orientationAutoCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectOrientation("sensor")
+            applyOrientation("sensor")
         }
 
-        orientationGroup.setOnCheckedChangeListener { _, checkedId ->
-            if (isUpdating) return@setOnCheckedChangeListener
-
-            val orientation = when (checkedId) {
-                R.id.orientation_portrait -> "portrait"
-                R.id.orientation_landscape -> "landscape"
-                else -> "sensor"
-            }
-            configManager.setOrientation(orientation)
-
-            // Отмечаем, что требуется перезагрузка
-            markRestartRequired()
-
-            parametersEventListener?.onOrientationChanged(orientation)
-            parametersEventListener?.onSettingChanged()
+        orientationPortraitCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectOrientation("portrait")
+            applyOrientation("portrait")
         }
+
+        orientationLandscapeCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            selectOrientation("landscape")
+            applyOrientation("landscape")
+        }
+    }
+
+    private fun selectOrientation(orientation: String) {
+        orientationAutoCard.setBackgroundResource(R.drawable.bg_theme_card)
+        orientationPortraitCard.setBackgroundResource(R.drawable.bg_theme_card)
+        orientationLandscapeCard.setBackgroundResource(R.drawable.bg_theme_card)
+
+        when (orientation) {
+            "sensor" -> orientationAutoCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            "portrait" -> orientationPortraitCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            "landscape" -> orientationLandscapeCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+        }
+    }
+
+    private fun applyOrientation(orientation: String) {
+        if (isUpdating) return
+
+        configManager.setOrientation(orientation)
+
+        markRestartRequired()
+
+        parametersEventListener?.onOrientationChanged(orientation)
+        parametersEventListener?.onSettingChanged()
+
+        val message = when (orientation) {
+            "sensor" -> getString(R.string.toast_orientation_auto)
+            "portrait" -> getString(R.string.toast_orientation_portrait)
+            "landscape" -> getString(R.string.toast_orientation_landscape)
+            else -> ""
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     // ============================================================
@@ -226,7 +246,6 @@ class GeneralFragment : Fragment() {
 
             configManager.setStrictModeEnabled(isChecked)
 
-            // Отмечаем, что требуется перезагрузка
             markRestartRequired()
 
             parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
@@ -248,12 +267,6 @@ class GeneralFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ============================================================
 
-    /**
-     * Отмечает изменение настройки, требующее перезагрузки.
-     *
-     * Основное состояние передаётся в SettingsActivity,
-     * поэтому оно не зависит от жизненного цикла Fragment.
-     */
     private fun markRestartRequired() {
         needsRestart = true
         (activity as? SettingsActivity)?.markRestartRequired()
@@ -268,37 +281,24 @@ class GeneralFragment : Fragment() {
     fun refreshParameters() {
         isUpdating = true
 
+        // Тема
         val mode = configManager.getThemeMode()
         selectTheme(mode)
 
-        val currentOrientation = configManager.getOrientation()
-        when (currentOrientation) {
-            "portrait" -> orientationGroup.check(R.id.orientation_portrait)
-            "landscape" -> orientationGroup.check(R.id.orientation_landscape)
-            else -> orientationGroup.check(R.id.orientation_sensor)
-        }
+        // Ориентация
+        val orientation = configManager.getOrientation()
+        selectOrientation(orientation)
 
+        // Полноэкранный и строгий
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
         strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
-        /*
-         * НЕ сбрасываем needsRestart здесь.
-         * refreshParameters() только синхронизирует UI
-         * с ConfigManager. Изменение состояния перезапуска
-         * должно сохраняться до тех пор, пока приложение
-         * действительно не будет перезапущено.
-         */
         isUpdating = false
     }
 
     override fun onResume() {
         super.onResume()
-
-        /*
-         * Синхронизируем локальный флаг с Activity.
-         * Это необходимо, если Fragment был пересоздан.
-         */
         (activity as? SettingsActivity)?.let {
             needsRestart = it.getNeedsRestart()
         }

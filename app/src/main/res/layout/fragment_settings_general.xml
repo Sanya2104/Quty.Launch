@@ -172,42 +172,118 @@
             android:text="@string/parameters_orientation_title" />
 
         <LinearLayout
-            style="@style/Card"
-            android:orientation="vertical"
-            android:padding="@dimen/spacing_l">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="@dimen/spacing_s">
 
-            <RadioGroup
-                android:id="@+id/orientation_group"
-                android:layout_width="match_parent"
+            <!-- Авто -->
+            <LinearLayout
+                android:id="@+id/orientation_auto_card"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="70dp">
 
-                <RadioButton
-                    android:id="@+id/orientation_sensor"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/orientation_auto" />
+                    android:text="@string/orientation_auto"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
 
-                <RadioButton
-                    android:id="@+id/orientation_portrait"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/orientation_portrait" />
+                    android:text="@string/orientation_auto_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
 
-                <RadioButton
-                    android:id="@+id/orientation_landscape"
-                    android:layout_width="match_parent"
+            </LinearLayout>
+
+            <!-- Портретная -->
+            <LinearLayout
+                android:id="@+id/orientation_portrait_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="70dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/height_button"
-                    style="@style/Text.Body"
-                    android:text="@string/orientation_landscape" />
+                    android:text="@string/orientation_portrait"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
 
-            </RadioGroup>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_portrait_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- Ландшафтная -->
+            <LinearLayout
+                android:id="@+id/orientation_landscape_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="70dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_landscape"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/orientation_landscape_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <!-- ============================================================ -->

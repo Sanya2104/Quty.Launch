@@ -83,6 +83,15 @@
     <string name="settings_theme_system_desc">Следует за системой</string>
 
     <!-- ============================================================ -->
+    <!-- ===== ОРИЕНТАЦИЯ ЭКРАНА ==================================== -->
+    <!-- ============================================================ -->
+
+    <string name="orientation_auto_desc">Системная</string>
+    <string name="orientation_portrait_desc">Вертикальная</string>
+    <string name="orientation_landscape_desc">Горизонтальная</string>
+
+
+    <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
     <!-- ============================================================ -->
 
@@ -94,6 +103,9 @@
     <string name="toast_strict_mode_enabled">Строгий режим включён</string>
     <string name="toast_strict_mode_disabled">Строгий режим выключен</string>
 
+    <string name="toast_orientation_auto">Авто-ориентация включена</string>
+    <string name="toast_orientation_portrait">Портретная ориентация включена</string>
+    <string name="toast_orientation_landscape">Ландшафтная ориентация включена</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ПАРАМЕТРЫ =================== -->
@@ -222,9 +234,9 @@
     <!-- ============================================================ -->
 
     <!-- Ориентация -->
-    <string name="orientation_auto">Авто (следовать за системой)</string>
-    <string name="orientation_portrait">Портретная (вертикальная)</string>
-    <string name="orientation_landscape">Ландшафтная (горизонтальная)</string>
+    <string name="orientation_auto">Авто</string>
+    <string name="orientation_portrait">Портретная</string>
+    <string name="orientation_landscape">Ландшафтная</string>
 
     <!-- Режимы -->
     <string name="additional_fullscreen">Полноэкранный режим</string>

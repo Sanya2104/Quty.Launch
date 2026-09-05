@@ -2,6 +2,7 @@
     "name":  "QutyLauncher",
     "author":  "QutyTeam",
     "preview":  "preview.png",
+    "orientation": "landscape",
     "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main/",
     "version":  "0.0.23",
     "minQutyLaunchVersion":  "0.0.0"
