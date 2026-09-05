@@ -498,17 +498,16 @@ class SettingsActivity : BaseActivity() {
      * Перезапуск приложения с задержкой
      */
     private fun restartApp() {
+        configManager.setRestartForOrientationFlag()
+        // Применяем тему перед перезапуском
+        configManager.applyTheme()
+
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(intent)
             finish()
         }, 500)
-    }
-
-    fun restartAppWithOrientation() {
-        configManager.setRestartForOrientationFlag()
-        restartApp()
     }
 
     private fun showItem(item: SettingsMenuModel) {

@@ -106,19 +106,23 @@ class GeneralFragment : Fragment() {
         themeLightCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("light")
-            applyTheme("light")
+            // Только сохраняем в конфиг, но НЕ применяем сразу
+            configManager.setThemeMode("light")
+            markRestartRequired()
         }
 
         themeDarkCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("dark")
-            applyTheme("dark")
+            configManager.setThemeMode("dark")
+            markRestartRequired()
         }
 
         themeSystemCard.setOnClickListener {
             if (isUpdating) return@setOnClickListener
             selectTheme("system")
-            applyTheme("system")
+            configManager.setThemeMode("system")
+            markRestartRequired()
         }
     }
 
@@ -134,26 +138,8 @@ class GeneralFragment : Fragment() {
         }
     }
 
-    private fun applyTheme(mode: String) {
-        if (isUpdating) return
-
-        configManager.setThemeMode(mode)
-        configManager.applyTheme()
-
-        markRestartRequired()
-
-        val message = when (mode) {
-            "light" -> getString(R.string.toast_theme_light_enabled)
-            "dark" -> getString(R.string.toast_theme_dark_enabled)
-            "system" -> getString(R.string.toast_theme_system_enabled)
-            else -> ""
-        }
-
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
     // ============================================================
-    // ОРИЕНТАЦИЯ - ПЛИТКИ С РАМКОЙ
+    // ОРИЕНТАЦИЯ - ПЛИТКИ С РАМКОЙ + БЛОКИРОВКА ОТ ОБОЛОЧКИ
     // ============================================================
 
     private fun setupOrientationSelector() {
@@ -163,19 +149,28 @@ class GeneralFragment : Fragment() {
         orientationAutoCard.setOnClickListener {
             if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("sensor")
-            applyOrientation("sensor")
+            configManager.setOrientation("sensor")
+            markRestartRequired()
+            parametersEventListener?.onOrientationChanged("sensor")
+            parametersEventListener?.onSettingChanged()
         }
 
         orientationPortraitCard.setOnClickListener {
             if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("portrait")
-            applyOrientation("portrait")
+            configManager.setOrientation("portrait")
+            markRestartRequired()
+            parametersEventListener?.onOrientationChanged("portrait")
+            parametersEventListener?.onSettingChanged()
         }
 
         orientationLandscapeCard.setOnClickListener {
             if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("landscape")
-            applyOrientation("landscape")
+            configManager.setOrientation("landscape")
+            markRestartRequired()
+            parametersEventListener?.onOrientationChanged("landscape")
+            parametersEventListener?.onSettingChanged()
         }
     }
 
@@ -191,33 +186,6 @@ class GeneralFragment : Fragment() {
         }
     }
 
-    private fun applyOrientation(orientation: String) {
-        if (isUpdating) return
-
-        configManager.setOrientation(orientation)
-        configManager.setRestartForOrientationFlag()
-
-        markRestartRequired()
-
-        parametersEventListener?.onOrientationChanged(orientation)
-        parametersEventListener?.onSettingChanged()
-
-        // Запускаем перезапуск приложения для применения ориентации
-        (activity as? SettingsActivity)?.restartAppWithOrientation()
-
-        val message = when (orientation) {
-            "sensor" -> getString(R.string.toast_orientation_auto)
-            "portrait" -> getString(R.string.toast_orientation_portrait)
-            "landscape" -> getString(R.string.toast_orientation_landscape)
-            else -> ""
-        }
-
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
-    // ============================================================
-    // ПОЛНОЭКРАННЫЙ РЕЖИМ
-    // ============================================================
     private fun updateOrientationLockState() {
         isUpdating = true
 
@@ -269,6 +237,10 @@ class GeneralFragment : Fragment() {
         val currentOrientation = configManager.getOrientation()
         selectOrientation(currentOrientation)
     }
+
+    // ============================================================
+    // ПОЛНОЭКРАННЫЙ РЕЖИМ
+    // ============================================================
 
     private fun setupFullscreenSelector() {
         fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
