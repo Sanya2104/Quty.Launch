@@ -4,12 +4,15 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
-    android:padding="@dimen/screen_padding_horizontal">
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/spacing_xxxxl"
+        android:paddingTop="@dimen/fragment_top"
         android:orientation="vertical">
 
         <!-- ============================================================ -->
@@ -21,7 +24,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
-            android:paddingTop="@dimen/spacing_s"
             android:text="@string/settings_theme_title" />
 
         <LinearLayout

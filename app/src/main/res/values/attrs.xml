@@ -73,4 +73,9 @@
     <!-- Фон для выделенного пункта меню (стеклянный эффект) -->
     <attr name="glassItem" format="color" />
 
+    <!-- Цвета для градиента шапки -->
+    <attr name="toolbarGradientStart" format="color" />
+    <attr name="toolbarGradientCenter" format="color" />
+    <attr name="toolbarGradientEnd" format="color" />
+
 </resources>

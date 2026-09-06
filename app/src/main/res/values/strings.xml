@@ -28,6 +28,7 @@
 
     <!-- Заголовки -->
     <string name="settings_title">Настройки</string>
+    <string name="settings_fragment">Название фрагмента</string>
 
     <!-- Пункты меню -->
     <string name="settings_menu_main">Основное</string>

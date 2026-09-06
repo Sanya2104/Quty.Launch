@@ -71,6 +71,12 @@
         <item name="glassBg">#DDFFFFFF</item>
         <item name="glassBorder">#EEFFFFFF</item>
         <item name="glassItem">#10919191</item>
+
+        <!-- ===== ЦВЕТА ДЛЯ ГРАДИЕНТА ШАПКИ (LIGHT) ===== -->
+        <item name="toolbarGradientStart">#FFF5F5F5</item>
+        <item name="toolbarGradientCenter">#88F5F5F5</item>
+        <item name="toolbarGradientEnd">#00F5F5F5</item>
+
     </style>
 
     <!-- ============================================================ -->

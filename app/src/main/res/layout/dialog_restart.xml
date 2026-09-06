@@ -21,12 +21,12 @@
 
         <!-- Иконка -->
         <ImageView
-            android:layout_width="@dimen/icon_large"
-            android:layout_height="@dimen/icon_large"
+            android:layout_width="@dimen/icon_xlarge"
+            android:layout_height="@dimen/icon_xlarge"
             android:layout_gravity="center"
             android:src="@drawable/ic_restart"
             android:background="@drawable/bg_glass_icon"
-            android:padding="@dimen/spacing_m"
+            android:padding="@dimen/spacing_l"
             android:contentDescription="@string/empty" />
 
         <!-- Заголовок -->

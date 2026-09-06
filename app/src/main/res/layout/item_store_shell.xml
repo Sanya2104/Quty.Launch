@@ -11,8 +11,8 @@
 
     <!-- ===== ПРЕВЬЮ ===== -->
     <FrameLayout
-        android:layout_width="@dimen/icon_xlarge"
-        android:layout_height="@dimen/icon_xlarge"
+        android:layout_width="@dimen/icon_xxlarge"
+        android:layout_height="@dimen/icon_xxlarge"
         android:layout_marginEnd="@dimen/spacing_m">
 
         <ImageView

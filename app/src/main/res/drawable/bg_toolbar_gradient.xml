@@ -1,0 +1,10 @@
+<!-- res/drawable/bg_toolbar_gradient.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="?attr/toolbarGradientStart"
+        android:centerColor="?attr/toolbarGradientCenter"
+        android:endColor="?attr/toolbarGradientEnd"
+        android:angle="270"
+        android:type="linear" />
+</shape>
