@@ -343,10 +343,12 @@ class SettingsActivity : BaseActivity() {
             checkAndShowRestartDialog()
         }
 
+        // Кнопка ЗАКРЫТЬ в правой панели (стеклянная)
         binding.btnCloseContent.setOnClickListener {
             checkAndShowRestartDialog()
         }
 
+        // Кнопка НАЗАД в правой панели (стеклянная)
         binding.btnBackContent.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }

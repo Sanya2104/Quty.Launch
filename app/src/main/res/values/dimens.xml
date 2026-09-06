@@ -15,6 +15,8 @@
     <dimen name="spacing_xl">24dp</dimen>
     <dimen name="spacing_xxl">32dp</dimen>
     <dimen name="spacing_xxxl">40dp</dimen>
+    <dimen name="spacing_xxxxl">48dp</dimen>
+
 
     <!-- ============================================================ -->
     <!-- ===== ОТСТУПЫ ДЛЯ ЭКРАНОВ ================================== -->
