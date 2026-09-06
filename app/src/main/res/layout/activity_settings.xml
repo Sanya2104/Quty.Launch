@@ -15,7 +15,7 @@
         android:background="?attr/colorSurface"
         android:orientation="vertical">
 
-        <!-- ШАПКА МЕНЮ С ГРАДИЕНТОМ -->
+        <!-- ШАПКА МЕНЮ С ГРАДИЕНТОМ (парящая) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,11 +26,10 @@
             android:paddingTop="@dimen/spacing_m"
             android:paddingBottom="@dimen/spacing_xs"
             android:background="@drawable/bg_toolbar_gradient"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:elevation="4dp">
 
-            <!-- Название раздела -->
             <TextView
                 style="@style/Text.Title.Large"
                 android:layout_width="0dp"

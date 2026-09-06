@@ -320,22 +320,28 @@
             android:text="@string/parameters_additional_title" />
 
         <LinearLayout
-            style="@style/Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_l">
 
-            <CheckBox
-                android:id="@+id/fullscreen_checkbox"
+            <!-- SwitchCompat для полноэкранного режима -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/fullscreen_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:enabled="true"
                 android:minHeight="@dimen/height_button"
+                android:padding="@dimen/spacing_s"
                 style="@style/Text.Body"
-                android:text="@string/additional_fullscreen" />
+                android:text="@string/additional_fullscreen"
+                android:checked="true"
+                android:clickable="true"
+                android:focusable="true" />
 
-            <CheckBox
-                android:id="@+id/strict_mode_checkbox"
+            <!-- SwitchCompat для строгого режима -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/strict_mode_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_s"
@@ -343,8 +349,11 @@
                 android:checked="false"
                 android:enabled="false"
                 android:minHeight="@dimen/height_button"
+                android:padding="@dimen/spacing_s"
                 style="@style/Text.Body"
-                android:text="@string/additional_strict_mode" />
+                android:text="@string/additional_strict_mode"
+                android:clickable="true"
+                android:focusable="true" />
 
         </LinearLayout>
 

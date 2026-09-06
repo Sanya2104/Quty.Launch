@@ -9,10 +9,10 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
@@ -40,8 +40,8 @@ class GeneralFragment : Fragment() {
     private lateinit var orientationLandscapeCard: LinearLayout
     private lateinit var orientationLockHint: TextView
 
-    private lateinit var fullscreenCheckbox: CheckBox
-    private lateinit var strictModeCheckbox: CheckBox
+    private lateinit var fullscreenSwitch: SwitchCompat
+    private lateinit var strictModeSwitch: SwitchCompat
     private var parametersEventListener: ParametersEventListener? = null
 
     // Флаг для предотвращения множественных обновлений
@@ -80,8 +80,8 @@ class GeneralFragment : Fragment() {
         orientationLandscapeCard = view.findViewById(R.id.orientation_landscape_card)
         orientationLockHint = view.findViewById(R.id.orientation_lock_hint)
 
-        fullscreenCheckbox = view.findViewById(R.id.fullscreen_checkbox)
-        strictModeCheckbox = view.findViewById(R.id.strict_mode_checkbox)
+        fullscreenSwitch = view.findViewById(R.id.fullscreen_switch)
+        strictModeSwitch = view.findViewById(R.id.strict_mode_switch)
 
         setupThemeSelector()
         setupOrientationSelector()
@@ -264,13 +264,13 @@ class GeneralFragment : Fragment() {
     // ============================================================
 
     private fun setupFullscreenSelector() {
-        fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
+        fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
 
-        fullscreenCheckbox.setOnCheckedChangeListener { _, isChecked ->
+        fullscreenSwitch.setOnCheckedChangeListener { _, isChecked ->
             configManager.setFullscreenEnabled(isChecked)
 
-            if (!isChecked && strictModeCheckbox.isChecked) {
-                strictModeCheckbox.isChecked = false
+            if (!isChecked && strictModeSwitch.isChecked) {
+                strictModeSwitch.isChecked = false
                 configManager.setStrictModeEnabled(false)
                 updateStrictModeState()
             }
@@ -294,16 +294,16 @@ class GeneralFragment : Fragment() {
     // ============================================================
 
     private fun setupStrictModeSelector() {
-        strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
+        strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
-        strictModeCheckbox.setOnCheckedChangeListener { _, isChecked ->
+        strictModeSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isUpdating) return@setOnCheckedChangeListener
 
             configManager.setStrictModeEnabled(isChecked)
             markRestartRequired()
 
-            parametersEventListener?.onFullscreenChanged(fullscreenCheckbox.isChecked)
+            parametersEventListener?.onFullscreenChanged(fullscreenSwitch.isChecked)
             parametersEventListener?.onSettingChanged()
 
             Toast.makeText(
@@ -324,9 +324,9 @@ class GeneralFragment : Fragment() {
     }
 
     private fun updateStrictModeState() {
-        val fullscreenEnabled = fullscreenCheckbox.isChecked
-        strictModeCheckbox.isEnabled = fullscreenEnabled
-        strictModeCheckbox.alpha = if (fullscreenEnabled) 1.0f else 0.5f
+        val fullscreenEnabled = fullscreenSwitch.isChecked
+        strictModeSwitch.isEnabled = fullscreenEnabled
+        strictModeSwitch.alpha = if (fullscreenEnabled) 1.0f else 0.5f
     }
 
     fun refreshParameters() {
@@ -340,8 +340,8 @@ class GeneralFragment : Fragment() {
         updateOrientationLockState()
 
         // Полноэкранный и строгий
-        fullscreenCheckbox.isChecked = configManager.isFullscreenEnabled()
-        strictModeCheckbox.isChecked = configManager.isStrictModeEnabled()
+        fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
+        strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
         isUpdating = false
