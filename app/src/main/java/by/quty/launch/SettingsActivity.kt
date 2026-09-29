@@ -64,9 +64,9 @@ class SettingsActivity : BaseActivity() {
                 true
             ),
             // === РАЗДЕЛИТЕЛЬ ===
-            SettingsMenuModel(
-                -1, 0, 0, 0, GeneralFragment::class.java, 0
-            ),
+//            SettingsMenuModel(
+//                -1, 0, 0, 0, GeneralFragment::class.java, 0
+//            ),
             // === ГРУППА 2: Персонализация ===
             SettingsMenuModel(
                 2,
@@ -78,9 +78,9 @@ class SettingsActivity : BaseActivity() {
                 false
             ),
             // === РАЗДЕЛИТЕЛЬ ===
-            SettingsMenuModel(
-                -2, 0, 0, 0, GeneralFragment::class.java, 0
-            ),
+//            SettingsMenuModel(
+//                -2, 0, 0, 0, GeneralFragment::class.java, 0
+//            ),
             // === ГРУППА 3: Система ===
             SettingsMenuModel(
                 6,

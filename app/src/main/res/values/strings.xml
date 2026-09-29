@@ -34,7 +34,7 @@
     <string name="settings_menu_main">Основное</string>
     <string name="settings_menu_main_desc">Быстрые настройки</string>
     <string name="settings_menu_personalization">Персонализация</string>
-    <string name="settings_menu_personalization_desc">Оболочки и цветовые схемы</string>
+    <string name="settings_menu_personalization_desc">Оболочка и оформление</string>
     <string name="settings_menu_storage">Память</string>
     <string name="settings_menu_storage_desc">Управление данными</string>
     <string name="settings_menu_updates">Центр обновления</string>
