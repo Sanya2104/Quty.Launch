@@ -109,6 +109,15 @@
     <string name="log_js_bridge_language_error" formatted="false">Failed to apply language: %s</string>
 
     <!-- ============================================================ -->
+    <!-- ===== PERSONALIZATION ====================================== -->
+    <!-- ============================================================ -->
+
+    <string name="settings_personalization_active_shell">Active shell</string>
+    <string name="settings_personalization_no_shell">Active shell not found</string>
+    <string name="settings_personalization_shell_type">Type</string>
+    <string name="settings_personalization_shell_min_version">Requires Quty.Launch</string>
+
+    <!-- ============================================================ -->
     <!-- ===== TOASTS =============================================== -->
     <!-- ============================================================ -->
 

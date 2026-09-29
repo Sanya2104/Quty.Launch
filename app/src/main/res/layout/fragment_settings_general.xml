@@ -1,5 +1,6 @@
 <!-- res/layout/fragment_settings_general.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -417,36 +418,73 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_card_rounded"
-            android:padding="@dimen/spacing_l">
+            android:padding="@dimen/spacing_s">
 
-            <!-- SwitchCompat для полноэкранного режима -->
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/fullscreen_switch"
+            <!-- Полноэкранный режим -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:minHeight="@dimen/height_button"
-                android:padding="@dimen/spacing_s"
-                style="@style/Text.Body"
-                android:text="@string/additional_fullscreen"
-                android:checked="true"
-                android:clickable="true"
-                android:focusable="true" />
+                android:paddingStart="@dimen/spacing_s"
+                android:paddingEnd="@dimen/spacing_s">
 
-            <!-- SwitchCompat для строгого режима -->
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/strict_mode_switch"
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_fullscreen"
+                    android:contentDescription="@string/additional_fullscreen"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/fullscreen_switch"
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="48dp"
+                    android:text="@string/additional_fullscreen"
+                    tools:ignore="VisualLintButtonSize" />
+
+            </LinearLayout>
+
+            <!-- Строгий режим -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_s"
-                android:alpha="0.5"
-                android:checked="false"
-                android:enabled="false"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:minHeight="@dimen/height_button"
-                android:padding="@dimen/spacing_s"
-                style="@style/Text.Body"
-                android:text="@string/additional_strict_mode"
-                android:clickable="true"
-                android:focusable="true" />
+                android:paddingStart="@dimen/spacing_s"
+                android:paddingEnd="@dimen/spacing_s">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_strict_mode"
+                    android:contentDescription="@string/additional_strict_mode"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/strict_mode_switch"
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:alpha="0.5"
+                    android:checked="false"
+                    android:clickable="true"
+                    android:enabled="false"
+                    android:focusable="true"
+                    android:minHeight="48dp"
+                    android:text="@string/additional_strict_mode"
+                    tools:ignore="VisualLintButtonSize" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

@@ -109,6 +109,15 @@
     <string name="log_js_bridge_language_error" formatted="false">Не удалось применить язык: %s</string>
 
     <!-- ============================================================ -->
+    <!-- ===== ПЕРСОНАЛИЗАЦИЯ ====================================== -->
+    <!-- ============================================================ -->
+
+    <string name="settings_personalization_active_shell">Активная оболочка</string>
+    <string name="settings_personalization_no_shell">Активная оболочка не найдена</string>
+    <string name="settings_personalization_shell_type">Тип</string>
+    <string name="settings_personalization_shell_min_version">Требуется Quty.Launch</string>
+
+    <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
     <!-- ============================================================ -->
 
