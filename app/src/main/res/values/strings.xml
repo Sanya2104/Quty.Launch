@@ -91,6 +91,22 @@
     <string name="orientation_portrait_desc">Вертикальная</string>
     <string name="orientation_landscape_desc">Горизонтальная</string>
 
+    <!-- ============================================================ -->
+    <!-- ===== ЯЗЫК ================================================= -->
+    <!-- ============================================================ -->
+
+    <string name="settings_language_title">Язык</string>
+    <string name="settings_language_russian">Русский</string>
+    <string name="settings_language_russian_desc">Русский язык</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_english_desc">Английский язык</string>
+
+    <string name="toast_language_ru">Язык изменён на русский</string>
+    <string name="toast_language_en">Language changed to English</string>
+
+    <string name="log_js_bridge_webview_destroyed_language">WebView уничтожен, невозможно применить язык</string>
+    <string name="log_js_bridge_language_applied" formatted="false">Язык применён в WebView: %s</string>
+    <string name="log_js_bridge_language_error" formatted="false">Не удалось применить язык: %s</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->

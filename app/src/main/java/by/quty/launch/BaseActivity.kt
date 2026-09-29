@@ -2,6 +2,7 @@
 package by.quty.launch
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
@@ -16,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
+import java.util.Locale
 
 /**
  * Базовый класс для всех активностей приложения
@@ -32,6 +34,35 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // Флаг, что слушатель активен
     private var isListenerAttached = false
+
+    /**
+     * Применяет язык до создания контекста активности.
+     * Работает для всех активностей, наследующих BaseActivity.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+
+        // Если язык ещё не сохранён — определяем системный
+        val language = if (prefs.contains("app_language")) {
+            prefs.getString("app_language", CoreConfig.DEFAULT_LANGUAGE) ?: CoreConfig.DEFAULT_LANGUAGE
+        } else {
+            val systemLang = Locale.getDefault().language
+            if (systemLang == CoreConfig.LANGUAGE_RU) CoreConfig.LANGUAGE_RU else CoreConfig.DEFAULT_LANGUAGE
+        }
+
+        val locale = when (language) {
+            CoreConfig.LANGUAGE_RU -> Locale.forLanguageTag(CoreConfig.LOCALE_TAG_RU)
+            else -> Locale.forLanguageTag(CoreConfig.LOCALE_TAG_EN)
+        }
+
+        Locale.setDefault(locale)
+
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+
+        val localizedContext = newBase.createConfigurationContext(config)
+        super.attachBaseContext(localizedContext)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Применяем тему ДО super.onCreate()

@@ -7,11 +7,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.ColorSchemeModel
+import java.util.Locale
 
 class ConfigManager(context: Context) {
 
     private val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
     private val appContext = context.applicationContext
+
+    init {
+        // При первой инициализации — определяем язык системы и сохраняем
+        ensureLanguageInitialized()
+    }
 
     // Значения по умолчанию из CoreConfig
     fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
@@ -19,6 +25,7 @@ class ConfigManager(context: Context) {
     fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
     fun getDefaultStrictMode(): Boolean = CoreConfig.DEFAULT_STRICT_MODE
     fun getDefaultThemeMode(): String = CoreConfig.DEFAULT_THEME_MODE
+    fun getDefaultLanguage(): String = CoreConfig.DEFAULT_LANGUAGE
 
     // Получение активной оболочки
     fun getActiveShell(): String {
@@ -93,11 +100,6 @@ class ConfigManager(context: Context) {
     // ТЕМА (LIGHT / DARK / SYSTEM)
     // ============================================================
 
-    companion object {
-        private const val KEY_THEME_MODE = "theme_mode"
-        private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
-    }
-
     /**
      * Возвращает режим темы: "light", "dark" или "system"
      */
@@ -161,4 +163,61 @@ class ConfigManager(context: Context) {
     fun setRestartForOrientationFlag() {
         prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
     }
+
+    // ============================================================
+    // ЯЗЫК
+    // ============================================================
+
+    /**
+     * При первой инициализации — определяет язык системы.
+     * Если язык системы русский — ставит "ru", иначе "en".
+     * Если ключ уже есть — ничего не делает.
+     */
+    private fun ensureLanguageInitialized() {
+        if (prefs.contains(KEY_LANGUAGE)) return
+
+        val systemLang = Locale.getDefault().language
+        val initial = if (systemLang == CoreConfig.LANGUAGE_RU) {
+            CoreConfig.LANGUAGE_RU
+        } else {
+            CoreConfig.LANGUAGE_EN
+        }
+        prefs.edit { putString(KEY_LANGUAGE, initial) }
+    }
+
+    /**
+     * Возвращает выбранный язык: "ru" или "en"
+     */
+    fun getLanguage(): String {
+        return prefs.getString(KEY_LANGUAGE, getDefaultLanguage()) ?: getDefaultLanguage()
+    }
+
+    /**
+     * Сохраняет выбранный язык
+     * @param language "ru" или "en"
+     */
+    fun setLanguage(language: String) {
+        val normalized = when (language) {
+            CoreConfig.LANGUAGE_RU -> CoreConfig.LANGUAGE_RU
+            else -> CoreConfig.LANGUAGE_EN
+        }
+        prefs.edit { putString(KEY_LANGUAGE, normalized) }
+    }
+
+    /**
+     * Возвращает BCP-47 код языка для передачи в WebView
+     */
+    fun getLanguageCode(): String {
+        return getLanguage()
+    }
+
+    companion object {
+        const val LANGUAGE_RU = CoreConfig.LANGUAGE_RU
+        const val LANGUAGE_EN = CoreConfig.LANGUAGE_EN
+
+        private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_LANGUAGE = "app_language"
+        private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
+    }
+
 }

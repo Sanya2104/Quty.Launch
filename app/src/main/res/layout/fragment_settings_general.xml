@@ -307,6 +307,99 @@
 
         </LinearLayout>
 
+
+        <!-- ============================================================ -->
+        <!-- ===== ЯЗЫК ================================================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/settings_language_title" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="@dimen/spacing_s">
+
+            <!-- Русский -->
+            <LinearLayout
+                android:id="@+id/language_russian_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="70dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_language_russian"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_language_russian_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- English -->
+            <LinearLayout
+                android:id="@+id/language_english_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:background="@drawable/bg_theme_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_m"
+                android:minHeight="70dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_language_english"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:textSize="@dimen/text_s"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_language_english_desc"
+                    android:textColor="?attr/textHintColor"
+                    android:textSize="@dimen/text_xs"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
         <!-- ============================================================ -->
         <!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ============================ -->
         <!-- ============================================================ -->

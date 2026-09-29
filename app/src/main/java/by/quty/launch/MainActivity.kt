@@ -25,6 +25,9 @@ class MainActivity : BaseActivity() {
     private lateinit var shellManager: ShellManager
     private lateinit var jsBridge: JsBridge
 
+    // Последний применённый язык — чтобы не дёргать WebView зря
+    private var lastAppliedLanguage: String? = null
+
     companion object {
         // Код запроса для ParametersActivity (из конфига)
         const val REQUEST_CODE_PARAMETERS = CoreConfig.PARAMETERS_REQUEST_CODE
@@ -59,6 +62,8 @@ class MainActivity : BaseActivity() {
         jsBridge.setWebView(webView)
         webView.addJavascriptInterface(jsBridge, "Android")
 
+        lastAppliedLanguage = configManager.getLanguageCode()
+
         // Загружаем оболочку
         loadShell()
         setContentView(webView)
@@ -87,11 +92,15 @@ class MainActivity : BaseActivity() {
                 isAsset = shellToActivate.isAsset
             )
 
-            // После загрузки оболочки отправляем цвета в WebView
+            // После загрузки оболочки отправляем цвета и язык в WebView
             webView.post {
                 val primary = configManager.getSchemePrimaryColor()
                 val accent = configManager.getSchemeAccentColor()
                 jsBridge.applyColorScheme(primary, accent)
+
+                val lang = configManager.getLanguageCode()
+                lastAppliedLanguage = lang
+                jsBridge.applyLanguage(lang)
             }
         }
     }
@@ -116,6 +125,15 @@ class MainActivity : BaseActivity() {
             applyOrientation(shellManager)
         } else {
             applyOrientation()
+        }
+
+        // Проверяем смену языка → сообщаем WebView
+        if (::jsBridge.isInitialized && ::webView.isInitialized) {
+            val currentLang = configManager.getLanguageCode()
+            if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
+                lastAppliedLanguage = currentLang
+                jsBridge.applyLanguage(currentLang)
+            }
         }
 
         window.decorView.post {

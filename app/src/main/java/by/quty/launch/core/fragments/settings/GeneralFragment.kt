@@ -22,7 +22,8 @@ import by.quty.launch.core.managers.ShellManager
 
 /**
  * Фрагмент "Основное" для Настроек
- * Содержит: переключение темы (Light/Dark/System), ориентация экрана, полноэкранный режим, строгий режим
+ * Содержит: переключение темы (Light/Dark/System), ориентация экрана,
+ * полноэкранный режим, строгий режим, выбор языка
  */
 class GeneralFragment : Fragment() {
 
@@ -42,6 +43,11 @@ class GeneralFragment : Fragment() {
 
     private lateinit var fullscreenSwitch: SwitchCompat
     private lateinit var strictModeSwitch: SwitchCompat
+
+    // UI элементы для языка
+    private lateinit var languageRussianCard: LinearLayout
+    private lateinit var languageEnglishCard: LinearLayout
+
     private var parametersEventListener: ParametersEventListener? = null
 
     // Флаг для предотвращения множественных обновлений
@@ -83,10 +89,15 @@ class GeneralFragment : Fragment() {
         fullscreenSwitch = view.findViewById(R.id.fullscreen_switch)
         strictModeSwitch = view.findViewById(R.id.strict_mode_switch)
 
+        // Язык
+        languageRussianCard = view.findViewById(R.id.language_russian_card)
+        languageEnglishCard = view.findViewById(R.id.language_english_card)
+
         setupThemeSelector()
         setupOrientationSelector()
         setupFullscreenSelector()
         setupStrictModeSelector()
+        setupLanguageSelector()
 
         Handler(Looper.getMainLooper()).postDelayed({
             updateOrientationLockState()
@@ -96,7 +107,7 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ТЕМА (LIGHT / DARK / SYSTEM) - ПЛИТКИ С РАМКОЙ
+    // ТЕМА (LIGHT / DARK / SYSTEM)
     // ============================================================
 
     private fun setupThemeSelector() {
@@ -153,7 +164,7 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ОРИЕНТАЦИЯ - ПЛИТКИ С РАМКОЙ + БЛОКИРОВКА ОТ ОБОЛОЧКИ
+    // ОРИЕНТАЦИЯ
     // ============================================================
 
     private fun setupOrientationSelector() {
@@ -163,7 +174,6 @@ class GeneralFragment : Fragment() {
         orientationAutoCard.setOnClickListener {
             if (isUpdating || shellManager.hasForcedOrientation()) return@setOnClickListener
             selectOrientation("sensor")
-            // Только сохраняем ориентацию, НЕ перезапускаем сразу
             configManager.setOrientation("sensor")
             markRestartRequired()
             parametersEventListener?.onOrientationChanged("sensor")
@@ -315,6 +325,60 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
+    // ЯЗЫК
+    // ============================================================
+
+    private fun setupLanguageSelector() {
+        val current = configManager.getLanguage()
+        selectLanguage(current)
+
+        languageRussianCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            if (configManager.getLanguage() == ConfigManager.LANGUAGE_RU) return@setOnClickListener
+            selectLanguage(ConfigManager.LANGUAGE_RU)
+            applyLanguage(ConfigManager.LANGUAGE_RU)
+        }
+
+        languageEnglishCard.setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            if (configManager.getLanguage() == ConfigManager.LANGUAGE_EN) return@setOnClickListener
+            selectLanguage(ConfigManager.LANGUAGE_EN)
+            applyLanguage(ConfigManager.LANGUAGE_EN)
+        }
+    }
+
+    private fun selectLanguage(language: String) {
+        languageRussianCard.setBackgroundResource(R.drawable.bg_theme_card)
+        languageEnglishCard.setBackgroundResource(R.drawable.bg_theme_card)
+
+        when (language) {
+            ConfigManager.LANGUAGE_RU -> languageRussianCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+            ConfigManager.LANGUAGE_EN -> languageEnglishCard.setBackgroundResource(R.drawable.bg_theme_card_selected)
+        }
+    }
+
+    private fun applyLanguage(language: String) {
+        if (isUpdating) return
+
+        configManager.setLanguage(language)
+
+        // Тост показываем на СТАРОМ языке (активность ещё не пересоздана)
+        val message = when (language) {
+            ConfigManager.LANGUAGE_RU -> getString(R.string.toast_language_ru)
+            else -> getString(R.string.toast_language_en)
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+        // ВАЖНО: помечаем, что требуется перезапуск.
+        // При выходе из настроек SettingsActivity покажет диалог перезапуска.
+        // Флаг сохраняется через onSaveInstanceState и переживёт recreate().
+        markRestartRequired()
+
+        // Мгновенно пересоздаём SettingsActivity → UI обновится на новый язык
+        (activity as? SettingsActivity)?.applyLanguageAndRecreate()
+    }
+
+    // ============================================================
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ============================================================
 
@@ -336,13 +400,16 @@ class GeneralFragment : Fragment() {
         val mode = configManager.getThemeMode()
         selectTheme(mode)
 
-        // Ориентация (обновляем с учётом блокировки)
+        // Ориентация
         updateOrientationLockState()
 
         // Полноэкранный и строгий
         fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
         strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
+
+        // Язык
+        selectLanguage(configManager.getLanguage())
 
         isUpdating = false
     }

@@ -203,6 +203,54 @@ class JsBridge(
         }
     }
 
+    // ============================================================
+    // ПРИМЕНЕНИЕ ЯЗЫКА В WEBVIEW
+    // ============================================================
+
+    /**
+     * Применяет выбранный язык в WebView.
+     * Вызывает JS-функцию window.applyLanguage(lang), если она есть.
+     * Иначе устанавливает document.documentElement.lang.
+     *
+     * @param lang код языка: "ru" или "en"
+     */
+    @JavascriptInterface
+    fun applyLanguage(lang: String) {
+        val webView = webViewRef?.get()
+        if (webView == null) {
+            LoggerManager.e(
+                "JsBridge",
+                context.getString(R.string.log_js_bridge_webview_destroyed_language)
+            )
+            return
+        }
+
+        val jsCode = """
+            (function() {
+                if (typeof window.applyLanguage === 'function') {
+                    window.applyLanguage('$lang');
+                } else {
+                    document.documentElement.lang = '$lang';
+                }
+            })();
+        """.trimIndent()
+
+        webView.post {
+            try {
+                webView.evaluateJavascript(jsCode, null)
+                LoggerManager.d(
+                    "JsBridge",
+                    context.getString(R.string.log_js_bridge_language_applied, lang)
+                )
+            } catch (e: Exception) {
+                LoggerManager.e(
+                    "JsBridge",
+                    context.getString(R.string.log_js_bridge_language_error, e.message)
+                )
+            }
+        }
+    }
+
     /**
      * Структура данных для лога
      */
