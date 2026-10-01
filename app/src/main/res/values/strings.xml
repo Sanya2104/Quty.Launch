@@ -114,6 +114,7 @@
 
     <string name="settings_personalization_active_shell">Активная оболочка</string>
     <string name="settings_personalization_no_shell">Активная оболочка не найдена</string>
+    <string name="settings_personalization_open_store">Больше оболочек в Store</string>
 
     <!-- Диалог информации -->
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
@@ -121,7 +122,7 @@
     <string name="settings_personalization_shell_info_version">Версия</string>
     <string name="settings_personalization_shell_info_author">Автор</string>
     <string name="settings_personalization_shell_info_type">Тип</string>
-    <string name="settings_personalization_shell_info_min_version">Требуется Quty.Launch</string>
+    <string name="settings_personalization_shell_info_min_version">Мин. версия Quty.Launch</string>
     <string name="settings_personalization_shell_info_orientation">Ориентация</string>
     <string name="settings_personalization_shell_info_repo">Репозиторий</string>
     <string name="settings_personalization_shell_info_repo_open">Открыть</string>

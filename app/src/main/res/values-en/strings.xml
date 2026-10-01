@@ -114,6 +114,7 @@
 
     <string name="settings_personalization_active_shell">Active shell</string>
     <string name="settings_personalization_no_shell">Active shell not found</string>
+    <string name="settings_personalization_open_store">More shells in Store</string>
 
     <!-- Info dialog -->
     <string name="settings_personalization_shell_info_title">Shell information</string>
@@ -121,7 +122,7 @@
     <string name="settings_personalization_shell_info_version">Version</string>
     <string name="settings_personalization_shell_info_author">Author</string>
     <string name="settings_personalization_shell_info_type">Type</string>
-    <string name="settings_personalization_shell_info_min_version">Requires Quty.Launch</string>
+    <string name="settings_personalization_shell_info_min_version">Min. version of Quty.Launch</string>
     <string name="settings_personalization_shell_info_orientation">Orientation</string>
     <string name="settings_personalization_shell_info_repo">Repository</string>
     <string name="settings_personalization_shell_info_repo_open">Open</string>

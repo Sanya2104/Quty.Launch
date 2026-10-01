@@ -22,6 +22,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.StoreActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
@@ -41,6 +42,9 @@ class ShellFragment : Fragment() {
     private lateinit var shellName: TextView
     private lateinit var shellVersion: TextView
     private lateinit var shellMenuButton: ImageButton
+
+    // Ссылка на магазин
+    private lateinit var storeRow: View
 
     // Флаг, что требуется перезагрузка
     private var needsRestart = false
@@ -68,10 +72,16 @@ class ShellFragment : Fragment() {
         shellName = view.findViewById(R.id.shell_name)
         shellVersion = view.findViewById(R.id.shell_version)
         shellMenuButton = view.findViewById(R.id.shell_menu_button)
+        storeRow = view.findViewById(R.id.store_row)
 
         // Кнопка сразу открывает диалог с информацией об активной оболочке
         shellMenuButton.setOnClickListener {
             showShellInfoDialog()
+        }
+
+        // Ссылка на магазин
+        storeRow.setOnClickListener {
+            openStore()
         }
 
         refreshActiveShell()
@@ -132,6 +142,22 @@ class ShellFragment : Fragment() {
             }
         } catch (_: Exception) {
             shellPreview.setImageResource(R.drawable.ic_image)
+        }
+    }
+
+    /**
+     * Открывает магазин оболочек.
+     */
+    private fun openStore() {
+        try {
+            val intent = Intent(requireContext(), StoreActivity::class.java)
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.store_load_error,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

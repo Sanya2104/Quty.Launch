@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     android:paddingStart="@dimen/screen_padding_horizontal"
@@ -88,6 +89,7 @@
                             android:layout_height="wrap_content"
                             style="@style/Text.Title.XSmall"
                             android:textColor="?attr/textPrimaryColor"
+                            tools:text="@string/settings_personalization_shell_info_name"
                             android:maxLines="1"
                             android:ellipsize="end" />
 
@@ -98,6 +100,7 @@
                             android:layout_marginTop="@dimen/spacing_xxs"
                             style="@style/Text.Small"
                             android:textColor="?attr/textSecondaryColor"
+                            tools:text="@string/settings_personalization_shell_info_version"
                             android:maxLines="1"
                             android:ellipsize="end" />
 
@@ -117,6 +120,49 @@
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
+        <!-- ============================================================ -->
+        <!-- ===== ССЫЛКА НА МАГАЗИН ==================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/store_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_card_rounded_ripple"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_l"
+            android:paddingBottom="@dimen/spacing_l">
+
+            <ImageView
+                android:layout_width="@dimen/icon_small"
+                android:layout_height="@dimen/icon_small"
+                android:src="@drawable/ic_store"
+                android:contentDescription="@string/empty"
+                android:layout_marginEnd="@dimen/spacing_m" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/Text.Body"
+                android:text="@string/settings_personalization_open_store" />
+
+            <ImageView
+                android:layout_width="@dimen/icon_small"
+                android:layout_height="@dimen/icon_small"
+                android:src="@drawable/ic_arrow_forward"
+                android:contentDescription="@string/empty" />
+
+        </LinearLayout>
 
         <!-- Отступ снизу -->
         <View
