@@ -43,7 +43,7 @@
     <color name="text_secondary">#424242</color>
     <color name="text_hint">#757575</color>
     <color name="text_muted">#9E9E9E</color>
-    <color name="text_dim">#BDBDBD</color>
+    <color name="text_dim">#757575</color>
     <color name="text_error">#D32F2F</color>
 
     <!-- Разделители и обводки (Dark) -->

@@ -23,7 +23,7 @@
     <color name="text_secondary">#CCCCCC</color>
     <color name="text_hint">#AAAAAA</color>
     <color name="text_muted">#888888</color>
-    <color name="text_dim">#666666</color>
+    <color name="text_dim">#AAAAAA</color>
     <color name="text_error">#FF6B6B</color>
 
     <!-- Разделители и обводки (Light) -->

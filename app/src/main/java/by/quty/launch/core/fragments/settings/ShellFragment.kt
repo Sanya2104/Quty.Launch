@@ -14,7 +14,6 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -25,7 +24,6 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.utilities.PopupMenuHelper
 
 /**
  * Фрагмент "Персонализация" для Настроек
@@ -43,9 +41,6 @@ class ShellFragment : Fragment() {
     private lateinit var shellName: TextView
     private lateinit var shellVersion: TextView
     private lateinit var shellMenuButton: ImageButton
-
-    // PopupWindow для меню оболочки
-    private var popupWindow: PopupWindow? = null
 
     // Флаг, что требуется перезагрузка
     private var needsRestart = false
@@ -74,8 +69,9 @@ class ShellFragment : Fragment() {
         shellVersion = view.findViewById(R.id.shell_version)
         shellMenuButton = view.findViewById(R.id.shell_menu_button)
 
-        shellMenuButton.setOnClickListener { anchor ->
-            showShellMenu(anchor)
+        // Кнопка сразу открывает диалог с информацией об активной оболочке
+        shellMenuButton.setOnClickListener {
+            showShellInfoDialog()
         }
 
         refreshActiveShell()
@@ -89,14 +85,6 @@ class ShellFragment : Fragment() {
         }
 
         refreshActiveShell()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-
-        // Закрываем popup, если он открыт — предотвращаем утечку
-        popupWindow?.dismiss()
-        popupWindow = null
     }
 
     /**
@@ -145,25 +133,6 @@ class ShellFragment : Fragment() {
         } catch (_: Exception) {
             shellPreview.setImageResource(R.drawable.ic_image)
         }
-    }
-
-    /**
-     * Показывает меню действий для оболочки через PopupMenuHelper.
-     */
-    private fun showShellMenu(anchor: View) {
-        // Закрываем предыдущий popup, если был
-        popupWindow?.dismiss()
-
-        popupWindow = PopupMenuHelper.show(
-            anchor = anchor,
-            items = listOf(
-                PopupMenuHelper.Item(
-                    text = getString(R.string.settings_personalization_shell_menu_info)
-                ) {
-                    showShellInfoDialog()
-                }
-            )
-        )
     }
 
     /**

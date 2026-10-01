@@ -115,10 +115,6 @@
     <string name="settings_personalization_active_shell">Активная оболочка</string>
     <string name="settings_personalization_no_shell">Активная оболочка не найдена</string>
 
-    <!-- Меню оболочки -->
-    <string name="settings_personalization_shell_menu_description">Меню оболочки</string>
-    <string name="settings_personalization_shell_menu_info">Информация</string>
-
     <!-- Диалог информации -->
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
