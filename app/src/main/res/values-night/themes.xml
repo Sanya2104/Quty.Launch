@@ -1,5 +1,6 @@
 <!-- res/values-night/themes.xml -->
 <resources>
+
     <!-- ============================================================ -->
     <!-- ===== БАЗОВАЯ ТЕМА (DARK) ================================== -->
     <!-- ============================================================ -->
@@ -12,30 +13,27 @@
         <!-- Для Android 13: обрабатываем вырез камеры -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
 
-        <!-- Важно! Запрещаем системе добавлять отступы -->
         <item name="android:fitsSystemWindows">false</item>
-
-        <!-- Растягиваем окно под системные панели -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- ===== ALERT DIALOG THEME ===== -->
+        <item name="alertDialogTheme">@style/Theme.QutyLaunch.AlertDialog</item>
+        <item name="android:alertDialogTheme">@style/Theme.QutyLaunch.AlertDialog</item>
 
         <!-- ============================================================ -->
         <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (DARK) ============================ -->
         <!-- ============================================================ -->
 
-        <!-- Основные цвета Material (для стандартных виджетов) -->
         <item name="colorPrimary">@color/scheme_teal_primary</item>
         <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
         <item name="colorAccent">@color/scheme_teal_accent</item>
 
-        <!-- Для контролов (чекбоксы, радиокнопки, переключатели) -->
         <item name="colorControlNormal">@color/text_dim</item>
         <item name="colorControlActivated">@color/scheme_teal_primary</item>
         <item name="colorControlHighlight">@color/scheme_teal_primary</item>
 
-        <!-- Для кнопок (ripple эффект) -->
         <item name="colorButtonNormal">@color/scheme_teal_primary</item>
 
-        <!-- Атрибуты для UI (значения по умолчанию для teal) -->
         <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
         <item name="colorOnPrimary">@color/text_primary</item>
         <item name="colorSurface">@color/background_card</item>
@@ -82,6 +80,31 @@
         <item name="toolbarGradientCenter">#88121212</item>
         <item name="toolbarGradientEnd">#00121212</item>
 
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛЬ ALERT DIALOG (DARK) ============================ -->
+    <!-- ============================================================ -->
+
+    <style name="Theme.QutyLaunch.AlertDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorAccent">?attr/buttonPrimaryColor</item>
+        <item name="android:textColorPrimary">?attr/textPrimaryColor</item>
+        <item name="android:textColorSecondary">?attr/textSecondaryColor</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+    </style>
+
+    <!-- Прозрачный вариант — для диалогов с собственным CardView/фоном -->
+    <style name="Theme.QutyLaunch.AlertDialog.Transparent" parent="Theme.QutyLaunch.AlertDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛЬ POPUP MENU (DARK) ============================== -->
+    <!-- ============================================================ -->
+
+    <style name="Theme.QutyLaunch.PopupMenu" parent="Theme.AppCompat">
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
     <!-- ============================================================ -->

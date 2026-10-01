@@ -101,7 +101,7 @@
     <string name="settings_language_english">English</string>
     <string name="settings_language_english_desc">English language</string>
 
-    <string name="toast_language_ru">Language changed to Russian</string>
+    <string name="toast_language_ru">Язык изменён на русский</string>
     <string name="toast_language_en">Language changed to English</string>
 
     <string name="log_js_bridge_webview_destroyed_language">WebView destroyed, cannot apply language</string>
@@ -114,8 +114,23 @@
 
     <string name="settings_personalization_active_shell">Active shell</string>
     <string name="settings_personalization_no_shell">Active shell not found</string>
-    <string name="settings_personalization_shell_type">Type</string>
-    <string name="settings_personalization_shell_min_version">Requires Quty.Launch</string>
+
+    <!-- Shell menu -->
+    <string name="settings_personalization_shell_menu_description">Shell menu</string>
+    <string name="settings_personalization_shell_menu_info">Info</string>
+
+    <!-- Info dialog -->
+    <string name="settings_personalization_shell_info_title">Shell information</string>
+    <string name="settings_personalization_shell_info_name">Name</string>
+    <string name="settings_personalization_shell_info_version">Version</string>
+    <string name="settings_personalization_shell_info_author">Author</string>
+    <string name="settings_personalization_shell_info_type">Type</string>
+    <string name="settings_personalization_shell_info_min_version">Requires Quty.Launch</string>
+    <string name="settings_personalization_shell_info_orientation">Orientation</string>
+    <string name="settings_personalization_shell_info_repo">Repository</string>
+    <string name="settings_personalization_shell_info_repo_open">Open</string>
+    <string name="settings_personalization_shell_info_repo_error">Failed to open link</string>
+    <string name="shell_info_orientation_none">Not specified</string>
 
     <!-- ============================================================ -->
     <!-- ===== TOASTS =============================================== -->

@@ -1,5 +1,6 @@
 <!-- res/values/themes.xml -->
 <resources>
+
     <!-- ============================================================ -->
     <!-- ===== БАЗОВАЯ ТЕМА (LIGHT) ================================= -->
     <!-- ============================================================ -->
@@ -13,24 +14,24 @@
         <item name="android:fitsSystemWindows">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
+        <!-- ===== ALERT DIALOG THEME ===== -->
+        <item name="alertDialogTheme">@style/Theme.QutyLaunch.AlertDialog</item>
+        <item name="android:alertDialogTheme">@style/Theme.QutyLaunch.AlertDialog</item>
+
         <!-- ============================================================ -->
         <!-- ===== ЦВЕТОВЫЕ АТРИБУТЫ (LIGHT) ============================ -->
         <!-- ============================================================ -->
 
-        <!-- Основные цвета Material (для стандартных виджетов) -->
         <item name="colorPrimary">@color/scheme_teal_primary</item>
         <item name="colorPrimaryDark">@color/scheme_teal_primary</item>
         <item name="colorAccent">@color/scheme_teal_accent</item>
 
-        <!-- Для контролов -->
         <item name="colorControlNormal">@color/text_dim</item>
         <item name="colorControlActivated">@color/scheme_teal_primary</item>
         <item name="colorControlHighlight">@color/scheme_teal_primary</item>
 
-        <!-- Для кнопок -->
         <item name="colorButtonNormal">@color/scheme_teal_primary</item>
 
-        <!-- Атрибуты для UI (значения по умолчанию для teal) -->
         <item name="colorPrimarySurface">@color/scheme_teal_primary</item>
         <item name="colorOnPrimary">@color/text_primary</item>
         <item name="colorSurface">@color/background_card</item>
@@ -77,6 +78,31 @@
         <item name="toolbarGradientCenter">#88F5F5F5</item>
         <item name="toolbarGradientEnd">#00F5F5F5</item>
 
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛЬ ALERT DIALOG (LIGHT) =========================== -->
+    <!-- ============================================================ -->
+
+    <style name="Theme.QutyLaunch.AlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">?attr/buttonPrimaryColor</item>
+        <item name="android:textColorPrimary">?attr/textPrimaryColor</item>
+        <item name="android:textColorSecondary">?attr/textSecondaryColor</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+    </style>
+
+    <!-- Прозрачный вариант — для диалогов с собственным CardView/фоном -->
+    <style name="Theme.QutyLaunch.AlertDialog.Transparent" parent="Theme.QutyLaunch.AlertDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ===== СТИЛЬ POPUP MENU (LIGHT) ============================= -->
+    <!-- ============================================================ -->
+
+    <style name="Theme.QutyLaunch.PopupMenu" parent="Theme.AppCompat.Light">
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
     <!-- ============================================================ -->

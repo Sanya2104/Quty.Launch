@@ -1,26 +1,35 @@
 // *** core/fragments/settings/ShellFragment.kt *** //
 package by.quty.launch.core.fragments.settings
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.utilities.PopupMenuHelper
 
 /**
  * Фрагмент "Персонализация" для Настроек
  * Показывает информацию об активной оболочке оформления.
- *
- * Функционал будет расширяться (цветовые схемы, магазин и т.д.)
  */
 class ShellFragment : Fragment() {
 
@@ -28,16 +37,15 @@ class ShellFragment : Fragment() {
     private lateinit var shellManager: ShellManager
 
     // Карточка активной оболочки
-    private lateinit var shellCard: LinearLayout
+    private lateinit var shellCard: View
     private lateinit var shellEmpty: TextView
     private lateinit var shellPreview: ImageView
     private lateinit var shellName: TextView
     private lateinit var shellVersion: TextView
-    private lateinit var shellAuthor: TextView
+    private lateinit var shellMenuButton: ImageButton
 
-    // Детали
-    private lateinit var shellType: TextView
-    private lateinit var shellMinVersion: TextView
+    // PopupWindow для меню оболочки
+    private var popupWindow: PopupWindow? = null
 
     // Флаг, что требуется перезагрузка
     private var needsRestart = false
@@ -64,9 +72,11 @@ class ShellFragment : Fragment() {
         shellPreview = view.findViewById(R.id.shell_preview)
         shellName = view.findViewById(R.id.shell_name)
         shellVersion = view.findViewById(R.id.shell_version)
-        shellAuthor = view.findViewById(R.id.shell_author)
-        shellType = view.findViewById(R.id.shell_type_value)
-        shellMinVersion = view.findViewById(R.id.shell_min_version_value)
+        shellMenuButton = view.findViewById(R.id.shell_menu_button)
+
+        shellMenuButton.setOnClickListener { anchor ->
+            showShellMenu(anchor)
+        }
 
         refreshActiveShell()
     }
@@ -78,8 +88,15 @@ class ShellFragment : Fragment() {
             needsRestart = it.getNeedsRestart()
         }
 
-        // Обновляем информацию об активной оболочке при каждом возврате
         refreshActiveShell()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        // Закрываем popup, если он открыт — предотвращаем утечку
+        popupWindow?.dismiss()
+        popupWindow = null
     }
 
     /**
@@ -97,31 +114,14 @@ class ShellFragment : Fragment() {
         shellCard.visibility = View.VISIBLE
         shellEmpty.visibility = View.GONE
 
-        // Название
         shellName.text = shell.displayName ?: shell.name
 
-        // Версия
         shellVersion.text = if (!shell.version.isNullOrEmpty()) {
             getString(R.string.shell_version_with_label, shell.version)
         } else {
             getString(R.string.shell_version_with_label, getString(R.string.unknown))
         }
 
-        // Автор
-        shellAuthor.text = shell.author ?: getString(R.string.author_default)
-
-        // Тип
-        shellType.text = if (shell.isCustom) {
-            getString(R.string.shell_type_custom)
-        } else {
-            getString(R.string.shell_type_builtin)
-        }
-
-        // Минимальная версия Quty.Launch
-        shellMinVersion.text = shell.minQutyLaunchVersion
-            ?: getString(R.string.shell_info_min_version_not_specified)
-
-        // Превью
         loadPreview(shell.previewBase64)
     }
 
@@ -130,7 +130,7 @@ class ShellFragment : Fragment() {
      */
     private fun loadPreview(base64: String?) {
         if (base64.isNullOrEmpty()) {
-            shellPreview.setImageResource(R.drawable.ic_parameters)
+            shellPreview.setImageResource(R.drawable.ic_image)
             return
         }
 
@@ -140,10 +140,125 @@ class ShellFragment : Fragment() {
             if (bitmap != null) {
                 shellPreview.setImageBitmap(bitmap)
             } else {
-                shellPreview.setImageResource(R.drawable.ic_parameters)
+                shellPreview.setImageResource(R.drawable.ic_image)
             }
         } catch (_: Exception) {
-            shellPreview.setImageResource(R.drawable.ic_parameters)
+            shellPreview.setImageResource(R.drawable.ic_image)
+        }
+    }
+
+    /**
+     * Показывает меню действий для оболочки через PopupMenuHelper.
+     */
+    private fun showShellMenu(anchor: View) {
+        // Закрываем предыдущий popup, если был
+        popupWindow?.dismiss()
+
+        popupWindow = PopupMenuHelper.show(
+            anchor = anchor,
+            items = listOf(
+                PopupMenuHelper.Item(
+                    text = getString(R.string.settings_personalization_shell_menu_info)
+                ) {
+                    showShellInfoDialog()
+                }
+            )
+        )
+    }
+
+    /**
+     * Показывает диалог с информацией об активной оболочке.
+     * Использует прозрачную тему диалога, чтобы был виден CardView со скруглением.
+     */
+    @SuppressLint("InflateParams")
+    private fun showShellInfoDialog() {
+        val shell = shellManager.getActiveShell()
+        if (shell == null) {
+            Toast.makeText(requireContext(), R.string.settings_personalization_no_shell, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_shell_info, null)
+
+        // Заполняем поля
+        dialogView.findViewById<TextView>(R.id.shell_info_name_value).text =
+            shell.displayName ?: shell.name
+
+        dialogView.findViewById<TextView>(R.id.shell_info_version_value).text =
+            shell.version ?: getString(R.string.unknown)
+
+        dialogView.findViewById<TextView>(R.id.shell_info_author_value).text =
+            shell.author ?: getString(R.string.author_default)
+
+        dialogView.findViewById<TextView>(R.id.shell_info_type_value).text =
+            if (shell.isCustom) getString(R.string.shell_type_custom)
+            else getString(R.string.shell_type_builtin)
+
+        dialogView.findViewById<TextView>(R.id.shell_info_min_version_value).text =
+            shell.minQutyLaunchVersion
+                ?: getString(R.string.shell_info_min_version_not_specified)
+
+        dialogView.findViewById<TextView>(R.id.shell_info_orientation_value).text =
+            mapOrientation(shell.orientation)
+
+        // Репозиторий
+        val repoContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_container)
+        val repoButton = dialogView.findViewById<Button>(R.id.shell_info_repo_button)
+
+        if (!shell.repoUrl.isNullOrEmpty()) {
+            repoContainer.visibility = View.VISIBLE
+            repoButton.setOnClickListener {
+                openUrl(shell.repoUrl)
+            }
+        } else {
+            repoContainer.visibility = View.GONE
+        }
+
+        // Создаём диалог с прозрачной темой — фон прозрачный, чтобы был виден CardView со скруглением
+        val dialog = AlertDialog.Builder(
+            requireContext(),
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .create()
+
+        // Прозрачный фон окна диалога
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        // Кнопка-крестик закрывает диалог
+        dialogView.findViewById<ImageButton>(R.id.shell_info_close_button).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    /**
+     * Преобразует код ориентации в читаемый текст.
+     */
+    private fun mapOrientation(orientation: String?): String {
+        return when (orientation) {
+            "portrait" -> getString(R.string.orientation_portrait)
+            "landscape" -> getString(R.string.orientation_landscape)
+            "sensor" -> getString(R.string.orientation_auto)
+            "user" -> getString(R.string.orientation_auto)
+            else -> getString(R.string.shell_info_orientation_none)
+        }
+    }
+
+    /**
+     * Открывает URL во внешнем браузере.
+     */
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_shell_info_repo_error,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

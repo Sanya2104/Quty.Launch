@@ -28,6 +28,7 @@ import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.model.SettingsMenuModel
 import by.quty.launch.databinding.ActivitySettingsBinding
+import androidx.core.graphics.drawable.toDrawable
 
 class SettingsActivity : BaseActivity() {
 
@@ -459,13 +460,18 @@ class SettingsActivity : BaseActivity() {
         if (isRestarting) return
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
-        val dialog = AlertDialog.Builder(this)
+
+        // Используем прозрачную тему — у dialog_restart свой bg_glass_dialog
+        val dialog = AlertDialog.Builder(
+            this,
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
-        // Делаем фон диалога прозрачным
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        // Прозрачный фон окна
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
         // ===== РАЗМЫТИЕ ДЛЯ ANDROID 12+ =====
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
