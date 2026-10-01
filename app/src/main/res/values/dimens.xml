@@ -23,7 +23,7 @@
     <!-- ===== ОТСТУПЫ ДЛЯ ЭКРАНОВ ================================== -->
     <!-- ============================================================ -->
 
-    <dimen name="screen_padding_horizontal">16dp</dimen>
+    <dimen name="screen_padding_horizontal">8dp</dimen>
     <dimen name="screen_padding_vertical">16dp</dimen>
     <dimen name="card_padding">16dp</dimen>
     <dimen name="item_padding">12dp</dimen>
@@ -74,7 +74,7 @@
     <dimen name="icon_xxlarge">80dp</dimen>
 
     <!-- Превью активной оболочки в Настройках -->
-    <dimen name="shell_preview_height">200dp</dimen>
+    <dimen name="shell_preview_height">250dp</dimen>
 
     <!-- ============================================================ -->
     <!-- ===== РАДИУСЫ СКРУГЛЕНИЯ ================================== -->

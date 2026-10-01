@@ -22,7 +22,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
@@ -87,7 +87,7 @@
                             android:id="@+id/shell_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            style="@style/Text.Title.XSmall"
+                            style="@style/Text.Title.Small"
                             android:textColor="?attr/textPrimaryColor"
                             tools:text="@string/settings_personalization_shell_info_name"
                             android:maxLines="1"
@@ -163,6 +163,32 @@
                 android:contentDescription="@string/empty" />
 
         </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== ЦВЕТОВАЯ СХЕМА ======================================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/settings_personalization_color_scheme_title" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/color_scheme_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/spacing_s"
+            android:paddingEnd="@dimen/spacing_s"
+            android:paddingTop="@dimen/spacing_xs"
+            android:paddingBottom="@dimen/spacing_xs"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:clipToPadding="false" />
 
         <!-- Отступ снизу -->
         <View

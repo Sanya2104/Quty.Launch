@@ -21,7 +21,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
@@ -169,7 +169,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
@@ -314,7 +314,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
@@ -406,7 +406,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
@@ -418,7 +418,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_card_rounded"
-            android:padding="@dimen/spacing_s">
+            android:padding="@dimen/spacing_s"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s" >
 
             <!-- Полноэкранный режим -->
             <LinearLayout

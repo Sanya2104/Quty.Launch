@@ -115,6 +115,7 @@
     <string name="settings_personalization_active_shell">Активная оболочка</string>
     <string name="settings_personalization_no_shell">Активная оболочка не найдена</string>
     <string name="settings_personalization_open_store">Больше оболочек в Store</string>
+    <string name="settings_personalization_color_scheme_title">Цветовая схема</string>
 
     <!-- Диалог информации -->
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>

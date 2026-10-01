@@ -1,6 +1,10 @@
 // *** core/adapters/ColorSchemeAdapter.kt *** //
 package by.quty.launch.core.adapters
 
+import android.content.Context
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +17,10 @@ import by.quty.launch.core.model.ColorSchemeModel
 /**
  * Адаптер для отображения цветовых схем в виде квадратиков
  * Используется в настройках оформления
+ *
+ * Выбранная схема обводится **цветом самой схемы** с прозрачным gap'ом
+ * между ring'ом и цветным квадратом — это гармонирует с квадратиком
+ * и работает одинаково в светлой и тёмной теме.
  */
 class ColorSchemeAdapter(
     private val onSchemeSelected: (ColorSchemeModel) -> Unit
@@ -82,24 +90,52 @@ class ColorSchemeAdapter(
         fun bind(scheme: ColorSchemeModel, isSelected: Boolean, onClick: () -> Unit) {
             val context = itemView.context
 
-            // Устанавливаем цвет фона
+            // Устанавливаем цвет фона (сам цвет схемы)
             val primaryColor = ContextCompat.getColor(context, scheme.primaryRes)
             colorView.setBackgroundColor(primaryColor)
 
             // Показываем обводку для выбранного
             if (isSelected) {
-                colorView.setBackgroundResource(R.drawable.bg_color_scheme_selected)
-                // Поверх фона накладываем цвет
-                colorView.setBackgroundColor(primaryColor)
+                // Толщина ring'а и радиус (переименовали, чтобы не путать с cornerRadius свойства)
+                val ringWidth = context.resources.getDimensionPixelSize(R.dimen.spacing_xxs)
+                val radiusPx = context.resources.getDimension(R.dimen.radius_medium)
+
+                // Внешний ring — цветом схемы
+                val outerRing = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = radiusPx
+                    setStroke(ringWidth, primaryColor)
+                }
+
+                // Внутренний ring — цветом фона (gap между внешним ring'ом и цветным квадратом)
+                val innerRing = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = radiusPx - ringWidth
+                    setStroke(ringWidth, getThemeColor(context, R.attr.colorSurface))
+                }
+
+                // Накладываем слои: внешний ring + внутренний ring
+                val layer = LayerDrawable(arrayOf(outerRing, innerRing))
+                layer.setLayerInset(1, ringWidth, ringWidth, ringWidth, ringWidth)
+
+                selectedIndicator.background = layer
                 selectedIndicator.visibility = View.VISIBLE
             } else {
-                colorView.setBackgroundResource(R.drawable.bg_color_scheme_item)
-                colorView.setBackgroundColor(primaryColor)
+                selectedIndicator.background = null
                 selectedIndicator.visibility = View.GONE
             }
 
             // Обработка клика
             itemView.setOnClickListener { onClick() }
+        }
+
+        /**
+         * Получает цвет из атрибута темы.
+         */
+        private fun getThemeColor(context: Context, attr: Int): Int {
+            val typedValue = TypedValue()
+            context.theme.resolveAttribute(attr, typedValue, true)
+            return typedValue.data
         }
     }
 }

@@ -115,6 +115,7 @@
     <string name="settings_personalization_active_shell">Active shell</string>
     <string name="settings_personalization_no_shell">Active shell not found</string>
     <string name="settings_personalization_open_store">More shells in Store</string>
+    <string name="settings_personalization_color_scheme_title">Color scheme</string>
 
     <!-- Info dialog -->
     <string name="settings_personalization_shell_info_title">Shell information</string>
