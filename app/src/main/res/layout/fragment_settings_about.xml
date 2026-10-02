@@ -1,36 +1,165 @@
 <!-- res/layout/fragment_settings_about.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
-    android:padding="@dimen/screen_padding_horizontal">
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
 
-        <!-- Заголовок -->
+        <!-- ============================================================ -->
+        <!-- ===== ИНФОРМАЦИЯ О СИСТЕМЕ ================================= -->
+        <!-- ============================================================ -->
+
         <TextView
+            style="@style/Text.Title.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Title.Medium"
-            android:text="@string/settings_about_title"
-            android:gravity="center" />
+            android:padding="@dimen/spacing_l"
+            android:text="@string/system_info_title" />
 
-        <!-- Описание -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_m"
-            style="@style/Text.Body.Secondary"
-            android:text="@string/settings_about_desc"
-            android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_s" />
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l">
+
+            <!-- Версия -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingBottom="@dimen/spacing_m">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/version_label" />
+
+                <TextView
+                    android:id="@+id/version_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:text="@string/version_unknown"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/dividerColor" />
+
+            <!-- Код версии -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingBottom="@dimen/spacing_m">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version_code"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/version_code_label" />
+
+                <TextView
+                    android:id="@+id/version_code_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:text="@string/unknown_code"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd" />
+
+            </LinearLayout>
+
+            <!-- Канал (если есть) -->
+            <View
+                android:id="@+id/channel_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/channel_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingBottom="@dimen/spacing_m"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version_channel"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/channel_label" />
+
+                <TextView
+                    android:id="@+id/channel_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:text="@string/unknown_code"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 

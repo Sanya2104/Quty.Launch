@@ -317,10 +317,13 @@
     <string name="install_local_apk">Install local APK</string>
     <string name="install_local_message" formatted="false">Are you sure you want to install APK version %s?</string>
 
+    <!-- УДАЛИТЬ после удаление Параметров -->
     <string name="install_option_title">Select installation method</string>
     <string name="install_option_file_manager">📂 Via file manager</string>
     <string name="install_option_downloads">📁 From Download folder</string>
     <string name="no_apk_found">No APK files found in Download folder</string>
+    <!-- / УДАЛИТЬ после удаление Параметров -->
+
     <string name="error_open_file_manager">Error opening file manager</string>
     <string name="install_error">Failed to start installation</string>
 
