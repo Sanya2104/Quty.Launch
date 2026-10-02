@@ -309,7 +309,7 @@
     <string name="no_internet_connection">No internet connection</string>
 
     <!-- Local APK install -->
-    <string name="install_from_file">Local update from file</string>
+    <string name="install_from_file">Local update</string>
     <string name="select_apk_title">Select APK file</string>
     <string name="invalid_apk">Selected file is not an APK</string>
     <string name="apk_validation_failed">APK does not match Quty.Launch</string>

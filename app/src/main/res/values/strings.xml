@@ -310,7 +310,7 @@
 
 
     <!-- Локальная установка APK -->
-    <string name="install_from_file">Локальное обновление из файла</string>
+    <string name="install_from_file">Локальное обновление</string>
     <string name="select_apk_title">Выберите APK файл</string>
     <string name="invalid_apk">Выбранный файл не является APK</string>
     <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
