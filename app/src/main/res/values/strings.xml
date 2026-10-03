@@ -328,6 +328,14 @@
     <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
     <string name="install_error">Не удалось запустить установку</string>
 
+    <!-- Состояния блока онлайн-обновления -->
+    <string name="update_state_available_title">Доступно обновление</string>
+    <string name="update_state_up_to_date_title">У вас последняя версия</string>
+    <string name="update_state_current_version_label" formatted="false">Quty.Launch %1$s%2$s</string>
+    <string name="update_state_new_version" formatted="false">Новая версия %s</string>
+    <string name="update_state_version_label" formatted="false">Версия %s</string>
+    <string name="update_state_subtitle_checking">Это может занять несколько секунд</string>
+
     <!-- Скачивание APK -->
     <string name="download_apk">📥 Скачать APK</string>
     <string name="download_complete_title">Загрузка завершена</string>

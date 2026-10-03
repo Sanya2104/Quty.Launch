@@ -96,8 +96,11 @@
     <dimen name="permission_item_padding">16dp</dimen>
     <dimen name="permission_item_margin_bottom">12dp</dimen>
 
-    <!-- Прогресс-бар -->
+    <!-- Прогресс-бар (WelcomeActivity) -->
     <dimen name="progress_bar_height">6dp</dimen>
+
+    <!-- Прогресс-бар в блоке обновления (заметнее) -->
+    <dimen name="update_progress_height">10dp</dimen>
 
     <!-- Spinner -->
     <dimen name="spinner_min_width">100dp</dimen>

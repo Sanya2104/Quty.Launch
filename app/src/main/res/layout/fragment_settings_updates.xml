@@ -1,5 +1,6 @@
 <!-- res/layout/fragment_settings_updates.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -26,6 +27,7 @@
             android:padding="@dimen/spacing_l"
             android:text="@string/update_info_title" />
 
+        <!-- Карточка с пунктами -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -45,7 +47,8 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:paddingTop="@dimen/spacing_m"
-                android:paddingBottom="@dimen/spacing_m">
+                android:paddingBottom="@dimen/spacing_m"
+                tools:ignore="UseCompoundDrawables">
 
                 <ImageView
                     android:layout_width="@dimen/icon_small"
@@ -61,16 +64,11 @@
                     style="@style/Text.Body.Dim"
                     android:text="@string/install_from_file" />
 
-                <TextView
-                    android:id="@+id/install_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Text.Body"
-                    android:text="@string/empty"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textAlignment="viewEnd"
-                    android:visibility="gone" />
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
 
             </LinearLayout>
 
@@ -89,7 +87,8 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:paddingTop="@dimen/spacing_m"
-                android:paddingBottom="@dimen/spacing_m">
+                android:paddingBottom="@dimen/spacing_m"
+                tools:ignore="UseCompoundDrawables">
 
                 <ImageView
                     android:layout_width="@dimen/icon_small"
@@ -105,15 +104,267 @@
                     style="@style/Text.Body.Dim"
                     android:text="@string/check_updates_online_button" />
 
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== БЛОК СОСТОЯНИЯ ОНЛАЙН-ОБНОВЛЕНИЯ ==================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/update_state_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l"
+            android:visibility="gone">
+
+            <!-- Шапка: крупная иконка в кружке + заголовок/подзаголовок -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                tools:ignore="UseCompoundDrawables">
+
+                <!-- Крупная иконка в кружке с фоном -->
+                <FrameLayout
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:background="@drawable/bg_glass_icon"
+                    android:layout_marginEnd="@dimen/spacing_l">
+
+                    <ImageView
+                        android:id="@+id/update_state_icon"
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_update_server"
+                        android:contentDescription="@string/empty" />
+
+                </FrameLayout>
+
+                <!-- Заголовок + подзаголовок -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/update_state_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Text.Title.Small"
+                        android:textColor="?attr/textPrimaryColor" />
+
+                    <TextView
+                        android:id="@+id/update_state_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xxs"
+                        style="@style/Text.Small"
+                        android:textColor="?attr/textDimColor"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Описание -->
+            <TextView
+                android:id="@+id/update_state_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                style="@style/Text.Body.Secondary"
+                android:lineSpacingExtra="@dimen/spacing_xxs"
+                android:visibility="gone" />
+
+            <!-- Прогресс -->
+            <LinearLayout
+                android:id="@+id/update_state_progress_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/update_state_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/update_progress_height"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="?attr/buttonPrimaryColor"
+                    android:progressBackgroundTint="?attr/dividerColor"
+                    android:background="@android:color/transparent" />
+
                 <TextView
-                    android:id="@+id/update_status"
+                    android:id="@+id/update_state_progress_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_m"
                     style="@style/Text.Body"
-                    android:text="@string/empty"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textAlignment="viewEnd"
+                    android:textStyle="bold"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Кнопки действий -->
+            <LinearLayout
+                android:id="@+id/update_state_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/update_state_btn_secondary"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/height_button"
+                    android:minWidth="0dp"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/update_state_btn_primary"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/height_button"
+                    android:minWidth="0dp"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== БЛОК СОСТОЯНИЯ ЛОКАЛЬНОЙ УСТАНОВКИ APK ============== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/install_state_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                tools:ignore="UseCompoundDrawables">
+
+                <FrameLayout
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:background="@drawable/bg_glass_icon"
+                    android:layout_marginEnd="@dimen/spacing_l">
+
+                    <ImageView
+                        android:id="@+id/install_state_icon"
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_update_folder"
+                        android:contentDescription="@string/empty" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/install_state_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Text.Title.Small"
+                        android:textColor="?attr/textPrimaryColor" />
+
+                    <TextView
+                        android:id="@+id/install_state_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xxs"
+                        style="@style/Text.Small"
+                        android:textColor="?attr/textDimColor"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/install_state_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                style="@style/Text.Body.Secondary"
+                android:lineSpacingExtra="@dimen/spacing_xxs"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/install_state_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/install_state_btn_secondary"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/height_button"
+                    android:minWidth="0dp"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/install_state_btn_primary"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/height_button"
+                    android:minWidth="0dp"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
                     android:visibility="gone" />
 
             </LinearLayout>

@@ -327,6 +327,14 @@
     <string name="error_open_file_manager">Error opening file manager</string>
     <string name="install_error">Failed to start installation</string>
 
+    <!-- Online update state block -->
+    <string name="update_state_available_title">Update available</string>
+    <string name="update_state_up_to_date_title">You have the latest version</string>
+    <string name="update_state_current_version_label" formatted="false">Quty.Launch %1$s%2$s</string>
+    <string name="update_state_new_version" formatted="false">New version %s</string>
+    <string name="update_state_version_label" formatted="false">Version %s</string>
+    <string name="update_state_subtitle_checking">This may take a few seconds</string>
+
     <!-- APK download -->
     <string name="download_apk">📥 Download APK</string>
     <string name="download_complete_title">Download complete</string>
