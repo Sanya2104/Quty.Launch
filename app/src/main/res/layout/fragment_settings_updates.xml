@@ -20,7 +20,7 @@
         <!-- ============================================================ -->
 
         <TextView
-            style="@style/Text.Title.Small"
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"

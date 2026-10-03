@@ -110,7 +110,7 @@
                         android:id="@+id/shell_menu_button"
                         android:layout_width="@dimen/icon_large"
                         android:layout_height="@dimen/icon_large"
-                        android:src="@drawable/ic_menu_horizontal"
+                        android:src="@drawable/ic_menu_dots"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:contentDescription="@string/settings_personalization_shell_info_title"
                         android:padding="@dimen/spacing_m" />
