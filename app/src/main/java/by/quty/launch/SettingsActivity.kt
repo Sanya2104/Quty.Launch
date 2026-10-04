@@ -46,89 +46,12 @@ class SettingsActivity : BaseActivity() {
     // Флаг, что были изменения, требующие перезапуска
     private var needsRestart = false
 
+    // Кэш текущего списка пунктов меню (может меняться при DevMode)
+    private var menuItems: List<SettingsMenuModel> = emptyList()
+
     // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
         (340 * resources.displayMetrics.density).toInt()
-    }
-
-    // Список пунктов меню с цветами (создаётся один раз)
-    private val menuItems: List<SettingsMenuModel> by lazy {
-        listOf(
-            // === ГРУППА 1: Основное ===
-            SettingsMenuModel(
-                1,
-                R.drawable.ic_settings,
-                R.string.settings_menu_main,
-                R.string.settings_menu_main_desc,
-                GeneralFragment::class.java,
-                R.color.scheme_green_primary,
-                true
-            ),
-            // === РАЗДЕЛИТЕЛЬ ===
-//            SettingsMenuModel(
-//                -1, 0, 0, 0, GeneralFragment::class.java, 0
-//            ),
-            // === ГРУППА 2: Персонализация ===
-            SettingsMenuModel(
-                2,
-                R.drawable.ic_palette,
-                R.string.settings_menu_personalization,
-                R.string.settings_menu_personalization_desc,
-                ShellFragment::class.java,
-                R.color.scheme_purple_primary,
-                false
-            ),
-            // === РАЗДЕЛИТЕЛЬ ===
-//            SettingsMenuModel(
-//                -2, 0, 0, 0, GeneralFragment::class.java, 0
-//            ),
-            // === ГРУППА 3: Система ===
-            SettingsMenuModel(
-                6,
-                R.drawable.ic_storage,
-                R.string.settings_menu_storage,
-                R.string.settings_menu_storage_desc,
-                StorageFragment::class.java,
-                R.color.scheme_cyan_primary,
-                true
-            ),
-            SettingsMenuModel(
-                3,
-                R.drawable.ic_download,
-                R.string.settings_menu_updates,
-                R.string.settings_menu_updates_desc,
-                UpdateFragment::class.java,
-                R.color.scheme_orange_primary,
-                true
-            ),
-            SettingsMenuModel(
-                4,
-                R.drawable.ic_developer,
-                R.string.settings_menu_developer,
-                R.string.settings_menu_developer_desc,
-                DeveloperFragment::class.java,
-                R.color.scheme_red_primary,
-                true
-            ),
-            SettingsMenuModel(
-                7,
-                R.drawable.ic_recovery,
-                R.string.settings_menu_recovery,
-                R.string.settings_menu_recovery_desc,
-                RecoveryFragment::class.java,
-                R.color.scheme_teal_primary,
-                true
-            ),
-            SettingsMenuModel(
-                5,
-                R.drawable.ic_info,
-                R.string.settings_menu_about,
-                R.string.settings_menu_about_desc,
-                AboutFragment::class.java,
-                R.color.scheme_blue_primary,
-                true
-            )
-        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,6 +62,9 @@ class SettingsActivity : BaseActivity() {
 
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Формируем меню (с учётом текущего состояния DevMode)
+        menuItems = buildMenuItems()
 
         checkMode()
         setupMenu()
@@ -161,12 +87,16 @@ class SettingsActivity : BaseActivity() {
                 val item = menuItems.find { it.id == selectedItemId }
                 if (item != null) {
                     restoreFragment(item)
+                } else {
+                    // Пункт больше не существует (например, DeveloperFragment после DevMode off)
+                    isFragmentVisible = false
+                    selectedItemId = -1
                 }
             }
         }
 
         // На планшете при первом открытии сразу показываем первый пункт
-        if (isTabletMode && selectedItemId == -1) {
+        if (isTabletMode && selectedItemId == -1 && menuItems.isNotEmpty()) {
             showItem(menuItems.first())
         }
 
@@ -205,7 +135,9 @@ class SettingsActivity : BaseActivity() {
         if (!previousTabletMode && isTabletMode) {
             if (selectedItemId == -1) {
                 // Ничего не выбрано — показываем первый пункт
-                showItem(menuItems.first())
+                if (menuItems.isNotEmpty()) {
+                    showItem(menuItems.first())
+                }
             } else {
                 // Есть выбранный пункт — восстанавливаем его
                 val item = menuItems.find { it.id == selectedItemId }
@@ -384,6 +316,169 @@ class SettingsActivity : BaseActivity() {
                     checkAndShowRestartDialog()
                 }
             }
+        )
+    }
+
+    // ============================================================
+    // МЕНЮ (ДИНАМИЧЕСКОЕ)
+    // ============================================================
+
+    /**
+     * Строит список пунктов меню с учётом текущего состояния DevMode.
+     *
+     * Пункт "Разработчикам" появляется только когда DevMode активирован.
+     *
+     * @return список пунктов меню
+     */
+    private fun buildMenuItems(): List<SettingsMenuModel> {
+        val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
+        val isDevMode = prefs.getBoolean("developer_mode", false)
+
+        val items = mutableListOf<SettingsMenuModel>()
+
+        // === ГРУППА 1: Основное ===
+        items.add(
+            SettingsMenuModel(
+                1,
+                R.drawable.ic_settings,
+                R.string.settings_menu_main,
+                R.string.settings_menu_main_desc,
+                GeneralFragment::class.java,
+                R.color.scheme_green_primary,
+                true
+            )
+        )
+
+        // === ГРУППА 2: Персонализация ===
+        items.add(
+            SettingsMenuModel(
+                2,
+                R.drawable.ic_palette,
+                R.string.settings_menu_personalization,
+                R.string.settings_menu_personalization_desc,
+                ShellFragment::class.java,
+                R.color.scheme_purple_primary,
+                false
+            )
+        )
+
+        // === ГРУППА 3: Система ===
+        items.add(
+            SettingsMenuModel(
+                6,
+                R.drawable.ic_storage,
+                R.string.settings_menu_storage,
+                R.string.settings_menu_storage_desc,
+                StorageFragment::class.java,
+                R.color.scheme_cyan_primary,
+                true
+            )
+        )
+
+        items.add(
+            SettingsMenuModel(
+                3,
+                R.drawable.ic_download,
+                R.string.settings_menu_updates,
+                R.string.settings_menu_updates_desc,
+                UpdateFragment::class.java,
+                R.color.scheme_orange_primary,
+                true
+            )
+        )
+
+        // === Пункт "Разработчикам" — только при активном DevMode ===
+        if (isDevMode) {
+            items.add(
+                SettingsMenuModel(
+                    4,
+                    R.drawable.ic_developer,
+                    R.string.settings_menu_developer,
+                    R.string.settings_menu_developer_desc,
+                    DeveloperFragment::class.java,
+                    R.color.scheme_red_primary,
+                    true
+                )
+            )
+        }
+
+        items.add(
+            SettingsMenuModel(
+                7,
+                R.drawable.ic_recovery,
+                R.string.settings_menu_recovery,
+                R.string.settings_menu_recovery_desc,
+                RecoveryFragment::class.java,
+                R.color.scheme_teal_primary,
+                true
+            )
+        )
+
+        items.add(
+            SettingsMenuModel(
+                5,
+                R.drawable.ic_info,
+                R.string.settings_menu_about,
+                R.string.settings_menu_about_desc,
+                AboutFragment::class.java,
+                R.color.scheme_blue_primary,
+                true
+            )
+        )
+
+        return items
+    }
+
+    /**
+     * Перестраивает список пунктов меню.
+     * Вызывается из AboutFragment при активации/деактивации DevMode.
+     *
+     * Логика:
+     * - Пересобирает menuItems с учётом нового состояния DevMode;
+     * - Если текущий открытый фрагмент больше не существует в списке
+     *   (например, DeveloperFragment после деактивации DevMode),
+     *   возвращает пользователя в главное меню;
+     * - Обновляет адаптер RecyclerView.
+     */
+    fun refreshMenuItems() {
+        val oldItems = menuItems
+        menuItems = buildMenuItems()
+
+        // Если открытый фрагмент больше не в списке — закрываем его
+        if (isFragmentVisible && selectedItemId != -1) {
+            val stillExists = menuItems.any { it.id == selectedItemId }
+            if (!stillExists) {
+                // Пункт исчез (DeveloperFragment после DevMode off)
+                isFragmentVisible = false
+                selectedItemId = -1
+
+                // Убираем текущий фрагмент
+                supportFragmentManager.findFragmentById(R.id.fragment_container)?.let { fragment ->
+                    supportFragmentManager.beginTransaction()
+                        .remove(fragment)
+                        .commit()
+                }
+            }
+        }
+
+        /*
+         * Обновляем адаптер.
+         *
+         * notifyDataSetChanged() не вызывается: новый экземпляр адаптера
+         * автоматически подхватывается RecyclerView, и он же строит
+         * полный список заново. Дополнительное уведомление избыточно
+         * и является анти-паттерном (см. lint: NotifyDataSetChanged).
+         */
+        binding.recyclerMenu.adapter = SettingsMenuAdapter(menuItems) { item ->
+            showItem(item)
+        }
+
+        // Пересчитываем режим (может потребоваться обновить видимость)
+        applyMode()
+
+        LoggerManager.d(
+            "SettingsActivity",
+            "refreshMenuItems: ${oldItems.size} → ${menuItems.size} items"
         )
     }
 

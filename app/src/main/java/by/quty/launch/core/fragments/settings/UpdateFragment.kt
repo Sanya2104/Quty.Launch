@@ -268,6 +268,23 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /**
+     * Хелпер: сбрасывает цвет заголовка и tint иконки к значениям по умолчанию.
+     * Используется перед заполнением нового состояния, чтобы убрать красный цвет после ошибки.
+     */
+    private fun resetUpdateStateColors() {
+        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
+        updateStateIcon.imageTintList = null
+    }
+
+    /**
+     * Хелпер: сбрасывает цвет заголовка и tint иконки в блоке локальной установки.
+     */
+    private fun resetInstallStateColors() {
+        installStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
+        installStateIcon.imageTintList = null
+    }
+
     // ============================================================
     // ПРОВЕРКА ОБНОВЛЕНИЙ (ОНЛАЙН)
     // ============================================================
@@ -329,15 +346,14 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateChecking() {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_update_server)
-        updateStateIcon.imageTintList = null
+        resetUpdateStateColors()
+        updateStateIcon.setImageResource(R.drawable.ic_update_server_checking)
 
         updateStateTitle.text = getString(R.string.checking_updates)
-        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         setUpdateSubtitle(getString(R.string.update_state_subtitle_checking))
         updateStateDescription.isVisible = false
 
-        // Прогресс indeterminate: убираем progressTint-логику — показываем бесконечный
+        // Прогресс indeterminate: показываем бесконечный
         updateStateProgress.isIndeterminate = true
         updateStateProgressContainer.isVisible = true
         updateStateProgressText.isVisible = false
@@ -351,14 +367,13 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateAvailable(versionInfo: VersionInfo) {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_update_server)
-        updateStateIcon.imageTintList = null
+        resetUpdateStateColors()
+        updateStateIcon.setImageResource(R.drawable.ic_update_server_available)
 
         val criticalTag = if (versionInfo.isCritical) getString(R.string.critical_tag) else ""
 
         // Заголовок — «Доступно обновление»
         updateStateTitle.text = getString(R.string.update_state_available_title)
-        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
 
         // Подзаголовок — «Новая версия X» + канал, если critical
         val subtitle = buildString {
@@ -406,11 +421,10 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateDownloading(versionInfo: VersionInfo? = null) {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_download)
-        updateStateIcon.imageTintList = null
+        resetUpdateStateColors()
+        updateStateIcon.setImageResource(R.drawable.ic_update_server_download)
 
         updateStateTitle.text = getString(R.string.downloading_title)
-        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
 
         // Подзаголовок — версия, если известна
         val version = versionInfo?.version ?: pendingVersionInfo?.version
@@ -444,11 +458,10 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateDownloadComplete(filePath: String, uri: Uri) {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_update_server)
-        updateStateIcon.imageTintList = null
+        resetUpdateStateColors()
+        updateStateIcon.setImageResource(R.drawable.ic_update_server_download_check)
 
         updateStateTitle.text = getString(R.string.download_complete_title)
-        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
 
         val version = pendingVersionInfo?.version
         if (version != null) {
@@ -487,11 +500,10 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateUpToDate() {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_update_server)
-        updateStateIcon.imageTintList = null
+        resetUpdateStateColors()
+        updateStateIcon.setImageResource(R.drawable.ic_update_check)
 
         updateStateTitle.text = getString(R.string.update_state_up_to_date_title)
-        updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
 
         // Подзаголовок — «Quty.Launch 0.0.149 Alpha»
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(requireContext())
@@ -516,7 +528,7 @@ class UpdateFragment : Fragment() {
     private fun showUpdateStateError(message: String) {
         updateStateContainer.isVisible = true
 
-        updateStateIcon.setImageResource(R.drawable.ic_update_server)
+        updateStateIcon.setImageResource(R.drawable.ic_update_error)
         // Красный тинт для иконки
         updateStateIcon.imageTintList =
             android.content.res.ColorStateList.valueOf(
@@ -589,11 +601,10 @@ class UpdateFragment : Fragment() {
 
                     // Сразу ставим на установку, но через блок — с кнопкой «Установить» и «Позже»
                     updateStateContainer.isVisible = true
-                    updateStateIcon.setImageResource(R.drawable.ic_update_server)
-                    updateStateIcon.imageTintList = null
+                    resetUpdateStateColors()
+                    updateStateIcon.setImageResource(R.drawable.ic_update_server_download_check)
 
                     updateStateTitle.text = getString(R.string.install_title)
-                    updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
                     setUpdateSubtitle(getString(R.string.update_state_version_label, versionInfo.version))
 
                     updateStateDescription.text = getString(R.string.install_message)
@@ -670,11 +681,11 @@ class UpdateFragment : Fragment() {
      */
     private fun showInstallStateChecking() {
         installStateContainer.isVisible = true
-        installStateIcon.setImageResource(R.drawable.ic_update_folder)
-        installStateIcon.imageTintList = null
+
+        resetInstallStateColors()
+        installStateIcon.setImageResource(R.drawable.ic_update_folder_checking)
 
         installStateTitle.text = getString(R.string.checking_updates)
-        installStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         setInstallSubtitle(getString(R.string.update_state_subtitle_checking))
         installStateDescription.isVisible = false
 
@@ -686,11 +697,11 @@ class UpdateFragment : Fragment() {
      */
     private fun showInstallStateReady(uri: Uri, version: String) {
         installStateContainer.isVisible = true
-        installStateIcon.setImageResource(R.drawable.ic_update_folder)
-        installStateIcon.imageTintList = null
+
+        resetInstallStateColors()
+        installStateIcon.setImageResource(R.drawable.ic_update_folder_available)
 
         installStateTitle.text = getString(R.string.install_local_apk)
-        installStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         setInstallSubtitle(getString(R.string.update_state_version_label, version))
 
         installStateDescription.text = getString(R.string.install_local_message, version)
@@ -714,7 +725,8 @@ class UpdateFragment : Fragment() {
      */
     private fun showInstallStateError(message: String) {
         installStateContainer.isVisible = true
-        installStateIcon.setImageResource(R.drawable.ic_update_folder)
+
+        installStateIcon.setImageResource(R.drawable.ic_update_error)
         installStateIcon.imageTintList =
             android.content.res.ColorStateList.valueOf(
                 resources.getColor(R.color.text_error, null)

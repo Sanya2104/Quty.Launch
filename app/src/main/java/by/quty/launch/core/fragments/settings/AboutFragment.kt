@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
+import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.utilities.AppInfoHelper
@@ -20,6 +21,11 @@ import by.quty.launch.core.utilities.AppInfoHelper
  * Содержит информацию о приложении и устройстве:
  * - версия, код версии, канал сборки;
  * - активация DevMode по клику на версию (5 раз).
+ *
+ * При активации/деактивации DevMode:
+ * - помечает SettingsActivity, что требуется перезапуск;
+ * - просит SettingsActivity обновить список меню
+ *   (пункт "Разработчикам" появляется/исчезает).
  *
  * TODO: Добавить в будущем:
  * - Иконка приложения
@@ -147,6 +153,11 @@ class AboutFragment : Fragment() {
 
     /**
      * Переключает режим разработчика.
+     *
+     * После переключения:
+     * - сообщает SettingsActivity, что нужен перезапуск;
+     * - просит SettingsActivity перестроить меню,
+     *   чтобы пункт "Разработчикам" появился или исчез.
      */
     private fun toggleDeveloperMode() {
         val prefs = requireContext().getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
@@ -157,6 +168,14 @@ class AboutFragment : Fragment() {
 
         // Инвалидируем кэш приложений при изменении DevMode
         CacheManager.invalidateCache(requireContext())
+
+        // Сообщаем SettingsActivity:
+        // 1. что требуется перезапуск (при выходе покажется диалог);
+        // 2. что нужно перестроить меню (пункт "Разработчикам" появится/исчезнет).
+        (activity as? SettingsActivity)?.let { settingsActivity ->
+            settingsActivity.markRestartRequired()
+            settingsActivity.refreshMenuItems()
+        }
 
         if (newState) {
             Toast.makeText(requireContext(), R.string.dev_mode_activated, Toast.LENGTH_LONG).show()

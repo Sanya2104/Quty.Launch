@@ -25,7 +25,7 @@
             android:layout_height="@dimen/icon_xlarge"
             android:layout_gravity="center"
             android:src="@drawable/ic_restart"
-            android:background="@drawable/bg_glass_icon"
+            android:background="@drawable/bg_icon_dialog"
             android:padding="@dimen/spacing_l"
             android:contentDescription="@string/empty" />
 

@@ -34,8 +34,8 @@
             android:layout_marginStart="@dimen/spacing_s"
             android:layout_marginEnd="@dimen/spacing_s"
             android:orientation="vertical"
-            android:background="@drawable/bg_card_rounded_ripple"
-            android:padding="@dimen/spacing_l">
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
 
             <!-- Локальное обновление -->
             <LinearLayout
@@ -44,10 +44,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingTop="@dimen/spacing_m"
-                android:paddingBottom="@dimen/spacing_m"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -61,7 +64,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="@style/Text.Body.Dim"
+                    style="@style/Text.Body"
                     android:text="@string/install_from_file" />
 
                 <ImageView
@@ -75,6 +78,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
                 android:background="?attr/dividerColor" />
 
             <!-- Онлайн обновление -->
@@ -84,10 +89,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingTop="@dimen/spacing_m"
-                android:paddingBottom="@dimen/spacing_m"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -101,7 +109,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="@style/Text.Body.Dim"
+                    style="@style/Text.Body"
                     android:text="@string/check_updates_online_button" />
 
                 <ImageView
@@ -143,13 +151,13 @@
                 <FrameLayout
                     android:layout_width="@dimen/icon_large"
                     android:layout_height="@dimen/icon_large"
-                    android:background="@drawable/bg_glass_icon"
+                    android:background="@drawable/bg_icon_surface"
                     android:layout_marginEnd="@dimen/spacing_l">
 
                     <ImageView
                         android:id="@+id/update_state_icon"
-                        android:layout_width="@dimen/icon_small"
-                        android:layout_height="@dimen/icon_small"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_update_server"
                         android:contentDescription="@string/empty" />
@@ -227,35 +235,33 @@
 
             </LinearLayout>
 
-            <!-- Кнопки действий -->
+            <!-- Кнопки действий — на всю ширину карточки -->
             <LinearLayout
                 android:id="@+id/update_state_actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_l"
                 android:orientation="horizontal"
-                android:gravity="end"
+                android:baselineAligned="false"
                 android:visibility="gone">
 
                 <Button
                     android:id="@+id/update_state_btn_secondary"
                     style="@style/Button.Glass.Secondary"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
                     android:minWidth="0dp"
-                    android:paddingStart="@dimen/spacing_l"
-                    android:paddingEnd="@dimen/spacing_l"
-                    android:layout_marginEnd="@dimen/spacing_s"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/update_state_btn_primary"
                     style="@style/Button.Glass.Primary"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/spacing_s"
                     android:minWidth="0dp"
-                    android:paddingStart="@dimen/spacing_l"
-                    android:paddingEnd="@dimen/spacing_l"
                     android:visibility="gone" />
 
             </LinearLayout>
@@ -289,13 +295,13 @@
                 <FrameLayout
                     android:layout_width="@dimen/icon_large"
                     android:layout_height="@dimen/icon_large"
-                    android:background="@drawable/bg_glass_icon"
+                    android:background="@drawable/bg_icon_surface"
                     android:layout_marginEnd="@dimen/spacing_l">
 
                     <ImageView
                         android:id="@+id/install_state_icon"
-                        android:layout_width="@dimen/icon_small"
-                        android:layout_height="@dimen/icon_small"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_update_folder"
                         android:contentDescription="@string/empty" />
@@ -343,28 +349,26 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_l"
                 android:orientation="horizontal"
-                android:gravity="end"
+                android:baselineAligned="false"
                 android:visibility="gone">
 
                 <Button
                     android:id="@+id/install_state_btn_secondary"
                     style="@style/Button.Glass.Secondary"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
                     android:minWidth="0dp"
-                    android:paddingStart="@dimen/spacing_l"
-                    android:paddingEnd="@dimen/spacing_l"
-                    android:layout_marginEnd="@dimen/spacing_s"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/install_state_btn_primary"
                     style="@style/Button.Glass.Primary"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/spacing_s"
                     android:minWidth="0dp"
-                    android:paddingStart="@dimen/spacing_l"
-                    android:paddingEnd="@dimen/spacing_l"
                     android:visibility="gone" />
 
             </LinearLayout>

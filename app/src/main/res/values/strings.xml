@@ -337,7 +337,7 @@
     <string name="update_state_subtitle_checking">Это может занять несколько секунд</string>
 
     <!-- Скачивание APK -->
-    <string name="download_apk">📥 Скачать APK</string>
+    <string name="download_apk">Скачать APK</string>
     <string name="download_complete_title">Загрузка завершена</string>
     <string name="download_error">Ошибка скачивания</string>
 
@@ -346,9 +346,9 @@
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
     <string name="critical_tag">  ⚠️ КРИТИЧЕСКОЕ</string>
-    <string name="update_version_info" formatted="false">📦 Новая версия: %s (код: %s)</string>
-    <string name="current_version_info" formatted="false">📱 Текущая версия: %s (код: %s)</string>
-    <string name="current_version_info_with_channel" formatted="false">📱 Текущая версия: %s \n (код: %s, канал: %s)</string>
+    <string name="update_version_info" formatted="false">Новая версия: %s (код: %s)</string>
+    <string name="current_version_info" formatted="false">Текущая версия: %s (код: %s)</string>
+    <string name="current_version_info_with_channel" formatted="false">Текущая версия: %s (код: %s, канал: %s)</string>
 
     <!-- Диалог загрузки -->
     <string name="downloading_title">Скачивание обновления</string>
@@ -360,7 +360,7 @@
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
 
-    <string name="apk_saved_to">✅ APK сохранён в:\n%s</string>
+    <string name="apk_saved_to">APK сохранён в:\n%s</string>
 
     <!-- ============================================================ -->
     <!-- ==================== СКАЧИВАНИЕ ============================= -->

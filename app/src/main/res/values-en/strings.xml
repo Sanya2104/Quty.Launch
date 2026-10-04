@@ -336,7 +336,7 @@
     <string name="update_state_subtitle_checking">This may take a few seconds</string>
 
     <!-- APK download -->
-    <string name="download_apk">📥 Download APK</string>
+    <string name="download_apk">Download APK</string>
     <string name="download_complete_title">Download complete</string>
     <string name="download_error">Download error</string>
 
@@ -345,9 +345,9 @@
     <string name="update_dialog_message" formatted="false">%s\n\nRelease: %s\nSize: %s</string>
     <string name="update_action">Update</string>
     <string name="critical_tag">  ⚠️ CRITICAL</string>
-    <string name="update_version_info" formatted="false">📦 New version: %s (code: %s)</string>
-    <string name="current_version_info" formatted="false">📱 Current version: %s (code: %s)</string>
-    <string name="current_version_info_with_channel" formatted="false">📱 Current version: %s \n (code: %s, channel: %s)</string>
+    <string name="update_version_info" formatted="false">New version: %s (code: %s)</string>
+    <string name="current_version_info" formatted="false">Current version: %s (code: %s)</string>
+    <string name="current_version_info_with_channel" formatted="false">Current version: %s (code: %s, channel: %s)</string>
 
     <!-- Download dialog -->
     <string name="downloading_title">Downloading update</string>
@@ -359,7 +359,7 @@
     <string name="install_message">Update downloaded. Install now?</string>
     <string name="install_action">Install</string>
 
-    <string name="apk_saved_to">✅ APK saved to:\n%s</string>
+    <string name="apk_saved_to">APK saved to:\n%s</string>
 
     <!-- ============================================================ -->
     <!-- ==================== DOWNLOAD ============================== -->
