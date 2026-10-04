@@ -420,8 +420,8 @@
             android:layout_marginStart="@dimen/spacing_s"
             android:layout_marginEnd="@dimen/spacing_s"
             android:orientation="vertical"
-            android:background="@drawable/bg_card_rounded_ripple"
-            android:padding="@dimen/spacing_l">
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
 
             <!-- Полноэкранный режим -->
             <LinearLayout
@@ -430,7 +430,11 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:clickable="true"
-                android:focusable="true">
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l">
 
                 <ImageView
                     android:layout_width="@dimen/icon_small"
@@ -450,7 +454,7 @@
                     android:ellipsize="end"
                     android:focusable="true"
                     android:maxLines="1"
-                    android:minHeight="48dp"
+                    android:minHeight="0dp"
                     android:text="@string/additional_fullscreen"
                     tools:ignore="VisualLintButtonSize" />
 
@@ -459,6 +463,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
                 android:background="?attr/dividerColor" />
 
             <!-- Строгий режим -->
@@ -469,7 +475,11 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:clickable="true"
-                android:focusable="true">
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l">
 
                 <ImageView
                     android:layout_width="@dimen/icon_small"
@@ -489,7 +499,7 @@
                     android:ellipsize="end"
                     android:focusable="true"
                     android:maxLines="1"
-                    android:minHeight="48dp"
+                    android:minHeight="0dp"
                     android:text="@string/additional_strict_mode"
                     tools:ignore="VisualLintButtonSize" />
 

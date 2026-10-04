@@ -1,7 +1,11 @@
 // *** core/fragments/settings/AboutFragment.kt *** //
 package by.quty.launch.core.fragments.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,31 +18,44 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.CacheManager
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.utilities.AppInfoHelper
 
 /**
  * Фрагмент "О системе" для Настроек
  * Содержит информацию о приложении и устройстве:
- * - версия, код версии, канал сборки;
- * - активация DevMode по клику на версию (5 раз).
+ * - шапка: иконка приложения, название, описание;
+ * - блок "Приложение": версия (кликабельна — активация DevMode),
+ *   код версии, канал, активная оболочка;
+ * - блок "Устройство": модель, Android, SDK, производитель;
+ * - блок "Контакты": Telegram, GitHub (кликабельны).
  *
  * При активации/деактивации DevMode:
  * - помечает SettingsActivity, что требуется перезапуск;
  * - просит SettingsActivity обновить список меню
  *   (пункт "Разработчикам" появляется/исчезает).
- *
- * TODO: Добавить в будущем:
- * - Иконка приложения
- * - Модель устройства, Android версия, SDK уровень
- * - Информация об активной оболочке
  */
 class AboutFragment : Fragment() {
 
+    // ===== Блок "Приложение" =====
+    private lateinit var versionRow: View
     private lateinit var versionTextView: TextView
     private lateinit var versionCodeTextView: TextView
     private lateinit var channelTextView: TextView
     private lateinit var channelContainer: View
     private lateinit var channelDivider: View
+    private lateinit var shellTextView: TextView
+
+    // ===== Блок "Устройство" =====
+    private lateinit var deviceModelText: TextView
+    private lateinit var deviceAndroidText: TextView
+    private lateinit var deviceSdkText: TextView
+    private lateinit var deviceManufacturerText: TextView
+
+    // ===== Блок "Контакты" =====
+    private lateinit var contactTelegramRow: View
+    private lateinit var contactGithubRow: View
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
@@ -60,13 +77,29 @@ class AboutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Блок "Приложение"
+        versionRow = view.findViewById(R.id.version_row)
         versionTextView = view.findViewById(R.id.version_text)
         versionCodeTextView = view.findViewById(R.id.version_code_text)
         channelTextView = view.findViewById(R.id.channel_text)
         channelContainer = view.findViewById(R.id.channel_container)
         channelDivider = view.findViewById(R.id.channel_divider)
+        shellTextView = view.findViewById(R.id.shell_text)
+
+        // Блок "Устройство"
+        deviceModelText = view.findViewById(R.id.device_model_text)
+        deviceAndroidText = view.findViewById(R.id.device_android_text)
+        deviceSdkText = view.findViewById(R.id.device_sdk_text)
+        deviceManufacturerText = view.findViewById(R.id.device_manufacturer_text)
+
+        // Блок "Контакты"
+        contactTelegramRow = view.findViewById(R.id.contact_telegram_row)
+        contactGithubRow = view.findViewById(R.id.contact_github_row)
 
         setupVersionInfo()
+        setupDeviceInfo()
+        setupShellInfo()
+        setupContacts()
     }
 
     override fun onDestroyView() {
@@ -78,7 +111,7 @@ class AboutFragment : Fragment() {
     }
 
     // ============================================================
-    // ИНФОРМАЦИЯ О ВЕРСИИ + DEV MODE
+    // БЛОК "ПРИЛОЖЕНИЕ"
     // ============================================================
 
     private fun setupVersionInfo() {
@@ -105,15 +138,101 @@ class AboutFragment : Fragment() {
             channelDivider.visibility = View.GONE
         }
 
-        versionTextView.isClickable = true
-        versionTextView.isFocusable = true
-        versionTextView.setOnClickListener {
+        /*
+         * DevMode активируется кликом по ВСЕЙ строке "Версия",
+         * а не только по значению версии.
+         * Слушатель вешаем на versionRow — контейнер строки,
+         * у которого есть ripple-эффект (bg_item_rounded).
+         */
+        versionRow.isClickable = true
+        versionRow.isFocusable = true
+        versionRow.setOnClickListener {
             handleVersionClick()
         }
     }
 
     /**
-     * Обрабатывает клик по версии — 5 нажатий подряд активируют DevMode.
+     * Информация об активной оболочке: "Название Версия".
+     * Если оболочка не найдена — "Неизвестно".
+     */
+    private fun setupShellInfo() {
+        try {
+            val configManager = ConfigManager(requireContext())
+            val shellManager = ShellManager(requireContext(), configManager)
+            val shell = shellManager.getActiveShell()
+
+            if (shell == null) {
+                shellTextView.text = getString(R.string.unknown)
+                return
+            }
+
+            val displayName = shell.displayName ?: shell.name
+            val version = shell.version
+
+            shellTextView.text = if (!version.isNullOrEmpty()) {
+                "$displayName $version"
+            } else {
+                displayName
+            }
+        } catch (_: Exception) {
+            shellTextView.text = getString(R.string.unknown)
+        }
+    }
+
+    // ============================================================
+    // БЛОК "УСТРОЙСТВО"
+    // ============================================================
+
+    private fun setupDeviceInfo() {
+        deviceModelText.text = Build.MODEL.ifEmpty { getString(R.string.unknown) }
+        deviceAndroidText.text = Build.VERSION.RELEASE.ifEmpty { getString(R.string.unknown) }
+        deviceSdkText.text = Build.VERSION.SDK_INT.toString()
+        deviceManufacturerText.text = Build.MANUFACTURER.ifEmpty { getString(R.string.unknown) }
+    }
+
+    // ============================================================
+    // БЛОК "КОНТАКТЫ"
+    // ============================================================
+
+    private fun setupContacts() {
+        contactTelegramRow.setOnClickListener {
+            openUrl(CoreConfig.CONTACT_TELEGRAM_URL)
+        }
+
+        contactGithubRow.setOnClickListener {
+            openUrl(CoreConfig.CONTACT_GITHUB_URL)
+        }
+    }
+
+    /**
+     * Открывает URL во внешнем приложении (браузер, Telegram и т.п.).
+     * При отсутствии подходящего приложения показывает тост.
+     */
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_shell_info_repo_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_shell_info_repo_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // ============================================================
+    // DEV MODE (клик по строке "Версия")
+    // ============================================================
+
+    /**
+     * Обрабатывает клик по строке версии — 5 нажатий подряд активируют DevMode.
      * Тайм-аут между кликами — из CoreConfig.DEV_MODE_CLICK_TIMEOUT_MS.
      */
     private fun handleVersionClick() {

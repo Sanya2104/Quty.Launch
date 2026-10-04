@@ -98,7 +98,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/spacing_xxs"
-                            style="@style/Text.Small"
+                            style="@style/Text.Body"
                             android:textColor="?attr/textSecondaryColor"
                             tools:text="@string/settings_personalization_shell_info_version"
                             android:maxLines="1"

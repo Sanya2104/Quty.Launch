@@ -26,7 +26,7 @@
     <dimen name="screen_padding_horizontal">8dp</dimen>
     <dimen name="screen_padding_vertical">16dp</dimen>
     <dimen name="card_padding">16dp</dimen>
-    <dimen name="item_padding">12dp</dimen>
+    <dimen name="item_padding">14dp</dimen>
     <dimen name="section_padding">16dp</dimen>
     <dimen name="fragment_top">60dp</dimen>
 

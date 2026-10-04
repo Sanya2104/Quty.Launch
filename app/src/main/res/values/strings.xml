@@ -63,13 +63,9 @@
     <string name="settings_placeholder_desc">Выберите раздел из списка слева,\nчтобы открыть его настройки</string>
 
     <!-- Описания фрагментов (для заглушек) -->
-    <string name="settings_general_desc">Здесь будут настройки:\n• Полноэкранный режим\n• Строгий режим\n• Ориентация экрана</string>
-    <string name="settings_personalization_desc">Здесь будут:\n• Список оболочек\n• Цветовые схемы\n• Кнопка "Магазин"</string>
     <string name="settings_storage_desc">Здесь будет:\n• Занятое место (приложение, кэш, оболочки, логи)\n• Свободное место\n• Очистка данных</string>
-    <string name="settings_updates_desc">Здесь будут:\n• Информация о версии\n• Проверка обновлений\n• Локальная установка APK</string>
     <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
     <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
-    <string name="settings_about_desc">Здесь будет:\n• Иконка приложения\n• Версия и код версии\n• Канал сборки\n• Модель устройства\n• Версия Android\n• SDK уровень\n• Информация об оболочке</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕМА ================================================= -->
@@ -370,6 +366,29 @@
     <string name="download_http_error" formatted="false">Ошибка загрузки: сервер вернул код %d</string>
     <string name="download_empty_file">Скачанный файл повреждён или пуст</string>
     <string name="download_timeout">Превышено время ожидания ответа от сервера</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== О СИСТЕМЕ (ABOUT) ===================== -->
+    <!-- ============================================================ -->
+
+    <!-- Шапка -->
+    <string name="about_app_description">Лёгкое и модульное ядро для Android-приложений</string>
+
+    <!-- Блок "Приложение" -->
+    <string name="about_app_section">Информация о системе</string>
+    <string name="about_shell_label">Оболочка</string>
+
+    <!-- Блок "Устройство" -->
+    <string name="about_device_section">Информация об устройстве</string>
+    <string name="about_device_model">Модель</string>
+    <string name="about_device_android">Android</string>
+    <string name="about_device_sdk">SDK</string>
+    <string name="about_device_manufacturer">Производитель</string>
+
+    <!-- Блок "Контакты" -->
+    <string name="about_contacts_section">Контакты</string>
+    <string name="about_contact_telegram">Telegram</string>
+    <string name="about_contact_github">GitHub</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ПРИВЕТСТВИЕ (ONBOARDING) ============== -->

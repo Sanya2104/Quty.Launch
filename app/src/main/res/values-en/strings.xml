@@ -63,13 +63,9 @@
     <string name="settings_placeholder_desc">Choose a section from the list on the left\nto open its settings</string>
 
     <!-- Fragment descriptions (placeholders) -->
-    <string name="settings_general_desc">Settings will be here:\n• Fullscreen mode\n• Strict mode\n• Screen orientation</string>
-    <string name="settings_personalization_desc">Will be here:\n• Shell list\n• Color schemes\n• Store button</string>
     <string name="settings_storage_desc">Will be here:\n• Used space (app, cache, shells, logs)\n• Free space\n• Clear data</string>
-    <string name="settings_updates_desc">Will be here:\n• Version info\n• Check for updates\n• Local APK install</string>
     <string name="settings_developer_desc">Will be here:\n• WebView debugging\n• Shell info\n• System info\n• Data management\n• Log management\n• Tools</string>
     <string name="settings_recovery_desc">Will be here:\n• Export/Import settings</string>
-    <string name="settings_about_desc">Will be here:\n• App icon\n• Version and version code\n• Build channel\n• Device model\n• Android version\n• SDK level\n• Shell info</string>
 
     <!-- ============================================================ -->
     <!-- ===== THEME ================================================ -->
@@ -369,6 +365,29 @@
     <string name="download_http_error" formatted="false">Download error: server returned %d</string>
     <string name="download_empty_file">Downloaded file is corrupted or empty</string>
     <string name="download_timeout">Server response timeout</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== ABOUT ================================= -->
+    <!-- ============================================================ -->
+
+    <!-- Header -->
+    <string name="about_app_description">Lightweight and modular core for Android apps</string>
+
+    <!-- "Application" section -->
+    <string name="about_app_section">System information</string>
+    <string name="about_shell_label">Shell</string>
+
+    <!-- "Device" section -->
+    <string name="about_device_section">Device information</string>
+    <string name="about_device_model">Model</string>
+    <string name="about_device_android">Android</string>
+    <string name="about_device_sdk">SDK</string>
+    <string name="about_device_manufacturer">Manufacturer</string>
+
+    <!-- "Contacts" section -->
+    <string name="about_contacts_section">Contacts</string>
+    <string name="about_contact_telegram">Telegram</string>
+    <string name="about_contact_github">GitHub</string>
 
     <!-- ============================================================ -->
     <!-- ==================== WELCOME (ONBOARDING) ================== -->
