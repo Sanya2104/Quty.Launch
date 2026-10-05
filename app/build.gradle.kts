@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 628
-    versionName = "0.0.151"
+    versionCode = 629
+    versionName = "0.0.152"
         versionNameSuffix = "Alpha"
     }
 
