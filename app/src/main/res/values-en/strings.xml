@@ -63,7 +63,6 @@
     <string name="settings_placeholder_desc">Choose a section from the list on the left\nto open its settings</string>
 
     <!-- Fragment descriptions (placeholders) -->
-    <string name="settings_storage_desc">Will be here:\n• Used space (app, cache, shells, logs)\n• Free space\n• Clear data</string>
     <string name="settings_developer_desc">Will be here:\n• WebView debugging\n• Shell info\n• System info\n• Data management\n• Log management\n• Tools</string>
     <string name="settings_recovery_desc">Will be here:\n• Export/Import settings</string>
 
@@ -125,6 +124,27 @@
     <string name="settings_personalization_shell_info_repo_open">Open</string>
     <string name="settings_personalization_shell_info_repo_error">Failed to open link</string>
     <string name="shell_info_orientation_none">Not specified</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== STORAGE ================================ -->
+    <!-- ============================================================ -->
+
+    <string name="storage_storage_title">Memory management</string>
+    <string name="storage_data_title">App data</string>
+    <string name="storage_category_cache">Cache</string>
+    <string name="storage_category_logs">Logs</string>
+    <string name="storage_category_temp">Temp files</string>
+    <string name="storage_category_updates">Updates</string>
+    <string name="storage_category_shells">Shells</string>
+    <string name="storage_category_exports">Exports</string>
+    <string name="storage_category_backups">Backups</string>
+
+    <string name="storage_empty_state">No data to display</string>
+    <string name="storage_nothing_to_clear">Nothing to clear</string>
+
+    <string name="storage_clear_title">Cleanup</string>
+    <string name="storage_clear_button">Clear selected</string>
+    <string name="storage_cleared_multiple_toast">Selected categories cleared</string>
 
     <!-- ============================================================ -->
     <!-- ===== TOASTS =============================================== -->

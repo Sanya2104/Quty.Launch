@@ -70,6 +70,7 @@
     <!-- Кнопки (Dark) -->
     <color name="button_secondary">#E0E0E0</color>
     <color name="button_danger">#D32F2F</color>
+    <color name="button_danger_soft">#CCD32F2F</color>
     <color name="button_warning">#FF9800</color>
     <color name="button_clear_cache">#FF6F00</color>
 

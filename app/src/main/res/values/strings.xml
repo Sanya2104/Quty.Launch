@@ -63,7 +63,6 @@
     <string name="settings_placeholder_desc">Выберите раздел из списка слева,\nчтобы открыть его настройки</string>
 
     <!-- Описания фрагментов (для заглушек) -->
-    <string name="settings_storage_desc">Здесь будет:\n• Занятое место (приложение, кэш, оболочки, логи)\n• Свободное место\n• Очистка данных</string>
     <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
     <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
 
@@ -125,6 +124,27 @@
     <string name="settings_personalization_shell_info_repo_open">Открыть</string>
     <string name="settings_personalization_shell_info_repo_error">Не удалось открыть ссылку</string>
     <string name="shell_info_orientation_none">Не задана</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== ПАМЯТЬ ================================= -->
+    <!-- ============================================================ -->
+
+    <string name="storage_storage_title">Управление памятью</string>
+    <string name="storage_data_title">Данные приложения</string>
+    <string name="storage_category_cache">Кэш</string>
+    <string name="storage_category_logs">Логи</string>
+    <string name="storage_category_temp">Временные файлы</string>
+    <string name="storage_category_updates">Обновления</string>
+    <string name="storage_category_shells">Оболочки</string>
+    <string name="storage_category_exports">Экспорты</string>
+    <string name="storage_category_backups">Резервные копии</string>
+
+    <string name="storage_empty_state">Нет данных для отображения</string>
+    <string name="storage_nothing_to_clear">Нечего очищать</string>
+
+    <string name="storage_clear_title">Очистка</string>
+    <string name="storage_clear_button">Очистить выбранное</string>
+    <string name="storage_cleared_multiple_toast">Выбранные категории очищены</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->

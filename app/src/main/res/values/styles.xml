@@ -28,4 +28,10 @@
         <item name="android:background">@drawable/bg_glass_button_secondary</item>
     </style>
 
+    <!-- Деструктивная стеклянная кнопка (красная) -->
+    <style name="Button.Glass.Danger" parent="Button.Glass">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:background">@drawable/bg_glass_button_danger</item>
+    </style>
+
 </resources>

@@ -12,7 +12,7 @@ object CoreConfig {
     // ============================================================
 
     /** Ссылка на Telegram-аккаунт разработчика */
-    const val CONTACT_TELEGRAM_URL = "https://t.me/A1_Kuzmi444"
+    const val CONTACT_TELEGRAM_URL = "https://t.me/QutyLaunch"
 
     /** Ссылка на репозиторий проекта на GitHub */
     const val CONTACT_GITHUB_URL = "https://github.com/Sanya2104/Quty.Launch"

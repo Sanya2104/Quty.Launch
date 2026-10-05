@@ -1,0 +1,46 @@
+<!-- res/layout/item_storage_category.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="@dimen/spacing_l"
+    android:paddingEnd="@dimen/spacing_l"
+    android:paddingTop="@dimen/spacing_l"
+    android:paddingBottom="@dimen/spacing_l"
+    android:background="@drawable/bg_item_rounded"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Цветной кружок -->
+    <View
+        android:id="@+id/category_dot"
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:layout_marginEnd="@dimen/spacing_m"
+        android:background="@drawable/bg_category_dot" />
+
+    <!-- Название категории -->
+    <TextView
+        android:id="@+id/category_title"
+        style="@style/Text.Body.Dim"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:ignore="VisualLintSystemUi"
+        tools:text="@string/unknown" />
+
+    <!-- Размер -->
+    <TextView
+        android:id="@+id/category_size"
+        style="@style/Text.Body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textAlignment="viewEnd"
+        tools:text="@string/unknown_code"
+        tools:ignore="VisualLintSystemUi" />
+
+</LinearLayout>

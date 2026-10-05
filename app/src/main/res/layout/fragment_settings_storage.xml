@@ -1,5 +1,6 @@
 <!-- res/layout/fragment_settings_storage.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -9,27 +10,111 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
 
-        <!-- Заголовок -->
+        <!-- ============================================================ -->
+        <!-- ===== ЗАГОЛОВОК ============================================ -->
+        <!-- ============================================================ -->
+
         <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:text="@string/storage_storage_title" />
+
+        <!-- ============================================================ -->
+        <!-- ===== ПОЛОСА-ИНДИКАТОР ===================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/storage_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/icon_large"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_s"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_storage_bar" />
+
+        <!-- Пустое состояние -->
+        <TextView
+            android:id="@+id/storage_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_s"
+            android:padding="@dimen/spacing_l"
+            style="@style/Text.Body.Secondary"
+            android:gravity="center"
+            android:text="@string/storage_empty_state"
+            android:visibility="gone" />
+
+        <!-- ============================================================ -->
+        <!-- ===== ЗАГОЛОВОК «ДАННЫЕ ПРИЛОЖЕНИЯ» + ИТОГО ================ -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Title.Medium"
-            android:text="@string/settings_storage_title"
-            android:gravity="center" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l"
+            android:paddingBottom="@dimen/spacing_l">
 
-        <!-- Описание (заглушка) -->
-        <TextView
+            <TextView
+                style="@style/Text.Title.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/storage_data_title" />
+
+            <TextView
+                android:id="@+id/storage_total_value"
+                style="@style/Text.Body.Dim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="11.26 MB" />
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СПИСОК КАТЕГОРИЙ ===================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/storage_categories"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_m"
-            style="@style/Text.Body.Secondary"
-            android:text="@string/settings_storage_desc"
-            android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_s" />
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs" />
+
+        <!-- ============================================================ -->
+        <!-- ===== КНОПКА ОЧИСТКИ ======================================= -->
+        <!-- ============================================================ -->
+
+        <Button
+            android:id="@+id/btn_clear"
+            style="@style/Button.Glass.Danger"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_button"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:text="@string/storage_clear_title"
+            tools:ignore="VisualLintButtonSize" />
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 

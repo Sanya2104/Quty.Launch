@@ -1,0 +1,6 @@
+<!-- res/drawable/bg_storage_bar.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/backgroundInput" />
+    <corners android:radius="@dimen/radius_medium" />
+</shape>

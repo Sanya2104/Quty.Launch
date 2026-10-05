@@ -1,0 +1,37 @@
+<!-- res/layout/item_storage_clear_category.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingTop="@dimen/spacing_s"
+    android:paddingBottom="@dimen/spacing_s">
+
+    <CheckBox
+        android:id="@+id/clear_category_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:minHeight="0dp" />
+
+    <TextView
+        android:id="@+id/clear_category_title"
+        style="@style/Text.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="@dimen/spacing_s"
+        tools:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/clear_category_size"
+        style="@style/Text.Body.Dim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textAlignment="viewEnd"
+        tools:text="@string/unknown_code" />
+
+</LinearLayout>
