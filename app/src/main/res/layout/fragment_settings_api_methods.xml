@@ -44,14 +44,51 @@
         <!-- ===== СЕКЦИЯ 1: ИСПОЛЬЗУЕТСЯ ЭТОЙ ОБОЛОЧКОЙ ================ -->
         <!-- ============================================================ -->
 
-        <TextView
-            android:id="@+id/api_methods_active_header"
-            style="@style/Text.Title.Small"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/spacing_l"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l"
             android:paddingTop="@dimen/spacing_s"
-            tools:text="@string/api_methods_active_header" />
+            android:paddingBottom="@dimen/spacing_s">
+
+            <!-- Иконка-подсказка (видимость — в коде) -->
+            <ImageView
+                android:id="@+id/api_methods_info_icon"
+                android:layout_width="@dimen/icon_small"
+                android:layout_height="@dimen/icon_small"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:src="@drawable/ic_info"
+                android:contentDescription="@string/api_methods_legend_title"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:padding="@dimen/spacing_xxs"
+                android:clickable="true"
+                android:focusable="true"
+                app:tint="?attr/textDimColor"
+                android:visibility="gone"
+                xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+            <!-- Заголовок -->
+            <TextView
+                android:id="@+id/api_methods_active_header"
+                style="@style/Text.Title.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                tools:text="@string/api_methods_active_header" />
+
+            <!-- Счётчик -->
+            <TextView
+                android:id="@+id/api_methods_active_counter"
+                style="@style/Text.Body.Dim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_s"
+                tools:text="3 из 5" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/api_methods_active_container"

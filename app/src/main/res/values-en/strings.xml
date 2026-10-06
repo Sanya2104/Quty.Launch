@@ -154,8 +154,16 @@
     <!-- ============================================================ -->
 
     <string name="api_methods_empty">No registered methods</string>
-    <string name="api_methods_active_header" formatted="false">Used by this shell (%1$d of %2$d)</string>
     <string name="api_methods_other_header">Other methods</string>
+    <string name="api_methods_active_header" formatted="false">Used by shell "%s"</string>
+    <string name="api_methods_active_counter" formatted="false">%1$d of %2$d</string>
+
+    <!-- Legend dialog -->
+    <string name="api_methods_legend_title">Checkmark colors</string>
+    <string name="api_methods_legend_green">Method is declared in manifest and used by shell</string>
+    <string name="api_methods_legend_orange">Method is used but NOT declared in shell manifest</string>
+    <string name="api_methods_legend_gray">Method is declared in manifest but not called yet</string>
+    <string name="api_methods_legend_ok">Got it</string>
 
     <!-- Method descriptions -->
     <string name="api_getapps_desc">List of installed apps</string>

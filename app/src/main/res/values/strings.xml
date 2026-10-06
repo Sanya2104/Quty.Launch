@@ -154,8 +154,16 @@
     <!-- ============================================================ -->
 
     <string name="api_methods_empty">Нет зарегистрированных методов</string>
-    <string name="api_methods_active_header" formatted="false">Используется этой оболочкой (%1$d из %2$d)</string>
     <string name="api_methods_other_header">Остальные методы</string>
+    <string name="api_methods_active_header" formatted="false">Используется оболочкой «%s»</string>
+    <string name="api_methods_active_counter" formatted="false">%1$d из %2$d</string>
+
+    <!-- Диалог-легенда -->
+    <string name="api_methods_legend_title">Цвета галочек</string>
+    <string name="api_methods_legend_green">Метод заявлен в manifest и используется оболочкой</string>
+    <string name="api_methods_legend_orange">Метод используется, но НЕ заявлен в manifest оболочки</string>
+    <string name="api_methods_legend_gray">Метод заявлен в manifest, но пока не вызывался</string>
+    <string name="api_methods_legend_ok">Понятно</string>
 
     <!-- Описания методов -->
     <string name="api_getapps_desc">Список установленных приложений</string>

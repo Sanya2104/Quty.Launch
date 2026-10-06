@@ -8,6 +8,7 @@ import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
 import by.quty.launch.R
+import by.quty.launch.api.router.ApiRouter
 import by.quty.launch.configs.CoreConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,7 +34,12 @@ data class Shell(
     val previewBase64: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
-    val minQutyLaunchVersion: String? = null
+    val minQutyLaunchVersion: String? = null,
+    /**
+     * Список API методов, заявленных оболочкой в manifest.json.
+     * Если поле не указано — пустой список.
+     */
+    val apiMethods: List<String> = emptyList()
 )
 
 /**
@@ -47,7 +53,12 @@ data class ShellManifest(
     val preview: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
-    val minQutyLaunchVersion: String? = null
+    val minQutyLaunchVersion: String? = null,
+    /**
+     * Список API методов, которые использует оболочка.
+     * Опциональное поле — для старых оболочек по умолчанию пустой список.
+     */
+    val apiMethods: List<String> = emptyList()
 )
 
 class ShellManager(
@@ -241,7 +252,8 @@ class ShellManager(
                     previewBase64 = previewBase64,
                     orientation = manifest?.orientation,
                     repoUrl = manifest?.repoUrl,
-                    minQutyLaunchVersion = manifest?.minQutyLaunchVersion
+                    minQutyLaunchVersion = manifest?.minQutyLaunchVersion,
+                    apiMethods = manifest?.apiMethods ?: emptyList()
                 )
             )
         }
@@ -292,7 +304,8 @@ class ShellManager(
                         previewBase64 = previewBase64,
                         orientation = manifest?.orientation,
                         repoUrl = manifest?.repoUrl,
-                        minQutyLaunchVersion = manifest?.minQutyLaunchVersion
+                        minQutyLaunchVersion = manifest?.minQutyLaunchVersion,
+                        apiMethods = manifest?.apiMethods ?: emptyList()
                     )
                 )
             }
@@ -424,6 +437,10 @@ class ShellManager(
 
         // Обновляем в памяти
         activeShell = shell
+
+        // Сбрасываем список активных API методов — они относятся
+        // к предыдущей оболочке
+        ApiRouter.clearActiveMethods()
 
         // Сохраняем принудительную ориентацию
         withContext(Dispatchers.Main) {

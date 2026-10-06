@@ -1,9 +1,10 @@
 {
-    "name":  "QutyAuto",
-    "author":  "QutyTeam",
-    "preview":  "preview.png",
+    "name": "QutyAuto",
+    "author": "QutyTeam",
+    "preview": "preview.png",
     "orientation": "sensor",
-    "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/",
-    "version":  "0.0.1",
-    "minQutyLaunchVersion":  "0.0.0"
+    "repoUrl": "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Shell.QutyAuto/main/",
+    "version": "0.0.1",
+    "minQutyLaunchVersion": "0.0.0",
+    "apiMethods": ["GetApps", "LaunchApp", "GetStatusBar"]
 }
