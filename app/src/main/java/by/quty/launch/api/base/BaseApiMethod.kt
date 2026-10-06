@@ -1,6 +1,9 @@
 // *** api/base/BaseApiMethod.kt *** //
 package by.quty.launch.api.base
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import by.quty.launch.R
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.serializer
 
@@ -18,6 +21,22 @@ abstract class BaseApiMethod<P> {
      */
     open val name: String
         get() = this::class.simpleName ?: "unknown"
+
+    /**
+     * Краткое описание метода для UI (в разделе «API методы»).
+     * Локализуется через @StringRes.
+     */
+    @get:StringRes
+    abstract val descriptionRes: Int
+
+    /**
+     * Иконка метода для UI.
+     * По умолчанию — универсальная ic_api_method.
+     * Каждый метод может переопределить под свою суть.
+     */
+    @get:DrawableRes
+    open val iconRes: Int
+        get() = R.drawable.ic_api_method
 
     // Этот метод нужно вызывать из JsBridge
     suspend fun execute(params: String?): String {

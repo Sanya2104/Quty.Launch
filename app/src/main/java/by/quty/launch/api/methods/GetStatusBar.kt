@@ -1,6 +1,7 @@
 // *** api/methods/GetStatusBar.kt *** //
 package by.quty.launch.api.methods
 
+import by.quty.launch.R
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
@@ -26,6 +27,14 @@ import java.util.Locale
 class GetStatusBar(
     private val context: Context
 ) : BaseApiMethod<Unit>() {
+
+    // описание метода для ядра
+    override val descriptionRes: Int
+        get() = R.string.api_getstatusbar_desc
+
+    // иконка метода для ядра
+    override val iconRes: Int
+        get() = R.drawable.ic_api_getstatusbar
 
     // Для расчёта скорости интернета
     private var lastRxBytes = 0L

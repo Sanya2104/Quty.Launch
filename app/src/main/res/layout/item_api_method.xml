@@ -1,0 +1,57 @@
+<!-- res/layout/item_api_method.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="@dimen/spacing_l"
+    android:paddingEnd="@dimen/spacing_l"
+    android:paddingTop="@dimen/spacing_l"
+    android:paddingBottom="@dimen/spacing_l">
+
+    <!-- Иконка метода -->
+    <ImageView
+        android:id="@+id/api_method_icon"
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:layout_marginEnd="@dimen/spacing_m"
+        android:src="@drawable/ic_api_method"
+        android:contentDescription="@string/empty" />
+
+    <!-- Текстовый блок -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/api_method_name"
+            style="@style/Text.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimaryColor"
+            android:textStyle="bold"
+            tools:text="@string/unknown" />
+
+        <TextView
+            android:id="@+id/api_method_description"
+            style="@style/Text.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/unknown" />
+
+    </LinearLayout>
+
+    <!-- Галочка (для активных методов) -->
+    <ImageView
+        android:id="@+id/api_method_check"
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:layout_marginStart="@dimen/spacing_m"
+        android:src="@drawable/ic_update_check"
+        android:contentDescription="@string/empty"
+        android:visibility="gone" />
+
+</LinearLayout>

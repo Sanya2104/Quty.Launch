@@ -23,6 +23,7 @@ import by.quty.launch.core.fragments.settings.GeneralFragment
 import by.quty.launch.core.fragments.settings.RecoveryFragment
 import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.fragments.settings.StorageFragment
+import by.quty.launch.core.fragments.settings.ApiMethodsFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
@@ -375,6 +376,19 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
+        // === API методы ===
+        items.add(
+            SettingsMenuModel(
+                8,
+                R.drawable.ic_api_method,
+                R.string.settings_menu_api_methods,
+                R.string.settings_menu_api_methods_desc,
+                ApiMethodsFragment::class.java,
+                R.color.scheme_pink_primary,
+                true
+            )
+        )
+
         items.add(
             SettingsMenuModel(
                 3,
@@ -452,11 +466,12 @@ class SettingsActivity : BaseActivity() {
                 isFragmentVisible = false
                 selectedItemId = -1
 
-                // Убираем текущий фрагмент
+                // Убираем текущий фрагмент (синхронно, чтобы не было мельканий)
                 supportFragmentManager.findFragmentById(R.id.fragment_container)?.let { fragment ->
                     supportFragmentManager.beginTransaction()
+                        .setReorderingAllowed(true)
                         .remove(fragment)
-                        .commit()
+                        .commitNow()
                 }
             }
         }
@@ -635,10 +650,18 @@ class SettingsActivity : BaseActivity() {
                 item.fragment.name
             )
 
+            /*
+             * commitNow() вместо commit() — транзакция выполняется
+             * синхронно, поэтому старый фрагмент удаляется ДО того,
+             * как applyMode() переключит видимость панелей.
+             * Это предотвращает кратковременное «моргание» старого
+             * фрагмента при переключении между пунктами меню.
+             */
             supportFragmentManager
                 .beginTransaction()
+                .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, fragment)
-                .commit()
+                .commitNow()
 
         } catch (e: Exception) {
             LoggerManager.e("SettingsActivity", getString(R.string.log_settings_error), e)

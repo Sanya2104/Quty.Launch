@@ -37,6 +37,8 @@
     <string name="settings_menu_personalization_desc">Shell and appearance</string>
     <string name="settings_menu_storage">Storage</string>
     <string name="settings_menu_storage_desc">Manage data</string>
+    <string name="settings_menu_api_methods">API methods</string>
+    <string name="settings_menu_api_methods_desc">Shell access</string>
     <string name="settings_menu_updates">Update center</string>
     <string name="settings_menu_updates_desc">Check for updates</string>
     <string name="settings_menu_developer">Developer</string>
@@ -50,6 +52,7 @@
     <string name="settings_general_title">General</string>
     <string name="settings_personalization_title">Personalization</string>
     <string name="settings_storage_title">Storage</string>
+    <string name="settings_api_methods_title">API methods</string>
     <string name="settings_updates_title">Update center</string>
     <string name="settings_developer_title">Developer</string>
     <string name="settings_recovery_title">Backup &amp; reset</string>
@@ -145,6 +148,20 @@
     <string name="storage_clear_title">Cleanup</string>
     <string name="storage_clear_button">Clear selected</string>
     <string name="storage_cleared_multiple_toast">Selected categories cleared</string>
+
+    <!-- ============================================================ -->
+    <!-- ==================== API METHODS (UI) ======================= -->
+    <!-- ============================================================ -->
+
+    <string name="api_methods_empty">No registered methods</string>
+    <string name="api_methods_active_header" formatted="false">Used by this shell (%1$d of %2$d)</string>
+    <string name="api_methods_other_header">Other methods</string>
+
+    <!-- Method descriptions -->
+    <string name="api_getapps_desc">List of installed apps</string>
+    <string name="api_launchapp_desc">Launch app by package name</string>
+    <string name="api_getstatusbar_desc">Network signal, Wi-Fi, battery</string>
+    <string name="api_getsysteminfo_desc">Device information</string>
 
     <!-- ============================================================ -->
     <!-- ===== TOASTS =============================================== -->

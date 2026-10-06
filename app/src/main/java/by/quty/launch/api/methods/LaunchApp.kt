@@ -18,6 +18,14 @@ class LaunchApp(
     private val context: Context
 ) : BaseApiMethod<LaunchAppParams>() {
 
+    // описание метода для ядра
+    override val descriptionRes: Int
+        get() = R.string.api_launchapp_desc
+
+    // иконка метода для ядра
+    override val iconRes: Int
+        get() = R.drawable.ic_api_launchapp
+
     override fun parseParams(jsonString: String): LaunchAppParams {
         return json.decodeFromString(jsonString)
     }

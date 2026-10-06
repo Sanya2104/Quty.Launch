@@ -1,0 +1,96 @@
+<!-- res/layout/fragment_settings_api_methods.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:padding="@dimen/screen_padding_horizontal">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
+
+        <!-- ============================================================ -->
+        <!-- ===== ЗАГОЛОВОК ============================================ -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:text="@string/settings_api_methods_title" />
+
+        <!-- ============================================================ -->
+        <!-- ===== ПУСТОЕ СОСТОЯНИЕ ===================================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            android:id="@+id/api_methods_empty"
+            style="@style/Text.Body.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:padding="@dimen/spacing_l"
+            android:gravity="center"
+            android:text="@string/api_methods_empty"
+            android:visibility="gone" />
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 1: ИСПОЛЬЗУЕТСЯ ЭТОЙ ОБОЛОЧКОЙ ================ -->
+        <!-- ============================================================ -->
+
+        <TextView
+            android:id="@+id/api_methods_active_header"
+            style="@style/Text.Title.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_s"
+            tools:text="@string/api_methods_active_header" />
+
+        <LinearLayout
+            android:id="@+id/api_methods_active_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs" />
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 2: ОСТАЛЬНЫЕ МЕТОДЫ =========================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            android:id="@+id/api_methods_other_header"
+            style="@style/Text.Title.Small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/api_methods_other_header" />
+
+        <LinearLayout
+            android:id="@+id/api_methods_other_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs" />
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
+
+    </LinearLayout>
+
+</ScrollView>

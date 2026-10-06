@@ -25,6 +25,14 @@ class GetApps(
     private val context: Context
 ) : BaseApiMethod<Unit>() {
 
+    // описание метода для ядра
+    override val descriptionRes: Int
+        get() = R.string.api_getapps_desc
+
+    // иконка метода для ядра
+    override val iconRes: Int
+        get() = R.drawable.ic_api_getapps
+
     override fun parseParams(jsonString: String) = Unit
 
     override suspend fun executeInternal(params: Unit?): String {

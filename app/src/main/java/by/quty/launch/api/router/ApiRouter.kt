@@ -7,8 +7,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.serializer
 
 object ApiRouter {
+
     private val methods = mutableMapOf<String, BaseApiMethod<*>>()
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Методы, которые были вызваны хотя бы раз в текущей сессии.
+     * Сбрасываются при смене оболочки или перезапуске приложения.
+     */
+    private val activeMethods = mutableSetOf<String>()
 
     fun register(method: BaseApiMethod<*>) {
         methods[method.name] = method
@@ -20,6 +27,39 @@ object ApiRouter {
                 ApiResponse.serializer(Unit.serializer()),
                 ApiResponse(success = false, error = "Method not found: $methodName")
             )
+
+        // Помечаем метод как активный
+        markMethodActive(methodName)
+
         return method.execute(params)
+    }
+
+    /**
+     * Возвращает список всех зарегистрированных методов.
+     */
+    fun getRegisteredMethods(): List<BaseApiMethod<*>> {
+        return methods.values.toList()
+    }
+
+    /**
+     * Помечает метод как вызванный в текущей сессии.
+     */
+    fun markMethodActive(name: String) {
+        activeMethods.add(name)
+    }
+
+    /**
+     * Возвращает множество активных методов (копию).
+     */
+    fun getActiveMethods(): Set<String> {
+        return activeMethods.toSet()
+    }
+
+    /**
+     * Сбрасывает список активных методов.
+     * Вызывается при смене оболочки.
+     */
+    fun clearActiveMethods() {
+        activeMethods.clear()
     }
 }
