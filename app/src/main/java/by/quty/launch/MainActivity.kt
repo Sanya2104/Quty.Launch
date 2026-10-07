@@ -2,6 +2,7 @@
 package by.quty.launch
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,7 +26,7 @@ class MainActivity : BaseActivity() {
     private lateinit var shellManager: ShellManager
     private lateinit var jsBridge: JsBridge
 
-    // Последний применённый язык — чтобы не дёргать WebView зря
+    // Последнее применённое состояние — чтобы не дёргать WebView зря
     private var lastAppliedLanguage: String? = null
 
     companion object {
@@ -91,17 +92,6 @@ class MainActivity : BaseActivity() {
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
             )
-
-            // После загрузки оболочки отправляем цвета и язык в WebView
-            webView.post {
-                val primary = configManager.getSchemePrimaryColor()
-                val accent = configManager.getSchemeAccentColor()
-                jsBridge.applyColorScheme(primary, accent)
-
-                val lang = configManager.getLanguageCode()
-                lastAppliedLanguage = lang
-                jsBridge.applyLanguage(lang)
-            }
         }
     }
 
@@ -127,18 +117,27 @@ class MainActivity : BaseActivity() {
             applyOrientation()
         }
 
-        // Проверяем смену языка → сообщаем WebView
+        // Проверяем смену языка → пушим в WebView, если изменилось
         if (::jsBridge.isInitialized && ::webView.isInitialized) {
             val currentLang = configManager.getLanguageCode()
             if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
                 lastAppliedLanguage = currentLang
-                jsBridge.applyLanguage(currentLang)
+                jsBridge.notifyCoreStateChanged()
             }
         }
 
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        // Пушим оболочке, что ориентация/конфигурация изменилась
+        if (::jsBridge.isInitialized && ::webView.isInitialized) {
+            jsBridge.notifyCoreStateChanged()
         }
     }
 }

@@ -102,10 +102,6 @@
     <string name="toast_language_ru">Язык изменён на русский</string>
     <string name="toast_language_en">Language changed to English</string>
 
-    <string name="log_js_bridge_webview_destroyed_language">WebView уничтожен, невозможно применить язык</string>
-    <string name="log_js_bridge_language_applied" formatted="false">Язык применён в WebView: %s</string>
-    <string name="log_js_bridge_language_error" formatted="false">Не удалось применить язык: %s</string>
-
     <!-- ============================================================ -->
     <!-- ===== ПЕРСОНАЛИЗАЦИЯ ====================================== -->
     <!-- ============================================================ -->
@@ -170,6 +166,7 @@
     <string name="api_launchapp_desc">Запуск приложения по пакету</string>
     <string name="api_getstatusbar_desc">Сигнал сети, Wi-Fi, батарея</string>
     <string name="api_getsysteminfo_desc">Информация об устройстве</string>
+    <string name="api_getcorestate_desc">Состояние ядра для оболочки</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
@@ -815,9 +812,8 @@
     <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
 
     <!-- JsBridge логи -->
-    <string name="log_js_bridge_webview_destroyed_color_scheme">WebView уничтожен, невозможно применить цветовую схему</string>
-    <string name="log_js_bridge_color_scheme_applied" formatted="false">Цветовая схема применена: primary=%s, accent=%s</string>
-    <string name="log_js_bridge_color_scheme_error" formatted="false">Не удалось применить цветовую схему: %s</string>
+    <string name="log_js_bridge_state_notified">Состояние ядра передано оболочке</string>
+    <string name="log_js_bridge_state_notify_error" formatted="false">Не удалось передать состояние ядра: %s</string>
 
     <!-- SettingsActivity логи -->
     <string name="log_settings_restored_needs_restart" formatted="false">Восстановлено, требуется перезапуск: %b</string>

@@ -12,8 +12,12 @@ import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Мост между JavaScript и Kotlin
- * Обрабатывает вызовы API из WebView
+ * Мост между JavaScript и Kotlin.
+ * Обрабатывает вызовы API из WebView.
+ *
+ * Методы applyColorScheme / applyLanguage удалены — теперь оболочка
+ * сама запрашивает состояние ядра через API-метод GetCoreState
+ * и подписывается на JS-событие window.onCoreStateChanged.
  */
 class JsBridge(
     private val core: Core,
@@ -113,7 +117,6 @@ class JsBridge(
      * Принимает лог из JavaScript и отправляет в LoggerManager
      * @param logData JSON строка с полями: level, message
      */
-
     @JavascriptInterface
     fun log(logData: String) {
         try {
@@ -142,95 +145,24 @@ class JsBridge(
     }
 
     // ============================================================
-    // ПРИМЕНЕНИЕ ЦВЕТОВОЙ СХЕМЫ И ТЕМЫ В WEBVIEW
+    // PUSH-МОДЕЛЬ: СООБЩЕНИЕ ОБОЛОЧКЕ ОБ ИЗМЕНЕНИИ СОСТОЯНИЯ ЯДРА
     // ============================================================
 
     /**
-     * Применяет цветовую схему и тему в WebView
-     * Вызывает JavaScript функцию applyColorScheme(primary, accent, theme)
-     * @param primary primary цвет в HEX (#009688)
-     * @param accent accent цвет в HEX (#4CAF50)
-     */
-    @JavascriptInterface
-    fun applyColorScheme(primary: String, accent: String) {
-        val webView = webViewRef?.get()
-        if (webView == null) {
-            LoggerManager.e(
-                "JsBridge",
-                context.getString(R.string.log_js_bridge_webview_destroyed_color_scheme)
-            )
-            return
-        }
-
-        // Получаем текущую тему (Dark/Light)
-        val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
-        val isDark = prefs.getBoolean("theme_dark", true)
-        val theme = if (isDark) "dark" else "light"
-
-        // Формируем JavaScript код для применения цветов и темы
-        val jsCode = """
-            (function() {
-                // Проверяем, определена ли функция applyColorScheme
-                if (typeof window.applyColorScheme === 'function') {
-                    window.applyColorScheme('$primary', '$accent', '$theme');
-                } else {
-                    // Fallback: применяем через CSS переменные
-                    document.documentElement.style.setProperty('--primary-color', '$primary');
-                    document.documentElement.style.setProperty('--accent-color', '$accent');
-                    document.documentElement.style.setProperty('--theme', '$theme');
-                    
-                    // Добавляем классы для темы
-                    document.body.classList.toggle('dark-theme', '$theme' === 'dark');
-                    document.body.classList.toggle('light-theme', '$theme' === 'light');
-                }
-            })();
-        """.trimIndent()
-
-        // Выполняем JavaScript в UI потоке
-        webView.post {
-            try {
-                webView.evaluateJavascript(jsCode, null)
-                LoggerManager.d(
-                    "JsBridge",
-                    context.getString(R.string.log_js_bridge_color_scheme_applied, primary, accent) + ", theme: $theme"
-                )
-            } catch (e: Exception) {
-                LoggerManager.e(
-                    "JsBridge",
-                    context.getString(R.string.log_js_bridge_color_scheme_error, e.message)
-                )
-            }
-        }
-    }
-
-    // ============================================================
-    // ПРИМЕНЕНИЕ ЯЗЫКА В WEBVIEW
-    // ============================================================
-
-    /**
-     * Применяет выбранный язык в WebView.
-     * Вызывает JS-функцию window.applyLanguage(lang), если она есть.
-     * Иначе устанавливает document.documentElement.lang.
+     * Уведомляет оболочку об изменении состояния ядра (тема, язык,
+     * ориентация и т.д.). Вызывает JS-функцию window.onCoreStateChanged(),
+     * если она определена.
      *
-     * @param lang код языка: "ru" или "en"
+     * Оболочка в этой функции обычно перезапрашивает состояние через
+     * Android.call('GetCoreState', null, callbackId).
      */
-    @JavascriptInterface
-    fun applyLanguage(lang: String) {
-        val webView = webViewRef?.get()
-        if (webView == null) {
-            LoggerManager.e(
-                "JsBridge",
-                context.getString(R.string.log_js_bridge_webview_destroyed_language)
-            )
-            return
-        }
+    fun notifyCoreStateChanged() {
+        val webView = webViewRef?.get() ?: return
 
         val jsCode = """
             (function() {
-                if (typeof window.applyLanguage === 'function') {
-                    window.applyLanguage('$lang');
-                } else {
-                    document.documentElement.lang = '$lang';
+                if (typeof window.onCoreStateChanged === 'function') {
+                    window.onCoreStateChanged();
                 }
             })();
         """.trimIndent()
@@ -238,15 +170,9 @@ class JsBridge(
         webView.post {
             try {
                 webView.evaluateJavascript(jsCode, null)
-                LoggerManager.d(
-                    "JsBridge",
-                    context.getString(R.string.log_js_bridge_language_applied, lang)
-                )
+                LoggerManager.d("JsBridge", context.getString(R.string.log_js_bridge_state_notified))
             } catch (e: Exception) {
-                LoggerManager.e(
-                    "JsBridge",
-                    context.getString(R.string.log_js_bridge_language_error, e.message)
-                )
+                LoggerManager.e("JsBridge", context.getString(R.string.log_js_bridge_state_notify_error, e.message))
             }
         }
     }

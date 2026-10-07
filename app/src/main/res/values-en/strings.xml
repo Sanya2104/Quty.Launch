@@ -102,10 +102,6 @@
     <string name="toast_language_ru">Язык изменён на русский</string>
     <string name="toast_language_en">Language changed to English</string>
 
-    <string name="log_js_bridge_webview_destroyed_language">WebView destroyed, cannot apply language</string>
-    <string name="log_js_bridge_language_applied" formatted="false">Language applied in WebView: %s</string>
-    <string name="log_js_bridge_language_error" formatted="false">Failed to apply language: %s</string>
-
     <!-- ============================================================ -->
     <!-- ===== PERSONALIZATION ====================================== -->
     <!-- ============================================================ -->
@@ -170,6 +166,7 @@
     <string name="api_launchapp_desc">Launch app by package name</string>
     <string name="api_getstatusbar_desc">Network signal, Wi-Fi, battery</string>
     <string name="api_getsysteminfo_desc">Device information</string>
+    <string name="api_getcorestate_desc">Core state for shell</string>
 
     <!-- ============================================================ -->
     <!-- ===== TOASTS =============================================== -->
@@ -810,9 +807,8 @@
     <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
 
     <!-- JsBridge logs -->
-    <string name="log_js_bridge_webview_destroyed_color_scheme">WebView destroyed, cannot apply color scheme</string>
-    <string name="log_js_bridge_color_scheme_applied" formatted="false">Color scheme applied: primary=%s, accent=%s</string>
-    <string name="log_js_bridge_color_scheme_error" formatted="false">Failed to apply color scheme: %s</string>
+    <string name="log_js_bridge_state_notified">Core state notified to shell</string>
+    <string name="log_js_bridge_state_notify_error" formatted="false">Failed to notify core state: %s</string>
 
     <!-- SettingsActivity logs -->
     <string name="log_settings_restored_needs_restart" formatted="false">Restored, restart required: %b</string>
