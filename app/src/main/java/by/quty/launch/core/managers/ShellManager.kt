@@ -430,17 +430,28 @@ class ShellManager(
 
     /**
      * Устанавливает активную оболочку
+     *
+     * ВАЖНО: список активных API методов сбрасывается ТОЛЬКО при смене
+     * оболочки (когда имя реально изменилось). При пересоздании MainActivity
+     * (например, при смене темы Light/Dark) с той же оболочкой состояние
+     * активных методов сохраняется — пользователь не теряет картину
+     * «кто что вызывал» в разделе Настроек → API методы.
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
+        // Запоминаем имя предыдущей активной оболочки
+        val previousShellName = activeShell?.name
+
         // Сохраняем в конфиг
         configManager.setActiveShell(shell.name)
 
         // Обновляем в памяти
         activeShell = shell
 
-        // Сбрасываем список активных API методов — они относятся
-        // к предыдущей оболочке
-        ApiRouter.clearActiveMethods()
+        // Сбрасываем список активных API методов только если оболочка
+        // реально поменялась
+        if (previousShellName != shell.name) {
+            ApiRouter.clearActiveMethods()
+        }
 
         // Сохраняем принудительную ориентацию
         withContext(Dispatchers.Main) {
