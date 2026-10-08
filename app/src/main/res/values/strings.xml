@@ -668,6 +668,9 @@
     <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
     <string name="webview_retry_limit_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
     <string name="webview_retry_attempt" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
+    <string name="webview_render_process_gone">Оболочка перезагружается…</string>
+    <string name="log_webview_render_process_gone" formatted="false">Render-процесс WebView упал. Crashed: %b</string>
+    <string name="log_webview_restart_failed" formatted="false">Не удалось перезапустить MainActivity: %s</string>
 
     <!-- ============================================================ -->
     <!-- ==================== API МЕТОДЫ ============================= -->

@@ -8,6 +8,7 @@ import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.managers.LoggerManager
 import kotlinx.coroutines.*
+import org.json.JSONObject
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -78,7 +79,12 @@ class JsBridge(
     }
 
     /**
-     * Отправляет результат выполнения в JavaScript
+     * Отправляет результат выполнения в JavaScript.
+     *
+     * ВАЖНО: результат и сообщение об ошибке экранируются через
+     * JSONObject.quote() — иначе апострофы, кавычки и спецсимволы
+     * внутри JSON сломают JS-код и callback не сработает.
+     *
      * @param callbackId идентификатор callback в JS
      * @param result JSON строка с результатом
      * @param error исключение (если было)
@@ -94,13 +100,14 @@ class JsBridge(
             return
         }
 
-        // Формируем JavaScript код для вызова callback
+        // Формируем JavaScript код для вызова callback.
+        // JSONObject.quote() корректно экранирует все спецсимволы.
         val jsCode = if (error == null) {
-            // Успешное выполнение
-            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId']($result);"
+            val safeResult = JSONObject.quote(result)
+            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId']($safeResult);"
         } else {
-            // Ошибка выполнения
-            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId'](null, '${error.message}');"
+            val safeError = JSONObject.quote(error.message ?: "Unknown error")
+            "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId'](null, $safeError);"
         }
 
         // Выполняем JavaScript в UI потоке

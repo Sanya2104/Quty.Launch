@@ -4,11 +4,10 @@ package by.quty.launch.api.methods
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
@@ -19,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import java.io.ByteArrayOutputStream
-import androidx.core.graphics.createBitmap
 
 class GetApps(
     private val context: Context
@@ -79,11 +77,14 @@ class GetApps(
             }
             .sortedBy { it.name }  // Сортируем обычные приложения по алфавиту
 
-        // Кастомные приложения
+        // Кастомные приложения.
+        // Для кастомных используем PNG-иконки (ic_app_*) из drawable-nodpi,
+        // а не VectorDrawable — у вектора tint задан через ?attr/iconTintColor,
+        // который не резолвится в applicationContext, и иконка получается пустой.
         val customApps = mutableListOf<AppInfo>()
 
         // 1. Настройки Quty.Launch
-        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_settings)
+        val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
         customApps.add(
@@ -91,12 +92,12 @@ class GetApps(
                 name = context.getString(R.string.api_getapps_settings_name),
                 packageName = ApiConfig.SETTINGS_PACKAGE,
                 isCustom = true,
-                iconBase64 = settingsIconBase64 // иконка из ресурсов
+                iconBase64 = settingsIconBase64
             )
         )
 
         // 2. Параметры Quty.Launch
-        val parametersIcon = ContextCompat.getDrawable(context, R.drawable.ic_parameters)
+        val parametersIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_parameters)
         val parametersIconBase64 = parametersIcon?.let { drawableToBase64(it) }
 
         customApps.add(
@@ -104,7 +105,7 @@ class GetApps(
                 name = context.getString(R.string.api_getapps_parameters_name),
                 packageName = ApiConfig.PARAMETERS_PACKAGE,
                 isCustom = true,
-                iconBase64 = parametersIconBase64 // иконка из ресурсов
+                iconBase64 = parametersIconBase64
             )
         )
 
@@ -113,7 +114,7 @@ class GetApps(
         val isDevMode = prefs.getBoolean("developer_mode", false)
 
         if (isDevMode) {
-            val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_logger)
+            val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
             val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
 
             customApps.add(
@@ -127,7 +128,7 @@ class GetApps(
         }
 
         // 4. Магазин оболочек (всегда доступен)
-        val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_store)
+        val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 
         customApps.add(
@@ -144,28 +145,26 @@ class GetApps(
     }
 
     /**
-     * Конвертирует Drawable в Base64 строку
+     * Конвертирует Drawable в Base64 строку.
+     *
+     * Используем androidx.core.graphics.drawable.toBitmap() — он корректно
+     * обрабатывает BitmapDrawable, VectorDrawable, AdaptiveIconDrawable.
+     *
+     * Base64.NO_WRAP — без переносов строк, иначе data:image/png;base64,...
+     * не работает в WebView.
      */
     private fun drawableToBase64(drawable: Drawable): String? {
         return try {
-            val bitmap = if (drawable is BitmapDrawable) {
-                drawable.bitmap
-            } else {
-                // Создаем bitmap из drawable
-                val bitmap = createBitmap(
-                    drawable.intrinsicWidth.takeIf { it > 0 } ?: 64,
-                    drawable.intrinsicHeight.takeIf { it > 0 } ?: 64
-                )
-                val canvas = Canvas(bitmap)
-                drawable.setBounds(0, 0, canvas.width, canvas.height)
-                drawable.draw(canvas)
-                bitmap
-            }
+            val bitmap = drawable.toBitmap(
+                width = 96,
+                height = 96,
+                config = Bitmap.Config.ARGB_8888
+            )
 
             val outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             val byteArray = outputStream.toByteArray()
-            Base64.encodeToString(byteArray, Base64.DEFAULT)
+            Base64.encodeToString(byteArray, Base64.NO_WRAP)
         } catch (_: Exception) {
             null
         }

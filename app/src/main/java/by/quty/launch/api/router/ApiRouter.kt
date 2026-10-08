@@ -5,17 +5,28 @@ import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.serializer
+import java.util.concurrent.ConcurrentHashMap
 
 object ApiRouter {
 
-    private val methods = mutableMapOf<String, BaseApiMethod<*>>()
+    /**
+     * Реестр зарегистрированных методов.
+     *
+     * ConcurrentHashMap — потому что register() вызывается при init из
+     * главного потока, а getRegisteredMethods() читает из UI. Плюс
+     * execute() вызывается из Dispatchers.IO.
+     */
+    private val methods = ConcurrentHashMap<String, BaseApiMethod<*>>()
+
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
      * Методы, которые были вызваны хотя бы раз в текущей сессии.
      * Сбрасываются при смене оболочки или перезапуске приложения.
+     *
+     * newKeySet() из ConcurrentHashMap — потокобезопасный Set.
      */
-    private val activeMethods = mutableSetOf<String>()
+    private val activeMethods: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     fun register(method: BaseApiMethod<*>) {
         methods[method.name] = method

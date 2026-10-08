@@ -4,6 +4,7 @@ package by.quty.launch.core.webview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.ConsoleMessage
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -49,7 +50,10 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         settings.allowFileAccessFromFileURLs = true
         settings.allowUniversalAccessFromFileURLs = true
 
-        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        // LOAD_DEFAULT вместо LOAD_NO_CACHE — на ряде прошивок LOAD_NO_CACHE
+        // ломает загрузку data:image/...;base64,... URI в WebView
+        // (иконки приложений не отображаются).
+        settings.cacheMode = WebSettings.LOAD_DEFAULT
 
         // Используем аппаратное ускорение для современных CSS
         setLayerType(LAYER_TYPE_HARDWARE, null)
@@ -93,7 +97,8 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
             .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(appContext))
             .build()
 
-        webViewClient = object : WebViewClient() {
+        webViewClient = @SuppressLint("MissingOnRenderProcessGone")
+        object : WebViewClient() {
             @Suppress("OVERRIDE_DEPRECATION")
             override fun shouldInterceptRequest(
                 view: WebView,
@@ -214,10 +219,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url.toString()
-                if (url.startsWith("quty://")) {
-                    return false
-                }
-                return super.shouldOverrideUrlLoading(view, request)
+                return !url.startsWith("quty://") && super.shouldOverrideUrlLoading(view, request)
             }
 
             @Suppress("OVERRIDE_DEPRECATION")
@@ -241,6 +243,49 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 if (isShellPage(url)) {
                     scheduleRetry(url)
                 }
+            }
+
+            /**
+             * Render-процесс WebView упал (обычно из-за OOM).
+             * Возвращаем true — обработали ситуацию, приложение не упадёт.
+             */
+            override fun onRenderProcessGone(
+                view: WebView?,
+                detail: RenderProcessGoneDetail?
+            ): Boolean {
+                val didCrash = detail?.didCrash() ?: false
+
+                LoggerManager.e(
+                    "LauncherWebView",
+                    appContext.getString(R.string.log_webview_render_process_gone, didCrash)
+                )
+
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    android.widget.Toast.makeText(
+                        appContext,
+                        appContext.getString(R.string.webview_render_process_gone),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+
+                    try {
+                        val intent = android.content.Intent(
+                            appContext,
+                            by.quty.launch.MainActivity::class.java
+                        )
+                        intent.addFlags(
+                            android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        )
+                        appContext.startActivity(intent)
+                    } catch (e: Exception) {
+                        LoggerManager.e(
+                            "LauncherWebView",
+                            appContext.getString(R.string.log_webview_restart_failed, e.message)
+                        )
+                    }
+                }
+
+                return true
             }
 
             /**

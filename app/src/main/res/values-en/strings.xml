@@ -663,6 +663,9 @@
     <string name="webview_dir_shell_not_found">Active shell directory not found</string>
     <string name="webview_retry_limit_reached" formatted="false">⚠️ Retry limit reached for %s (attempts: %d)</string>
     <string name="webview_retry_attempt" formatted="false">🔄 Reloading %s (attempt %d of %d)</string>
+    <string name="webview_render_process_gone">Shell is restarting…</string>
+    <string name="log_webview_render_process_gone" formatted="false">Render process gone. Crashed: %b</string>
+    <string name="log_webview_restart_failed" formatted="false">Failed to restart MainActivity: %s</string>
 
     <!-- ============================================================ -->
     <!-- ==================== API METHODS =========================== -->

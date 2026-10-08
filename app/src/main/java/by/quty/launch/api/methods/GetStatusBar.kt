@@ -294,6 +294,7 @@ class GetStatusBar(
     /**
      * Получение уровня GSM сигнала
      */
+    @Suppress("DEPRECATION")
     private fun getGsmSignal(): Int? {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -388,7 +389,7 @@ class GetStatusBar(
         }
     }
 
-// ==================== Bluetooth ====================
+    // ==================== Bluetooth ====================
 
     /**
      * Проверка включен ли Bluetooth
