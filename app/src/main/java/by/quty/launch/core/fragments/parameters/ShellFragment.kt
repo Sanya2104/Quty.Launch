@@ -1,7 +1,7 @@
+// *** core/fragments/parameters/ShellFragment.kt *** //
 package by.quty.launch.core.fragments.parameters
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -23,10 +23,10 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -40,15 +40,16 @@ import by.quty.launch.core.adapters.ColorSchemeAdapter
 import by.quty.launch.core.interfaces.ParametersEventListener
 import by.quty.launch.core.managers.Shell
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.ShellManifest
 import by.quty.launch.core.managers.ShellRepoInfo
 import by.quty.launch.core.managers.ShellUpdateManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.model.ColorSchemeModel
+import by.quty.launch.core.utilities.PopupMenuHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.zip.ZipFile
 
@@ -273,9 +274,9 @@ class ShellFragment : Fragment() {
                 type = "*/*"
                 putExtra(
                     Intent.EXTRA_MIME_TYPES, arrayOf(
-                    "application/zip",
-                    "application/octet-stream"
-                ))
+                        "application/zip",
+                        "application/octet-stream"
+                    ))
                 putExtra(Intent.EXTRA_TITLE, getString(R.string.select_shell_title))
             }
             selectShellLauncher.launch(intent)
@@ -295,9 +296,9 @@ class ShellFragment : Fragment() {
                 type = "*/*"
                 putExtra(
                     Intent.EXTRA_MIME_TYPES, arrayOf(
-                    "application/zip",
-                    "application/octet-stream"
-                ))
+                        "application/zip",
+                        "application/octet-stream"
+                    ))
             }
             selectShellLauncher.launch(intent)
         } catch (e: Exception) {
@@ -452,9 +453,7 @@ class ShellFragment : Fragment() {
         if (minVersion.isNullOrEmpty()) return true
 
         val currentVersion = getCurrentLauncherVersion()
-        if (currentVersion.isEmpty()) return true
-
-        return compareVersions(currentVersion, minVersion) >= 0
+        return currentVersion.isEmpty() || compareVersions(currentVersion, minVersion) >= 0
     }
 
     /**
@@ -682,20 +681,29 @@ class ShellFragment : Fragment() {
         }
 
         /**
-         * Показывает выпадающее меню для управления оболочкой
+         * Показывает выпадающее меню для управления оболочкой.
+         *
+         * Использует PopupMenuHelper вместо android.widget.PopupMenu,
+         * чтобы пункты меню корректно применяли цвета темы проекта.
          */
         private fun showShellMenu(anchor: View, shell: Shell, isActive: Boolean) {
-            val popupMenu = PopupMenu(requireContext(), anchor)
-
-            val menu = popupMenu.menu
+            val items = mutableListOf<PopupMenuHelper.Item>()
 
             // Пункт "Применить" - только если не активна
             if (!isActive) {
-                menu.add(0, 1, 0, getString(R.string.shell_menu_apply))
+                items.add(
+                    PopupMenuHelper.Item(getString(R.string.shell_menu_apply)) {
+                        applyShellInternal(shell)
+                    }
+                )
             }
 
             // Пункт "Информация" - ВСЕГДА
-            menu.add(0, 2, 0, getString(R.string.shell_menu_info))
+            items.add(
+                PopupMenuHelper.Item(getString(R.string.shell_menu_info)) {
+                    showShellInfo(shell)
+                }
+            )
 
             // Пункт "Удалить" - ТОЛЬКО для кастомных оболочек
             if (shell.isCustom) {
@@ -705,31 +713,32 @@ class ShellFragment : Fragment() {
                 } else {
                     getString(R.string.shell_menu_delete)
                 }
-                menu.add(0, 3, 0, menuText)
+                items.add(
+                    PopupMenuHelper.Item(menuText) {
+                        deleteShell(shell)
+                    }
+                )
             }
 
             // Пункт "Поделиться" - только для кастомных оболочек
             if (shell.isCustom) {
-                menu.add(0, 4, 0, getString(R.string.shell_menu_share))
+                items.add(
+                    PopupMenuHelper.Item(getString(R.string.shell_menu_share)) {
+                        shareShell(shell)
+                    }
+                )
             }
 
             // "Проверить обновления" — если есть repoUrl
             if (!shell.repoUrl.isNullOrEmpty()) {
-                menu.add(0, 5, 0, getString(R.string.shell_menu_check_updates))
+                items.add(
+                    PopupMenuHelper.Item(getString(R.string.shell_menu_check_updates)) {
+                        checkShellUpdates(shell)
+                    }
+                )
             }
 
-            popupMenu.setOnMenuItemClickListener { menuItem ->
-                when (menuItem.itemId) {
-                    1 -> applyShellInternal(shell)
-                    2 -> showShellInfo(shell)
-                    3 -> deleteShell(shell)
-                    4 -> shareShell(shell)
-                    5 -> checkShellUpdates(shell)
-                }
-                true
-            }
-
-            popupMenu.show()
+            PopupMenuHelper.show(anchor = anchor, items = items)
         }
 
         /**
@@ -1024,16 +1033,4 @@ class ShellFragment : Fragment() {
         shellsList?.adapter = shellsAdapter
         shellsAdapter.notifyDataSetChanged()
     }
-
-    // Внутренний класс для парсинга manifest.json
-    @Serializable
-    data class ShellManifest(
-        val name: String,
-        val author: String = "",
-        val version: String = "0.0.1",
-        val preview: String? = null,
-        val orientation: String? = null,
-        val repoUrl: String? = null,
-        val minQutyLaunchVersion: String? = null
-    )
 }

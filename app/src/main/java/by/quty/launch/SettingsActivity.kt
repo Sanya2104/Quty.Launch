@@ -706,11 +706,9 @@ class SettingsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        try {
-            supportFragmentManager.popBackStackImmediate(null, 0)
-        } catch (_: Exception) {
-        }
-
+        // НЕ вызываем popBackStackImmediate — FragmentManager при destroy
+        // сам корректно очищает фрагменты. Ручной popBackStackImmediate
+        // на этой стадии может привести к IllegalStateException.
         super.onDestroy()
     }
 }

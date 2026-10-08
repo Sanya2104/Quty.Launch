@@ -18,6 +18,7 @@ import by.quty.launch.core.managers.LoggerManager
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
+import androidx.core.net.toUri
 
 @Suppress("DEPRECATION")
 @SuppressLint("SetJavaScriptEnabled")
@@ -214,12 +215,49 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return null
             }
 
+            /**
+             * Перехватываем навигацию по внешним ссылкам.
+             *
+             * - quty:// — внутренняя схема, грузим сами (вернуть false).
+             * - appassets.androidplatform.net — локальный asset-домен, грузим сами.
+             * - http(s):// на внешний домен — открываем во внешнем браузере,
+             *   чтобы пользователь не «утонул» внутри WebView.
+             */
             override fun shouldOverrideUrlLoading(
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
-                val url = request?.url.toString()
-                return !url.startsWith("quty://") && super.shouldOverrideUrlLoading(view, request)
+                val url = request?.url?.toString() ?: return false
+
+                // Внутренняя схема — грузим сами
+                if (url.startsWith("quty://")) return false
+
+                // Asset-домен (WebViewAssetLoader) — грузим сами
+                if (url.startsWith("https://appassets.androidplatform.net/")) return false
+
+                // data:, about:, file: — грузим сами (нужно для JS-логики оболочек)
+                if (url.startsWith("data:") ||
+                    url.startsWith("about:") ||
+                    url.startsWith("file:")
+                ) return false
+
+                // Всё остальное — внешняя ссылка, открываем во внешнем браузере
+                try {
+                    val intent = android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        url.toUri()
+                    )
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    appContext.startActivity(intent)
+                } catch (e: Exception) {
+                    LoggerManager.e(
+                        "LauncherWebView",
+                        appContext.getString(R.string.log_webview_restart_failed, e.message)
+                    )
+                }
+
+                // Возвращаем true — WebView сам НЕ грузит ссылку
+                return true
             }
 
             @Suppress("OVERRIDE_DEPRECATION")

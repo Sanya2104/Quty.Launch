@@ -3,6 +3,7 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.core.model.ShellStoreModel
+import by.quty.launch.core.utilities.AppInfoHelper
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.R
 import kotlinx.coroutines.Dispatchers
@@ -57,9 +58,6 @@ class StoreManager(private val context: Context) {
                     val isInstalled = installedShells.contains(shell.name)
                     LoggerManager.d("StoreManager", context.getString(R.string.log_store_shell_installed_check, shell.name, isInstalled))
                     shell.copy(isInstalled = isInstalled)
-                }
-                cachedShells = cachedShells?.map { shell ->
-                    shell.copy(isInstalled = installedShells.contains(shell.name))
                 }
 
                 LoggerManager.d("StoreManager", context.getString(R.string.log_store_shells_loaded, cachedShells?.size ?: 0))
@@ -229,17 +227,21 @@ class StoreManager(private val context: Context) {
     private fun isLauncherCompatible(minVersion: String): Boolean {
         if (minVersion.isEmpty()) return true
         val currentVersion = getCurrentLauncherVersion()
-        if (currentVersion.isEmpty()) return true
-        return compareVersions(currentVersion, minVersion) >= 0
+        return currentVersion.isEmpty() || compareVersions(currentVersion, minVersion) >= 0
     }
 
+    /**
+     * Получает текущую версию Quty.Launch БЕЗ суффикса.
+     *
+     * ВАЖНО: использует AppInfoHelper.getSplitVersion(), чтобы отрезать
+     * суффикс канала (Alpha/Beta/etc). Иначе "0.0.157-Alpha".split(".")
+     * даёт ["0","0","157-Alpha"] → toIntOrNull() на последнем элементе
+     * вернёт null → 0, и сравнение версий сломается.
+     */
     private fun getCurrentLauncherVersion(): String {
         return try {
-            val packageInfo = context.packageManager.getPackageInfo(
-                context.packageName,
-                0
-            )
-            packageInfo.versionName ?: ""
+            val (versionName, _) = AppInfoHelper.getSplitVersion(context)
+            versionName
         } catch (_: Exception) {
             ""
         }

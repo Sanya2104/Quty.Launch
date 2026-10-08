@@ -6,6 +6,7 @@ import android.os.StatFs
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -112,7 +113,13 @@ object UpdateHelper {
     // ============================================================
 
     /**
-     * Скачивает файл из интернета
+     * Скачивает файл из интернета.
+     *
+     * ВАЖНО: цикл чтения проверяет coroutineContext.isActive.
+     * Если корутина отменена (например, фрагмент уничтожен) — цикл
+     * прервётся, временный файл удалится, and exception будет брошен
+     * вверх по стеку для корректной обработки отмены.
+     *
      * @param context контекст приложения
      * @param url ссылка на файл
      * @param listener слушатель прогресса
@@ -179,6 +186,12 @@ object UpdateHelper {
             var lastProgress = 0
 
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                // Проверяем отмену корутины — прерываем скачивание,
+                // если scope был отменён. Файл будет удалён в catch-блоке.
+                if (!isActive) {
+                    throw kotlinx.coroutines.CancellationException("Download cancelled")
+                }
+
                 outputStream.write(buffer, 0, bytesRead)
                 totalBytesRead += bytesRead
 
@@ -211,6 +224,18 @@ object UpdateHelper {
             }
             return@withContext file
 
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Отмена корутины — чистим и пробрасываем дальше
+            try {
+                outputStream?.close()
+                inputStream?.close()
+                connection?.disconnect()
+                when (destination) {
+                    is Destination.CustomPath -> File(destination.path).takeIf { it.exists() }?.delete()
+                }
+            } catch (_: Exception) {}
+            throw e
+
         } catch (_: java.net.SocketTimeoutException) {
             withContext(Dispatchers.Main) {
                 listener.onError(context.getString(R.string.download_timeout))
@@ -227,8 +252,8 @@ object UpdateHelper {
             }
             null
         } finally {
-            inputStream?.close()
-            outputStream?.close()
+            try { inputStream?.close() } catch (_: Exception) {}
+            try { outputStream?.close() } catch (_: Exception) {}
             connection?.disconnect()
         }
     }

@@ -313,6 +313,8 @@ abstract class BaseActivity : AppCompatActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             window?.decorView?.post {
+                // Защита от вызова до инициализации configManager
+                if (!::_configManager.isInitialized) return@post
                 val strictMode = configManager.isStrictModeEnabled()
                 enableImmersiveMode(strictMode)
             }
@@ -353,6 +355,9 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+
+        // Защита от вызова до инициализации configManager
+        if (!::_configManager.isInitialized) return
 
         window?.decorView?.post {
             val strictMode = configManager.isStrictModeEnabled()

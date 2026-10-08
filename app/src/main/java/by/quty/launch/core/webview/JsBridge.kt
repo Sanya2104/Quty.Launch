@@ -32,6 +32,16 @@ class JsBridge(
     private val timeoutMs = CoreConfig.JS_BRIDGE_TIMEOUT_MS
 
     /**
+     * Единый scope для выполнения API-вызовов.
+     *
+     * SupervisorJob — чтобы падение одной корутины (например, ошибка
+     * в конкретном методе) не убивало остальные.
+     *
+     * Dispatchers.IO — потому что методы API делают I/O (файлы, сеть).
+     */
+    private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /**
      * Устанавливает ссылку на WebView для отправки результатов обратно в JS
      * @param webView экземпляр LauncherWebView
      */
@@ -49,8 +59,8 @@ class JsBridge(
      */
     @JavascriptInterface
     fun call(method: String, params: String?, callbackId: String) {
-        // Запускаем выполнение в фоновом потоке
-        CoroutineScope(Dispatchers.IO).launch {
+        // Запускаем выполнение в общем scope
+        bridgeScope.launch {
             try {
                 // Выполняем метод с таймаутом
                 val result = withTimeout(timeoutMs.milliseconds) {

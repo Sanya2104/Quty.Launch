@@ -33,6 +33,14 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
     private lateinit var closeButton: Button
     private lateinit var pagerAdapter: ParametersPagerAdapter
 
+    /**
+     * Ссылка на активный TabLayoutMediator.
+     *
+     * Храним, чтобы корректно отписываться при пересоздании адаптера
+     * (refreshPagerAdapter) — иначе накапливаются listener'ы и вкладки.
+     */
+    private var tabMediator: TabLayoutMediator? = null
+
     // Ссылки на фрагменты для обновления
     var shellFragment: ShellFragment? = null
         private set
@@ -117,6 +125,26 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
     }
 
     /**
+     * Привязывает TabLayoutMediator к текущему ViewPager2.
+     * Перед созданием нового mediator — отписывает старый (если был),
+     * чтобы не накапливались listener'ы и вкладки.
+     */
+    private fun attachTabMediator() {
+        // Отписываем старый mediator, если есть
+        tabMediator?.detach()
+
+        // Создаём новый
+        tabMediator = TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when (position) {
+                ParametersPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_parameters_shell)
+                ParametersPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_parameters_display)
+                ParametersPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_parameters_system)
+                ParametersPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_parameters_developer)
+            }
+        }.also { it.attach() }
+    }
+
+    /**
      * Настройка ViewPager2 с TabLayout
      */
     private fun setupViewPager() {
@@ -124,14 +152,7 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
         viewPager.adapter = pagerAdapter
 
         // Привязываем TabLayout к ViewPager2
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            when (position) {
-                ParametersPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_parameters_shell)
-                ParametersPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_parameters_display)
-                ParametersPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_parameters_system)
-                ParametersPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_parameters_developer)
-            }
-        }.attach()
+        attachTabMediator()
 
         // Сохраняем ссылки на фрагменты при их создании
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -176,15 +197,8 @@ class ParametersActivity : BaseActivity(), ParametersEventListener {
         pagerAdapter = ParametersPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
-        // Перепривязываем TabLayout
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            when (position) {
-                ParametersPagerAdapter.TAB_SHELL -> tab.text = getString(R.string.tab_parameters_shell)
-                ParametersPagerAdapter.TAB_DISPLAY -> tab.text = getString(R.string.tab_parameters_display)
-                ParametersPagerAdapter.TAB_SYSTEM -> tab.text = getString(R.string.tab_parameters_system)
-                ParametersPagerAdapter.TAB_DEVELOPER -> tab.text = getString(R.string.tab_parameters_developer)
-            }
-        }.attach()
+        // Перепривязываем TabLayout — старый mediator корректно detach'ится
+        attachTabMediator()
 
         // Восстанавливаем позицию
         viewPager.setCurrentItem(currentPosition, false)

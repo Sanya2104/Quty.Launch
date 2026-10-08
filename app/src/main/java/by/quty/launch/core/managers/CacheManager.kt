@@ -9,6 +9,8 @@ import by.quty.launch.R
 import by.quty.launch.api.model.AppInfo
 import by.quty.launch.configs.CoreConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -37,11 +39,18 @@ object CacheManager {
     // In-memory кэш (самый быстрый доступ)
     private var memoryCache: CachedApps? = null
 
+    // Mutex для синхронизации memoryCache и isCacheDirty
+    private val cacheMutex = Mutex()
+
     // Флаг, что кэш нужно принудительно обновить
     private var isCacheDirty = false
 
     // StorageManager - хранится в WeakReference для предотвращения утечек памяти
     private var storageManagerRef: WeakReference<StorageManager>? = null
+
+    // Контекст приложения — нужен для fallback-создания StorageManager,
+    // если WeakReference очищена GC.
+    private lateinit var appContext: Context
 
     // Регистрация BroadcastReceiver
     private var receiverRegistered = false
@@ -69,11 +78,21 @@ object CacheManager {
     }
 
     /**
-     * Получает StorageManager из WeakReference
-     * @return StorageManager или null, если сборщик мусора уже очистил ссылку
+     * Получает StorageManager.
+     *
+     * Если WeakReference очищена GC — создаёт новый экземпляр через
+     * сохранённый appContext. Без этого кэш молча не сохранялся бы
+     * на диск после сборки старого StorageManager.
      */
     private fun getStorageManager(): StorageManager? {
-        return storageManagerRef?.get()
+        var storageManager = storageManagerRef?.get()
+        if (storageManager == null) {
+            // Fallback — создаём новый, если WeakReference пуста
+            if (!::appContext.isInitialized) return null
+            storageManager = StorageManager(appContext)
+            storageManagerRef = WeakReference(storageManager)
+        }
+        return storageManager
     }
 
     /**
@@ -82,6 +101,7 @@ object CacheManager {
      * @param context контекст приложения для логирования
      */
     fun init(storageManager: StorageManager, context: Context) {
+        this.appContext = context.applicationContext
         this.storageManagerRef = WeakReference(storageManager)
         registerPackageReceiver(context)
     }
@@ -137,16 +157,20 @@ object CacheManager {
         }
 
         // 1. Проверяем память (самый быстрый способ)
-        memoryCache?.let { cached ->
-            if (!isExpired(cached.timestamp)) {
-                return@withContext cached.apps
+        cacheMutex.withLock {
+            memoryCache?.let { cached ->
+                if (!isExpired(cached.timestamp)) {
+                    return@withContext cached.apps
+                }
             }
         }
 
         // 2. Проверяем диск
         val diskCache = loadFromDisk(storageManager)
         if (diskCache != null && !isExpired(diskCache.timestamp)) {
-            memoryCache = diskCache // сохраняем в память для будущих запросов
+            cacheMutex.withLock {
+                memoryCache = diskCache // сохраняем в память для будущих запросов
+            }
             return@withContext diskCache.apps
         }
 
@@ -164,10 +188,11 @@ object CacheManager {
     suspend fun saveApps(context: Context, apps: List<AppInfo>) {
         val cached = CachedApps(apps, System.currentTimeMillis())
 
-        // Сохраняем в память (мгновенно)
-        memoryCache = cached
-        // Сбрасываем флаг грязного кэша
-        isCacheDirty = false
+        // Сохраняем в память (мгновенно) + сбрасываем флаг
+        cacheMutex.withLock {
+            memoryCache = cached
+            isCacheDirty = false
+        }
 
         // Сохраняем на диск в фоновом потоке
         val storageManager = getStorageManager()
@@ -223,8 +248,7 @@ object CacheManager {
      * @return true если кэш старше 30 минут или есть флаг грязного кэша
      */
     private fun isExpired(timestamp: Long): Boolean {
-        if (isCacheDirty) return true
-        return System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
+        return isCacheDirty || System.currentTimeMillis() - timestamp > CACHE_VALIDITY_MS
     }
 
     /**
@@ -232,9 +256,11 @@ object CacheManager {
      * @param context контекст приложения для логирования
      */
     suspend fun clearCache(context: Context) {
-        // Очищаем in-memory кэш
-        memoryCache = null
-        isCacheDirty = true
+        // Очищаем in-memory кэш под mutex
+        cacheMutex.withLock {
+            memoryCache = null
+            isCacheDirty = true
+        }
 
         // Удаляем файл кэша с диска через StorageManager
         val storageManager = getStorageManager()

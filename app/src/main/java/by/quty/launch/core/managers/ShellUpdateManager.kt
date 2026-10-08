@@ -2,9 +2,8 @@
 package by.quty.launch.core.managers
 
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import by.quty.launch.R
+import by.quty.launch.core.utilities.AppInfoHelper
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -93,25 +92,21 @@ class ShellUpdateManager(private val context: Context) {
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true
         val currentLauncherVersion = getCurrentLauncherVersion()
-        if (currentLauncherVersion.isEmpty()) return true
-        return UpdateHelper.compareVersions(currentLauncherVersion, minVersion) >= 0
+        return currentLauncherVersion.isEmpty() || UpdateHelper.compareVersions(currentLauncherVersion, minVersion) >= 0
     }
 
     /**
-     * Получает текущую версию Quty.Launch
+     * Получает текущую версию Quty.Launch БЕЗ суффикса.
+     *
+     * ВАЖНО: использует AppInfoHelper.getSplitVersion(), чтобы отрезать
+     * суффикс канала (Alpha/Beta/etc). Иначе "0.0.157-Alpha".split(".")
+     * даёт ["0","0","157-Alpha"] → toIntOrNull() на последнем элементе
+     * вернёт null → 0, и сравнение версий сломается.
      */
     private fun getCurrentLauncherVersion(): String {
         return try {
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(0)
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-            packageInfo.versionName ?: ""
+            val (versionName, _) = AppInfoHelper.getSplitVersion(context)
+            versionName
         } catch (_: Exception) {
             ""
         }

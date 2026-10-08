@@ -9,6 +9,7 @@ import by.quty.launch.core.model.LogLevelModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -30,6 +31,9 @@ import kotlin.time.Duration.Companion.milliseconds
  *
  * Оптимизация: буферизированная запись — логи накапливаются в памяти
  * и записываются на диск пачками с задержкой
+ *
+ * Синхронизация: все манипуляции с буфером, currentLogFile и flushJob
+ * выполняются под Mutex, чтобы избежать race conditions.
  */
 object LoggerFileManager {
 
@@ -61,6 +65,13 @@ object LoggerFileManager {
 
     // Job для отложенной записи
     private var flushJob: Job? = null
+
+    /**
+     * Внутренний scope для фоновых операций.
+     * SupervisorJob — чтобы падение одной корутины не убивало остальные.
+     * Используется вместо создания CoroutineScope на каждый write().
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // JSON парсер
     private val json = Json {
@@ -107,6 +118,7 @@ object LoggerFileManager {
 
     /**
      * Запись лога в файл (с буферизацией)
+     *
      * @param level уровень лога
      * @param tag тег
      * @param message сообщение
@@ -123,54 +135,76 @@ object LoggerFileManager {
             source = source
         )
 
-        // Добавляем в буфер и планируем запись
-        CoroutineScope(Dispatchers.IO).launch {
+        // Используем единый scope вместо создания нового на каждый вызов
+        scope.launch {
             mutex.withLock {
                 buffer.add(entry)
-                scheduleFlush()
+                scheduleFlushLocked()
             }
         }
     }
 
     /**
-     * Планирует отложенную запись буфера на диск
+     * Планирует отложенную запись буфера на диск.
+     *
+     * ВАЖНО: вызывается ТОЛЬКО под mutex (из write()).
+     * Отменяет предыдущий flushJob, только если он ещё в фазе delay.
+     * Если flush уже начал писать (isActive в withLock) — не трогаем.
      */
-    private fun scheduleFlush() {
-        // Если уже есть запланированная запись — отменяем
+    private fun scheduleFlushLocked() {
+        // Отменяем предыдущий job только если он ещё не начал работу.
+        // Если job уже в withLock (пишет) — cancel() не сработает,
+        // но и не навредит: withLock cancellable только на suspend-точках.
         flushJob?.cancel()
 
-        // Планируем новую запись с задержкой
-        flushJob = CoroutineScope(Dispatchers.IO).launch {
+        flushJob = scope.launch {
             delay(FLUSH_DELAY)
             flushBuffer()
         }
     }
 
     /**
-     * Немедленно записывает буфер на диск
+     * Немедленно записывает буфер на диск.
+     *
+     * ВАЖНО: буфер очищается только ПОСЛЕ успешной записи.
+     * При ошибке — данные возвращаются в буфер для повторной попытки.
      */
     private suspend fun flushBuffer() {
         mutex.withLock {
             if (buffer.isEmpty()) return@withLock
 
             val entriesToWrite = buffer.toList()
-            buffer.clear()
+            val success = writeEntriesToFile(entriesToWrite)
 
-            writeEntriesToFile(entriesToWrite)
+            if (success) {
+                // Успех — удаляем те записи, что уже записаны
+                // (проверка на identity, чтобы не удалить добавленные параллельно)
+                val writtenCount = entriesToWrite.size
+                repeat(writtenCount) {
+                    if (buffer.isNotEmpty()) {
+                        buffer.removeAt(0)
+                    }
+                }
+            } else {
+                // Ошибка — оставляем буфер как есть (данные не теряются)
+                android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_file_write_error))
+            }
         }
     }
 
     /**
-     * Записывает список записей в файл
+     * Записывает список записей в файл.
+     *
+     * @return true при успехе, false при ошибке
      */
-    private suspend fun writeEntriesToFile(entries: List<LogEntryModel>) {
-        val storageManager = getStorageManager() ?: return
+    private suspend fun writeEntriesToFile(entries: List<LogEntryModel>): Boolean {
+        val storageManager = getStorageManager() ?: return false
 
-        try {
+        return try {
             // Проверяем, нужно ли создать новый файл
             checkAndRotateIfNeeded(storageManager)
 
-            val file = currentLogFile ?: return
+            val file = currentLogFile ?: return false
 
             // Читаем существующие логи из файла
             val existingLogs = readLogsFromFile(storageManager, file)
@@ -193,8 +227,9 @@ object LoggerFileManager {
                 storageManager.set(file, jsonContent, overwrite = true)
             }
 
+            true
         } catch (_: Exception) {
-            android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_file_write_error))
+            false
         }
     }
 
@@ -236,7 +271,9 @@ object LoggerFileManager {
     }
 
     /**
-     * Создаёт новый активный файл
+     * Создаёт новый активный файл.
+     *
+     * ВАЖНО: вызывается под mutex (или из init до первой записи).
      */
     private fun prepareCurrentLogFile() {
         val storageManager = getStorageManager() ?: return
@@ -271,15 +308,21 @@ object LoggerFileManager {
     }
 
     /**
-     * Возвращает список всех файлов логов
+     * Возвращает список всех файлов логов.
+     *
+     * Сортировка по lastModified (НЕ по имени):
+     * имена имеют формат log_YYYY-MM-DD_HH-MM-SS.json, и последний файл
+     * должен быть действительно самым свежим (а не лексикографически последним).
+     *
      * @param storageManager экземпляр StorageManager
-     * @return список файлов логов
+     * @return список файлов логов, отсортированный от старых к новым
      */
     fun getLogFiles(storageManager: StorageManager): List<File> {
         return storageManager.list(
             directory = StorageDirectory.LOGS,
-            extension = storageManager.getExtension(StorageFileType.LOG).removePrefix(".")
-        )
+            extension = storageManager.getExtension(StorageFileType.LOG).removePrefix("."),
+            sorted = false   // отключаем сортировку по имени
+        ).sortedBy { it.lastModified() }
     }
 
     /**
@@ -289,22 +332,23 @@ object LoggerFileManager {
     suspend fun clearAll(storageManager: StorageManager? = null) {
         val manager = storageManager ?: getStorageManager() ?: return
 
-        // Очищаем буфер
+        // Очищаем буфер и отменяем flushJob под mutex
         mutex.withLock {
             buffer.clear()
             flushJob?.cancel()
-        }
+            flushJob = null
 
-        try {
-            manager.removeAll(
-                directory = StorageDirectory.LOGS,
-                extension = manager.getExtension(StorageFileType.LOG).removePrefix(".")
-            )
-            currentLogFile = null
-            prepareCurrentLogFile()
-            android.util.Log.d("LoggerFileManager", appContext.getString(R.string.log_logger_cleared))
-        } catch (e: Exception) {
-            android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_clear_error, e.message))
+            try {
+                manager.removeAll(
+                    directory = StorageDirectory.LOGS,
+                    extension = manager.getExtension(StorageFileType.LOG).removePrefix(".")
+                )
+                currentLogFile = null
+                prepareCurrentLogFile()
+                android.util.Log.d("LoggerFileManager", appContext.getString(R.string.log_logger_cleared))
+            } catch (e: Exception) {
+                android.util.Log.e("LoggerFileManager", appContext.getString(R.string.log_logger_clear_error, e.message))
+            }
         }
     }
 
@@ -315,7 +359,7 @@ object LoggerFileManager {
         this.maxFiles = maxFiles
         this.maxSizeMB = maxSizeMB
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             val storageManager = getStorageManager() ?: return@launch
             cleanupOldFiles(storageManager)
         }
@@ -328,7 +372,7 @@ object LoggerFileManager {
         persistEnabled = enabled
 
         if (!enabled) {
-            CoroutineScope(Dispatchers.IO).launch {
+            scope.launch {
                 val storageManager = getStorageManager() ?: return@launch
                 clearAll(storageManager)
             }

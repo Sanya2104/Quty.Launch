@@ -9,6 +9,7 @@ import by.quty.launch.core.model.LogEntryModel
 import by.quty.launch.core.model.LogLevelModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.lang.ref.WeakReference
@@ -43,6 +44,12 @@ object LoggerManager {
 
     // StorageManager - хранится в WeakReference для предотвращения утечек памяти
     private var storageManagerRef: WeakReference<StorageManager>? = null
+
+    /**
+     * Внутренний scope для фоновых операций (восстановление логов, очистка).
+     * SupervisorJob — чтобы падение одной корутины не убивало остальные.
+     */
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
      * Получает StorageManager из WeakReference
@@ -87,53 +94,63 @@ object LoggerManager {
         // Инициализируем файловое ядро
         LoggerFileManager.init(storageManager, maxFiles, maxSizeMB, persistEnabled, context.applicationContext)
 
-        // Если сохранение включено — восстанавливаем логи из файла
+        // Если сохранение включено — восстанавливаем логи из файла В ФОНЕ
         if (persistEnabled) {
-            restoreLogsFromFile()
+            restoreLogsFromFileAsync()
         }
 
         d("LoggerManager", appContext.getString(R.string.log_logger_initialized))
     }
 
     /**
-     * Восстанавливает логи из файла в память
+     * Восстанавливает логи из файла в память (асинхронно, в фоне).
+     *
+     * Читает самый свежий файл логов с диска и загружает его содержимое
+     * в память. Выполняется в backgroundScope, чтобы не блокировать main-поток
+     * и не вызывать ANR при больших файлах.
+     *
+     * ВАЖНО: getLogFiles() сортирует по lastModified (старые → новые).
+     * Поэтому latestFile = maxByOrNull { it.lastModified() } — иначе
+     * можно случайно взять самый старый файл.
      */
-    private fun restoreLogsFromFile() {
-        try {
-            val storageManager = getStorageManager()
+    private fun restoreLogsFromFileAsync() {
+        backgroundScope.launch {
+            try {
+                val storageManager = getStorageManager()
 
-            val logFiles = LoggerFileManager.getLogFiles(storageManager)
-            if (logFiles.isEmpty()) return
+                val logFiles = LoggerFileManager.getLogFiles(storageManager)
+                if (logFiles.isEmpty()) return@launch
 
-            // Берём самый свежий файл (первый в списке)
-            val latestFile = logFiles.firstOrNull() ?: return
+                // Берём САМЫЙ СВЕЖИЙ файл (max по lastModified)
+                val latestFile = logFiles.maxByOrNull { it.lastModified() } ?: return@launch
 
-            // Читаем логи из файла через LoggerFileManager (синхронно)
-            val restoredLogs = runBlocking {
-                LoggerFileManager.readLogsFromFile(storageManager, latestFile)
-            }
+                // Читаем логи из файла через LoggerFileManager (suspend, IO)
+                val restoredLogs = LoggerFileManager.readLogsFromFile(storageManager, latestFile)
 
-            // Добавляем в память (новые сверху)
-            synchronized(logs) {
-                logs.clear()
-                logs.addAll(restoredLogs)
-                // Ограничиваем количество
-                while (logs.size > MAX_LOGS) {
-                    logs.removeAt(logs.size - 1)
+                if (restoredLogs.isEmpty()) return@launch
+
+                // Добавляем в память (новые сверху)
+                synchronized(logs) {
+                    logs.clear()
+                    logs.addAll(restoredLogs)
+                    // Ограничиваем количество
+                    while (logs.size > MAX_LOGS) {
+                        logs.removeAt(logs.size - 1)
+                    }
                 }
-            }
 
-            // Уведомляем слушателей
-            CoroutineScope(Dispatchers.Main).launch {
-                listeners.forEach { it.onLogsCleared() }
-                restoredLogs.forEach { entry ->
-                    listeners.forEach { it.onLogAdded(entry) }
+                // Уведомляем слушателей в UI-потоке
+                CoroutineScope(Dispatchers.Main).launch {
+                    listeners.forEach { it.onLogsCleared() }
+                    restoredLogs.forEach { entry ->
+                        listeners.forEach { it.onLogAdded(entry) }
+                    }
                 }
-            }
 
-            d("LoggerManager", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
-        } catch (_: Exception) {
-            e("LoggerManager", appContext.getString(R.string.log_logger_restore_error))
+                d("LoggerManager", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
+            } catch (_: Exception) {
+                e("LoggerManager", appContext.getString(R.string.log_logger_restore_error))
+            }
         }
     }
 
@@ -217,15 +234,42 @@ object LoggerManager {
      * @param throwable исключение
      */
     fun e(tag: String, message: String, throwable: Throwable) {
-        addLog(LogLevelModel.ERROR, tag, "$message: ${throwable.message}")
-        // Также пишем в стандартный лог для обратной совместимости
+        // Пишем в память/файл, но НЕ в системный Log — иначе будет дубликат
+        addLogInternal(
+            level = LogLevelModel.ERROR,
+            tag = tag,
+            message = "$message: ${throwable.message}",
+            source = "Kotlin",
+            writeToSystemLog = false
+        )
+        // Один раз пишем в системный Log с throwable (сохраняем stacktrace)
         Log.e(tag, message, throwable)
     }
 
     /**
      * Внутренний метод добавления лога
+     *
+     * @param "writeToSystemLog" если true — дублирует лог в android.util.Log
+     *                         (для обратной совместимости / отладки через logcat).
+     *                         Устанавливается в false для перегрузки e(…, throwable),
+     *                         которая сама пишет в Log.e с сохранением stacktrace.
      */
-    private fun addLog(level: LogLevelModel, tag: String, message: String, source: String = "Kotlin") {
+    private fun addLog(
+        level: LogLevelModel,
+        tag: String,
+        message: String,
+        source: String = "Kotlin"
+    ) {
+        addLogInternal(level, tag, message, source, writeToSystemLog = true)
+    }
+
+    private fun addLogInternal(
+        level: LogLevelModel,
+        tag: String,
+        message: String,
+        source: String,
+        writeToSystemLog: Boolean
+    ) {
         // Если пауза — не добавляем логи
         if (isPaused) return
 
@@ -256,11 +300,13 @@ object LoggerManager {
         }
 
         // Также пишем в стандартный лог для обратной совместимости
-        when (level) {
-            LogLevelModel.DEBUG -> Log.d(tag, message)
-            LogLevelModel.INFO -> Log.i(tag, message)
-            LogLevelModel.WARN -> Log.w(tag, message)
-            LogLevelModel.ERROR -> Log.e(tag, message)
+        if (writeToSystemLog) {
+            when (level) {
+                LogLevelModel.DEBUG -> Log.d(tag, message)
+                LogLevelModel.INFO -> Log.i(tag, message)
+                LogLevelModel.WARN -> Log.w(tag, message)
+                LogLevelModel.ERROR -> Log.e(tag, message)
+            }
         }
     }
 
@@ -291,15 +337,15 @@ object LoggerManager {
             logs.clear()
         }
 
-        // Очищаем файлы с проверкой
-        try {
-            val storageManager = getStorageManager()
-            runBlocking {
+        // Очищаем файлы в фоне — чтобы не блокировать main-поток
+        backgroundScope.launch {
+            try {
+                val storageManager = getStorageManager()
                 LoggerFileManager.clearAll(storageManager)
+                d("LoggerManager", appContext.getString(R.string.log_logger_cleared))
+            } catch (e: Exception) {
+                e("LoggerManager", appContext.getString(R.string.log_logger_clear_error, e.message))
             }
-            d("LoggerManager", appContext.getString(R.string.log_logger_cleared))
-        } catch (e: Exception) {
-            e("LoggerManager", appContext.getString(R.string.log_logger_clear_error, e.message))
         }
 
         CoroutineScope(Dispatchers.Main).launch {

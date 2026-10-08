@@ -10,7 +10,9 @@ import by.quty.launch.core.fragments.parameters.DisplayFragment
 import by.quty.launch.core.fragments.parameters.SystemFragment
 import by.quty.launch.core.fragments.parameters.ShellFragment
 
-class ParametersPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
+class ParametersPagerAdapter(
+    private val hostActivity: FragmentActivity
+) : FragmentStateAdapter(hostActivity) {
 
     companion object {
         private const val NUM_TABS_BASE = 3
@@ -22,13 +24,20 @@ class ParametersPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(
         const val TAB_DEVELOPER = 3
     }
 
-    private val isDeveloperMode: Boolean by lazy {
-        val prefs = activity.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
-        prefs.getBoolean("developer_mode", false)
+    /**
+     * Проверяет текущее состояние DevMode.
+     *
+     * ВАЖНО: НЕ используем by lazy — значение перечитывается при каждом
+     * вызове, потому что DevMode может быть переключён в момент, когда
+     * адаптер уже создан (например, через SystemFragment или SettingsActivity).
+     */
+    private fun isDeveloperMode(): Boolean {
+        val prefs = hostActivity.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
+        return prefs.getBoolean("developer_mode", false)
     }
 
     override fun getItemCount(): Int {
-        return if (isDeveloperMode) NUM_TABS_DEV else NUM_TABS_BASE
+        return if (isDeveloperMode()) NUM_TABS_DEV else NUM_TABS_BASE
     }
 
     override fun createFragment(position: Int): Fragment {

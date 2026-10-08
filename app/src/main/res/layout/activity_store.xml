@@ -54,31 +54,29 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- ===== ПРОГРЕСС ЗАГРУЗКИ ===== -->
-        <LinearLayout
-            android:id="@+id/progress_container"
-            android:layout_width="match_parent"
+        <!-- ===== ПРОГРЕСС ЗАГРУЗКИ =====
+             Раньше был обёрнут в progress_container с visibility="gone",
+             из-за чего прогресс никогда не показывался. Теперь прогресс
+             управляется напрямую через progress_bar и progress_text. -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="@dimen/icon_large"
+            android:layout_height="@dimen/icon_large"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginBottom="@dimen/spacing_s"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/progress_text"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="@dimen/spacing_xl"
-            android:visibility="gone">
-
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                android:layout_width="@dimen/icon_large"
-                android:layout_height="@dimen/icon_large"
-                android:indeterminate="true" />
-
-            <TextView
-                android:id="@+id/progress_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_m"
-                style="@style/Text.Body"
-                android:text="@string/store_loading" />
-
-        </LinearLayout>
+            android:layout_gravity="center"
+            android:layout_marginBottom="@dimen/spacing_xl"
+            style="@style/Text.Body"
+            android:text="@string/store_loading"
+            android:visibility="gone" />
 
     </LinearLayout>
 

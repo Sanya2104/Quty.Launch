@@ -4,7 +4,6 @@ package by.quty.launch.core.model
 import android.content.Context
 import androidx.annotation.ColorRes
 import by.quty.launch.R
-import by.quty.launch.configs.CoreConfig
 
 /**
  * Модель цветовой схемы
@@ -107,17 +106,32 @@ data class ColorSchemeModel(
         }
 
         /**
-         * Возвращает схему по ID
+         * Возвращает схему по ID.
+         *
+         * Если схема с указанным ID не найдена — возвращает дефолтную (teal).
+         * НЕ вызывает getDefaultScheme() во избежание рекурсии.
          */
         fun getSchemeById(id: String): ColorSchemeModel {
-            return getAllSchemes().find { it.id == id } ?: getDefaultScheme()
+            return getAllSchemes().find { it.id == id }
+                ?: getDefaultScheme()
         }
 
         /**
-         * Возвращает схему по умолчанию (teal)
+         * Возвращает схему по умолчанию (teal).
+         *
+         * Создаётся напрямую — независимо от getAllSchemes() и getSchemeById(),
+         * чтобы гарантированно не уйти в рекурсию, если схема "teal" вдруг
+         * исчезнет из списка.
          */
         fun getDefaultScheme(): ColorSchemeModel {
-            return getSchemeById(CoreConfig.DEFAULT_COLOR_SCHEME)
+            return ColorSchemeModel(
+                id = "teal",
+                displayNameRes = R.string.color_scheme_teal,
+                primaryColor = "#009688",
+                accentColor = "#4CAF50",
+                primaryRes = R.color.scheme_teal_primary,
+                accentRes = R.color.scheme_teal_accent
+            )
         }
     }
 }

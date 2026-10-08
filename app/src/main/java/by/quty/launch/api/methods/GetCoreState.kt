@@ -35,9 +35,11 @@ class GetCoreState(
     override fun parseParams(jsonString: String) = Unit
 
     override suspend fun executeInternal(params: Unit?): String {
+        val themeMode = normalizeThemeMode(configManager.getThemeMode())
+
         val coreState = CoreStateInfo(
-            theme = resolveTheme(),
-            themeMode = configManager.getThemeMode(),
+            theme = resolveTheme(themeMode),
+            themeMode = themeMode,
             language = configManager.getLanguageCode(),
             locale = resolveLocale(configManager.getLanguageCode()),
             orientation = configManager.getOrientation(),
@@ -70,11 +72,25 @@ class GetCoreState(
     }
 
     /**
+     * Нормализует themeMode до одного из допустимых значений:
+     * "light", "dark", "system".
+     *
+     * Если в SharedPreferences оказался мусор или неизвестное значение —
+     * возвращает "system" (значение по умолчанию).
+     */
+    private fun normalizeThemeMode(mode: String): String {
+        return when (mode) {
+            "light", "dark", "system" -> mode
+            else -> "system"
+        }
+    }
+
+    /**
      * Определяет фактическую тему: dark / light.
      * Если themeMode == "system" — смотрит на системную конфигурацию.
      */
-    private fun resolveTheme(): String {
-        return when (configManager.getThemeMode()) {
+    private fun resolveTheme(themeMode: String): String {
+        return when (themeMode) {
             "dark" -> "dark"
             "light" -> "light"
             "system" -> {

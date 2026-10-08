@@ -437,8 +437,19 @@ class SystemUpdateManager(private val context: Context) {
     /**
      * Установка APK из Uri
      * @param uri URI APK файла
-     * @param versionCode версия для очистки метки (опционально)
+     * @param versionCode НЕ используется для очистки метки.
+     *
+     * ВАЖНО: метка загрузки НЕ очищается при старте установки.
+     * Если пользователь отменит установку — метка останется, файл останется,
+     * и следующая проверка обновлений подхватит APK без повторного скачивания.
+     *
+     * Метка будет очищена автоматически в cleanupOldDownloadMarks()
+     * при следующей проверке, когда текущая версия приложения станет
+     * >= установленной версии.
+     *
+     * Параметр versionCode оставлен для обратной совместимости API.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
             LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_install_start))
@@ -458,15 +469,11 @@ class SystemUpdateManager(private val context: Context) {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                // Для Android 7+ нужна поддержка FileProvider
-                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             }
             context.startActivity(intent)
 
-            // Очищаем метку загрузки после запуска установки
-            versionCode?.let { code ->
-                clearDownloadMark(code)
-            }
+            // НЕ вызываем clearDownloadMark — метка нужна для повторного запуска установки.
+            // Автоочистка произойдёт в cleanupOldDownloadMarks() при следующей проверке.
 
         } catch (e: Exception) {
             LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_install_error, e.message))
