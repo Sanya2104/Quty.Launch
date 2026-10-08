@@ -147,7 +147,14 @@ object LoggerManager {
                     }
                 }
 
-                d("LoggerManager", appContext.getString(R.string.log_logger_restored, restoredLogs.size))
+                d(
+                    "LoggerManager",
+                    appContext.resources.getQuantityString(
+                        R.plurals.log_logger_restored,
+                        restoredLogs.size,
+                        restoredLogs.size
+                    )
+                )
             } catch (_: Exception) {
                 e("LoggerManager", appContext.getString(R.string.log_logger_restore_error))
             }

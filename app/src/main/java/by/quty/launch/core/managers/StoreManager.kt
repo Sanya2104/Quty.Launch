@@ -60,7 +60,15 @@ class StoreManager(private val context: Context) {
                     shell.copy(isInstalled = isInstalled)
                 }
 
-                LoggerManager.d("StoreManager", context.getString(R.string.log_store_shells_loaded, cachedShells?.size ?: 0))
+                val loadedCount = cachedShells?.size ?: 0
+                LoggerManager.d(
+                    "StoreManager",
+                    context.resources.getQuantityString(
+                        R.plurals.log_store_shells_loaded,
+                        loadedCount,
+                        loadedCount
+                    )
+                )
                 cachedShells
             } else {
                 LoggerManager.e("StoreManager", context.getString(R.string.log_store_load_error, connection.responseCode))

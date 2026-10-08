@@ -12,7 +12,6 @@
     <!-- Фоны (Light) -->
     <color name="background_dark">#121212</color>
     <color name="background_card">#1E1E1E</color>
-    <color name="background_item">#1A1A1A</color>
     <color name="background_input">#2A2A2A</color>
     <color name="background_warning">#332A2A</color>
     <color name="background_error">#332222</color>

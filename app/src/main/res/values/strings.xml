@@ -48,22 +48,13 @@
     <string name="settings_menu_about">О системе</string>
     <string name="settings_menu_about_desc">Версия, устройство</string>
 
-    <!-- Заголовки фрагментов -->
-    <string name="settings_general_title">Основное</string>
-    <string name="settings_personalization_title">Персонализация</string>
-    <string name="settings_storage_title">Память</string>
+    <!-- Заголовки фрагментов (используются в layout) -->
     <string name="settings_api_methods_title">API методы</string>
-    <string name="settings_updates_title">Центр обновления</string>
     <string name="settings_developer_title">Разработчикам</string>
     <string name="settings_recovery_title">Восстановление и сброс</string>
-    <string name="settings_about_title">О системе</string>
 
     <!-- Кнопки -->
     <string name="settings_close">Закрыть</string>
-
-    <!-- Заглушка для пустого состояния -->
-    <string name="settings_placeholder_title">Выберите пункт меню</string>
-    <string name="settings_placeholder_desc">Выберите раздел из списка слева,\nчтобы открыть его настройки</string>
 
     <!-- Описания фрагментов (для заглушек) -->
     <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
@@ -631,8 +622,6 @@
     <string name="shell_already_active">Оболочка уже активна</string>
     <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
-    <!-- Доступ к хранилищу -->
-
     <!-- Названия -->
     <string name="shell_default_name">Стандартная</string>
     <string name="shell_active_not_found">Ранее активная оболочка не найдена или была удалена</string>
@@ -700,7 +689,6 @@
     <!-- Карточка -->
     <string name="store_install">Установить</string>
     <string name="store_installed">Установлено</string>
-    <string name="store_bullet_separator">  •  </string>
 
     <!-- Детальный вид -->
     <string name="store_detail_title">Оболочка</string>
@@ -770,11 +758,18 @@
 
     <!-- Logger логи -->
     <string name="log_logger_initialized">Logger инициализирован</string>
-    <string name="log_logger_restored">Восстановлено %d логов из файла</string>
     <string name="log_logger_restore_error">Ошибка восстановления логов из файла</string>
     <string name="log_logger_cleared">Логи очищены</string>
     <string name="log_logger_clear_error">Ошибка очистки логов: %s</string>
     <string name="log_logger_save_error">Ошибка сохранения логов: %s</string>
+
+    <!-- plurals (бывшие log_logger_restored) -->
+    <plurals name="log_logger_restored">
+        <item quantity="one">Восстановлен %d лог из файла</item>
+        <item quantity="few">Восстановлено %d лога из файла</item>
+        <item quantity="many">Восстановлено %d логов из файла</item>
+        <item quantity="other">Восстановлено %d логов из файла</item>
+    </plurals>
 
     <!-- SystemUpdateManager логи -->
     <string name="log_system_update_checking">Проверка обновлений…</string>
@@ -801,11 +796,18 @@
     <!-- StoreManager логи -->
     <string name="log_store_installed_shells_from_manager">✅ Установленные оболочки (из ShellManager): %s</string>
     <string name="log_store_shell_installed_check" formatted="false">  📦 %s → установлена: %b</string>
-    <string name="log_store_shells_loaded">Загружено %d оболочек</string>
     <string name="log_store_load_error">Ошибка загрузки: %d</string>
     <string name="log_store_error">Ошибка: %s</string>
     <string name="log_store_shell_installed">Оболочка установлена: %s</string>
     <string name="log_store_install_error">Ошибка установки: %s</string>
+
+    <!-- plurals (бывшие log_store_shells_loaded) -->
+    <plurals name="log_store_shells_loaded">
+        <item quantity="one">Загружена %d оболочка</item>
+        <item quantity="few">Загружено %d оболочки</item>
+        <item quantity="many">Загружено %d оболочек</item>
+        <item quantity="other">Загружено %d оболочек</item>
+    </plurals>
 
     <!-- ShellListFragment логи -->
     <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>

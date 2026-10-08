@@ -4,7 +4,7 @@ package by.quty.launch.core.fragments.settings
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -210,7 +210,7 @@ class AboutFragment : Fragment() {
      */
     private fun openUrl(url: String) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             startActivity(intent)
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(
