@@ -16,7 +16,6 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.core.interfaces.ParametersEventListener
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
@@ -48,8 +47,6 @@ class GeneralFragment : Fragment() {
     private lateinit var languageRussianCard: LinearLayout
     private lateinit var languageEnglishCard: LinearLayout
 
-    private var parametersEventListener: ParametersEventListener? = null
-
     // Флаг для предотвращения множественных обновлений
     private var isUpdating = false
 
@@ -66,8 +63,6 @@ class GeneralFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        parametersEventListener = activity as? ParametersEventListener
 
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
@@ -103,7 +98,7 @@ class GeneralFragment : Fragment() {
             updateOrientationLockState()
         }, 50)
 
-        refreshParameters()
+        refreshSettings()
     }
 
     // ============================================================
@@ -176,8 +171,6 @@ class GeneralFragment : Fragment() {
             selectOrientation("sensor")
             configManager.setOrientation("sensor")
             markRestartRequired()
-            parametersEventListener?.onOrientationChanged("sensor")
-            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(requireContext(), getString(R.string.toast_orientation_auto), Toast.LENGTH_SHORT).show()
         }
@@ -187,8 +180,6 @@ class GeneralFragment : Fragment() {
             selectOrientation("portrait")
             configManager.setOrientation("portrait")
             markRestartRequired()
-            parametersEventListener?.onOrientationChanged("portrait")
-            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(requireContext(), getString(R.string.toast_orientation_portrait), Toast.LENGTH_SHORT).show()
         }
@@ -198,8 +189,6 @@ class GeneralFragment : Fragment() {
             selectOrientation("landscape")
             configManager.setOrientation("landscape")
             markRestartRequired()
-            parametersEventListener?.onOrientationChanged("landscape")
-            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(requireContext(), getString(R.string.toast_orientation_landscape), Toast.LENGTH_SHORT).show()
         }
@@ -288,9 +277,6 @@ class GeneralFragment : Fragment() {
             updateStrictModeState()
             markRestartRequired()
 
-            parametersEventListener?.onFullscreenChanged(isChecked)
-            parametersEventListener?.onSettingChanged()
-
             Toast.makeText(
                 requireContext(),
                 if (isChecked) getString(R.string.toast_fullscreen_enabled) else getString(R.string.toast_fullscreen_disabled),
@@ -312,9 +298,6 @@ class GeneralFragment : Fragment() {
 
             configManager.setStrictModeEnabled(isChecked)
             markRestartRequired()
-
-            parametersEventListener?.onFullscreenChanged(fullscreenSwitch.isChecked)
-            parametersEventListener?.onSettingChanged()
 
             Toast.makeText(
                 requireContext(),
@@ -393,7 +376,7 @@ class GeneralFragment : Fragment() {
         strictModeSwitch.alpha = if (fullscreenEnabled) 1.0f else 0.5f
     }
 
-    fun refreshParameters() {
+    fun refreshSettings() {
         isUpdating = true
 
         // Тема
@@ -421,7 +404,7 @@ class GeneralFragment : Fragment() {
             needsRestart = it.getNeedsRestart()
         }
 
-        refreshParameters()
+        refreshSettings()
     }
 
     private fun getColorFromAttribute(context: Context, attr: Int): Int {

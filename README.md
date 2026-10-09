@@ -68,7 +68,7 @@ Quty.Launch позволяет полностью отделить интерф�
 │        Quty.Launch          │
 │                             │
 │  Android API / Storage /    │
-│ Updates / Logs / Parameters │
+│ Updates / Logs / Settings   │
 └─────────────────────────────┘
 ```
 
@@ -195,8 +195,8 @@ Quty.Launch
 ├── Logger
 │   └── Система логирования
 │
-└── Parameter
-    └── Параметры приложения
+└── Settings
+    └── Настройки приложения
 ```
 
 ---
@@ -246,7 +246,7 @@ Quty.Launch создаётся как универсальная основа д
         ▼                ▼                ▼
       Shell           Android API      Storage
         │                │                │
-   HTML/CSS/JS       JsBridge       Logs / Files
+   HTML/CSS/JS       JsBridge        Logs / Files
         │                │                │
         └────────────────┼────────────────┘
                          │

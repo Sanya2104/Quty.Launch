@@ -59,8 +59,7 @@ class ConfigManager(context: Context) {
 
     // Получение строгого режима
     fun isStrictModeEnabled(): Boolean {
-        if (!isFullscreenEnabled()) return false
-        return prefs.getBoolean("strict_mode", getDefaultStrictMode())
+        return isFullscreenEnabled() && prefs.getBoolean("strict_mode", getDefaultStrictMode())
     }
 
     // Сохранение строгого режима

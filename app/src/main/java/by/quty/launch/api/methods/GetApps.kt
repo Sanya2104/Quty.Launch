@@ -96,19 +96,6 @@ class GetApps(
             )
         )
 
-        // 2. Параметры Quty.Launch
-        val parametersIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_parameters)
-        val parametersIconBase64 = parametersIcon?.let { drawableToBase64(it) }
-
-        customApps.add(
-            AppInfo(
-                name = context.getString(R.string.api_getapps_parameters_name),
-                packageName = ApiConfig.PARAMETERS_PACKAGE,
-                isCustom = true,
-                iconBase64 = parametersIconBase64
-            )
-        )
-
         // 3. Логгер (только в DevMode, если включён флаг logger_in_apps)
         val prefs = context.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)

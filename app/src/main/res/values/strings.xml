@@ -11,7 +11,6 @@
     <!-- Общие кнопки -->
     <string name="cancel">Отмена</string>
     <string name="close">Закрыть</string>
-    <string name="delete">Удалить</string>
     <string name="back">Назад</string>
     <string name="empty"> </string>
     <string name="unknown_code">\?</string>
@@ -50,14 +49,12 @@
 
     <!-- Заголовки фрагментов (используются в layout) -->
     <string name="settings_api_methods_title">API методы</string>
-    <string name="settings_developer_title">Разработчикам</string>
     <string name="settings_recovery_title">Восстановление и сброс</string>
 
     <!-- Кнопки -->
     <string name="settings_close">Закрыть</string>
 
     <!-- Описания фрагментов (для заглушек) -->
-    <string name="settings_developer_desc">Здесь будут:\n• Отладка WebView\n• Информация об оболочке\n• Системная информация\n• Управление данными\n• Управление логами\n• Инструменты</string>
     <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
 
     <!-- ============================================================ -->
@@ -179,15 +176,6 @@
     <!-- ==================== ПАРАМЕТРЫ =================== -->
     <!-- ============================================================ -->
 
-    <!-- Заголовки -->
-    <string name="parameters_title">Параметры</string>
-
-    <!-- Названия вкладок -->
-    <string name="tab_parameters_shell">Оформление</string>
-    <string name="tab_parameters_display">Экран</string>
-    <string name="tab_parameters_system">Система</string>
-    <string name="tab_parameters_developer">DevMode</string>
-
     <!-- Диалоги -->
     <string name="dialog_apply_parameters_title">Применить параметры</string>
     <string name="dialog_apply_parameters_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
@@ -195,89 +183,24 @@
     <string name="dialog_later">Позже</string>
 
     <!-- Заголовки разделов -->
-    <string name="parameters_shell_title">Выберите оболочку оформления:</string>
     <string name="parameters_orientation_title">Ориентация экрана</string>
     <string name="parameters_additional_title">Дополнительные параметры</string>
-    <string name="parameters_color_scheme_title">Цветовая схема</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ОБОЛОЧКА ОФОРМЛЕНИЯ ======================== -->
     <!-- ============================================================ -->
 
-    <!-- Установка оболочки из файла -->
-    <string name="install_shell_from_file">Импортировать оболочку</string>
-    <string name="select_shell_title">Выберите файл оболочки (.qutyshell)</string>
-    <string name="invalid_shell_extensions" formatted="false">Выбранный файл не является оболочкой Quty.Launch (требуется .qutyshell, .qsp или .qutyshellpack)</string>
-    <string name="shell_install_success" formatted="false">Оболочка "%s" успешно установлена!</string>
-    <string name="shell_install_error">Ошибка установки оболочки</string>
-    <string name="shell_install_confirm">Установить оболочку</string>
-    <string name="shell_install_confirm_message" formatted="false">Вы уверены, что хотите установить оболочку "%s" версии %s?</string>
-    <string name="shell_already_exists" formatted="false">Оболочка "%s" уже существует. Перезаписать?</string>
-    <string name="shell_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
-    <string name="shell_min_launcher_version" formatted="false">Требуется Quty.Launch версии: %s</string>
-
     <!-- Меню оболочки -->
     <string name="shell_menu_description">Меню оболочки</string>
-    <string name="shell_menu_apply">Применить</string>
-    <string name="shell_menu_delete">Удалить</string>
-    <string name="shell_menu_share">Поделиться</string>
-    <string name="shell_menu_info">Информация</string>
-    <string name="shell_menu_check_updates">Проверить обновления</string>
 
-    <!-- Удаление оболочки -->
-    <string name="shell_delete_confirm">Удалить оболочку?</string>
-    <string name="shell_delete_message" formatted="false">Вы уверены, что хотите удалить оболочку "%s"?</string>
-    <string name="shell_delete_success" formatted="false">Оболочка "%s" удалена</string>
-    <string name="shell_delete_error">Ошибка при удалении оболочки</string>
-    <string name="shell_cant_delete_default">Нельзя удалить встроенную оболочку</string>
-    <string name="shell_cant_delete_active">Нельзя удалить активную оболочку. Сначала примените другую.</string>
-    <string name="shell_menu_delete_update">Удалить обновление</string>
-    <string name="shell_delete_update_success" formatted="false">Обновление оболочки "%s" удалены. Восстановлена встроенная версия</string>
-
-    <!-- Удаление обновления активной встроенной оболочки -->
-    <string name="shell_delete_active_update_confirm">Вы уверены, что хотите удалить обновление активной оболочки?\n\nОболочка будет заменена на встроенную версию. Интерфейс будет перезагружен.</string>
-    <string name="shell_delete_active_update_title">Удалить обновление</string>
+    <!-- Ошибка установки оболочки -->
+    <string name="shell_install_error">Ошибка установки оболочки</string>
 
     <!-- Информация об оболочке -->
-    <string name="shell_info_title" formatted="false">Информация об оболочке "%s"</string>
-    <string name="shell_info_message" formatted="false">\n Название: %1$s\n\n Версия: %2$s\n\n Автор: %3$s\n\n Тип: %4$s\n\n Требуется Quty.Launch версии: %5$s</string>
     <string name="shell_type_builtin">Встроенная</string>
     <string name="shell_type_custom">Пользовательская</string>
     <string name="shell_version_with_label" formatted="false">Версия: %s</string>
-    <string name="shell_info_min_version" formatted="false"> %s</string>
     <string name="shell_info_min_version_not_specified">Не указано</string>
-
-    <!-- Шаринг оболочки -->
-    <string name="shell_share_title">Поделиться оболочкой</string>
-    <string name="shell_share_error">Ошибка при отправке файла</string>
-    <string name="shell_file_not_found">Файл оболочки не найден</string>
-
-    <!-- Обновление оболочки -->
-    <string name="shell_update_not_found">Обновлений не найдено</string>
-    <string name="shell_update_error" formatted="false">Ошибка проверки обновлений: %s</string>
-    <string name="shell_update_downloading">Скачивание обновления…</string>
-    <string name="shell_update_success">Оболочка обновлена до версии %s</string>
-    <string name="shell_update_confirm_title">Обновление оболочки</string>
-    <string name="shell_update_checking">Проверка обновлений</string>
-    <string name="shell_update_checking_message">Проверка…</string>
-    <string name="shell_update_available_message">Доступно обновление оболочки!</string>
-    <string name="shell_update_current_version" formatted="false">Текущая версия: %s</string>
-    <string name="shell_update_new_version" formatted="false">Новая версия: %s</string>
-    <string name="shell_update_changelog" formatted="false">Что нового:\n%s</string>
-    <string name="shell_update_size" formatted="false">Размер: %s</string>
-    <string name="shell_update_install">Обновить</string>
-    <string name="shell_update_preparing">Подготовка…</string>
-    <string name="shell_update_progress" formatted="false">Скачивание: %d%%</string>
-    <string name="shell_update_min_launcher" formatted="false">Требуется Quty.Launch версии: %s</string>
-    <string name="shell_update_incompatible_title">Оболочка несовместима</string>
-    <string name="shell_update_incompatible_message" formatted="false">Обновление оболочки требует Quty.Launch версии %s или выше.\n\nПожалуйста, обновите приложение сначала.</string>
-
-    <!-- Файловый менеджер -->
-    <string name="file_manager_not_found">Файловый менеджер не найден</string>
-    <string name="file_manager_suggestion" formatted="false">Для установки оболочки необходимо приложение-файловый менеджер.\n\nРекомендуем:\n• Material Files (бесплатно, без рекламы)\n• Total Commander (мощный, бесплатный)\n• CX File Explorer (простой, бесплатный)</string>
-    <string name="install_material_files">Установить Material Files</string>
-    <string name="other_file_manager">Другой файловый менеджер</string>
-    <string name="cannot_open_play_store">Не удалось открыть Google Play.\n Установите файловый менеджер вручную.</string>
 
     <!-- ============================================================ -->
     <!-- ЦВЕТОВАЯ СХЕМА -->
@@ -309,7 +232,6 @@
     <!-- Режимы -->
     <string name="additional_fullscreen">Полноэкранный режим</string>
     <string name="additional_strict_mode">Строгий режим</string>
-    <string name="strict_mode_changed">Строгий режим изменён</string>
 
     <!-- Блокировка ориентации -->
     <string name="orientation_lock_hint_portrait">🔒 Ориентация задана оболочкой (портретная)</string>
@@ -321,7 +243,6 @@
     <!-- ============================================================ -->
 
     <!-- Информация о системе -->
-    <string name="system_info_title">Информация о системе</string>
     <string name="version_label">Версия</string>
     <string name="version_code_label">Код версии</string>
     <string name="channel_label">Канал</string>
@@ -330,29 +251,17 @@
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
-    <string name="update_available" formatted="false">Доступно обновление %s</string>
-    <string name="no_updates">У вас последняя версия</string>
     <string name="update_error">Ошибка</string>
     <string name="server_error_prefix">Ошибка сервера</string>
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
     <string name="no_internet_connection">Отсутствует подключение к интернету</string>
 
-
     <!-- Локальная установка APK -->
     <string name="install_from_file">Локальное обновление</string>
-    <string name="select_apk_title">Выберите APK файл</string>
     <string name="invalid_apk">Выбранный файл не является APK</string>
     <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
-    <string name="apk_validated_success" formatted="false">APK проверен. Версия: %s</string>
     <string name="install_local_apk">Установить локальный APK</string>
     <string name="install_local_message" formatted="false">Вы уверены, что хотите установить APK версии %s?</string>
-
-    <!-- УДАЛИТЬ после удаление Параметров -->
-    <string name="install_option_title">Выберите способ установки</string>
-    <string name="install_option_file_manager">📂 Через файловый менеджер</string>
-    <string name="install_option_downloads">📁 Из папки Download</string>
-    <string name="no_apk_found">APK файлы не найдены в папке Download</string>
-    <!-- / УДАЛИТЬ после удаление Параметров -->
 
     <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
     <string name="install_error">Не удалось запустить установку</string>
@@ -371,7 +280,6 @@
     <string name="download_error">Ошибка скачивания</string>
 
     <!-- Диалог обновления -->
-    <string name="update_dialog_title" formatted="false">Доступно обновление \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
     <string name="critical_tag">  ⚠️ КРИТИЧЕСКОЕ</string>
@@ -381,7 +289,6 @@
 
     <!-- Диалог загрузки -->
     <string name="downloading_title">Скачивание обновления</string>
-    <string name="downloading_prepare">Подготовка…</string>
     <string name="downloading_progress" formatted="false">Скачивание: %d%%</string>
 
     <!-- Диалог установки -->
@@ -442,8 +349,6 @@
     <string name="welcome_permission_location">Геолокация</string>
     <string name="welcome_permission_location_desc">Для отображения статуса GPS.</string>
 
-    <!-- MANAGE_EXTERNAL_STORAGE разрешение -->
-
     <!-- Кнопки -->
     <string name="welcome_button_grant">Предоставить доступ</string>
     <string name="welcome_button_retry">Повторить запрос</string>
@@ -476,10 +381,6 @@
     <string name="dev_reset_onboarding_restart_message">Перезапустить приложение сейчас, чтобы увидеть экран приветствия?</string>
     <string name="dev_reset_onboarding_restart_confirm">Перезапустить</string>
 
-    <!-- Диалог подтверждения очистки данных -->
-    <string name="dev_clear_data_dialog_title">Очистить все данные?</string>
-    <string name="dev_clear_data_dialog_message">Все данные приложения будут удалены безвозвратно:\n\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с оболочками пользователя\n\nПриложение будет перезапущено.</string>
-
     <!-- Диалог "Перезапустить приложение" -->
     <string name="dev_restart_app_dialog_title">Перезапустить приложение?</string>
     <string name="dev_restart_app_dialog_message">Приложение будет закрыто и запущено заново.</string>
@@ -494,21 +395,16 @@
     <!-- ============================================================ -->
 
     <!-- Заголовки разделов -->
-    <string name="dev_section_webview">Отладка WebView</string>
     <string name="dev_section_shell">Информация об оболочке</string>
-    <string name="dev_section_system">Системная информация</string>
     <string name="dev_section_data">Управление данными</string>
     <string name="dev_section_logs">Управление логами</string>
     <string name="dev_section_tools">Инструменты</string>
 
-    <!-- 1. Отладка WebView -->
-    <string name="dev_webview_debug">Отладка WebView</string>
-    <string name="dev_webview_debug_enabled">Отладка WebView включена\nПодключитесь через Chrome DevTools</string>
-    <string name="dev_webview_debug_disabled">Отладка WebView выключена</string>
+    <!-- WebView -->
     <string name="dev_webview_clear_cache">Очистить кэш WebView</string>
     <string name="dev_webview_clear_cache_success">Кэш WebView очищен</string>
 
-    <!-- 2. Информация об оболочке -->
+    <!-- Информация об оболочке -->
     <string name="dev_shell_manifest">Показать manifest.json</string>
     <string name="dev_shell_manifest_title">manifest.json</string>
     <string name="dev_shell_manifest_not_found">manifest.json не найден</string>
@@ -517,60 +413,15 @@
     <string name="dev_shell_not_found">Активная оболочка не найдена</string>
     <string name="dev_error">Ошибка: %s</string>
 
-    <!-- 3. Системная информация -->
-    <string name="dev_device_model">Модель устройства</string>
-    <string name="dev_android_version">Версия Android</string>
-    <string name="dev_sdk_level">SDK уровень</string>
-    <string name="dev_app_version">Версия приложения</string>
-    <string name="dev_app_code">Код версии</string>
-    <string name="dev_app_channel">Канал сборки</string>
-
-    <!-- 4. Управление данными -->
-    <string name="dev_cache_size">Размер кэша</string>
-    <string name="dev_shells_size">Размер оболочек оформления</string>
-    <string name="dev_cache_size_value">0 B</string>
-    <string name="dev_shells_size_value">0 B</string>
-    <string name="dev_cache_size_updated">Размер кэша обновлён</string>
-    <string name="dev_logs_size">Размер логов</string>
-    <string name="dev_logs_size_value">0 B</string>
-    <string name="dev_clear_apps_cache">Сбросить кэш приложений</string>
-    <string name="dev_clear_apps_cache_confirm">Вы уверены, что хотите очистить кэш списка приложений?\n\nПри следующей загрузке список будет обновлён.</string>
-    <string name="dev_clear_apps_cache_success">Кэш приложений очищен</string>
-    <string name="dev_clear_data">Очистить данные</string>
-    <string name="dev_clear_data_confirm">Вы уверены? Все данные приложения будут удалены безвозвратно!\n\nБудут удалены:\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с оболочками пользователя</string>
-    <string name="dev_clear_data_success">Данные очищены. Приложение будет перезапущено.</string>
-
-    <!-- 5. Управление логами -->
-    <string name="dev_logs_clear">Очистить логи</string>
-    <string name="dev_logs_show">Показать логи</string>
-    <string name="dev_logs_clear_confirm">Вы уверены, что хотите удалить все файлы логов?</string>
-    <string name="dev_logs_cleared">Логи очищены</string>
-    <string name="dev_logs_clear_error">Ошибка при очистке логов</string>
-    <string name="dev_logs_empty">Логи не найдены</string>
-    <string name="dev_logs_title">Файлы логов</string>
-    <string name="dev_logs_delete">Удалить</string>
-    <string name="dev_logs_delete_confirm" formatted="false">Удалить файл %s?</string>
-    <string name="dev_logs_deleted">Файл удалён</string>
-    <string name="dev_logs_delete_error">Ошибка при удалении файла</string>
-    <string name="dev_logs_file_truncated" formatted="false">\n\n … (файл обрезан, размер: %s)</string>
-    <string name="dev_logs_file_title" formatted="false">📄 %s</string>
+    <!-- Управление логами -->
     <string name="dev_logs_view">Просмотр логов</string>
-    <string name="dev_logs_share">Поделиться</string>
-    <string name="dev_logs_share_error">Ошибка при отправке файла</string>
-    <string name="dev_logs_share_title">Поделиться логами</string>
-    <string name="dev_logs_copy">Копировать</string>
-    <string name="dev_logs_copied">Содержимое файла скопировано в буфер обмена</string>
-    <string name="dev_logs_copy_error">Ошибка при копировании файла</string>
     <string name="dev_logs_logger_in_apps">Логгер в списке приложений</string>
     <string name="dev_logs_view_stub">Функционал появится позже</string>
 
-    <!-- 6. Управление сохранением логов -->
+    <!-- Управление сохранением логов -->
     <string name="dev_logs_persist">Сохранять логи в файл</string>
     <string name="dev_logs_max_files">Максимум файлов</string>
     <string name="dev_logs_max_size">Максимум на файл</string>
-    <string name="dev_logs_reset">Сбросить настройки</string>
-    <string name="dev_logs_reset_confirm">Сбросить настройки логов к значениям по умолчанию?</string>
-    <string name="dev_logs_reset_success">Настройки логов сброшены</string>
     <string name="dev_logs_persist_enabled">Сохранение логов включено</string>
     <string name="dev_logs_persist_disabled">Сохранение логов выключено</string>
     <string name="dev_logs_applied">Настройки логов применены</string>
@@ -588,7 +439,7 @@
         <item>10 MB</item>
     </string-array>
 
-    <!-- 7. Инструменты -->
+    <!-- Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
 
     <!-- Активация DevMode -->
@@ -596,7 +447,6 @@
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
-    <string name="dev_truncated">\n\n … (обрезано)</string>
 
     <!-- ============================================================ -->
     <!-- ==================== ЛОГГЕР ================================ -->
@@ -651,13 +501,7 @@
     <!-- ============================================================ -->
 
     <!-- Авторы -->
-    <string name="author_custom">Пользовательская</string>
     <string name="author_default">QutyTeam</string>
-
-    <!-- Сообщения -->
-    <string name="shell_applied" formatted="false">Оболочка %s применена</string>
-    <string name="shell_already_active">Оболочка уже активна</string>
-    <string name="fullscreen_changed">Полноэкранный режим изменён</string>
 
     <!-- Названия -->
     <string name="shell_default_name">Стандартная</string>
@@ -704,7 +548,6 @@
 
     <!-- GetApps -->
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
-    <string name="api_getapps_parameters_name">Параметры Quty.Launch</string>
 
     <!-- LaunchApp -->
     <string name="api_launchapp_package_required">Требуется имя пакета</string>

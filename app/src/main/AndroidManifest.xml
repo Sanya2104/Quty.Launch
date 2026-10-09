@@ -87,14 +87,6 @@
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
-        <!-- Параметры -->
-        <activity
-            android:name=".ParametersActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
-            android:theme="@style/Theme.AppCompat.Translucent">
-        </activity>
-
         <!-- Логгер (доступен только в DevMode) -->
         <activity
             android:name=".LoggerActivity"

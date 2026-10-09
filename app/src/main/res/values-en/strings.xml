@@ -11,7 +11,6 @@
     <!-- Common buttons -->
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
-    <string name="delete">Delete</string>
     <string name="back">Back</string>
     <string name="empty"> </string>
     <string name="unknown_code">\?</string>
@@ -50,14 +49,12 @@
 
     <!-- Fragment titles (used in layout) -->
     <string name="settings_api_methods_title">API methods</string>
-    <string name="settings_developer_title">Developer</string>
     <string name="settings_recovery_title">Backup &amp; reset</string>
 
     <!-- Buttons -->
     <string name="settings_close">Close</string>
 
     <!-- Fragment descriptions (placeholders) -->
-    <string name="settings_developer_desc">Will be here:\n• WebView debugging\n• Shell info\n• System info\n• Data management\n• Log management\n• Tools</string>
     <string name="settings_recovery_desc">Will be here:\n• Export/Import settings</string>
 
     <!-- ============================================================ -->
@@ -179,15 +176,6 @@
     <!-- ==================== PARAMETERS ============================ -->
     <!-- ============================================================ -->
 
-    <!-- Titles -->
-    <string name="parameters_title">Parameters</string>
-
-    <!-- Tab names -->
-    <string name="tab_parameters_shell">Appearance</string>
-    <string name="tab_parameters_display">Screen</string>
-    <string name="tab_parameters_system">System</string>
-    <string name="tab_parameters_developer">DevMode</string>
-
     <!-- Dialogs -->
     <string name="dialog_apply_parameters_title">Apply parameters</string>
     <string name="dialog_apply_parameters_message">Some settings may require restarting the app. Do it now?</string>
@@ -195,89 +183,24 @@
     <string name="dialog_later">Later</string>
 
     <!-- Section titles -->
-    <string name="parameters_shell_title">Select appearance shell:</string>
     <string name="parameters_orientation_title">Screen orientation</string>
     <string name="parameters_additional_title">Additional parameters</string>
-    <string name="parameters_color_scheme_title">Color scheme</string>
 
     <!-- ============================================================ -->
     <!-- ==================== SHELL ================================= -->
     <!-- ============================================================ -->
 
-    <!-- Install shell from file -->
-    <string name="install_shell_from_file">Import shell</string>
-    <string name="select_shell_title">Select shell file (.qutyshell)</string>
-    <string name="invalid_shell_extensions" formatted="false">Selected file is not a Quty.Launch shell (.qutyshell, .qsp or .qutyshellpack required)</string>
-    <string name="shell_install_success" formatted="false">Shell "%s" installed successfully!</string>
-    <string name="shell_install_error">Failed to install shell</string>
-    <string name="shell_install_confirm">Install shell</string>
-    <string name="shell_install_confirm_message" formatted="false">Are you sure you want to install shell "%s" version %s?</string>
-    <string name="shell_already_exists" formatted="false">Shell "%s" already exists. Overwrite?</string>
-    <string name="shell_incompatible">Shell is incompatible with the current Quty.Launch version</string>
-    <string name="shell_min_launcher_version" formatted="false">Requires Quty.Launch version: %s</string>
-
     <!-- Shell menu -->
     <string name="shell_menu_description">Shell menu</string>
-    <string name="shell_menu_apply">Apply</string>
-    <string name="shell_menu_delete">Delete</string>
-    <string name="shell_menu_share">Share</string>
-    <string name="shell_menu_info">Info</string>
-    <string name="shell_menu_check_updates">Check for updates</string>
 
-    <!-- Delete shell -->
-    <string name="shell_delete_confirm">Delete shell?</string>
-    <string name="shell_delete_message" formatted="false">Are you sure you want to delete shell "%s"?</string>
-    <string name="shell_delete_success" formatted="false">Shell "%s" deleted</string>
-    <string name="shell_delete_error">Error deleting shell</string>
-    <string name="shell_cant_delete_default">Cannot delete built-in shell</string>
-    <string name="shell_cant_delete_active">Cannot delete the active shell. Apply another one first.</string>
-    <string name="shell_menu_delete_update">Delete update</string>
-    <string name="shell_delete_update_success" formatted="false">Update for shell "%s" deleted. Built-in version restored</string>
-
-    <!-- Delete update of active built-in shell -->
-    <string name="shell_delete_active_update_confirm">Are you sure you want to delete the update of the active shell?\n\nThe shell will be replaced by the built-in version. The interface will be reloaded.</string>
-    <string name="shell_delete_active_update_title">Delete update</string>
+    <!-- Shell install error -->
+    <string name="shell_install_error">Failed to install shell</string>
 
     <!-- Shell info -->
-    <string name="shell_info_title" formatted="false">Shell info "%s"</string>
-    <string name="shell_info_message" formatted="false">\n Name: %1$s\n\n Version: %2$s\n\n Author: %3$s\n\n Type: %4$s\n\n Requires Quty.Launch version: %5$s</string>
     <string name="shell_type_builtin">Built-in</string>
     <string name="shell_type_custom">Custom</string>
     <string name="shell_version_with_label" formatted="false">Version: %s</string>
-    <string name="shell_info_min_version" formatted="false"> %s</string>
     <string name="shell_info_min_version_not_specified">Not specified</string>
-
-    <!-- Share shell -->
-    <string name="shell_share_title">Share shell</string>
-    <string name="shell_share_error">Error sending file</string>
-    <string name="shell_file_not_found">Shell file not found</string>
-
-    <!-- Shell update -->
-    <string name="shell_update_not_found">No updates found</string>
-    <string name="shell_update_error" formatted="false">Update check error: %s</string>
-    <string name="shell_update_downloading">Downloading update…</string>
-    <string name="shell_update_success">Shell updated to version %s</string>
-    <string name="shell_update_confirm_title">Shell update</string>
-    <string name="shell_update_checking">Checking for updates</string>
-    <string name="shell_update_checking_message">Checking…</string>
-    <string name="shell_update_available_message">Shell update available!</string>
-    <string name="shell_update_current_version" formatted="false">Current version: %s</string>
-    <string name="shell_update_new_version" formatted="false">New version: %s</string>
-    <string name="shell_update_changelog" formatted="false">What\'s new:\n%s</string>
-    <string name="shell_update_size" formatted="false">Size: %s</string>
-    <string name="shell_update_install">Update</string>
-    <string name="shell_update_preparing">Preparing…</string>
-    <string name="shell_update_progress" formatted="false">Downloading: %d%%</string>
-    <string name="shell_update_min_launcher" formatted="false">Requires Quty.Launch version: %s</string>
-    <string name="shell_update_incompatible_title">Shell incompatible</string>
-    <string name="shell_update_incompatible_message" formatted="false">Shell update requires Quty.Launch version %s or higher.\n\nPlease update the app first.</string>
-
-    <!-- File manager -->
-    <string name="file_manager_not_found">File manager not found</string>
-    <string name="file_manager_suggestion" formatted="false">A file manager app is required to install a shell.\n\nRecommended:\n• Material Files (free, no ads)\n• Total Commander (powerful, free)\n• CX File Explorer (simple, free)</string>
-    <string name="install_material_files">Install Material Files</string>
-    <string name="other_file_manager">Other file manager</string>
-    <string name="cannot_open_play_store">Failed to open Google Play.\nInstall a file manager manually.</string>
 
     <!-- ============================================================ -->
     <!-- ==================== COLOR SCHEME ========================== -->
@@ -309,7 +232,6 @@
     <!-- Modes -->
     <string name="additional_fullscreen">Fullscreen mode</string>
     <string name="additional_strict_mode">Strict mode</string>
-    <string name="strict_mode_changed">Strict mode changed</string>
 
     <!-- Orientation lock -->
     <string name="orientation_lock_hint_portrait">🔒 Orientation set by shell (portrait)</string>
@@ -321,7 +243,6 @@
     <!-- ============================================================ -->
 
     <!-- System information -->
-    <string name="system_info_title">System information</string>
     <string name="version_label">Version</string>
     <string name="version_code_label">Version code</string>
     <string name="channel_label">Channel</string>
@@ -330,8 +251,6 @@
     <string name="update_info_title">System update</string>
     <string name="check_updates_online_button">Online update</string>
     <string name="checking_updates">Checking…</string>
-    <string name="update_available" formatted="false">Update %s available</string>
-    <string name="no_updates">You have the latest version</string>
     <string name="update_error">Error</string>
     <string name="server_error_prefix">Server error</string>
     <string name="server_error" formatted="false">Server error: %d</string>
@@ -339,19 +258,10 @@
 
     <!-- Local APK install -->
     <string name="install_from_file">Local update</string>
-    <string name="select_apk_title">Select APK file</string>
     <string name="invalid_apk">Selected file is not an APK</string>
     <string name="apk_validation_failed">APK does not match Quty.Launch</string>
-    <string name="apk_validated_success" formatted="false">APK validated. Version: %s</string>
     <string name="install_local_apk">Install local APK</string>
     <string name="install_local_message" formatted="false">Are you sure you want to install APK version %s?</string>
-
-    <!-- УДАЛИТЬ после удаление Параметров -->
-    <string name="install_option_title">Select installation method</string>
-    <string name="install_option_file_manager">📂 Via file manager</string>
-    <string name="install_option_downloads">📁 From Download folder</string>
-    <string name="no_apk_found">No APK files found in Download folder</string>
-    <!-- / УДАЛИТЬ после удаление Параметров -->
 
     <string name="error_open_file_manager">Error opening file manager</string>
     <string name="install_error">Failed to start installation</string>
@@ -370,7 +280,6 @@
     <string name="download_error">Download error</string>
 
     <!-- Update dialog -->
-    <string name="update_dialog_title" formatted="false">Update available \n %s%s \n</string>
     <string name="update_dialog_message" formatted="false">%s\n\nRelease: %s\nSize: %s</string>
     <string name="update_action">Update</string>
     <string name="critical_tag">  ⚠️ CRITICAL</string>
@@ -380,7 +289,6 @@
 
     <!-- Download dialog -->
     <string name="downloading_title">Downloading update</string>
-    <string name="downloading_prepare">Preparing…</string>
     <string name="downloading_progress" formatted="false">Downloading: %d%%</string>
 
     <!-- Install dialog -->
@@ -473,10 +381,6 @@
     <string name="dev_reset_onboarding_restart_message">Restart the app now to see the welcome screen?</string>
     <string name="dev_reset_onboarding_restart_confirm">Restart</string>
 
-    <!-- Clear data confirmation dialog -->
-    <string name="dev_clear_data_dialog_title">Clear all data?</string>
-    <string name="dev_clear_data_dialog_message">All app data will be permanently deleted:\n\n• App cache\n• Settings (SharedPreferences)\n• User shells folder\n\nThe app will restart.</string>
-
     <!-- "Restart app" dialog -->
     <string name="dev_restart_app_dialog_title">Restart the app?</string>
     <string name="dev_restart_app_dialog_message">The app will be closed and launched again.</string>
@@ -491,21 +395,16 @@
     <!-- ============================================================ -->
 
     <!-- Section titles -->
-    <string name="dev_section_webview">WebView debugging</string>
     <string name="dev_section_shell">Shell info</string>
-    <string name="dev_section_system">System info</string>
     <string name="dev_section_data">Data management</string>
     <string name="dev_section_logs">Log management</string>
     <string name="dev_section_tools">Tools</string>
 
-    <!-- 1. WebView debugging -->
-    <string name="dev_webview_debug">WebView debugging</string>
-    <string name="dev_webview_debug_enabled">WebView debugging enabled\nConnect via Chrome DevTools</string>
-    <string name="dev_webview_debug_disabled">WebView debugging disabled</string>
+    <!-- WebView -->
     <string name="dev_webview_clear_cache">Clear WebView cache</string>
     <string name="dev_webview_clear_cache_success">WebView cache cleared</string>
 
-    <!-- 2. Shell info -->
+    <!-- Shell info -->
     <string name="dev_shell_manifest">Show manifest.json</string>
     <string name="dev_shell_manifest_title">manifest.json</string>
     <string name="dev_shell_manifest_not_found">manifest.json not found</string>
@@ -514,60 +413,15 @@
     <string name="dev_shell_not_found">Active shell not found</string>
     <string name="dev_error">Error: %s</string>
 
-    <!-- 3. System info -->
-    <string name="dev_device_model">Device model</string>
-    <string name="dev_android_version">Android version</string>
-    <string name="dev_sdk_level">SDK level</string>
-    <string name="dev_app_version">App version</string>
-    <string name="dev_app_code">Version code</string>
-    <string name="dev_app_channel">Build channel</string>
-
-    <!-- 4. Data management -->
-    <string name="dev_cache_size">Cache size</string>
-    <string name="dev_shells_size">Shells size</string>
-    <string name="dev_cache_size_value">0 B</string>
-    <string name="dev_shells_size_value">0 B</string>
-    <string name="dev_cache_size_updated">Cache size updated</string>
-    <string name="dev_logs_size">Logs size</string>
-    <string name="dev_logs_size_value">0 B</string>
-    <string name="dev_clear_apps_cache">Reset apps cache</string>
-    <string name="dev_clear_apps_cache_confirm">Are you sure you want to clear the apps cache?\n\nThe list will be refreshed on the next load.</string>
-    <string name="dev_clear_apps_cache_success">Apps cache cleared</string>
-    <string name="dev_clear_data">Clear data</string>
-    <string name="dev_clear_data_confirm">Are you sure? All app data will be permanently deleted!\n\nWill be deleted:\n• App cache\n• Settings (SharedPreferences)\n• User shells folder</string>
-    <string name="dev_clear_data_success">Data cleared. The app will restart.</string>
-
-    <!-- 5. Log management -->
-    <string name="dev_logs_clear">Clear logs</string>
-    <string name="dev_logs_show">Show logs</string>
-    <string name="dev_logs_clear_confirm">Are you sure you want to delete all log files?</string>
-    <string name="dev_logs_cleared">Logs cleared</string>
-    <string name="dev_logs_clear_error">Error clearing logs</string>
-    <string name="dev_logs_empty">No logs found</string>
-    <string name="dev_logs_title">Log files</string>
-    <string name="dev_logs_delete">Delete</string>
-    <string name="dev_logs_delete_confirm" formatted="false">Delete file %s?</string>
-    <string name="dev_logs_deleted">File deleted</string>
-    <string name="dev_logs_delete_error">Error deleting file</string>
-    <string name="dev_logs_file_truncated" formatted="false">\n\n … (file truncated, size: %s)</string>
-    <string name="dev_logs_file_title" formatted="false">📄 %s</string>
+    <!-- Log management -->
     <string name="dev_logs_view">View logs</string>
-    <string name="dev_logs_share">Share</string>
-    <string name="dev_logs_share_error">Error sending file</string>
-    <string name="dev_logs_share_title">Share logs</string>
-    <string name="dev_logs_copy">Copy</string>
-    <string name="dev_logs_copied">File content copied to clipboard</string>
-    <string name="dev_logs_copy_error">Error copying file</string>
     <string name="dev_logs_logger_in_apps">Logger in app list</string>
     <string name="dev_logs_view_stub">Feature coming soon</string>
 
-    <!-- 6. Log save settings -->
+    <!-- Log save settings -->
     <string name="dev_logs_persist">Save logs to file</string>
     <string name="dev_logs_max_files">Max files</string>
     <string name="dev_logs_max_size">Max per file</string>
-    <string name="dev_logs_reset">Reset settings</string>
-    <string name="dev_logs_reset_confirm">Reset log settings to defaults?</string>
-    <string name="dev_logs_reset_success">Log settings reset</string>
     <string name="dev_logs_persist_enabled">Log saving enabled</string>
     <string name="dev_logs_persist_disabled">Log saving disabled</string>
     <string name="dev_logs_applied">Log settings applied</string>
@@ -585,7 +439,7 @@
         <item>10 MB</item>
     </string-array>
 
-    <!-- 7. Tools -->
+    <!-- Tools -->
     <string name="dev_restart_app">Restart app</string>
 
     <!-- DevMode activation -->
@@ -593,7 +447,6 @@
     <string name="dev_mode_deactivated">Developer mode deactivated</string>
     <string name="dev_mode_click_count" formatted="false">Clicks left: %d</string>
     <string name="dev_unknown_error">Unknown error</string>
-    <string name="dev_truncated">\n\n … (truncated)</string>
 
     <!-- ============================================================ -->
     <!-- ==================== LOGGER ================================ -->
@@ -648,13 +501,7 @@
     <!-- ============================================================ -->
 
     <!-- Authors -->
-    <string name="author_custom">Custom</string>
     <string name="author_default">QutyTeam</string>
-
-    <!-- Messages -->
-    <string name="shell_applied" formatted="false">Shell %s applied</string>
-    <string name="shell_already_active">Shell already active</string>
-    <string name="fullscreen_changed">Fullscreen mode changed</string>
 
     <!-- Names -->
     <string name="shell_default_name">Default</string>
@@ -701,7 +548,6 @@
 
     <!-- GetApps -->
     <string name="api_getapps_settings_name">Quty.Launch Settings</string>
-    <string name="api_getapps_parameters_name">Quty.Launch Parameters</string>
 
     <!-- LaunchApp -->
     <string name="api_launchapp_package_required">Package name required</string>

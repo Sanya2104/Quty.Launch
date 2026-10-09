@@ -10,9 +10,6 @@ object ApiConfig {
     // ===== API - GetApps ========================================
     // ============================================================
 
-    /** Пакет для активности параметров */
-    const val PARAMETERS_PACKAGE = "by.quty.launch.parameters"
-
     /** Пакет для активности настроек */
     const val SETTINGS_PACKAGE = "by.quty.launch.settings"
 

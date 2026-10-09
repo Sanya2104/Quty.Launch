@@ -4,10 +4,7 @@ package by.quty.launch
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.lifecycleScope
-import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
@@ -28,14 +25,6 @@ class MainActivity : BaseActivity() {
 
     // Последнее применённое состояние — чтобы не дёргать WebView зря
     private var lastAppliedLanguage: String? = null
-
-    companion object {
-        // Код запроса для ParametersActivity (из конфига)
-        const val REQUEST_CODE_PARAMETERS = CoreConfig.PARAMETERS_REQUEST_CODE
-
-        // Задержка перед пересозданием активности (из конфига)
-        private const val DELAY_BEFORE_RELOAD = CoreConfig.DELAY_BEFORE_RECREATE_MS
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,18 +81,6 @@ class MainActivity : BaseActivity() {
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
             )
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        // Обрабатываем только изменение оболочки
-        if (requestCode == REQUEST_CODE_PARAMETERS && resultCode == ParametersActivity.RESULT_SHELL_CHANGED) {
-            // Перезагружаем оболочку с задержкой, чтобы избежать мерцания
-            Handler(Looper.getMainLooper()).postDelayed({
-                loadShell()
-            }, DELAY_BEFORE_RELOAD)
         }
     }
 
