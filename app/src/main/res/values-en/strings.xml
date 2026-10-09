@@ -452,6 +452,41 @@
     <string name="welcome_permission_denied_message">Quty.Launch requires all permissions to work correctly. Please grant access in settings.</string>
 
     <!-- ============================================================ -->
+    <!-- ===== DEVELOPER MODE (new version) ========================= -->
+    <!-- ============================================================ -->
+
+    <!-- Reset onboarding row -->
+    <string name="dev_reset_onboarding">Reset onboarding</string>
+
+    <!-- Universal confirmation dialog -->
+    <string name="dialog_dev_confirm_title">Confirmation</string>
+    <string name="dialog_dev_confirm_message">Are you sure?</string>
+    <string name="dev_confirm_ok">Confirm</string>
+
+    <!-- Reset onboarding confirmation dialog -->
+    <string name="dev_reset_onboarding_dialog_title">Reset onboarding?</string>
+    <string name="dev_reset_onboarding_dialog_message">After resetting, the app will show the welcome screen again on the next launch and request permissions once more.</string>
+    <string name="dev_reset_onboarding_confirm">Reset</string>
+
+    <!-- Restart dialog after reset -->
+    <string name="dev_reset_onboarding_restart_title">Done</string>
+    <string name="dev_reset_onboarding_restart_message">Restart the app now to see the welcome screen?</string>
+    <string name="dev_reset_onboarding_restart_confirm">Restart</string>
+
+    <!-- Clear data confirmation dialog -->
+    <string name="dev_clear_data_dialog_title">Clear all data?</string>
+    <string name="dev_clear_data_dialog_message">All app data will be permanently deleted:\n\n• App cache\n• Settings (SharedPreferences)\n• User shells folder\n\nThe app will restart.</string>
+
+    <!-- "Restart app" dialog -->
+    <string name="dev_restart_app_dialog_title">Restart the app?</string>
+    <string name="dev_restart_app_dialog_message">The app will be closed and launched again.</string>
+    <string name="dev_restart_app_dialog_confirm">Restart</string>
+
+    <!-- "manifest.json" dialog -->
+    <string name="dev_shell_manifest_copy">Copy</string>
+    <string name="dev_shell_manifest_copied">Copied to clipboard</string>
+
+    <!-- ============================================================ -->
     <!-- ==================== DEVELOPER MODE ======================== -->
     <!-- ============================================================ -->
 
@@ -516,13 +551,15 @@
     <string name="dev_logs_delete_error">Error deleting file</string>
     <string name="dev_logs_file_truncated" formatted="false">\n\n … (file truncated, size: %s)</string>
     <string name="dev_logs_file_title" formatted="false">📄 %s</string>
-    <string name="dev_logs_view">View</string>
+    <string name="dev_logs_view">View logs</string>
     <string name="dev_logs_share">Share</string>
     <string name="dev_logs_share_error">Error sending file</string>
     <string name="dev_logs_share_title">Share logs</string>
     <string name="dev_logs_copy">Copy</string>
     <string name="dev_logs_copied">File content copied to clipboard</string>
     <string name="dev_logs_copy_error">Error copying file</string>
+    <string name="dev_logs_logger_in_apps">Logger in app list</string>
+    <string name="dev_logs_view_stub">Feature coming soon</string>
 
     <!-- 6. Log save settings -->
     <string name="dev_logs_persist">Save logs to file</string>
@@ -819,5 +856,8 @@
     <string name="log_settings_restart_required">Restart required: setting changed</string>
     <string name="log_settings_checking_restart_state" formatted="false">Checking restart state: needsRestart=%b</string>
     <string name="log_settings_error">Error</string>
+
+    <!-- DeveloperFragment logs -->
+    <string name="log_developer_onboarding_reset">Onboarding flag reset (force_show_onboarding=true)</string>
 
 </resources>

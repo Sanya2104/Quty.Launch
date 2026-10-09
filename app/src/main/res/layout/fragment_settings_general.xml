@@ -445,7 +445,7 @@
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/fullscreen_switch"
-                    style="@style/Text.Body.Dim"
+                    style="@style/Text.Body"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -489,7 +489,7 @@
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/strict_mode_switch"
-                    style="@style/Text.Body.Dim"
+                    style="@style/Text.Body"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"

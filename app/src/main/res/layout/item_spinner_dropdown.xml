@@ -1,0 +1,13 @@
+<!-- res/layout/item_spinner_dropdown.xml -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/text1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/height_spinner"
+    android:gravity="center_vertical"
+    android:paddingStart="@dimen/spacing_m"
+    android:paddingEnd="@dimen/spacing_m"
+    android:background="?android:attr/selectableItemBackground"
+    android:textColor="?attr/textPrimaryColor"
+    android:textSize="@dimen/text_m"
+    style="@style/Text.Body" />

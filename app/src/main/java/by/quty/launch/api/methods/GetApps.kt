@@ -109,11 +109,12 @@ class GetApps(
             )
         )
 
-        // 3. Логгер (только в DevMode)
+        // 3. Логгер (только в DevMode, если включён флаг logger_in_apps)
         val prefs = context.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)
+        val isLoggerInApps = prefs.getBoolean("logger_in_apps", false)
 
-        if (isDevMode) {
+        if (isDevMode && isLoggerInApps) {
             val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
             val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
 

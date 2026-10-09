@@ -5,31 +5,514 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
-    android:padding="@dimen/screen_padding_horizontal">
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
         android:orientation="vertical">
 
-        <!-- Заголовок -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Title.Medium"
-            android:text="@string/settings_developer_title"
-            android:gravity="center" />
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 1: ОБОЛОЧКА =================================== -->
+        <!-- ============================================================ -->
 
-        <!-- Описание -->
         <TextView
+            style="@style/Text.Title.Medium"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_m"
-            style="@style/Text.Body.Secondary"
-            android:text="@string/settings_developer_desc"
-            android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_s" />
+            android:padding="@dimen/spacing_l"
+            android:text="@string/dev_section_shell" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Показать manifest.json -->
+            <LinearLayout
+                android:id="@+id/dev_shell_manifest_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_file_manifest"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_shell_manifest" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Перезагрузить оболочку -->
+            <LinearLayout
+                android:id="@+id/dev_shell_reload_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_shell_off"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_shell_reload" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 2: УПРАВЛЕНИЕ ДАННЫМИ ========================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_data" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Очистить кэш WebView -->
+            <LinearLayout
+                android:id="@+id/dev_clear_webview_cache_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_webview_clear"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_webview_clear_cache" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Сбросить онбординг -->
+            <LinearLayout
+                android:id="@+id/dev_reset_onboarding_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_onboarding_reset"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_reset_onboarding" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 3: ЛОГИ ======================================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_logs" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Просмотр логов -->
+            <LinearLayout
+                android:id="@+id/dev_logs_view_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_logs_view"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_logs_view" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Логгер в списке приложений (switch) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_logger"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/dev_logs_logger_in_apps"
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:minHeight="0dp"
+                    android:text="@string/dev_logs_logger_in_apps"
+                    tools:ignore="VisualLintButtonSize" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Сохранять логи в файл (switch) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_logs_save"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/dev_logs_persist"
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:minHeight="0dp"
+                    android:text="@string/dev_logs_persist"
+                    tools:ignore="VisualLintButtonSize" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Максимум файлов (spinner) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_sm"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_files"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_logs_max_files" />
+
+                <Spinner
+                    android:id="@+id/dev_logs_max_files"
+                    style="@style/Spinner" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Максимум на файл (spinner) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_sm"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_file_size"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_logs_max_size" />
+
+                <Spinner
+                    android:id="@+id/dev_logs_max_size"
+                    style="@style/Spinner" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ 4: ИНСТРУМЕНТЫ ================================ -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/dev_section_tools" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Перезапустить приложение -->
+            <LinearLayout
+                android:id="@+id/dev_restart_app_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_restart_app"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/dev_restart_app" />
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 

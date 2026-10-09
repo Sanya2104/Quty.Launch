@@ -1,0 +1,97 @@
+<!-- res/layout/dialog_dev_restart.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/spacing_l"
+    android:paddingEnd="@dimen/spacing_l"
+    android:paddingTop="@dimen/spacing_xl"
+    android:paddingBottom="@dimen/spacing_xl">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:maxHeight="600dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        tools:ignore="UselessParent">
+
+        <!-- Стеклянная карточка (без CardView) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_dialog"
+            android:elevation="16dp"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l">
+
+            <!-- Иконка -->
+            <ImageView
+                android:id="@+id/dev_restart_icon"
+                android:layout_width="@dimen/icon_xlarge"
+                android:layout_height="@dimen/icon_xlarge"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_restart_app"
+                android:background="@drawable/bg_icon_dialog"
+                android:padding="@dimen/spacing_l"
+                android:contentDescription="@string/empty" />
+
+            <!-- Заголовок -->
+            <TextView
+                android:id="@+id/dev_restart_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:text="@string/dev_restart_app_dialog_title"
+                android:textSize="@dimen/text_xl"
+                android:textColor="?attr/textPrimaryColor"
+                android:gravity="center"
+                android:textStyle="bold" />
+
+            <!-- Сообщение -->
+            <TextView
+                android:id="@+id/dev_restart_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_s"
+                android:gravity="center"
+                android:lineSpacingExtra="@dimen/spacing_xxs"
+                android:text="@string/dev_restart_app_dialog_message"
+                android:textColor="?attr/textSecondaryColor"
+                android:textSize="@dimen/text_m"
+                android:breakStrategy="simple" />
+
+            <!-- Кнопки -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/dev_restart_cancel_button"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/cancel" />
+
+                <Button
+                    android:id="@+id/dev_restart_ok_button"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/dev_restart_app_dialog_confirm" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

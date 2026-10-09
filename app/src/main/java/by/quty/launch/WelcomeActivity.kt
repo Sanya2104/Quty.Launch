@@ -134,12 +134,12 @@ class WelcomeActivity : BaseActivity() {
             )
         )
 
-        for (item in permissionsData) {
+        for ((permission, iconRes, titleRes, descRes) in permissionsData) {
             val itemView = createPermissionItem(
-                permission = item.permission,
-                iconRes = item.iconRes,
-                title = getString(item.titleRes),
-                description = getString(item.descRes)
+                permission = permission,
+                iconRes = iconRes,
+                title = getString(titleRes),
+                description = getString(descRes)
             )
             permissionsContainer.addView(itemView)
         }
@@ -470,6 +470,9 @@ class WelcomeActivity : BaseActivity() {
         prefs.edit {
             putBoolean("onboarding_completed", true)
             putLong("onboarding_timestamp", System.currentTimeMillis())
+            // Снимаем флаг принудительного показа онбординга —
+            // следующий запуск пойдёт сразу в Main.
+            remove("force_show_onboarding")
         }
 
         val intent = Intent(this, MainActivity::class.java)
@@ -485,6 +488,17 @@ class WelcomeActivity : BaseActivity() {
         isRequestingPermissions = false
 
         updatePermissionsUI()
+
+        // Если стоит флаг force_show_onboarding (после сброса онбординга
+        // из DevMode) — НЕ автозапускаем Main, даже если все разрешения уже
+        // выданы. Пользователь увидит экран приветствия и сам нажмёт "Начать".
+        //
+        // Флаг снимается в finishAndGoToMain() — то есть после того, как
+        // пользователь пройдёт онбординг (или нажмёт "Начать").
+        val forceShow = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
+            .getBoolean("force_show_onboarding", false)
+
+        if (forceShow) return
 
         if (PermissionManager.hasAllRequiredPermissions(this)) {
             finishAndGoToMain()

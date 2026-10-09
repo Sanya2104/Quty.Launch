@@ -283,7 +283,16 @@ class AboutFragment : Fragment() {
         val isCurrentlyEnabled = prefs.getBoolean("developer_mode", false)
 
         val newState = !isCurrentlyEnabled
-        prefs.edit { putBoolean("developer_mode", newState) }
+        prefs.edit {
+            putBoolean("developer_mode", newState)
+
+            // При ВЫКЛЮЧЕНИИ DevMode — сбрасываем флаг "логгер в списке приложений".
+            // При включении DevMode — логгер по умолчанию НЕ показывается,
+            // пользователь сам включит его в Настройки → Разработчикам.
+            if (!newState) {
+                putBoolean("logger_in_apps", false)
+            }
+        }
 
         // Инвалидируем кэш приложений при изменении DevMode
         CacheManager.invalidateCache(requireContext())

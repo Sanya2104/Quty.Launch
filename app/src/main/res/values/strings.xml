@@ -455,6 +455,41 @@
     <string name="welcome_permission_denied_message">Для корректной работы Quty.Launch необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
 
     <!-- ============================================================ -->
+    <!-- ===== РЕЖИМ РАЗРАБОТЧИКА (новая версия) ==================== -->
+    <!-- ============================================================ -->
+
+    <!-- Строка "Сбросить онбординг" -->
+    <string name="dev_reset_onboarding">Сбросить онбординг</string>
+
+    <!-- Универсальный диалог подтверждения -->
+    <string name="dialog_dev_confirm_title">Подтверждение</string>
+    <string name="dialog_dev_confirm_message">Вы уверены?</string>
+    <string name="dev_confirm_ok">Подтвердить</string>
+
+    <!-- Диалог подтверждения сброса онбординга -->
+    <string name="dev_reset_onboarding_dialog_title">Сбросить онбординг?</string>
+    <string name="dev_reset_onboarding_dialog_message">После сброса при следующем запуске приложение снова покажет экран приветствия и запросит разрешения заново.</string>
+    <string name="dev_reset_onboarding_confirm">Сбросить</string>
+
+    <!-- Диалог перезапуска после сброса -->
+    <string name="dev_reset_onboarding_restart_title">Готово</string>
+    <string name="dev_reset_onboarding_restart_message">Перезапустить приложение сейчас, чтобы увидеть экран приветствия?</string>
+    <string name="dev_reset_onboarding_restart_confirm">Перезапустить</string>
+
+    <!-- Диалог подтверждения очистки данных -->
+    <string name="dev_clear_data_dialog_title">Очистить все данные?</string>
+    <string name="dev_clear_data_dialog_message">Все данные приложения будут удалены безвозвратно:\n\n• Кэш приложения\n• Настройки (SharedPreferences)\n• Папка с оболочками пользователя\n\nПриложение будет перезапущено.</string>
+
+    <!-- Диалог "Перезапустить приложение" -->
+    <string name="dev_restart_app_dialog_title">Перезапустить приложение?</string>
+    <string name="dev_restart_app_dialog_message">Приложение будет закрыто и запущено заново.</string>
+    <string name="dev_restart_app_dialog_confirm">Перезапустить</string>
+
+    <!-- Диалог "manifest.json" -->
+    <string name="dev_shell_manifest_copy">Копировать</string>
+    <string name="dev_shell_manifest_copied">Скопировано в буфер обмена</string>
+
+    <!-- ============================================================ -->
     <!-- ==================== РЕЖИМ РАЗРАБОТЧИКА ===================== -->
     <!-- ============================================================ -->
 
@@ -519,13 +554,15 @@
     <string name="dev_logs_delete_error">Ошибка при удалении файла</string>
     <string name="dev_logs_file_truncated" formatted="false">\n\n … (файл обрезан, размер: %s)</string>
     <string name="dev_logs_file_title" formatted="false">📄 %s</string>
-    <string name="dev_logs_view">Просмотр</string>
+    <string name="dev_logs_view">Просмотр логов</string>
     <string name="dev_logs_share">Поделиться</string>
     <string name="dev_logs_share_error">Ошибка при отправке файла</string>
     <string name="dev_logs_share_title">Поделиться логами</string>
     <string name="dev_logs_copy">Копировать</string>
     <string name="dev_logs_copied">Содержимое файла скопировано в буфер обмена</string>
     <string name="dev_logs_copy_error">Ошибка при копировании файла</string>
+    <string name="dev_logs_logger_in_apps">Логгер в списке приложений</string>
+    <string name="dev_logs_view_stub">Функционал появится позже</string>
 
     <!-- 6. Управление сохранением логов -->
     <string name="dev_logs_persist">Сохранять логи в файл</string>
@@ -826,5 +863,8 @@
     <string name="log_settings_restart_required">Требуется перезапуск: настройка изменена</string>
     <string name="log_settings_checking_restart_state" formatted="false">Проверка состояния перезапуска: needsRestart=%b</string>
     <string name="log_settings_error">Ошибка</string>
+
+    <!-- DeveloperFragment логи -->
+    <string name="log_developer_onboarding_reset">Onboarding flag reset (force_show_onboarding=true)</string>
 
 </resources>
