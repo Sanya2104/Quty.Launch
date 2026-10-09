@@ -383,8 +383,8 @@
                 android:gravity="center_vertical"
                 android:paddingStart="@dimen/spacing_l"
                 android:paddingEnd="@dimen/spacing_l"
-                android:paddingTop="@dimen/spacing_sm"
-                android:paddingBottom="@dimen/spacing_sm"
+                android:paddingTop="@dimen/spacing_xs"
+                android:paddingBottom="@dimen/spacing_xs"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -422,8 +422,8 @@
                 android:gravity="center_vertical"
                 android:paddingStart="@dimen/spacing_l"
                 android:paddingEnd="@dimen/spacing_l"
-                android:paddingTop="@dimen/spacing_sm"
-                android:paddingBottom="@dimen/spacing_sm"
+                android:paddingTop="@dimen/spacing_xs"
+                android:paddingBottom="@dimen/spacing_xs"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView

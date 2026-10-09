@@ -62,7 +62,7 @@
     <!-- ===== ВЫСОТЫ ЭЛЕМЕНТОВ ===================================== -->
     <!-- ============================================================ -->
 
-    <dimen name="height_spinner">24dp</dimen>
+    <dimen name="height_spinner">36dp</dimen>
     <dimen name="height_button">48dp</dimen>
     <dimen name="height_button_large">56dp</dimen>
     <dimen name="height_toolbar">56dp</dimen>

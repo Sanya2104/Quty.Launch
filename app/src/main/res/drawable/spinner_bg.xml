@@ -4,7 +4,7 @@
     <corners android:radius="@dimen/radius_small" />
     <stroke
         android:width="1dp"
-        android:color="?attr/textDimColor" />
+        android:color="?attr/dividerColor" />
     <padding
         android:left="12dp"
         android:right="12dp"
