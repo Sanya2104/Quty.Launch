@@ -174,7 +174,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
             android:paddingTop="@dimen/spacing_xl"
-            android:text="@string/parameters_orientation_title" />
+            android:text="@string/settings_orientation_title" />
 
         <!-- Подсказка о блокировке ориентации с закруглением -->
         <TextView
@@ -411,7 +411,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/spacing_l"
             android:paddingTop="@dimen/spacing_xl"
-            android:text="@string/parameters_additional_title" />
+            android:text="@string/settings_additional_title" />
 
 
         <LinearLayout

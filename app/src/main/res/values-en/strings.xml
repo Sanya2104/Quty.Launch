@@ -107,8 +107,8 @@
     <!-- ===== SETTINGS — ADDITIONAL MODES ========================== -->
     <!-- ============================================================ -->
 
-    <string name="parameters_orientation_title">Screen orientation</string>
-    <string name="parameters_additional_title">Additional parameters</string>
+    <string name="settings_orientation_title">Screen orientation</string>
+    <string name="settings_additional_title">Additional settings</string>
 
     <string name="additional_fullscreen">Fullscreen mode</string>
     <string name="additional_strict_mode">Strict mode</string>
@@ -119,11 +119,11 @@
     <string name="toast_strict_mode_disabled">Strict mode disabled</string>
 
     <!-- ============================================================ -->
-    <!-- ===== APPLY PARAMETERS DIALOG ============================== -->
+    <!-- ===== APPLY SETTINGS DIALOG ============================== -->
     <!-- ============================================================ -->
 
-    <string name="dialog_apply_parameters_title">Apply parameters</string>
-    <string name="dialog_apply_parameters_message">Some settings may require restarting the app. Do it now?</string>
+    <string name="dialog_apply_settings_title">Apply settings</string>
+    <string name="dialog_apply_settings_message">Some settings may require restarting the app. Do it now?</string>
     <string name="dialog_restart">Restart</string>
     <string name="dialog_later">Later</string>
 

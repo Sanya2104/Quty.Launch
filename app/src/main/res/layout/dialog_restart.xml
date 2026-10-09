@@ -41,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_l"
-                android:text="@string/dialog_apply_parameters_title"
+                android:text="@string/dialog_apply_settings_title"
                 android:textSize="@dimen/text_xl"
                 android:textColor="?attr/textPrimaryColor"
                 android:gravity="center"
@@ -54,7 +54,7 @@
                 android:layout_marginTop="@dimen/spacing_s"
                 android:gravity="center"
                 android:lineSpacingExtra="@dimen/spacing_xxs"
-                android:text="@string/dialog_apply_parameters_message"
+                android:text="@string/dialog_apply_settings_message"
                 android:textColor="?attr/textSecondaryColor"
                 android:textSize="@dimen/text_m"
                 android:breakStrategy="simple" />

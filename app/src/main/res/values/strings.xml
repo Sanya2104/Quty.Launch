@@ -107,8 +107,8 @@
     <!-- ===== НАСТРОЙКИ — ДОПОЛНИТЕЛЬНЫЕ РЕЖИМЫ ==================== -->
     <!-- ============================================================ -->
 
-    <string name="parameters_orientation_title">Ориентация экрана</string>
-    <string name="parameters_additional_title">Дополнительные параметры</string>
+    <string name="settings_orientation_title">Ориентация экрана</string>
+    <string name="settings_additional_title">Дополнительные настройки</string>
 
     <string name="additional_fullscreen">Полноэкранный режим</string>
     <string name="additional_strict_mode">Строгий режим</string>
@@ -122,8 +122,8 @@
     <!-- ===== ДИАЛОГ ПРИМЕНЕНИЯ ПАРАМЕТРОВ ========================= -->
     <!-- ============================================================ -->
 
-    <string name="dialog_apply_parameters_title">Применить параметры</string>
-    <string name="dialog_apply_parameters_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
+    <string name="dialog_apply_settings_title">Применить настройки</string>
+    <string name="dialog_apply_settings_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
     <string name="dialog_restart">Перезапустить</string>
     <string name="dialog_later">Позже</string>
 
