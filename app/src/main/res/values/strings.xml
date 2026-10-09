@@ -2,10 +2,10 @@
 <resources>
 
     <!-- ============================================================ -->
-    <!-- ==================== ОБЩИЕ СТРОКИ =========================== -->
+    <!-- ===== ОБЩИЕ СТРОКИ ========================================= -->
     <!-- ============================================================ -->
 
-    <!-- App name -->
+    <!-- Название приложения -->
     <string name="app_name">Quty.Launch</string>
 
     <!-- Общие кнопки -->
@@ -22,12 +22,12 @@
     <string name="unknown">Неизвестно</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== НАСТРОЙКИ (SETTINGS) =================== -->
+    <!-- ===== НАСТРОЙКИ — МЕНЮ И ЗАГОЛОВКИ ========================= -->
     <!-- ============================================================ -->
 
-    <!-- Заголовки -->
     <string name="settings_title">Настройки</string>
     <string name="settings_fragment">Название фрагмента</string>
+    <string name="settings_close">Закрыть</string>
 
     <!-- Пункты меню -->
     <string name="settings_menu_main">Основное</string>
@@ -51,14 +51,11 @@
     <string name="settings_api_methods_title">API методы</string>
     <string name="settings_recovery_title">Восстановление и сброс</string>
 
-    <!-- Кнопки -->
-    <string name="settings_close">Закрыть</string>
-
     <!-- Описания фрагментов (для заглушек) -->
     <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
 
     <!-- ============================================================ -->
-    <!-- ===== ТЕМА ================================================= -->
+    <!-- ===== НАСТРОЙКИ — ТЕМА ===================================== -->
     <!-- ============================================================ -->
 
     <string name="settings_theme_title">Тема оформления</string>
@@ -69,16 +66,32 @@
     <string name="settings_theme_system">Системная</string>
     <string name="settings_theme_system_desc">Следует за системой</string>
 
+    <string name="toast_theme_light_enabled">Светлая тема включена</string>
+    <string name="toast_theme_dark_enabled">Тёмная тема включена</string>
+    <string name="toast_theme_system_enabled">Режим "Следовать за системой" включен</string>
+
     <!-- ============================================================ -->
-    <!-- ===== ОРИЕНТАЦИЯ ЭКРАНА ==================================== -->
+    <!-- ===== НАСТРОЙКИ — ОРИЕНТАЦИЯ ЭКРАНА ======================== -->
     <!-- ============================================================ -->
 
+    <string name="orientation_auto">Авто</string>
     <string name="orientation_auto_desc">Системная</string>
+    <string name="orientation_portrait">Портретная</string>
     <string name="orientation_portrait_desc">Вертикальная</string>
+    <string name="orientation_landscape">Ландшафтная</string>
     <string name="orientation_landscape_desc">Горизонтальная</string>
 
+    <string name="toast_orientation_auto">Авто-ориентация включена</string>
+    <string name="toast_orientation_portrait">Портретная ориентация включена</string>
+    <string name="toast_orientation_landscape">Ландшафтная ориентация включена</string>
+
+    <!-- Блокировка ориентации оболочкой -->
+    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана оболочкой (портретная)</string>
+    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана оболочкой (ландшафтная)</string>
+    <string name="orientation_lock_hint_default">🔒 Ориентация задана оболочкой</string>
+
     <!-- ============================================================ -->
-    <!-- ===== ЯЗЫК ================================================= -->
+    <!-- ===== НАСТРОЙКИ — ЯЗЫК ===================================== -->
     <!-- ============================================================ -->
 
     <string name="settings_language_title">Язык</string>
@@ -91,7 +104,31 @@
     <string name="toast_language_en">Language changed to English</string>
 
     <!-- ============================================================ -->
-    <!-- ===== ПЕРСОНАЛИЗАЦИЯ ====================================== -->
+    <!-- ===== НАСТРОЙКИ — ДОПОЛНИТЕЛЬНЫЕ РЕЖИМЫ ==================== -->
+    <!-- ============================================================ -->
+
+    <string name="parameters_orientation_title">Ориентация экрана</string>
+    <string name="parameters_additional_title">Дополнительные параметры</string>
+
+    <string name="additional_fullscreen">Полноэкранный режим</string>
+    <string name="additional_strict_mode">Строгий режим</string>
+
+    <string name="toast_fullscreen_enabled">Полноэкранный режим включён</string>
+    <string name="toast_fullscreen_disabled">Полноэкранный режим выключен</string>
+    <string name="toast_strict_mode_enabled">Строгий режим включён</string>
+    <string name="toast_strict_mode_disabled">Строгий режим выключен</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ДИАЛОГ ПРИМЕНЕНИЯ ПАРАМЕТРОВ ========================= -->
+    <!-- ============================================================ -->
+
+    <string name="dialog_apply_parameters_title">Применить параметры</string>
+    <string name="dialog_apply_parameters_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
+    <string name="dialog_restart">Перезапустить</string>
+    <string name="dialog_later">Позже</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ПЕРСОНАЛИЗАЦИЯ — АКТИВНАЯ ОБОЛОЧКА =================== -->
     <!-- ============================================================ -->
 
     <string name="settings_personalization_active_shell">Активная оболочка</string>
@@ -99,7 +136,7 @@
     <string name="settings_personalization_open_store">Больше оболочек в Store</string>
     <string name="settings_personalization_color_scheme_title">Цветовая схема</string>
 
-    <!-- Диалог информации -->
+    <!-- Диалог информации об оболочке -->
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
     <string name="settings_personalization_shell_info_version">Версия</string>
@@ -112,12 +149,46 @@
     <string name="settings_personalization_shell_info_repo_error">Не удалось открыть ссылку</string>
     <string name="shell_info_orientation_none">Не задана</string>
 
+    <!-- Типы оболочки -->
+    <string name="shell_type_builtin">Встроенная</string>
+    <string name="shell_type_custom">Пользовательская</string>
+    <string name="shell_version_with_label" formatted="false">Версия: %s</string>
+    <string name="shell_info_min_version_not_specified">Не указано</string>
+
+    <!-- Меню оболочки (contentDescription) -->
+    <string name="shell_menu_description">Меню оболочки</string>
+
+    <!-- Ошибки работы с оболочкой -->
+    <string name="shell_install_error">Ошибка установки оболочки</string>
+    <string name="shell_active_not_found">Ранее активная оболочка не найдена или была удалена</string>
+    <string name="shell_restored_default" formatted="false">Система изменила оболочку на "%s"</string>
+    <string name="shell_default_name">Стандартная</string>
+
     <!-- ============================================================ -->
-    <!-- ==================== ПАМЯТЬ ================================= -->
+    <!-- ===== ЦВЕТОВЫЕ СХЕМЫ ======================================= -->
+    <!-- ============================================================ -->
+
+    <string name="color_scheme_preview_description">Цветовая схема</string>
+    <string name="color_scheme_applied" formatted="false">Цветовая схема «"%s"» применена</string>
+
+    <string name="color_scheme_red">Красный</string>
+    <string name="color_scheme_orange">Оранжевый</string>
+    <string name="color_scheme_lime">Лаймовый</string>
+    <string name="color_scheme_green">Зелёный</string>
+    <string name="color_scheme_teal">Бирюзовый</string>
+    <string name="color_scheme_cyan">Голубой</string>
+    <string name="color_scheme_blue">Синий</string>
+    <string name="color_scheme_purple">Фиолетовый</string>
+    <string name="color_scheme_pink">Розовый</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ПАМЯТЬ (STORAGE) ===================================== -->
     <!-- ============================================================ -->
 
     <string name="storage_storage_title">Управление памятью</string>
     <string name="storage_data_title">Данные приложения</string>
+
+    <!-- Категории -->
     <string name="storage_category_cache">Кэш</string>
     <string name="storage_category_logs">Логи</string>
     <string name="storage_category_temp">Временные файлы</string>
@@ -126,15 +197,15 @@
     <string name="storage_category_exports">Экспорты</string>
     <string name="storage_category_backups">Резервные копии</string>
 
+    <!-- Состояния и очистка -->
     <string name="storage_empty_state">Нет данных для отображения</string>
     <string name="storage_nothing_to_clear">Нечего очищать</string>
-
     <string name="storage_clear_title">Очистка</string>
     <string name="storage_clear_button">Очистить выбранное</string>
     <string name="storage_cleared_multiple_toast">Выбранные категории очищены</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== API МЕТОДЫ (UI) ======================== -->
+    <!-- ===== API МЕТОДЫ (UI) ====================================== -->
     <!-- ============================================================ -->
 
     <string name="api_methods_empty">Нет зарегистрированных методов</string>
@@ -156,115 +227,26 @@
     <string name="api_getsysteminfo_desc">Информация об устройстве</string>
     <string name="api_getcorestate_desc">Состояние ядра для оболочки</string>
 
-    <!-- ============================================================ -->
-    <!-- ===== ТОСТ-СООБЩЕНИЯ ======================================= -->
-    <!-- ============================================================ -->
+    <!-- Имена виртуальных приложений (GetApps) -->
+    <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
 
-    <string name="toast_theme_light_enabled">Светлая тема включена</string>
-    <string name="toast_theme_dark_enabled">Тёмная тема включена</string>
-    <string name="toast_theme_system_enabled">Режим "Следовать за системой" включен</string>
-    <string name="toast_fullscreen_enabled">Полноэкранный режим включён</string>
-    <string name="toast_fullscreen_disabled">Полноэкранный режим выключен</string>
-    <string name="toast_strict_mode_enabled">Строгий режим включён</string>
-    <string name="toast_strict_mode_disabled">Строгий режим выключен</string>
-
-    <string name="toast_orientation_auto">Авто-ориентация включена</string>
-    <string name="toast_orientation_portrait">Портретная ориентация включена</string>
-    <string name="toast_orientation_landscape">Ландшафтная ориентация включена</string>
+    <!-- Ошибки LaunchApp -->
+    <string name="api_launchapp_package_required">Требуется имя пакета</string>
+    <string name="api_launchapp_not_found">Приложение не найдено</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== ПАРАМЕТРЫ =================== -->
+    <!-- ===== ЦЕНТР ОБНОВЛЕНИЯ (SYSTEM UPDATE) ===================== -->
     <!-- ============================================================ -->
 
-    <!-- Диалоги -->
-    <string name="dialog_apply_parameters_title">Применить параметры</string>
-    <string name="dialog_apply_parameters_message">Для применения некоторых настроек может потребоваться перезапустить приложение. Сделать это сейчас?</string>
-    <string name="dialog_restart">Перезапустить</string>
-    <string name="dialog_later">Позже</string>
-
-    <!-- Заголовки разделов -->
-    <string name="parameters_orientation_title">Ориентация экрана</string>
-    <string name="parameters_additional_title">Дополнительные параметры</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== ОБОЛОЧКА ОФОРМЛЕНИЯ ======================== -->
-    <!-- ============================================================ -->
-
-    <!-- Меню оболочки -->
-    <string name="shell_menu_description">Меню оболочки</string>
-
-    <!-- Ошибка установки оболочки -->
-    <string name="shell_install_error">Ошибка установки оболочки</string>
-
-    <!-- Информация об оболочке -->
-    <string name="shell_type_builtin">Встроенная</string>
-    <string name="shell_type_custom">Пользовательская</string>
-    <string name="shell_version_with_label" formatted="false">Версия: %s</string>
-    <string name="shell_info_min_version_not_specified">Не указано</string>
-
-    <!-- ============================================================ -->
-    <!-- ЦВЕТОВАЯ СХЕМА -->
-    <!-- ============================================================ -->
-
-    <string name="color_scheme_preview_description">Цветовая схема</string>
-    <string name="color_scheme_applied" formatted="false">Цветовая схема «"%s"» применена</string>
-
-    <!-- Названия цветовых схем -->
-    <string name="color_scheme_red">Красный</string>
-    <string name="color_scheme_orange">Оранжевый</string>
-    <string name="color_scheme_lime">Лаймовый</string>
-    <string name="color_scheme_green">Зелёный</string>
-    <string name="color_scheme_teal">Бирюзовый</string>
-    <string name="color_scheme_cyan">Голубой</string>
-    <string name="color_scheme_blue">Синий</string>
-    <string name="color_scheme_purple">Фиолетовый</string>
-    <string name="color_scheme_pink">Розовый</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== НАСТРОЙКИ ЭКРАНА ======================= -->
-    <!-- ============================================================ -->
-
-    <!-- Ориентация -->
-    <string name="orientation_auto">Авто</string>
-    <string name="orientation_portrait">Портретная</string>
-    <string name="orientation_landscape">Ландшафтная</string>
-
-    <!-- Режимы -->
-    <string name="additional_fullscreen">Полноэкранный режим</string>
-    <string name="additional_strict_mode">Строгий режим</string>
-
-    <!-- Блокировка ориентации -->
-    <string name="orientation_lock_hint_portrait">🔒 Ориентация задана оболочкой (портретная)</string>
-    <string name="orientation_lock_hint_landscape">🔒 Ориентация задана оболочкой (ландшафтная)</string>
-    <string name="orientation_lock_hint_default">🔒 Ориентация задана оболочкой</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== СИСТЕМА И ОБНОВЛЕНИЯ =================== -->
-    <!-- ============================================================ -->
-
-    <!-- Информация о системе -->
-    <string name="version_label">Версия</string>
-    <string name="version_code_label">Код версии</string>
-    <string name="channel_label">Канал</string>
-
-    <!-- Обновление системы -->
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
+
+    <!-- Ошибки -->
     <string name="update_error">Ошибка</string>
     <string name="server_error_prefix">Ошибка сервера</string>
     <string name="server_error" formatted="false">Ошибка сервера: %d</string>
     <string name="no_internet_connection">Отсутствует подключение к интернету</string>
-
-    <!-- Локальная установка APK -->
-    <string name="install_from_file">Локальное обновление</string>
-    <string name="invalid_apk">Выбранный файл не является APK</string>
-    <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
-    <string name="install_local_apk">Установить локальный APK</string>
-    <string name="install_local_message" formatted="false">Вы уверены, что хотите установить APK версии %s?</string>
-
-    <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
-    <string name="install_error">Не удалось запустить установку</string>
 
     <!-- Состояния блока онлайн-обновления -->
     <string name="update_state_available_title">Доступно обновление</string>
@@ -274,11 +256,6 @@
     <string name="update_state_version_label" formatted="false">Версия %s</string>
     <string name="update_state_subtitle_checking">Это может занять несколько секунд</string>
 
-    <!-- Скачивание APK -->
-    <string name="download_apk">Скачать APK</string>
-    <string name="download_complete_title">Загрузка завершена</string>
-    <string name="download_error">Ошибка скачивания</string>
-
     <!-- Диалог обновления -->
     <string name="update_dialog_message" formatted="false">%s\n\nРелиз: %s\nРазмер: %s</string>
     <string name="update_action">Обновить</string>
@@ -287,51 +264,68 @@
     <string name="current_version_info" formatted="false">Текущая версия: %s (код: %s)</string>
     <string name="current_version_info_with_channel" formatted="false">Текущая версия: %s (код: %s, канал: %s)</string>
 
-    <!-- Диалог загрузки -->
+    <!-- Скачивание APK -->
+    <string name="download_apk">Скачать APK</string>
+    <string name="download_complete_title">Загрузка завершена</string>
+    <string name="download_error">Ошибка скачивания</string>
     <string name="downloading_title">Скачивание обновления</string>
     <string name="downloading_progress" formatted="false">Скачивание: %d%%</string>
 
-    <!-- Диалог установки -->
+    <!-- Установка -->
     <string name="install_title">Установка обновления</string>
     <string name="install_message">Обновление скачано. Установить сейчас?</string>
     <string name="install_action">Установить</string>
-
     <string name="apk_saved_to">APK сохранён в:\n%s</string>
 
-    <!-- ============================================================ -->
-    <!-- ==================== СКАЧИВАНИЕ ============================= -->
-    <!-- ============================================================ -->
+    <!-- Локальная установка APK -->
+    <string name="install_from_file">Локальное обновление</string>
+    <string name="invalid_apk">Выбранный файл не является APK</string>
+    <string name="apk_validation_failed">APK не соответствует приложению Quty.Launch</string>
+    <string name="install_local_apk">Установить локальный APK</string>
+    <string name="install_local_message" formatted="false">Вы уверены, что хотите установить APK версии %s?</string>
+    <string name="error_open_file_manager">Ошибка открытия файлового менеджера</string>
+    <string name="install_error">Не удалось запустить установку</string>
 
+    <!-- Ошибки скачивания -->
     <string name="download_not_enough_space">Недостаточно свободного места для загрузки</string>
     <string name="download_http_error" formatted="false">Ошибка загрузки: сервер вернул код %d</string>
     <string name="download_empty_file">Скачанный файл повреждён или пуст</string>
     <string name="download_timeout">Превышено время ожидания ответа от сервера</string>
 
+    <!-- Менеджер обновлений — установка -->
+    <string name="update_install_failed" formatted="false">Не удалось установить обновление: %s</string>
+    <string name="update_install_permission_required">Разрешите установку из неизвестных источников и повторите попытку</string>
+
+    <!-- Обновление оболочки -->
+    <string name="shell_update_not_enough_space">Недостаточно свободного места для загрузки оболочки.\nПожалуйста, освободите место и попробуйте снова.</string>
+
     <!-- ============================================================ -->
-    <!-- ==================== О СИСТЕМЕ (ABOUT) ===================== -->
+    <!-- ===== О СИСТЕМЕ (ABOUT) ==================================== -->
     <!-- ============================================================ -->
 
-    <!-- Шапка -->
     <string name="about_app_description">Лёгкое и модульное ядро для Android-приложений</string>
 
-    <!-- Блок "Приложение" -->
+    <!-- Блок «Приложение» -->
     <string name="about_app_section">Информация о системе</string>
     <string name="about_shell_label">Оболочка</string>
+    <string name="version_label">Версия</string>
+    <string name="version_code_label">Код версии</string>
+    <string name="channel_label">Канал</string>
 
-    <!-- Блок "Устройство" -->
+    <!-- Блок «Устройство» -->
     <string name="about_device_section">Информация об устройстве</string>
     <string name="about_device_model">Модель</string>
     <string name="about_device_android">Android</string>
     <string name="about_device_sdk">SDK</string>
     <string name="about_device_manufacturer">Производитель</string>
 
-    <!-- Блок "Контакты" -->
+    <!-- Блок «Контакты» -->
     <string name="about_contacts_section">Контакты</string>
     <string name="about_contact_telegram">Telegram</string>
     <string name="about_contact_github">GitHub</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== ПРИВЕТСТВИЕ (ONBOARDING) ============== -->
+    <!-- ===== ПРИВЕТСТВИЕ (ONBOARDING) ============================= -->
     <!-- ============================================================ -->
 
     <string name="_0">0%</string>
@@ -360,41 +354,10 @@
     <string name="welcome_permission_denied_message">Для корректной работы Quty.Launch необходимы все разрешения. Пожалуйста, предоставьте доступ в настройках.</string>
 
     <!-- ============================================================ -->
-    <!-- ===== РЕЖИМ РАЗРАБОТЧИКА (новая версия) ==================== -->
+    <!-- ===== РЕЖИМ РАЗРАБОТЧИКА (DevMode) ========================= -->
     <!-- ============================================================ -->
 
-    <!-- Строка "Сбросить онбординг" -->
-    <string name="dev_reset_onboarding">Сбросить онбординг</string>
-
-    <!-- Универсальный диалог подтверждения -->
-    <string name="dialog_dev_confirm_title">Подтверждение</string>
-    <string name="dialog_dev_confirm_message">Вы уверены?</string>
-    <string name="dev_confirm_ok">Подтвердить</string>
-
-    <!-- Диалог подтверждения сброса онбординга -->
-    <string name="dev_reset_onboarding_dialog_title">Сбросить онбординг?</string>
-    <string name="dev_reset_onboarding_dialog_message">После сброса при следующем запуске приложение снова покажет экран приветствия и запросит разрешения заново.</string>
-    <string name="dev_reset_onboarding_confirm">Сбросить</string>
-
-    <!-- Диалог перезапуска после сброса -->
-    <string name="dev_reset_onboarding_restart_title">Готово</string>
-    <string name="dev_reset_onboarding_restart_message">Перезапустить приложение сейчас, чтобы увидеть экран приветствия?</string>
-    <string name="dev_reset_onboarding_restart_confirm">Перезапустить</string>
-
-    <!-- Диалог "Перезапустить приложение" -->
-    <string name="dev_restart_app_dialog_title">Перезапустить приложение?</string>
-    <string name="dev_restart_app_dialog_message">Приложение будет закрыто и запущено заново.</string>
-    <string name="dev_restart_app_dialog_confirm">Перезапустить</string>
-
-    <!-- Диалог "manifest.json" -->
-    <string name="dev_shell_manifest_copy">Копировать</string>
-    <string name="dev_shell_manifest_copied">Скопировано в буфер обмена</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== РЕЖИМ РАЗРАБОТЧИКА ===================== -->
-    <!-- ============================================================ -->
-
-    <!-- Заголовки разделов -->
+    <!-- Секции -->
     <string name="dev_section_shell">Информация об оболочке</string>
     <string name="dev_section_data">Управление данными</string>
     <string name="dev_section_logs">Управление логами</string>
@@ -404,21 +367,21 @@
     <string name="dev_webview_clear_cache">Очистить кэш WebView</string>
     <string name="dev_webview_clear_cache_success">Кэш WebView очищен</string>
 
-    <!-- Информация об оболочке -->
+    <!-- Оболочка -->
     <string name="dev_shell_manifest">Показать manifest.json</string>
     <string name="dev_shell_manifest_title">manifest.json</string>
     <string name="dev_shell_manifest_not_found">manifest.json не найден</string>
+    <string name="dev_shell_manifest_copy">Копировать</string>
+    <string name="dev_shell_manifest_copied">Скопировано в буфер обмена</string>
     <string name="dev_shell_reload">Перезагрузить оболочку</string>
     <string name="dev_shell_reload_success">Оболочка перезагружена</string>
     <string name="dev_shell_not_found">Активная оболочка не найдена</string>
     <string name="dev_error">Ошибка: %s</string>
 
-    <!-- Управление логами -->
+    <!-- Логи -->
     <string name="dev_logs_view">Просмотр логов</string>
-    <string name="dev_logs_logger_in_apps">Логгер в списке приложений</string>
     <string name="dev_logs_view_stub">Функционал появится позже</string>
-
-    <!-- Управление сохранением логов -->
+    <string name="dev_logs_logger_in_apps">Логгер в списке приложений</string>
     <string name="dev_logs_persist">Сохранять логи в файл</string>
     <string name="dev_logs_max_files">Максимум файлов</string>
     <string name="dev_logs_max_size">Максимум на файл</string>
@@ -439,20 +402,36 @@
         <item>10 MB</item>
     </string-array>
 
+    <!-- Сброс онбординга -->
+    <string name="dev_reset_onboarding">Сбросить онбординг</string>
+    <string name="dev_reset_onboarding_dialog_title">Сбросить онбординг?</string>
+    <string name="dev_reset_onboarding_dialog_message">После сброса при следующем запуске приложение снова покажет экран приветствия и запросит разрешения заново.</string>
+    <string name="dev_reset_onboarding_confirm">Сбросить</string>
+    <string name="dev_reset_onboarding_restart_title">Готово</string>
+    <string name="dev_reset_onboarding_restart_message">Перезапустить приложение сейчас, чтобы увидеть экран приветствия?</string>
+    <string name="dev_reset_onboarding_restart_confirm">Перезапустить</string>
+
     <!-- Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
+    <string name="dev_restart_app_dialog_title">Перезапустить приложение?</string>
+    <string name="dev_restart_app_dialog_message">Приложение будет закрыто и запущено заново.</string>
+    <string name="dev_restart_app_dialog_confirm">Перезапустить</string>
 
-    <!-- Активация DevMode -->
+    <!-- Универсальный диалог подтверждения -->
+    <string name="dialog_dev_confirm_title">Подтверждение</string>
+    <string name="dialog_dev_confirm_message">Вы уверены?</string>
+    <string name="dev_confirm_ok">Подтвердить</string>
+
+    <!-- Активация/деактивация -->
     <string name="dev_mode_activated">Режим разработчика активирован!</string>
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== ЛОГГЕР ================================ -->
+    <!-- ===== ЛОГГЕР =============================================== -->
     <!-- ============================================================ -->
 
-    <!-- Название -->
     <string name="logger_app_name">Логгер</string>
     <string name="logger_title">🐞 Логгер</string>
 
@@ -461,16 +440,23 @@
     <string name="logger_copy">Копировать</string>
     <string name="logger_pause">Пауза</string>
     <string name="logger_close">Закрыть</string>
-    <string name="logger_empty">Логов пока нет</string>
     <string name="logger_save">Сохранить логи</string>
-    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
-    <string name="logger_save_error">Ошибка сохранения логов</string>
     <string name="logger_share">Поделиться логами</string>
     <string name="logger_share_title">Поделиться логами</string>
 
+    <!-- Статусы -->
+    <string name="logger_empty">Логов пока нет</string>
+    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
+    <string name="logger_save_error">Ошибка сохранения логов</string>
+    <string name="logger_status" formatted="false">Всего логов: %d</string>
+    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
+    <string name="logger_copied">Логи скопированы в буфер обмена</string>
+    <string name="logger_cleared">Логи очищены</string>
+    <string name="logger_paused">Сбор логов приостановлен</string>
+    <string name="logger_resumed">Сбор логов возобновлён</string>
+
     <!-- Фильтры -->
     <string name="logger_filter_all">Все</string>
-    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
 
     <string-array name="logger_levels">
         <item>Все</item>
@@ -486,78 +472,13 @@
         <item>WebView</item>
     </string-array>
 
-    <!-- Статус -->
-    <string name="logger_status" formatted="false">Всего логов: %d</string>
-    <string name="logger_copied">Логи скопированы в буфер обмена</string>
-    <string name="logger_cleared">Логи очищены</string>
-    <string name="logger_paused">Сбор логов приостановлен</string>
-    <string name="logger_resumed">Сбор логов возобновлён</string>
-
     <!-- Ошибки -->
     <string name="logger_devmode_required">Режим разработчика не активирован</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== МЕНЕДЖЕР ОБОЛОЧЕК =========================== -->
+    <!-- ===== МАГАЗИН (STORE) ====================================== -->
     <!-- ============================================================ -->
 
-    <!-- Авторы -->
-    <string name="author_default">QutyTeam</string>
-
-    <!-- Названия -->
-    <string name="shell_default_name">Стандартная</string>
-    <string name="shell_active_not_found">Ранее активная оболочка не найдена или была удалена</string>
-    <string name="shell_restored_default" formatted="false">Система изменила оболочку на "%s"</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== ОБНОВЛЕНИЕ ОБОЛОЧКИ ==================== -->
-    <!-- ============================================================ -->
-
-    <string name="shell_update_not_enough_space">Недостаточно свободного места для загрузки оболочки.\nПожалуйста, освободите место и попробуйте снова.</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== МЕНЕДЖЕР ОБНОВЛЕНИЙ ==================== -->
-    <!-- ============================================================ -->
-
-    <string name="update_install_failed" formatted="false">Не удалось установить обновление: %s</string>
-    <string name="update_install_permission_required">Разрешите установку из неизвестных источников и повторите попытку</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== JsBridge =============================== -->
-    <!-- ============================================================ -->
-
-    <string name="js_bridge_webview_null" formatted="false">WebView уничтожен, невозможно отправить результат: %s</string>
-    <string name="js_bridge_send_error" formatted="false">Не удалось отправить результат в JS: %s</string>
-    <string name="js_bridge_timeout_error">Время выполнения истекло</string>
-    <string name="js_bridge_cancelled_error">Выполнение отменено</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== LAUNCHER WEBVIEW ======================= -->
-    <!-- ============================================================ -->
-
-    <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
-    <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
-    <string name="webview_retry_limit_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
-    <string name="webview_retry_attempt" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
-    <string name="webview_render_process_gone">Оболочка перезагружается…</string>
-    <string name="log_webview_render_process_gone" formatted="false">Render-процесс WebView упал. Crashed: %b</string>
-    <string name="log_webview_restart_failed" formatted="false">Не удалось перезапустить MainActivity: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== API МЕТОДЫ ============================= -->
-    <!-- ============================================================ -->
-
-    <!-- GetApps -->
-    <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
-
-    <!-- LaunchApp -->
-    <string name="api_launchapp_package_required">Требуется имя пакета</string>
-    <string name="api_launchapp_not_found">Приложение не найдено</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== МАГАЗИН =============================== -->
-    <!-- ============================================================ -->
-
-    <!-- Общие -->
     <string name="store_title">Магазин</string>
     <string name="store_tab_shells">Оболочки</string>
     <string name="store_tab_my">Мои</string>
@@ -576,9 +497,9 @@
     <string name="store_date">Дата</string>
     <string name="store_size">Размер</string>
     <string name="store_description">Описание</string>
-    <string name="store_compat_required" formatted="false">⚠️ Требуется Quty.Launch версии %s или выше</string>
     <string name="store_author_label">Автор: </string>
     <string name="store_preview_description">Превью оболочки</string>
+    <string name="store_compat_required" formatted="false">⚠️ Требуется Quty.Launch версии %s или выше</string>
 
     <!-- Установка -->
     <string name="store_installing">Установка оболочки</string>
@@ -592,10 +513,36 @@
     <string name="store_save_error">Ошибка сохранения оболочки</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== ЛОГИ (TECHNICAL) ====================== -->
+    <!-- ===== АВТОРЫ =============================================== -->
     <!-- ============================================================ -->
 
-    <!-- CacheManager логи -->
+    <string name="author_default">QutyTeam</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== JsBridge ============================================= -->
+    <!-- ============================================================ -->
+
+    <string name="js_bridge_webview_null" formatted="false">WebView уничтожен, невозможно отправить результат: %s</string>
+    <string name="js_bridge_send_error" formatted="false">Не удалось отправить результат в JS: %s</string>
+    <string name="js_bridge_timeout_error">Время выполнения истекло</string>
+    <string name="js_bridge_cancelled_error">Выполнение отменено</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== LAUNCHER WEBVIEW ===================================== -->
+    <!-- ============================================================ -->
+
+    <string name="webview_error_loading" formatted="false">Ошибка при загрузке: %s - %s</string>
+    <string name="webview_dir_shell_not_found">Директория активной оболочки не найдена</string>
+    <string name="webview_retry_limit_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
+    <string name="webview_retry_attempt" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
+    <string name="webview_render_process_gone">Оболочка перезагружается…</string>
+    <string name="log_webview_render_process_gone" formatted="false">Render-процесс WebView упал. Crashed: %b</string>
+    <string name="log_webview_restart_failed" formatted="false">Не удалось перезапустить MainActivity: %s</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — CacheManager ================================= -->
+    <!-- ============================================================ -->
+
     <string name="log_cache_manager_package_changed" formatted="false">📦 Обнаружено изменение в приложениях: %s -&gt; %s</string>
     <string name="log_cache_manager_receiver_registered">📦 BroadcastReceiver зарегистрирован для отслеживания приложений</string>
     <string name="log_cache_manager_receiver_register_error">Ошибка регистрации BroadcastReceiver: %s</string>
@@ -604,7 +551,10 @@
     <string name="log_cache_manager_cleared">🗑️ Кэш приложений очищен</string>
     <string name="log_cache_manager_invalidated">🔄 Кэш приложений инвалидирован (грязный флаг = true)</string>
 
-    <!-- ShellUpdateManager логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — ShellUpdateManager =========================== -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_update_incompatible">⚠️ Обновление несовместимо с текущей версией Quty.Launch</string>
     <string name="log_shell_update_found" formatted="false">✅ Найдено обновление: %s (текущая: %s)</string>
     <string name="log_shell_update_not_found" formatted="false">ℹ️ Обновлений нет (текущая: %s, доступна: %s)</string>
@@ -614,7 +564,10 @@
     <string name="log_shell_update_save_error">❌ Ошибка сохранения обновления оболочки</string>
     <string name="log_shell_update_download_error">❌ Ошибка скачивания обновления: %s</string>
 
-    <!-- StorageManager логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — StorageManager =============================== -->
+    <!-- ============================================================ -->
+
     <string name="log_storage_dir_created">📁 Создана директория: %s</string>
     <string name="log_storage_dir_create_failed">❌ Не удалось создать: %s</string>
     <string name="log_storage_file_not_exists">⚠️ Файл не существует: %s</string>
@@ -633,17 +586,17 @@
     <string name="log_storage_files_delete_error">❌ Ошибка удаления файлов: %s</string>
     <string name="log_storage_uri_error">❌ Ошибка получения URI: %s</string>
 
-    <!-- LoggerFile логи -->
-    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — LoggerFileManager / LoggerManager ============= -->
+    <!-- ============================================================ -->
 
-    <!-- Logger логи -->
+    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
     <string name="log_logger_initialized">Logger инициализирован</string>
     <string name="log_logger_restore_error">Ошибка восстановления логов из файла</string>
     <string name="log_logger_cleared">Логи очищены</string>
     <string name="log_logger_clear_error">Ошибка очистки логов: %s</string>
     <string name="log_logger_save_error">Ошибка сохранения логов: %s</string>
 
-    <!-- plurals (бывшие log_logger_restored) -->
     <plurals name="log_logger_restored">
         <item quantity="one">Восстановлен %d лог из файла</item>
         <item quantity="few">Восстановлено %d лога из файла</item>
@@ -651,7 +604,10 @@
         <item quantity="other">Восстановлено %d логов из файла</item>
     </plurals>
 
-    <!-- SystemUpdateManager логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — SystemUpdateManager ========================== -->
+    <!-- ============================================================ -->
+
     <string name="log_system_update_checking">Проверка обновлений…</string>
     <string name="log_system_update_version_check" formatted="false">Текущая версия: %d, Доступна: %d, Обновление: %b</string>
     <string name="log_system_update_server_error" formatted="false">Сервер вернул код: %d</string>
@@ -670,10 +626,16 @@
     <string name="log_system_update_install_no_permission">Нет разрешения на установку, открываем настройки</string>
     <string name="log_system_update_install_error">Ошибка запуска установки: %s</string>
 
-    <!-- ShellManager логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — ShellManager ================================= -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_manager_unzip_error">Ошибка распаковки оболочки: %s</string>
 
-    <!-- StoreManager логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — StoreManager ================================= -->
+    <!-- ============================================================ -->
+
     <string name="log_store_installed_shells_from_manager">✅ Установленные оболочки (из ShellManager): %s</string>
     <string name="log_store_shell_installed_check" formatted="false">  📦 %s → установлена: %b</string>
     <string name="log_store_load_error">Ошибка загрузки: %d</string>
@@ -681,7 +643,6 @@
     <string name="log_store_shell_installed">Оболочка установлена: %s</string>
     <string name="log_store_install_error">Ошибка установки: %s</string>
 
-    <!-- plurals (бывшие log_store_shells_loaded) -->
     <plurals name="log_store_shells_loaded">
         <item quantity="one">Загружена %d оболочка</item>
         <item quantity="few">Загружено %d оболочки</item>
@@ -689,25 +650,29 @@
         <item quantity="other">Загружено %d оболочек</item>
     </plurals>
 
-    <!-- ShellListFragment логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — ShellListFragment ============================ -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
     <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
     <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
     <string name="log_shell_list_empty">🔍 ПУСТО: показан emptyText</string>
     <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
 
-    <!-- JsBridge логи -->
+    <!-- ============================================================ -->
+    <!-- ===== ЛОГИ — JsBridge / SettingsActivity / Developer ====== -->
+    <!-- ============================================================ -->
+
     <string name="log_js_bridge_state_notified">Состояние ядра передано оболочке</string>
     <string name="log_js_bridge_state_notify_error" formatted="false">Не удалось передать состояние ядра: %s</string>
 
-    <!-- SettingsActivity логи -->
     <string name="log_settings_restored_needs_restart" formatted="false">Восстановлено, требуется перезапуск: %b</string>
     <string name="log_settings_width_tablet" formatted="false">Ширина: %.2fdp, Планшет: %b</string>
     <string name="log_settings_restart_required">Требуется перезапуск: настройка изменена</string>
     <string name="log_settings_checking_restart_state" formatted="false">Проверка состояния перезапуска: needsRestart=%b</string>
     <string name="log_settings_error">Ошибка</string>
 
-    <!-- DeveloperFragment логи -->
-    <string name="log_developer_onboarding_reset">Onboarding flag reset (force_show_onboarding=true)</string>
+    <string name="log_developer_onboarding_reset">Сброс флага онбординга (force_show_onboarding=true)</string>
 
 </resources>

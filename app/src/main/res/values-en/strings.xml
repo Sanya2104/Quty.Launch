@@ -1,8 +1,8 @@
 <!-- res/values-en/strings.xml -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ============================================================ -->
-    <!-- ==================== GENERAL =============================== -->
+    <!-- ===== GENERAL ============================================== -->
     <!-- ============================================================ -->
 
     <!-- App name -->
@@ -22,12 +22,12 @@
     <string name="unknown">Unknown</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== SETTINGS ============================== -->
+    <!-- ===== SETTINGS — MENU & TITLES ============================= -->
     <!-- ============================================================ -->
 
-    <!-- Titles -->
     <string name="settings_title">Settings</string>
     <string name="settings_fragment">Fragment name</string>
+    <string name="settings_close">Close</string>
 
     <!-- Menu items -->
     <string name="settings_menu_main">General</string>
@@ -51,14 +51,11 @@
     <string name="settings_api_methods_title">API methods</string>
     <string name="settings_recovery_title">Backup &amp; reset</string>
 
-    <!-- Buttons -->
-    <string name="settings_close">Close</string>
-
     <!-- Fragment descriptions (placeholders) -->
     <string name="settings_recovery_desc">Will be here:\n• Export/Import settings</string>
 
     <!-- ============================================================ -->
-    <!-- ===== THEME ================================================ -->
+    <!-- ===== SETTINGS — THEME ===================================== -->
     <!-- ============================================================ -->
 
     <string name="settings_theme_title">Appearance theme</string>
@@ -69,16 +66,32 @@
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_system_desc">Follows the system</string>
 
+    <string name="toast_theme_light_enabled">Light theme enabled</string>
+    <string name="toast_theme_dark_enabled">Dark theme enabled</string>
+    <string name="toast_theme_system_enabled">"Follow system" mode enabled</string>
+
     <!-- ============================================================ -->
-    <!-- ===== SCREEN ORIENTATION =================================== -->
+    <!-- ===== SETTINGS — SCREEN ORIENTATION ======================== -->
     <!-- ============================================================ -->
 
+    <string name="orientation_auto">Auto</string>
     <string name="orientation_auto_desc">System</string>
+    <string name="orientation_portrait">Portrait</string>
     <string name="orientation_portrait_desc">Vertical</string>
+    <string name="orientation_landscape">Landscape</string>
     <string name="orientation_landscape_desc">Horizontal</string>
 
+    <string name="toast_orientation_auto">Auto-rotate enabled</string>
+    <string name="toast_orientation_portrait">Portrait orientation enabled</string>
+    <string name="toast_orientation_landscape">Landscape orientation enabled</string>
+
+    <!-- Orientation lock by shell -->
+    <string name="orientation_lock_hint_portrait">🔒 Orientation set by shell (portrait)</string>
+    <string name="orientation_lock_hint_landscape">🔒 Orientation set by shell (landscape)</string>
+    <string name="orientation_lock_hint_default">🔒 Orientation set by shell</string>
+
     <!-- ============================================================ -->
-    <!-- ===== LANGUAGE ============================================= -->
+    <!-- ===== SETTINGS — LANGUAGE ================================== -->
     <!-- ============================================================ -->
 
     <string name="settings_language_title">Language</string>
@@ -91,7 +104,31 @@
     <string name="toast_language_en">Language changed to English</string>
 
     <!-- ============================================================ -->
-    <!-- ===== PERSONALIZATION ====================================== -->
+    <!-- ===== SETTINGS — ADDITIONAL MODES ========================== -->
+    <!-- ============================================================ -->
+
+    <string name="parameters_orientation_title">Screen orientation</string>
+    <string name="parameters_additional_title">Additional parameters</string>
+
+    <string name="additional_fullscreen">Fullscreen mode</string>
+    <string name="additional_strict_mode">Strict mode</string>
+
+    <string name="toast_fullscreen_enabled">Fullscreen mode enabled</string>
+    <string name="toast_fullscreen_disabled">Fullscreen mode disabled</string>
+    <string name="toast_strict_mode_enabled">Strict mode enabled</string>
+    <string name="toast_strict_mode_disabled">Strict mode disabled</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== APPLY PARAMETERS DIALOG ============================== -->
+    <!-- ============================================================ -->
+
+    <string name="dialog_apply_parameters_title">Apply parameters</string>
+    <string name="dialog_apply_parameters_message">Some settings may require restarting the app. Do it now?</string>
+    <string name="dialog_restart">Restart</string>
+    <string name="dialog_later">Later</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== PERSONALIZATION — ACTIVE SHELL ======================= -->
     <!-- ============================================================ -->
 
     <string name="settings_personalization_active_shell">Active shell</string>
@@ -99,7 +136,7 @@
     <string name="settings_personalization_open_store">More shells in Store</string>
     <string name="settings_personalization_color_scheme_title">Color scheme</string>
 
-    <!-- Info dialog -->
+    <!-- Shell info dialog -->
     <string name="settings_personalization_shell_info_title">Shell information</string>
     <string name="settings_personalization_shell_info_name">Name</string>
     <string name="settings_personalization_shell_info_version">Version</string>
@@ -112,12 +149,46 @@
     <string name="settings_personalization_shell_info_repo_error">Failed to open link</string>
     <string name="shell_info_orientation_none">Not specified</string>
 
+    <!-- Shell types -->
+    <string name="shell_type_builtin">Built-in</string>
+    <string name="shell_type_custom">Custom</string>
+    <string name="shell_version_with_label" formatted="false">Version: %s</string>
+    <string name="shell_info_min_version_not_specified">Not specified</string>
+
+    <!-- Shell menu (contentDescription) -->
+    <string name="shell_menu_description">Shell menu</string>
+
+    <!-- Shell errors -->
+    <string name="shell_install_error">Failed to install shell</string>
+    <string name="shell_active_not_found">Previously active shell not found or deleted</string>
+    <string name="shell_restored_default" formatted="false">System changed shell to "%s"</string>
+    <string name="shell_default_name">Default</string>
+
     <!-- ============================================================ -->
-    <!-- ==================== STORAGE ================================ -->
+    <!-- ===== COLOR SCHEMES ======================================== -->
+    <!-- ============================================================ -->
+
+    <string name="color_scheme_preview_description">Color scheme</string>
+    <string name="color_scheme_applied" formatted="false">Color scheme "%s" applied</string>
+
+    <string name="color_scheme_red">Red</string>
+    <string name="color_scheme_orange">Orange</string>
+    <string name="color_scheme_lime">Lime</string>
+    <string name="color_scheme_green">Green</string>
+    <string name="color_scheme_teal">Teal</string>
+    <string name="color_scheme_cyan">Cyan</string>
+    <string name="color_scheme_blue">Blue</string>
+    <string name="color_scheme_purple">Purple</string>
+    <string name="color_scheme_pink">Pink</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== STORAGE ============================================== -->
     <!-- ============================================================ -->
 
     <string name="storage_storage_title">Memory management</string>
     <string name="storage_data_title">App data</string>
+
+    <!-- Categories -->
     <string name="storage_category_cache">Cache</string>
     <string name="storage_category_logs">Logs</string>
     <string name="storage_category_temp">Temp files</string>
@@ -126,15 +197,15 @@
     <string name="storage_category_exports">Exports</string>
     <string name="storage_category_backups">Backups</string>
 
+    <!-- States & cleanup -->
     <string name="storage_empty_state">No data to display</string>
     <string name="storage_nothing_to_clear">Nothing to clear</string>
-
     <string name="storage_clear_title">Cleanup</string>
     <string name="storage_clear_button">Clear selected</string>
     <string name="storage_cleared_multiple_toast">Selected categories cleared</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== API METHODS (UI) ======================= -->
+    <!-- ===== API METHODS (UI) ===================================== -->
     <!-- ============================================================ -->
 
     <string name="api_methods_empty">No registered methods</string>
@@ -156,115 +227,26 @@
     <string name="api_getsysteminfo_desc">Device information</string>
     <string name="api_getcorestate_desc">Core state for shell</string>
 
-    <!-- ============================================================ -->
-    <!-- ===== TOASTS =============================================== -->
-    <!-- ============================================================ -->
+    <!-- Virtual app names (GetApps) -->
+    <string name="api_getapps_settings_name">Quty.Launch Settings</string>
 
-    <string name="toast_theme_light_enabled">Light theme enabled</string>
-    <string name="toast_theme_dark_enabled">Dark theme enabled</string>
-    <string name="toast_theme_system_enabled">"Follow system" mode enabled</string>
-    <string name="toast_fullscreen_enabled">Fullscreen mode enabled</string>
-    <string name="toast_fullscreen_disabled">Fullscreen mode disabled</string>
-    <string name="toast_strict_mode_enabled">Strict mode enabled</string>
-    <string name="toast_strict_mode_disabled">Strict mode disabled</string>
-
-    <string name="toast_orientation_auto">Auto-rotate enabled</string>
-    <string name="toast_orientation_portrait">Portrait orientation enabled</string>
-    <string name="toast_orientation_landscape">Landscape orientation enabled</string>
+    <!-- LaunchApp errors -->
+    <string name="api_launchapp_package_required">Package name required</string>
+    <string name="api_launchapp_not_found">App not found</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== PARAMETERS ============================ -->
+    <!-- ===== UPDATE CENTER (SYSTEM UPDATE) ======================== -->
     <!-- ============================================================ -->
 
-    <!-- Dialogs -->
-    <string name="dialog_apply_parameters_title">Apply parameters</string>
-    <string name="dialog_apply_parameters_message">Some settings may require restarting the app. Do it now?</string>
-    <string name="dialog_restart">Restart</string>
-    <string name="dialog_later">Later</string>
-
-    <!-- Section titles -->
-    <string name="parameters_orientation_title">Screen orientation</string>
-    <string name="parameters_additional_title">Additional parameters</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== SHELL ================================= -->
-    <!-- ============================================================ -->
-
-    <!-- Shell menu -->
-    <string name="shell_menu_description">Shell menu</string>
-
-    <!-- Shell install error -->
-    <string name="shell_install_error">Failed to install shell</string>
-
-    <!-- Shell info -->
-    <string name="shell_type_builtin">Built-in</string>
-    <string name="shell_type_custom">Custom</string>
-    <string name="shell_version_with_label" formatted="false">Version: %s</string>
-    <string name="shell_info_min_version_not_specified">Not specified</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== COLOR SCHEME ========================== -->
-    <!-- ============================================================ -->
-
-    <string name="color_scheme_preview_description">Color scheme</string>
-    <string name="color_scheme_applied" formatted="false">Color scheme "%s" applied</string>
-
-    <!-- Color scheme names -->
-    <string name="color_scheme_red">Red</string>
-    <string name="color_scheme_orange">Orange</string>
-    <string name="color_scheme_lime">Lime</string>
-    <string name="color_scheme_green">Green</string>
-    <string name="color_scheme_teal">Teal</string>
-    <string name="color_scheme_cyan">Cyan</string>
-    <string name="color_scheme_blue">Blue</string>
-    <string name="color_scheme_purple">Purple</string>
-    <string name="color_scheme_pink">Pink</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== SCREEN SETTINGS ======================= -->
-    <!-- ============================================================ -->
-
-    <!-- Orientation -->
-    <string name="orientation_auto">Auto</string>
-    <string name="orientation_portrait">Portrait</string>
-    <string name="orientation_landscape">Landscape</string>
-
-    <!-- Modes -->
-    <string name="additional_fullscreen">Fullscreen mode</string>
-    <string name="additional_strict_mode">Strict mode</string>
-
-    <!-- Orientation lock -->
-    <string name="orientation_lock_hint_portrait">🔒 Orientation set by shell (portrait)</string>
-    <string name="orientation_lock_hint_landscape">🔒 Orientation set by shell (landscape)</string>
-    <string name="orientation_lock_hint_default">🔒 Orientation set by shell</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== SYSTEM & UPDATES ====================== -->
-    <!-- ============================================================ -->
-
-    <!-- System information -->
-    <string name="version_label">Version</string>
-    <string name="version_code_label">Version code</string>
-    <string name="channel_label">Channel</string>
-
-    <!-- System update -->
     <string name="update_info_title">System update</string>
     <string name="check_updates_online_button">Online update</string>
     <string name="checking_updates">Checking…</string>
+
+    <!-- Errors -->
     <string name="update_error">Error</string>
     <string name="server_error_prefix">Server error</string>
     <string name="server_error" formatted="false">Server error: %d</string>
     <string name="no_internet_connection">No internet connection</string>
-
-    <!-- Local APK install -->
-    <string name="install_from_file">Local update</string>
-    <string name="invalid_apk">Selected file is not an APK</string>
-    <string name="apk_validation_failed">APK does not match Quty.Launch</string>
-    <string name="install_local_apk">Install local APK</string>
-    <string name="install_local_message" formatted="false">Are you sure you want to install APK version %s?</string>
-
-    <string name="error_open_file_manager">Error opening file manager</string>
-    <string name="install_error">Failed to start installation</string>
 
     <!-- Online update state block -->
     <string name="update_state_available_title">Update available</string>
@@ -274,11 +256,6 @@
     <string name="update_state_version_label" formatted="false">Version %s</string>
     <string name="update_state_subtitle_checking">This may take a few seconds</string>
 
-    <!-- APK download -->
-    <string name="download_apk">Download APK</string>
-    <string name="download_complete_title">Download complete</string>
-    <string name="download_error">Download error</string>
-
     <!-- Update dialog -->
     <string name="update_dialog_message" formatted="false">%s\n\nRelease: %s\nSize: %s</string>
     <string name="update_action">Update</string>
@@ -287,36 +264,53 @@
     <string name="current_version_info" formatted="false">Current version: %s (code: %s)</string>
     <string name="current_version_info_with_channel" formatted="false">Current version: %s (code: %s, channel: %s)</string>
 
-    <!-- Download dialog -->
+    <!-- APK download -->
+    <string name="download_apk">Download APK</string>
+    <string name="download_complete_title">Download complete</string>
+    <string name="download_error">Download error</string>
     <string name="downloading_title">Downloading update</string>
     <string name="downloading_progress" formatted="false">Downloading: %d%%</string>
 
-    <!-- Install dialog -->
+    <!-- Install -->
     <string name="install_title">Installing update</string>
     <string name="install_message">Update downloaded. Install now?</string>
     <string name="install_action">Install</string>
-
     <string name="apk_saved_to">APK saved to:\n%s</string>
 
-    <!-- ============================================================ -->
-    <!-- ==================== DOWNLOAD ============================== -->
-    <!-- ============================================================ -->
+    <!-- Local APK install -->
+    <string name="install_from_file">Local update</string>
+    <string name="invalid_apk">Selected file is not an APK</string>
+    <string name="apk_validation_failed">APK does not match Quty.Launch</string>
+    <string name="install_local_apk">Install local APK</string>
+    <string name="install_local_message" formatted="false">Are you sure you want to install APK version %s?</string>
+    <string name="error_open_file_manager">Error opening file manager</string>
+    <string name="install_error">Failed to start installation</string>
 
+    <!-- Download errors -->
     <string name="download_not_enough_space">Not enough free space for download</string>
     <string name="download_http_error" formatted="false">Download error: server returned %d</string>
     <string name="download_empty_file">Downloaded file is corrupted or empty</string>
     <string name="download_timeout">Server response timeout</string>
 
+    <!-- Update manager — install -->
+    <string name="update_install_failed" formatted="false">Failed to install update: %s</string>
+    <string name="update_install_permission_required">Allow installation from unknown sources and try again</string>
+
+    <!-- Shell update -->
+    <string name="shell_update_not_enough_space">Not enough free space to download the shell.\nPlease free up space and try again.</string>
+
     <!-- ============================================================ -->
-    <!-- ==================== ABOUT ================================= -->
+    <!-- ===== ABOUT ================================================ -->
     <!-- ============================================================ -->
 
-    <!-- Header -->
     <string name="about_app_description">Lightweight and modular core for Android apps</string>
 
     <!-- "Application" section -->
     <string name="about_app_section">System information</string>
     <string name="about_shell_label">Shell</string>
+    <string name="version_label">Version</string>
+    <string name="version_code_label">Version code</string>
+    <string name="channel_label">Channel</string>
 
     <!-- "Device" section -->
     <string name="about_device_section">Device information</string>
@@ -331,7 +325,7 @@
     <string name="about_contact_github">GitHub</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== WELCOME (ONBOARDING) ================== -->
+    <!-- ===== WELCOME (ONBOARDING) ================================= -->
     <!-- ============================================================ -->
 
     <string name="_0">0%</string>
@@ -360,41 +354,10 @@
     <string name="welcome_permission_denied_message">Quty.Launch requires all permissions to work correctly. Please grant access in settings.</string>
 
     <!-- ============================================================ -->
-    <!-- ===== DEVELOPER MODE (new version) ========================= -->
+    <!-- ===== DEVELOPER MODE ======================================= -->
     <!-- ============================================================ -->
 
-    <!-- Reset onboarding row -->
-    <string name="dev_reset_onboarding">Reset onboarding</string>
-
-    <!-- Universal confirmation dialog -->
-    <string name="dialog_dev_confirm_title">Confirmation</string>
-    <string name="dialog_dev_confirm_message">Are you sure?</string>
-    <string name="dev_confirm_ok">Confirm</string>
-
-    <!-- Reset onboarding confirmation dialog -->
-    <string name="dev_reset_onboarding_dialog_title">Reset onboarding?</string>
-    <string name="dev_reset_onboarding_dialog_message">After resetting, the app will show the welcome screen again on the next launch and request permissions once more.</string>
-    <string name="dev_reset_onboarding_confirm">Reset</string>
-
-    <!-- Restart dialog after reset -->
-    <string name="dev_reset_onboarding_restart_title">Done</string>
-    <string name="dev_reset_onboarding_restart_message">Restart the app now to see the welcome screen?</string>
-    <string name="dev_reset_onboarding_restart_confirm">Restart</string>
-
-    <!-- "Restart app" dialog -->
-    <string name="dev_restart_app_dialog_title">Restart the app?</string>
-    <string name="dev_restart_app_dialog_message">The app will be closed and launched again.</string>
-    <string name="dev_restart_app_dialog_confirm">Restart</string>
-
-    <!-- "manifest.json" dialog -->
-    <string name="dev_shell_manifest_copy">Copy</string>
-    <string name="dev_shell_manifest_copied">Copied to clipboard</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== DEVELOPER MODE ======================== -->
-    <!-- ============================================================ -->
-
-    <!-- Section titles -->
+    <!-- Sections -->
     <string name="dev_section_shell">Shell info</string>
     <string name="dev_section_data">Data management</string>
     <string name="dev_section_logs">Log management</string>
@@ -404,21 +367,21 @@
     <string name="dev_webview_clear_cache">Clear WebView cache</string>
     <string name="dev_webview_clear_cache_success">WebView cache cleared</string>
 
-    <!-- Shell info -->
+    <!-- Shell -->
     <string name="dev_shell_manifest">Show manifest.json</string>
     <string name="dev_shell_manifest_title">manifest.json</string>
     <string name="dev_shell_manifest_not_found">manifest.json not found</string>
+    <string name="dev_shell_manifest_copy">Copy</string>
+    <string name="dev_shell_manifest_copied">Copied to clipboard</string>
     <string name="dev_shell_reload">Reload shell</string>
     <string name="dev_shell_reload_success">Shell reloaded</string>
     <string name="dev_shell_not_found">Active shell not found</string>
     <string name="dev_error">Error: %s</string>
 
-    <!-- Log management -->
+    <!-- Logs -->
     <string name="dev_logs_view">View logs</string>
-    <string name="dev_logs_logger_in_apps">Logger in app list</string>
     <string name="dev_logs_view_stub">Feature coming soon</string>
-
-    <!-- Log save settings -->
+    <string name="dev_logs_logger_in_apps">Logger in app list</string>
     <string name="dev_logs_persist">Save logs to file</string>
     <string name="dev_logs_max_files">Max files</string>
     <string name="dev_logs_max_size">Max per file</string>
@@ -439,20 +402,36 @@
         <item>10 MB</item>
     </string-array>
 
+    <!-- Reset onboarding -->
+    <string name="dev_reset_onboarding">Reset onboarding</string>
+    <string name="dev_reset_onboarding_dialog_title">Reset onboarding?</string>
+    <string name="dev_reset_onboarding_dialog_message">After resetting, the app will show the welcome screen again on the next launch and request permissions once more.</string>
+    <string name="dev_reset_onboarding_confirm">Reset</string>
+    <string name="dev_reset_onboarding_restart_title">Done</string>
+    <string name="dev_reset_onboarding_restart_message">Restart the app now to see the welcome screen?</string>
+    <string name="dev_reset_onboarding_restart_confirm">Restart</string>
+
     <!-- Tools -->
     <string name="dev_restart_app">Restart app</string>
+    <string name="dev_restart_app_dialog_title">Restart the app?</string>
+    <string name="dev_restart_app_dialog_message">The app will be closed and launched again.</string>
+    <string name="dev_restart_app_dialog_confirm">Restart</string>
 
-    <!-- DevMode activation -->
+    <!-- Universal confirmation dialog -->
+    <string name="dialog_dev_confirm_title">Confirmation</string>
+    <string name="dialog_dev_confirm_message">Are you sure?</string>
+    <string name="dev_confirm_ok">Confirm</string>
+
+    <!-- Activation / deactivation -->
     <string name="dev_mode_activated">Developer mode activated!</string>
     <string name="dev_mode_deactivated">Developer mode deactivated</string>
     <string name="dev_mode_click_count" formatted="false">Clicks left: %d</string>
     <string name="dev_unknown_error">Unknown error</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== LOGGER ================================ -->
+    <!-- ===== LOGGER =============================================== -->
     <!-- ============================================================ -->
 
-    <!-- Name -->
     <string name="logger_app_name">Logger</string>
     <string name="logger_title">🐞 Logger</string>
 
@@ -461,16 +440,23 @@
     <string name="logger_copy">Copy</string>
     <string name="logger_pause">Pause</string>
     <string name="logger_close">Close</string>
-    <string name="logger_empty">No logs yet</string>
     <string name="logger_save">Save logs</string>
-    <string name="logger_saved" formatted="false">Logs saved:\n%s</string>
-    <string name="logger_save_error">Failed to save logs</string>
     <string name="logger_share">Share logs</string>
     <string name="logger_share_title">Share logs</string>
 
+    <!-- Statuses -->
+    <string name="logger_empty">No logs yet</string>
+    <string name="logger_saved" formatted="false">Logs saved:\n%s</string>
+    <string name="logger_save_error">Failed to save logs</string>
+    <string name="logger_status" formatted="false">Total logs: %d</string>
+    <string name="logger_filter_status" formatted="false">Total logs: %d/%d</string>
+    <string name="logger_copied">Logs copied to clipboard</string>
+    <string name="logger_cleared">Logs cleared</string>
+    <string name="logger_paused">Log collection paused</string>
+    <string name="logger_resumed">Log collection resumed</string>
+
     <!-- Filters -->
     <string name="logger_filter_all">All</string>
-    <string name="logger_filter_status" formatted="false">Total logs: %d/%d</string>
 
     <string-array name="logger_levels">
         <item>All</item>
@@ -486,78 +472,13 @@
         <item>WebView</item>
     </string-array>
 
-    <!-- Status -->
-    <string name="logger_status" formatted="false">Total logs: %d</string>
-    <string name="logger_copied">Logs copied to clipboard</string>
-    <string name="logger_cleared">Logs cleared</string>
-    <string name="logger_paused">Log collection paused</string>
-    <string name="logger_resumed">Log collection resumed</string>
-
     <!-- Errors -->
     <string name="logger_devmode_required">Developer mode is not activated</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== SHELL MANAGER ========================= -->
+    <!-- ===== STORE ================================================ -->
     <!-- ============================================================ -->
 
-    <!-- Authors -->
-    <string name="author_default">QutyTeam</string>
-
-    <!-- Names -->
-    <string name="shell_default_name">Default</string>
-    <string name="shell_active_not_found">Previously active shell not found or deleted</string>
-    <string name="shell_restored_default" formatted="false">System changed shell to "%s"</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== SHELL UPDATE ========================== -->
-    <!-- ============================================================ -->
-
-    <string name="shell_update_not_enough_space">Not enough free space to download the shell.\nPlease free up space and try again.</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== UPDATE MANAGER ======================== -->
-    <!-- ============================================================ -->
-
-    <string name="update_install_failed" formatted="false">Failed to install update: %s</string>
-    <string name="update_install_permission_required">Allow installation from unknown sources and try again</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== JsBridge ============================== -->
-    <!-- ============================================================ -->
-
-    <string name="js_bridge_webview_null" formatted="false">WebView destroyed, cannot send result: %s</string>
-    <string name="js_bridge_send_error" formatted="false">Failed to send result to JS: %s</string>
-    <string name="js_bridge_timeout_error">Execution timed out</string>
-    <string name="js_bridge_cancelled_error">Execution cancelled</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== LAUNCHER WEBVIEW ====================== -->
-    <!-- ============================================================ -->
-
-    <string name="webview_error_loading" formatted="false">Loading error: %s - %s</string>
-    <string name="webview_dir_shell_not_found">Active shell directory not found</string>
-    <string name="webview_retry_limit_reached" formatted="false">⚠️ Retry limit reached for %s (attempts: %d)</string>
-    <string name="webview_retry_attempt" formatted="false">🔄 Reloading %s (attempt %d of %d)</string>
-    <string name="webview_render_process_gone">Shell is restarting…</string>
-    <string name="log_webview_render_process_gone" formatted="false">Render process gone. Crashed: %b</string>
-    <string name="log_webview_restart_failed" formatted="false">Failed to restart MainActivity: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== API METHODS =========================== -->
-    <!-- ============================================================ -->
-
-    <!-- GetApps -->
-    <string name="api_getapps_settings_name">Quty.Launch Settings</string>
-
-    <!-- LaunchApp -->
-    <string name="api_launchapp_package_required">Package name required</string>
-    <string name="api_launchapp_not_found">App not found</string>
-
-    <!-- ============================================================ -->
-    <!-- ==================== STORE ================================= -->
-    <!-- ============================================================ -->
-
-    <!-- General -->
     <string name="store_title">Store</string>
     <string name="store_tab_shells">Shells</string>
     <string name="store_tab_my">Mine</string>
@@ -576,9 +497,9 @@
     <string name="store_date">Date</string>
     <string name="store_size">Size</string>
     <string name="store_description">Description</string>
-    <string name="store_compat_required" formatted="false">⚠️ Requires Quty.Launch version %s or higher</string>
     <string name="store_author_label">Author: </string>
     <string name="store_preview_description">Shell preview</string>
+    <string name="store_compat_required" formatted="false">⚠️ Requires Quty.Launch version %s or higher</string>
 
     <!-- Installation -->
     <string name="store_installing">Installing shell</string>
@@ -592,10 +513,36 @@
     <string name="store_save_error">Failed to save shell</string>
 
     <!-- ============================================================ -->
-    <!-- ==================== LOGS (TECHNICAL) ====================== -->
+    <!-- ===== AUTHORS ============================================== -->
     <!-- ============================================================ -->
 
-    <!-- CacheManager logs -->
+    <string name="author_default">QutyTeam</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== JsBridge ============================================= -->
+    <!-- ============================================================ -->
+
+    <string name="js_bridge_webview_null" formatted="false">WebView destroyed, cannot send result: %s</string>
+    <string name="js_bridge_send_error" formatted="false">Failed to send result to JS: %s</string>
+    <string name="js_bridge_timeout_error">Execution timed out</string>
+    <string name="js_bridge_cancelled_error">Execution cancelled</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== LAUNCHER WEBVIEW ===================================== -->
+    <!-- ============================================================ -->
+
+    <string name="webview_error_loading" formatted="false">Loading error: %s - %s</string>
+    <string name="webview_dir_shell_not_found">Active shell directory not found</string>
+    <string name="webview_retry_limit_reached" formatted="false">⚠️ Retry limit reached for %s (attempts: %d)</string>
+    <string name="webview_retry_attempt" formatted="false">🔄 Reloading %s (attempt %d of %d)</string>
+    <string name="webview_render_process_gone">Shell is restarting…</string>
+    <string name="log_webview_render_process_gone" formatted="false">Render process gone. Crashed: %b</string>
+    <string name="log_webview_restart_failed" formatted="false">Failed to restart MainActivity: %s</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — CacheManager ================================== -->
+    <!-- ============================================================ -->
+
     <string name="log_cache_manager_package_changed" formatted="false">📦 Package change detected: %s -&gt; %s</string>
     <string name="log_cache_manager_receiver_registered">📦 BroadcastReceiver registered for package tracking</string>
     <string name="log_cache_manager_receiver_register_error">BroadcastReceiver registration error: %s</string>
@@ -604,7 +551,10 @@
     <string name="log_cache_manager_cleared">🗑️ Apps cache cleared</string>
     <string name="log_cache_manager_invalidated">🔄 Apps cache invalidated (dirty flag = true)</string>
 
-    <!-- ShellUpdateManager logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — ShellUpdateManager ============================ -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_update_incompatible">⚠️ Update incompatible with current Quty.Launch version</string>
     <string name="log_shell_update_found" formatted="false">✅ Update found: %s (current: %s)</string>
     <string name="log_shell_update_not_found" formatted="false">ℹ️ No updates (current: %s, available: %s)</string>
@@ -614,7 +564,10 @@
     <string name="log_shell_update_save_error">❌ Error saving shell update</string>
     <string name="log_shell_update_download_error">❌ Update download error: %s</string>
 
-    <!-- StorageManager logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — StorageManager ================================ -->
+    <!-- ============================================================ -->
+
     <string name="log_storage_dir_created">📁 Directory created: %s</string>
     <string name="log_storage_dir_create_failed">❌ Failed to create: %s</string>
     <string name="log_storage_file_not_exists">⚠️ File does not exist: %s</string>
@@ -633,23 +586,28 @@
     <string name="log_storage_files_delete_error">❌ Files delete error: %s</string>
     <string name="log_storage_uri_error">❌ URI error: %s</string>
 
-    <!-- LoggerFile logs -->
-    <string name="log_logger_file_write_error">Error writing log to file</string>
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — LoggerFileManager / LoggerManager ============= -->
+    <!-- ============================================================ -->
 
-    <!-- Logger logs -->
+    <string name="log_logger_file_write_error">Error writing log to file</string>
     <string name="log_logger_initialized">Logger initialized</string>
     <string name="log_logger_restore_error">Error restoring logs from file</string>
     <string name="log_logger_cleared">Logs cleared</string>
     <string name="log_logger_clear_error">Log clear error: %s</string>
     <string name="log_logger_save_error">Log save error: %s</string>
 
-    <!-- plurals (бывшие log_logger_restored) -->
-    <plurals name="log_logger_restored">
+    <plurals name="log_logger_restored" tools:ignore="UnusedQuantity">
         <item quantity="one">Restored %d log from file</item>
+        <item quantity="few">Restored %d logs from file</item>
+        <item quantity="many">Restored %d logs from file</item>
         <item quantity="other">Restored %d logs from file</item>
     </plurals>
 
-    <!-- SystemUpdateManager logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — SystemUpdateManager =========================== -->
+    <!-- ============================================================ -->
+
     <string name="log_system_update_checking">Checking for updates…</string>
     <string name="log_system_update_version_check" formatted="false">Current: %d, Available: %d, Update: %b</string>
     <string name="log_system_update_server_error" formatted="false">Server returned: %d</string>
@@ -668,10 +626,16 @@
     <string name="log_system_update_install_no_permission">No install permission, opening settings</string>
     <string name="log_system_update_install_error">Installation launch error: %s</string>
 
-    <!-- ShellManager logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — ShellManager ================================== -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_manager_unzip_error">Shell unzip error: %s</string>
 
-    <!-- StoreManager logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — StoreManager ================================== -->
+    <!-- ============================================================ -->
+
     <string name="log_store_installed_shells_from_manager">✅ Installed shells (from ShellManager): %s</string>
     <string name="log_store_shell_installed_check" formatted="false">  📦 %s → installed: %b</string>
     <string name="log_store_load_error">Load error: %d</string>
@@ -679,31 +643,36 @@
     <string name="log_store_shell_installed">Shell installed: %s</string>
     <string name="log_store_install_error">Install error: %s</string>
 
-    <!-- plurals (бывшие log_store_shells_loaded) -->
-    <plurals name="log_store_shells_loaded">
+    <plurals name="log_store_shells_loaded" tools:ignore="UnusedQuantity">
         <item quantity="one">Loaded %d shell</item>
+        <item quantity="few">Loaded %d shells</item>
+        <item quantity="many">Loaded %d shells</item>
         <item quantity="other">Loaded %d shells</item>
     </plurals>
 
-    <!-- ShellListFragment logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — ShellListFragment ============================= -->
+    <!-- ============================================================ -->
+
     <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
     <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
     <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
     <string name="log_shell_list_empty">🔍 EMPTY: emptyText shown</string>
     <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
 
-    <!-- JsBridge logs -->
+    <!-- ============================================================ -->
+    <!-- ===== LOGS — JsBridge / SettingsActivity / Developer ======= -->
+    <!-- ============================================================ -->
+
     <string name="log_js_bridge_state_notified">Core state notified to shell</string>
     <string name="log_js_bridge_state_notify_error" formatted="false">Failed to notify core state: %s</string>
 
-    <!-- SettingsActivity logs -->
     <string name="log_settings_restored_needs_restart" formatted="false">Restored, restart required: %b</string>
     <string name="log_settings_width_tablet" formatted="false">Width: %.2fdp, Tablet: %b</string>
     <string name="log_settings_restart_required">Restart required: setting changed</string>
     <string name="log_settings_checking_restart_state" formatted="false">Checking restart state: needsRestart=%b</string>
     <string name="log_settings_error">Error</string>
 
-    <!-- DeveloperFragment logs -->
     <string name="log_developer_onboarding_reset">Onboarding flag reset (force_show_onboarding=true)</string>
 
 </resources>
