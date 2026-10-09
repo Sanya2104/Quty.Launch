@@ -35,7 +35,7 @@ class GetApps(
 
     override suspend fun executeInternal(params: Unit?): String {
         // 1. Пробуем получить из кэша
-        val cachedApps = CacheManager.getCachedApps(context)
+        val cachedApps = CacheManager.getCachedApps()
         if (cachedApps != null) {
             return json.encodeToString(
                 ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
@@ -47,7 +47,7 @@ class GetApps(
         val freshApps = loadFreshApps()
 
         // 3. Сохраняем в кэш
-        CacheManager.saveApps(context, freshApps)
+        CacheManager.saveApps(freshApps)
 
         return json.encodeToString(
             ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
@@ -96,26 +96,7 @@ class GetApps(
             )
         )
 
-        // 3. Логгер (только в DevMode, если включён флаг logger_in_apps)
-        val prefs = context.getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
-        val isDevMode = prefs.getBoolean("developer_mode", false)
-        val isLoggerInApps = prefs.getBoolean("logger_in_apps", false)
-
-        if (isDevMode && isLoggerInApps) {
-            val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
-            val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
-
-            customApps.add(
-                AppInfo(
-                    name = context.getString(R.string.logger_app_name),
-                    packageName = ApiConfig.LOGGER_PACKAGE,
-                    isCustom = true,
-                    iconBase64 = loggerIconBase64
-                )
-            )
-        }
-
-        // 4. Магазин оболочек (всегда доступен)
+        // 2. Магазин оболочек (всегда доступен)
         val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 

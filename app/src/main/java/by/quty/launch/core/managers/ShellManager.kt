@@ -73,8 +73,6 @@ class ShellManager(
         /** Поддерживаемые расширения файлов оболочки (без точки) - из конфига */
         val SHELL_EXTENSIONS = CoreConfig.SHELL_EXTENSIONS
 
-        /** Поддерживаемые расширения файлов оболочки (с точкой) - из конфига */
-        val SHELL_EXTENSIONS_WITH_DOT = CoreConfig.SHELL_EXTENSIONS_WITH_DOT
     }
 
     // Хранилище и менеджеры
@@ -309,8 +307,8 @@ class ShellManager(
                     )
                 )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
+            // Игнорируем ошибки чтения assets
         }
 
         return shells
@@ -515,8 +513,8 @@ class ShellManager(
                     }
                 }
             }
-        } catch (e: Exception) {
-            LoggerManager.e("ShellManager", context.getString(R.string.log_shell_manager_unzip_error, e.message))
+        } catch (_: Exception) {
+            // Игнорируем ошибки распаковки
         }
     }
 

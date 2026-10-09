@@ -14,7 +14,6 @@ import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.managers.LoggerManager
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
@@ -65,22 +64,19 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         // Настраиваем WebViewAssetLoader
         setupAssetLoader()
 
-        // Настраиваем WebChromeClient
-        // Логи из JavaScript отправляются через JsBridge.log() для избежания дублирования
+        // Настраиваем WebChromeClient — console.log перехват отключён
         setupWebChromeClient()
     }
 
     /**
-     * Настройка WebChromeClient
-     * Перехват console.log() ОТКЛЮЧЁН — логи отправляются только через JsBridge.log()
-     * Это предотвращает дублирование и попадание CSS-стилей в логгер
+     * Настройка WebChromeClient.
+     * Перехват console.log() отключён — оболочки используют
+     * Android.call для обращения к ядру, а JS console не пробрасывается.
      */
     private fun setupWebChromeClient() {
         webChromeClient = object : WebChromeClient() {
-            // Полностью отключаем перехват console.log()
-            // Логи отправляются только через JsBridge.log()
             override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                // Просто пропускаем — логи уже отправлены через JsBridge.log()
+                // Пропускаем — консоль не пробрасывается
                 return false
             }
 
@@ -125,14 +121,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     }
 
                     // Определяем папку оболочки по имени активной оболочки
-                    val shellDir = getActiveShellDir()
-                    if (shellDir == null) {
-                        LoggerManager.e(
-                            "LauncherWebView",
-                            appContext.getString(R.string.webview_dir_shell_not_found)
-                        )
-                        return null
-                    }
+                    val shellDir = getActiveShellDir() ?: return null
 
                     // Пытаемся найти файл в папке оболочки
                     var file = File(shellDir, path)
@@ -249,11 +238,8 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     )
                     intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                     appContext.startActivity(intent)
-                } catch (e: Exception) {
-                    LoggerManager.e(
-                        "LauncherWebView",
-                        appContext.getString(R.string.log_webview_restart_failed, e.message)
-                    )
+                } catch (_: Exception) {
+                    // Игнорируем ошибку открытия ссылки
                 }
 
                 // Возвращаем true — WebView сам НЕ грузит ссылку
@@ -270,12 +256,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 super.onReceivedError(view, errorCode, description, failingUrl)
 
                 val url = failingUrl ?: "unknown"
-                val errorDesc = description ?: "unknown error"
-
-                LoggerManager.e(
-                    "LauncherWebView",
-                    appContext.getString(R.string.webview_error_loading, url, errorDesc)
-                )
 
                 // Если это страница оболочки (не ресурс) — пробуем перезагрузить
                 if (isShellPage(url)) {
@@ -291,13 +271,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 view: WebView?,
                 detail: RenderProcessGoneDetail?
             ): Boolean {
-                val didCrash = detail?.didCrash() ?: false
-
-                LoggerManager.e(
-                    "LauncherWebView",
-                    appContext.getString(R.string.log_webview_render_process_gone, didCrash)
-                )
-
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                     android.widget.Toast.makeText(
                         appContext,
@@ -315,11 +288,8 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                                     android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                         )
                         appContext.startActivity(intent)
-                    } catch (e: Exception) {
-                        LoggerManager.e(
-                            "LauncherWebView",
-                            appContext.getString(R.string.log_webview_restart_failed, e.message)
-                        )
+                    } catch (_: Exception) {
+                        // Игнорируем ошибку перезапуска
                     }
                 }
 
@@ -350,17 +320,8 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 // Если превышен лимит — не перезагружаем
                 if (errorRetryCount > MAX_RETRY_COUNT) {
-                    LoggerManager.e(
-                        "LauncherWebView",
-                        appContext.getString(R.string.webview_retry_limit_reached, url, errorRetryCount)
-                    )
                     return
                 }
-
-                LoggerManager.d(
-                    "LauncherWebView",
-                    appContext.getString(R.string.webview_retry_attempt, url, errorRetryCount, MAX_RETRY_COUNT)
-                )
 
                 // Задержка перед перезагрузкой
                 postDelayed({

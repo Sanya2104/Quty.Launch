@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import by.quty.launch.R
 import by.quty.launch.api.model.AppInfo
 import by.quty.launch.configs.CoreConfig
 import kotlinx.coroutines.Dispatchers
@@ -56,17 +55,11 @@ object CacheManager {
     private var receiverRegistered = false
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            val data = intent.data
-            val packageName = data?.schemeSpecificPart
-
-            when (action) {
+            when (intent.action) {
                 Intent.ACTION_PACKAGE_ADDED,
                 Intent.ACTION_PACKAGE_REMOVED,
                 Intent.ACTION_PACKAGE_REPLACED -> {
-                    val message = context.getString(R.string.log_cache_manager_package_changed, action, packageName)
-                    LoggerManager.d("CacheManager", message)
-                    invalidateCache(context)
+                    invalidateCache()
                 }
             }
         }
@@ -98,7 +91,7 @@ object CacheManager {
     /**
      * Инициализация CacheManager
      * @param storageManager экземпляр StorageManager (хранится в WeakReference)
-     * @param context контекст приложения для логирования
+     * @param context контекст приложения
      */
     fun init(storageManager: StorageManager, context: Context) {
         this.appContext = context.applicationContext
@@ -123,36 +116,31 @@ object CacheManager {
 
             context.applicationContext.registerReceiver(packageReceiver, filter)
             receiverRegistered = true
-            LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_receiver_registered))
-        } catch (e: Exception) {
-            LoggerManager.e("CacheManager", context.getString(R.string.log_cache_manager_receiver_register_error, e.message))
+        } catch (_: Exception) {
+            // Игнорируем ошибку регистрации receiver
         }
     }
 
     /**
      * Принудительно инвалидирует кэш
      * Вызывается при изменении списка приложений
-     * @param context контекст приложения для логирования
      */
-    fun invalidateCache(context: Context) {
+    fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
-        LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_invalidated))
     }
 
     /**
      * Получить кэшированный список приложений
      * Сначала проверяет in-memory кэш (мгновенно),
      * затем пробует загрузить с диска.
-     * @param context контекст приложения для логирования
      * @return список приложений или null, если кэш отсутствует/просрочен
      */
-    suspend fun getCachedApps(context: Context): List<AppInfo>? = withContext(Dispatchers.IO) {
+    suspend fun getCachedApps(): List<AppInfo>? = withContext(Dispatchers.IO) {
         val storageManager = getStorageManager()
 
         // Если кэш помечен как грязный — пропускаем
         if (isCacheDirty) {
-            LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_skipped_dirty))
             return@withContext null
         }
 
@@ -182,10 +170,9 @@ object CacheManager {
      * Сохраняет одновременно:
      * - в оперативную память (in-memory)
      * - на диск (в фоновом потоке)
-     * @param context контекст приложения для логирования
      * @param apps список приложений для сохранения
      */
-    suspend fun saveApps(context: Context, apps: List<AppInfo>) {
+    suspend fun saveApps(apps: List<AppInfo>) {
         val cached = CachedApps(apps, System.currentTimeMillis())
 
         // Сохраняем в память (мгновенно) + сбрасываем флаг
@@ -199,8 +186,6 @@ object CacheManager {
         if (storageManager != null) {
             saveToDisk(storageManager, cached)
         }
-
-        LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_saved, apps.size))
     }
 
     /**
@@ -253,9 +238,8 @@ object CacheManager {
 
     /**
      * Очищает кэш приложений (in-memory и disk)
-     * @param context контекст приложения для логирования
      */
-    suspend fun clearCache(context: Context) {
+    suspend fun clearCache() {
         // Очищаем in-memory кэш под mutex
         cacheMutex.withLock {
             memoryCache = null
@@ -270,7 +254,6 @@ object CacheManager {
                     directory = StorageDirectory.CACHE,
                     name = CACHE_FILE_NAME
                 )
-                LoggerManager.d("CacheManager", context.getString(R.string.log_cache_manager_cleared))
             } catch (_: Exception) {
                 // Игнорируем ошибки
             }

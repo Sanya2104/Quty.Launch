@@ -7,7 +7,6 @@ import by.quty.launch.R
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
-import by.quty.launch.LoggerActivity
 import by.quty.launch.StoreActivity
 import by.quty.launch.SettingsActivity
 import by.quty.launch.configs.ApiConfig
@@ -37,12 +36,6 @@ class LaunchApp(
             ApiConfig.SETTINGS_PACKAGE -> {
                 // Открываем Настройки
                 val intent = Intent(context, SettingsActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
-            }
-            ApiConfig.LOGGER_PACKAGE -> {
-                // Открываем Логгер
-                val intent = Intent(context, LoggerActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }

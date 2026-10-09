@@ -119,7 +119,7 @@
     <string name="toast_strict_mode_disabled">Строгий режим выключен</string>
 
     <!-- ============================================================ -->
-    <!-- ===== ДИАЛОГ ПРИМЕНЕНИЯ ПАРАМЕТРОВ ========================= -->
+    <!-- ===== ДИАЛОГ ПРИМЕНЕНИЯ НАСТРОЕК =========================== -->
     <!-- ============================================================ -->
 
     <string name="dialog_apply_settings_title">Применить настройки</string>
@@ -190,7 +190,6 @@
 
     <!-- Категории -->
     <string name="storage_category_cache">Кэш</string>
-    <string name="storage_category_logs">Логи</string>
     <string name="storage_category_temp">Временные файлы</string>
     <string name="storage_category_updates">Обновления</string>
     <string name="storage_category_shells">Оболочки</string>
@@ -360,7 +359,6 @@
     <!-- Секции -->
     <string name="dev_section_shell">Информация об оболочке</string>
     <string name="dev_section_data">Управление данными</string>
-    <string name="dev_section_logs">Управление логами</string>
     <string name="dev_section_tools">Инструменты</string>
 
     <!-- WebView -->
@@ -377,30 +375,6 @@
     <string name="dev_shell_reload_success">Оболочка перезагружена</string>
     <string name="dev_shell_not_found">Активная оболочка не найдена</string>
     <string name="dev_error">Ошибка: %s</string>
-
-    <!-- Логи -->
-    <string name="dev_logs_view">Просмотр логов</string>
-    <string name="dev_logs_view_stub">Функционал появится позже</string>
-    <string name="dev_logs_logger_in_apps">Логгер в списке приложений</string>
-    <string name="dev_logs_persist">Сохранять логи в файл</string>
-    <string name="dev_logs_max_files">Максимум файлов</string>
-    <string name="dev_logs_max_size">Максимум на файл</string>
-    <string name="dev_logs_persist_enabled">Сохранение логов включено</string>
-    <string name="dev_logs_persist_disabled">Сохранение логов выключено</string>
-    <string name="dev_logs_applied">Настройки логов применены</string>
-
-    <!-- Массивы для Spinner -->
-    <string-array name="dev_logs_files_count">
-        <item>3</item>
-        <item>5</item>
-        <item>10</item>
-    </string-array>
-
-    <string-array name="dev_logs_file_size">
-        <item>3 MB</item>
-        <item>5 MB</item>
-        <item>10 MB</item>
-    </string-array>
 
     <!-- Сброс онбординга -->
     <string name="dev_reset_onboarding">Сбросить онбординг</string>
@@ -427,53 +401,6 @@
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГГЕР =============================================== -->
-    <!-- ============================================================ -->
-
-    <string name="logger_app_name">Логгер</string>
-    <string name="logger_title">🐞 Логгер</string>
-
-    <!-- Кнопки -->
-    <string name="logger_clear">Очистить</string>
-    <string name="logger_copy">Копировать</string>
-    <string name="logger_pause">Пауза</string>
-    <string name="logger_close">Закрыть</string>
-    <string name="logger_save">Сохранить логи</string>
-    <string name="logger_share">Поделиться логами</string>
-    <string name="logger_share_title">Поделиться логами</string>
-
-    <!-- Статусы -->
-    <string name="logger_empty">Логов пока нет</string>
-    <string name="logger_saved" formatted="false">Логи сохранены:\n%s</string>
-    <string name="logger_save_error">Ошибка сохранения логов</string>
-    <string name="logger_status" formatted="false">Всего логов: %d</string>
-    <string name="logger_filter_status" formatted="false">Всего логов: %d/%d</string>
-    <string name="logger_copied">Логи скопированы в буфер обмена</string>
-    <string name="logger_cleared">Логи очищены</string>
-    <string name="logger_paused">Сбор логов приостановлен</string>
-    <string name="logger_resumed">Сбор логов возобновлён</string>
-
-    <!-- Фильтры -->
-    <string name="logger_filter_all">Все</string>
-
-    <string-array name="logger_levels">
-        <item>Все</item>
-        <item>DEBUG</item>
-        <item>INFO</item>
-        <item>WARN</item>
-        <item>ERROR</item>
-    </string-array>
-
-    <string-array name="logger_sources">
-        <item>Все</item>
-        <item>Kotlin</item>
-        <item>WebView</item>
-    </string-array>
-
-    <!-- Ошибки -->
-    <string name="logger_devmode_required">Режим разработчика не активирован</string>
 
     <!-- ============================================================ -->
     <!-- ===== МАГАЗИН (STORE) ====================================== -->
@@ -536,143 +463,5 @@
     <string name="webview_retry_limit_reached" formatted="false">⚠️ Достигнут лимит попыток перезагрузки для %s (попыток: %d)</string>
     <string name="webview_retry_attempt" formatted="false">🔄 Повторная загрузка %s (попытка %d из %d)</string>
     <string name="webview_render_process_gone">Оболочка перезагружается…</string>
-    <string name="log_webview_render_process_gone" formatted="false">Render-процесс WebView упал. Crashed: %b</string>
-    <string name="log_webview_restart_failed" formatted="false">Не удалось перезапустить MainActivity: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — CacheManager ================================= -->
-    <!-- ============================================================ -->
-
-    <string name="log_cache_manager_package_changed" formatted="false">📦 Обнаружено изменение в приложениях: %s -&gt; %s</string>
-    <string name="log_cache_manager_receiver_registered">📦 BroadcastReceiver зарегистрирован для отслеживания приложений</string>
-    <string name="log_cache_manager_receiver_register_error">Ошибка регистрации BroadcastReceiver: %s</string>
-    <string name="log_cache_manager_skipped_dirty">⏭️ Кэш пропущен (грязный флаг)</string>
-    <string name="log_cache_manager_saved">✅ Сохранено приложений в кэш: %d</string>
-    <string name="log_cache_manager_cleared">🗑️ Кэш приложений очищен</string>
-    <string name="log_cache_manager_invalidated">🔄 Кэш приложений инвалидирован (грязный флаг = true)</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — ShellUpdateManager =========================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_update_incompatible">⚠️ Обновление несовместимо с текущей версией Quty.Launch</string>
-    <string name="log_shell_update_found" formatted="false">✅ Найдено обновление: %s (текущая: %s)</string>
-    <string name="log_shell_update_not_found" formatted="false">ℹ️ Обновлений нет (текущая: %s, доступна: %s)</string>
-    <string name="log_shell_update_check_error">⚠️ Ошибка проверки обновлений: %d</string>
-    <string name="log_shell_update_check_exception">❌ Ошибка проверки обновлений: %s</string>
-    <string name="log_shell_update_saved">✅ Обновление оболочки сохранено: %s</string>
-    <string name="log_shell_update_save_error">❌ Ошибка сохранения обновления оболочки</string>
-    <string name="log_shell_update_download_error">❌ Ошибка скачивания обновления: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — StorageManager =============================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_storage_dir_created">📁 Создана директория: %s</string>
-    <string name="log_storage_dir_create_failed">❌ Не удалось создать: %s</string>
-    <string name="log_storage_file_not_exists">⚠️ Файл не существует: %s</string>
-    <string name="log_storage_file_read_error">❌ Ошибка чтения файла: %s</string>
-    <string name="log_storage_file_saved">✅ Файл сохранён: %s</string>
-    <string name="log_storage_file_save_error">❌ Ошибка сохранения файла: %s</string>
-    <string name="log_storage_file_stream_saved">✅ Файл сохранён из потока: %s</string>
-    <string name="log_storage_file_stream_save_error">❌ Ошибка сохранения файла из потока: %s</string>
-    <string name="log_storage_file_bytes_saved">✅ Файл сохранён (байты): %s</string>
-    <string name="log_storage_file_bytes_save_error">❌ Ошибка сохранения файла (байты): %s</string>
-    <string name="log_storage_file_deleted">🗑️ Файл удалён: %s</string>
-    <string name="log_storage_file_delete_error">❌ Ошибка удаления файла: %s</string>
-    <string name="log_storage_dir_deleted">🗑️ Директория удалена: %s</string>
-    <string name="log_storage_dir_delete_error">❌ Ошибка удаления директории: %s</string>
-    <string name="log_storage_files_deleted">🗑️ Все файлы удалены из %s</string>
-    <string name="log_storage_files_delete_error">❌ Ошибка удаления файлов: %s</string>
-    <string name="log_storage_uri_error">❌ Ошибка получения URI: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — LoggerFileManager / LoggerManager ============= -->
-    <!-- ============================================================ -->
-
-    <string name="log_logger_file_write_error">Ошибка записи лога в файл</string>
-    <string name="log_logger_initialized">Logger инициализирован</string>
-    <string name="log_logger_restore_error">Ошибка восстановления логов из файла</string>
-    <string name="log_logger_cleared">Логи очищены</string>
-    <string name="log_logger_clear_error">Ошибка очистки логов: %s</string>
-    <string name="log_logger_save_error">Ошибка сохранения логов: %s</string>
-
-    <plurals name="log_logger_restored">
-        <item quantity="one">Восстановлен %d лог из файла</item>
-        <item quantity="few">Восстановлено %d лога из файла</item>
-        <item quantity="many">Восстановлено %d логов из файла</item>
-        <item quantity="other">Восстановлено %d логов из файла</item>
-    </plurals>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — SystemUpdateManager ========================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_system_update_checking">Проверка обновлений…</string>
-    <string name="log_system_update_version_check" formatted="false">Текущая версия: %d, Доступна: %d, Обновление: %b</string>
-    <string name="log_system_update_server_error" formatted="false">Сервер вернул код: %d</string>
-    <string name="log_system_update_version_error">Ошибка получения версии: %s</string>
-    <string name="log_system_update_download_start">Начинаем скачивание APK: %s</string>
-    <string name="log_system_update_apk_exists">APK уже скачан: %s</string>
-    <string name="log_system_update_apk_saved">APK сохранён: %s</string>
-    <string name="log_system_update_apk_save_error">Ошибка сохранения APK</string>
-    <string name="log_system_update_uri_error">Не удалось получить URI для APK</string>
-    <string name="log_system_update_download_error">Ошибка скачивания APK: %s</string>
-    <string name="log_system_update_mark_complete" formatted="false">Отмечено завершение загрузки для версии %d</string>
-    <string name="log_system_update_clear_mark" formatted="false">Очищена метка загрузки для версии %d</string>
-    <string name="log_system_update_cleanup_marks" formatted="false">Очищено %d старых меток загрузки</string>
-    <string name="log_system_update_delete_old_apks" formatted="false">Удалено %d старых APK файлов</string>
-    <string name="log_system_update_install_start">Запуск установки APK</string>
-    <string name="log_system_update_install_no_permission">Нет разрешения на установку, открываем настройки</string>
-    <string name="log_system_update_install_error">Ошибка запуска установки: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — ShellManager ================================= -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_manager_unzip_error">Ошибка распаковки оболочки: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — StoreManager ================================= -->
-    <!-- ============================================================ -->
-
-    <string name="log_store_installed_shells_from_manager">✅ Установленные оболочки (из ShellManager): %s</string>
-    <string name="log_store_shell_installed_check" formatted="false">  📦 %s → установлена: %b</string>
-    <string name="log_store_load_error">Ошибка загрузки: %d</string>
-    <string name="log_store_error">Ошибка: %s</string>
-    <string name="log_store_shell_installed">Оболочка установлена: %s</string>
-    <string name="log_store_install_error">Ошибка установки: %s</string>
-
-    <plurals name="log_store_shells_loaded">
-        <item quantity="one">Загружена %d оболочка</item>
-        <item quantity="few">Загружено %d оболочки</item>
-        <item quantity="many">Загружено %d оболочек</item>
-        <item quantity="other">Загружено %d оболочек</item>
-    </plurals>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — ShellListFragment ============================ -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
-    <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
-    <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
-    <string name="log_shell_list_empty">🔍 ПУСТО: показан emptyText</string>
-    <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== ЛОГИ — JsBridge / SettingsActivity / Developer ====== -->
-    <!-- ============================================================ -->
-
-    <string name="log_js_bridge_state_notified">Состояние ядра передано оболочке</string>
-    <string name="log_js_bridge_state_notify_error" formatted="false">Не удалось передать состояние ядра: %s</string>
-
-    <string name="log_settings_restored_needs_restart" formatted="false">Восстановлено, требуется перезапуск: %b</string>
-    <string name="log_settings_width_tablet" formatted="false">Ширина: %.2fdp, Планшет: %b</string>
-    <string name="log_settings_restart_required">Требуется перезапуск: настройка изменена</string>
-    <string name="log_settings_checking_restart_state" formatted="false">Проверка состояния перезапуска: needsRestart=%b</string>
-    <string name="log_settings_error">Ошибка</string>
-
-    <string name="log_developer_onboarding_reset">Сброс флага онбординга (force_show_onboarding=true)</string>
 
 </resources>

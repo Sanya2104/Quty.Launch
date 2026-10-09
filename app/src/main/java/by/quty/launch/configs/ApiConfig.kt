@@ -13,9 +13,6 @@ object ApiConfig {
     /** Пакет для активности настроек */
     const val SETTINGS_PACKAGE = "by.quty.launch.settings"
 
-    /** Пакет для активности логгера */
-    const val LOGGER_PACKAGE = "by.quty.launch.logger"
-
     /** Пакет для активности магазина */
     const val STORE_PACKAGE = "by.quty.launch.store"
 

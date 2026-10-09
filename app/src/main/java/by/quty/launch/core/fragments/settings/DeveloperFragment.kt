@@ -10,26 +10,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
-import by.quty.launch.configs.CoreConfig
-import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
-import by.quty.launch.core.managers.LoggerFileManager
-import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StorageManager
 import kotlinx.serialization.json.Json
@@ -44,12 +36,10 @@ import java.util.zip.ZipFile
  * Содержит:
  * - Секция "Оболочка": просмотр manifest.json (с копированием), перезагрузка оболочки
  * - Секция "Управление данными": очистка кэша WebView, сброс онбординга
- * - Секция "Логи": просмотр логов (заглушка), логгер в списке приложений,
- *   переключатель сохранения, лимиты файлов
  * - Секция "Инструменты": перезапуск приложения
  *
  * Действия, требующие перезапуска приложения (reload shell, clear WebView cache,
- * reset onboarding, logger in apps), помечаются через
+ * reset onboarding), помечаются через
  * SettingsActivity.markRestartRequired() — при выходе из настроек пользователю
  * будет предложен диалог перезапуска.
  */
@@ -68,18 +58,8 @@ class DeveloperFragment : Fragment() {
     private lateinit var clearWebViewCacheRow: View
     private lateinit var resetOnboardingRow: View
 
-    // UI — Логи
-    private lateinit var logsViewRow: View
-    private lateinit var switchLoggerInApps: SwitchCompat
-    private lateinit var switchPersist: SwitchCompat
-    private lateinit var spinnerMaxFiles: Spinner
-    private lateinit var spinnerMaxSize: Spinner
-
     // UI — Инструменты
     private lateinit var restartAppRow: View
-
-    // Флаг загрузки настроек (чтобы не триггерить apply при инициализации)
-    private var isLoadingSettings = false
 
     // JSON парсер для manifest.json
     private val json = Json { prettyPrint = true }
@@ -109,16 +89,10 @@ class DeveloperFragment : Fragment() {
         shellReloadRow = view.findViewById(R.id.dev_shell_reload_row)
         clearWebViewCacheRow = view.findViewById(R.id.dev_clear_webview_cache_row)
         resetOnboardingRow = view.findViewById(R.id.dev_reset_onboarding_row)
-        logsViewRow = view.findViewById(R.id.dev_logs_view_row)
-        switchLoggerInApps = view.findViewById(R.id.dev_logs_logger_in_apps)
-        switchPersist = view.findViewById(R.id.dev_logs_persist)
-        spinnerMaxFiles = view.findViewById(R.id.dev_logs_max_files)
-        spinnerMaxSize = view.findViewById(R.id.dev_logs_max_size)
         restartAppRow = view.findViewById(R.id.dev_restart_app_row)
 
         setupShellSection()
         setupDataSection()
-        setupLogsSection()
         setupToolsSection()
     }
 
@@ -346,11 +320,6 @@ class DeveloperFragment : Fragment() {
             putBoolean("force_show_onboarding", true)
         }
 
-        LoggerManager.i(
-            "DeveloperFragment",
-            getString(R.string.log_developer_onboarding_reset)
-        )
-
         (activity as? SettingsActivity)?.markRestartRequired()
 
         showRestartAfterResetDialog()
@@ -394,162 +363,7 @@ class DeveloperFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 3: ЛОГИ
-    // ============================================================
-
-    private fun setupLogsSection() {
-        // Просмотр логов — пока заглушка.
-        // TODO: подключить LoggerActivity или кастомный диалог.
-        logsViewRow.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                R.string.dev_logs_view_stub,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
-        // === Логгер в списке приложений ===
-        // Читаем текущий флаг из developer_prefs.
-        // По умолчанию — false (логгер не показывается).
-        val devPrefs = requireContext().getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
-        switchLoggerInApps.isChecked = devPrefs.getBoolean("logger_in_apps", false)
-
-        switchLoggerInApps.setOnCheckedChangeListener { _, isChecked ->
-            // Сохраняем флаг
-            devPrefs.edit { putBoolean("logger_in_apps", isChecked) }
-
-            // Сбрасываем кэш приложений, чтобы при следующем GetApps
-            // список был пересобран с учётом нового флага.
-            CacheManager.invalidateCache(requireContext())
-
-            // Помечаем необходимость перезапуска — при выходе
-            // всплывёт общий диалог "Применить параметры?"
-            (activity as? SettingsActivity)?.markRestartRequired()
-        }
-
-        // === Сохранение логов в файл ===
-        val filesAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.dev_logs_files_count,
-            R.layout.item_spinner
-        )
-        filesAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        spinnerMaxFiles.adapter = filesAdapter
-
-        val sizeAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.dev_logs_file_size,
-            R.layout.item_spinner
-        )
-        sizeAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        spinnerMaxSize.adapter = sizeAdapter
-
-        // Загружаем сохранённые настройки БЕЗ триггера слушателей
-        loadLogsSettingsWithoutTrigger()
-
-        // Слушатели
-        spinnerMaxFiles.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (isLoadingSettings) return
-                val value = parent?.getItemAtPosition(position).toString().toIntOrNull()
-                    ?: CoreConfig.LOGGER_MAX_FILES_DEFAULT
-                applyLogsSettings(maxFiles = value)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
-
-        spinnerMaxSize.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (isLoadingSettings) return
-                val value = parent?.getItemAtPosition(position).toString()
-                    .replace(" MB", "")
-                    .toIntOrNull()
-                    ?: CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT
-                applyLogsSettings(maxSizeMB = value)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
-
-        switchPersist.setOnCheckedChangeListener { _, isChecked ->
-            val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
-            prefs.edit { putBoolean("persist_enabled", isChecked) }
-
-            LoggerFileManager.setPersistEnabled(isChecked)
-
-            val message = if (isChecked) {
-                R.string.dev_logs_persist_enabled
-            } else {
-                R.string.dev_logs_persist_disabled
-            }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * Загружает настройки логов из SharedPreferences БЕЗ триггера слушателей.
-     */
-    private fun loadLogsSettingsWithoutTrigger() {
-        isLoadingSettings = true
-
-        val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
-        val persistEnabled = prefs.getBoolean("persist_enabled", CoreConfig.LOGGER_PERSIST_ENABLED_BY_DEFAULT)
-        val maxFiles = prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
-        val maxSizeMB = prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
-
-        switchPersist.isChecked = persistEnabled
-
-        val filesPos = when (maxFiles) {
-            3 -> 0
-            5 -> 1
-            10 -> 2
-            else -> 1
-        }
-        spinnerMaxFiles.setSelection(filesPos, false)
-
-        val sizePos = when (maxSizeMB) {
-            3 -> 0
-            5 -> 1
-            10 -> 2
-            else -> 1
-        }
-        spinnerMaxSize.setSelection(sizePos, false)
-
-        isLoadingSettings = false
-    }
-
-    /**
-     * Применяет настройки логов в LoggerFileManager.
-     */
-    private fun applyLogsSettings(maxFiles: Int = -1, maxSizeMB: Int = -1) {
-        if (isLoadingSettings) return
-
-        val prefs = requireContext().getSharedPreferences("logger_prefs", Context.MODE_PRIVATE)
-
-        val currentMaxFiles = if (maxFiles > 0) {
-            maxFiles
-        } else {
-            prefs.getInt("max_files", CoreConfig.LOGGER_MAX_FILES_DEFAULT)
-        }
-        val currentMaxSizeMB = if (maxSizeMB > 0) {
-            maxSizeMB
-        } else {
-            prefs.getInt("max_size_mb", CoreConfig.LOGGER_MAX_FILE_SIZE_MB_DEFAULT)
-        }
-
-        prefs.edit {
-            putInt("max_files", currentMaxFiles)
-            putInt("max_size_mb", currentMaxSizeMB)
-        }
-
-        LoggerFileManager.reconfigure(currentMaxFiles, currentMaxSizeMB)
-
-        Toast.makeText(requireContext(), R.string.dev_logs_applied, Toast.LENGTH_SHORT).show()
-    }
-
-    // ============================================================
-    // СЕКЦИЯ 4: ИНСТРУМЕНТЫ
+    // СЕКЦИЯ 3: ИНСТРУМЕНТЫ
     // ============================================================
 
     private fun setupToolsSection() {

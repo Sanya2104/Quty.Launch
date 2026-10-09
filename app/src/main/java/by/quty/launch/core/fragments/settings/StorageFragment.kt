@@ -26,7 +26,6 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
-import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageManager
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +40,6 @@ import kotlinx.coroutines.withContext
  *
  * Категории:
  * - Кэш (CACHE + context.cacheDir)
- * - Логи (LOGS)
  * - Временные (TEMP)
  * - Обновления (UPDATES)
  * - Оболочки (SHELLS) — не очищаются здесь
@@ -131,9 +129,6 @@ class StorageFragment : Fragment() {
     // ПОДСЧЁТ РАЗМЕРОВ
     // ============================================================
 
-    /**
-     * Пересчитывает размеры всех категорий и обновляет UI
-     */
     private fun refreshSizes() {
         viewLifecycleOwner.lifecycleScope.launch {
             val sizes = withContext(Dispatchers.IO) {
@@ -163,9 +158,6 @@ class StorageFragment : Fragment() {
         }
     }
 
-    /**
-     * Формирует список категорий с актуальными размерами
-     */
     private fun buildCategoriesWithSizes(): List<StorageCategoryItem> {
         val cacheAppSize = requireContext().cacheDir.walkTopDown()
             .filter { it.isFile }
@@ -183,14 +175,6 @@ class StorageFragment : Fragment() {
                 size = cacheTotal,
                 canClear = true,
                 extraCacheDir = true
-            ),
-            StorageCategoryItem(
-                id = "logs",
-                titleRes = R.string.storage_category_logs,
-                colorRes = R.color.scheme_green_primary,
-                directory = StorageDirectory.LOGS,
-                size = storageManager.getDirectorySize(StorageDirectory.LOGS),
-                canClear = true
             ),
             StorageCategoryItem(
                 id = "temp",
@@ -239,10 +223,6 @@ class StorageFragment : Fragment() {
     // ПОЛОСА-ИНДИКАТОР
     // ============================================================
 
-    /**
-     * Перестраивает полосу-индикатор из сегментов
-     * Сегменты пропорциональны размеру категорий
-     */
     private fun rebuildBar() {
         barContainer.removeAllViews()
 
@@ -251,7 +231,6 @@ class StorageFragment : Fragment() {
             return
         }
 
-        // Минимальный вес, чтобы совсем маленькие сегменты были видны
         val minWeight = 0.02f
 
         categories.forEach { category ->
@@ -277,17 +256,12 @@ class StorageFragment : Fragment() {
         }
     }
 
-    /**
-     * Применяет анимацию выделения к сегментам полосы
-     * @param selectedId id выбранной категории или null для сброса
-     */
     private fun applyBarSelection(selectedId: String?) {
         for (i in 0 until barContainer.childCount) {
             val segment = barContainer.getChildAt(i)
             val segmentId = segment.tag as? String ?: continue
             val isSelected = segmentId == selectedId
 
-            // Сбрасываем предыдущие анимации и фон
             segment.animate().cancel()
             segment.scaleY = 1f
             segment.alpha = 1f
@@ -299,12 +273,10 @@ class StorageFragment : Fragment() {
             segment.setBackgroundColor(color)
 
             if (selectedId == null) {
-                // Ничего не выбрано — обычное состояние
                 continue
             }
 
             if (isSelected) {
-                // Выделение: scaleY + обводка
                 val drawable = ContextCompat.getDrawable(
                     requireContext(),
                     R.drawable.bg_storage_segment_selected
@@ -326,7 +298,6 @@ class StorageFragment : Fragment() {
                     start()
                 }
             } else {
-                // Остальные — приглушаем
                 segment.animate()
                     .alpha(0.4f)
                     .setDuration(150)
@@ -340,10 +311,6 @@ class StorageFragment : Fragment() {
     // СПИСОК КАТЕГОРИЙ
     // ============================================================
 
-    /**
-     * Перестраивает список категорий (с разделителями между строками)
-     * Стиль как в разделе «О системе»
-     */
     private fun rebuildCategoryList() {
         categoriesContainer.removeAllViews()
 
@@ -359,7 +326,6 @@ class StorageFragment : Fragment() {
             val row = createCategoryRow(category)
             categoriesContainer.addView(row)
 
-            // Разделитель между строками (кроме последней)
             if (index < categories.lastIndex) {
                 val divider = View(requireContext()).apply {
                     layoutParams = LinearLayout.LayoutParams(
@@ -376,10 +342,6 @@ class StorageFragment : Fragment() {
         }
     }
 
-    /**
-     * Заполняет строку категории данными из item_storage_category.xml
-     * Разметка — в XML, здесь только привязка данных и клик.
-     */
     private fun createCategoryRow(category: StorageCategoryItem): View {
         val view = layoutInflater.inflate(
             R.layout.item_storage_category,
@@ -391,24 +353,16 @@ class StorageFragment : Fragment() {
         val title = view.findViewById<TextView>(R.id.category_title)
         val size = view.findViewById<TextView>(R.id.category_size)
 
-        // Цвет кружка
         (dot.background?.mutate() as? GradientDrawable)?.setColor(
             ContextCompat.getColor(requireContext(), category.colorRes)
         )
 
-        // Название
         title.text = getString(category.titleRes)
-
-        // Размер
         size.text = storageManager.formatSize(category.size)
 
-        // Прозрачность для пустых категорий
         view.alpha = if (category.size > 0) 1f else 0.5f
-
-        // Tag для последующего поиска при выделении
         view.tag = category.id
 
-        // Клик
         view.setOnClickListener {
             onCategoryClicked(category)
         }
@@ -420,14 +374,9 @@ class StorageFragment : Fragment() {
     // КЛИК ПО КАТЕГОРИИ
     // ============================================================
 
-    /**
-     * Клик по категории — только выделение.
-     * Диалог очистки НЕ показываем (очистка только через кнопку «Очистка»).
-     */
     private fun onCategoryClicked(category: StorageCategoryItem) {
         if (isClearing) return
 
-        // Если уже выбрана — снимаем выделение
         if (selectedCategoryId == category.id) {
             selectedCategoryId = null
             applyBarSelection(null)
@@ -435,15 +384,11 @@ class StorageFragment : Fragment() {
             return
         }
 
-        // Иначе — выделяем
         selectedCategoryId = category.id
         applyBarSelection(category.id)
         applyListSelection(category.id)
     }
 
-    /**
-     * Применяет подсветку к строке списка
-     */
     private fun applyListSelection(selectedId: String?) {
         for (i in 0 until categoriesContainer.childCount) {
             val row = categoriesContainer.getChildAt(i)
@@ -461,14 +406,9 @@ class StorageFragment : Fragment() {
     // ДИАЛОГ МАССОВОЙ ОЧИСТКИ
     // ============================================================
 
-    /**
-     * Диалог массовой очистки (кнопка «Очистка»)
-     * Разметка — в dialog_storage_clear.xml, строки — в item_storage_clear_category.xml
-     */
     private fun showMassClearDialog() {
         if (isClearing) return
 
-        // Собираем только те категории, что можно чистить
         val clearableCategories = categories.filter { it.canClear }
 
         if (clearableCategories.isEmpty()) {
@@ -476,7 +416,6 @@ class StorageFragment : Fragment() {
             return
         }
 
-        // Инфлейтим разметку диалога
         val dialogView = layoutInflater.inflate(R.layout.dialog_storage_clear, null)
 
         val checkboxesContainer = dialogView.findViewById<LinearLayout>(R.id.storage_clear_checkboxes)
@@ -514,7 +453,6 @@ class StorageFragment : Fragment() {
             checkboxes[category.id] = cb
         }
 
-        // Создаём диалог с прозрачной темой
         val dialog = AlertDialog.Builder(
             requireContext(),
             R.style.Theme_QutyLaunch_AlertDialog_Transparent
@@ -523,20 +461,16 @@ class StorageFragment : Fragment() {
             .setCancelable(true)
             .create()
 
-        // Прозрачный фон окна — чтобы был виден CardView со скруглением
         dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-        // Кнопка закрытия (крестик)
         closeButton.setOnClickListener {
             dialog.dismiss()
         }
 
-        // Кнопка «Отмена»
         cancelButton.setOnClickListener {
             dialog.dismiss()
         }
 
-        // Кнопка «Очистить выбранное»
         confirmButton.setOnClickListener {
             val selected = checkboxes.filterValues { it.isChecked }.keys
             dialog.dismiss()
@@ -548,9 +482,6 @@ class StorageFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Очищает выбранные категории
-     */
     private fun clearSelectedCategories(ids: Set<String>) {
         if (isClearing) return
         isClearing = true
@@ -564,10 +495,7 @@ class StorageFragment : Fragment() {
                             storageManager.removeAll(StorageDirectory.CACHE)
                             requireContext().cacheDir.deleteRecursively()
                             requireContext().cacheDir.mkdirs()
-                            CacheManager.clearCache(requireContext())
-                        }
-                        "logs" -> {
-                            LoggerManager.clear()
+                            CacheManager.clearCache()
                         }
                         else -> {
                             storageManager.removeAll(category.directory)
@@ -579,7 +507,6 @@ class StorageFragment : Fragment() {
             withContext(Dispatchers.Main) {
                 isClearing = false
 
-                // Сообщаем SettingsActivity, что требуется перезапуск
                 (activity as? SettingsActivity)?.markRestartRequired()
                 needsRestart = true
 
@@ -620,9 +547,6 @@ class StorageFragment : Fragment() {
         return typedValue.data
     }
 
-    /**
-     * Модель категории
-     */
     data class StorageCategoryItem(
         val id: String,
         val titleRes: Int,

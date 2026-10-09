@@ -6,7 +6,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.core.Core
-import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
@@ -38,8 +37,6 @@ class MainActivity : BaseActivity() {
             finish()
             return
         }
-
-        LoggerManager.init(this)
 
         shellManager = ShellManager(this, configManager)
         applyOrientation(shellManager)

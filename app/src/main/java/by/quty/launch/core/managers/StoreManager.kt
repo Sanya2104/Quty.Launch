@@ -52,30 +52,17 @@ class StoreManager(private val context: Context) {
 
                 // Отмечаем установленные
                 val installedShells = shellManager.getAvailableShells().map { it.name }
-                LoggerManager.d("StoreManager", context.getString(R.string.log_store_installed_shells_from_manager, installedShells))
 
                 cachedShells = cachedShells?.map { shell ->
                     val isInstalled = installedShells.contains(shell.name)
-                    LoggerManager.d("StoreManager", context.getString(R.string.log_store_shell_installed_check, shell.name, isInstalled))
                     shell.copy(isInstalled = isInstalled)
                 }
 
-                val loadedCount = cachedShells?.size ?: 0
-                LoggerManager.d(
-                    "StoreManager",
-                    context.resources.getQuantityString(
-                        R.plurals.log_store_shells_loaded,
-                        loadedCount,
-                        loadedCount
-                    )
-                )
                 cachedShells
             } else {
-                LoggerManager.e("StoreManager", context.getString(R.string.log_store_load_error, connection.responseCode))
                 null
             }
-        } catch (e: Exception) {
-            LoggerManager.e("StoreManager", context.getString(R.string.log_store_error, e.message))
+        } catch (_: Exception) {
             null
         }
     }
@@ -162,15 +149,12 @@ class StoreManager(private val context: Context) {
                 if (it.id == shell.id) it.copy(isInstalled = true) else it
             }
 
-            LoggerManager.d("StoreManager", context.getString(R.string.log_store_shell_installed, shell.displayName))
-
             withContext(Dispatchers.Main) {
                 listener.onSuccess()
             }
             true
 
         } catch (e: Exception) {
-            LoggerManager.e("StoreManager", context.getString(R.string.log_store_install_error, e.message))
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.store_install_error))
             }

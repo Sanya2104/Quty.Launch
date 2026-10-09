@@ -1,5 +1,5 @@
 <!-- res/values-en/strings.xml -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- ============================================================ -->
     <!-- ===== GENERAL ============================================== -->
@@ -119,7 +119,7 @@
     <string name="toast_strict_mode_disabled">Strict mode disabled</string>
 
     <!-- ============================================================ -->
-    <!-- ===== APPLY SETTINGS DIALOG ============================== -->
+    <!-- ===== APPLY SETTINGS DIALOG =============================== -->
     <!-- ============================================================ -->
 
     <string name="dialog_apply_settings_title">Apply settings</string>
@@ -190,7 +190,6 @@
 
     <!-- Categories -->
     <string name="storage_category_cache">Cache</string>
-    <string name="storage_category_logs">Logs</string>
     <string name="storage_category_temp">Temp files</string>
     <string name="storage_category_updates">Updates</string>
     <string name="storage_category_shells">Shells</string>
@@ -360,7 +359,6 @@
     <!-- Sections -->
     <string name="dev_section_shell">Shell info</string>
     <string name="dev_section_data">Data management</string>
-    <string name="dev_section_logs">Log management</string>
     <string name="dev_section_tools">Tools</string>
 
     <!-- WebView -->
@@ -377,30 +375,6 @@
     <string name="dev_shell_reload_success">Shell reloaded</string>
     <string name="dev_shell_not_found">Active shell not found</string>
     <string name="dev_error">Error: %s</string>
-
-    <!-- Logs -->
-    <string name="dev_logs_view">View logs</string>
-    <string name="dev_logs_view_stub">Feature coming soon</string>
-    <string name="dev_logs_logger_in_apps">Logger in app list</string>
-    <string name="dev_logs_persist">Save logs to file</string>
-    <string name="dev_logs_max_files">Max files</string>
-    <string name="dev_logs_max_size">Max per file</string>
-    <string name="dev_logs_persist_enabled">Log saving enabled</string>
-    <string name="dev_logs_persist_disabled">Log saving disabled</string>
-    <string name="dev_logs_applied">Log settings applied</string>
-
-    <!-- Spinner arrays -->
-    <string-array name="dev_logs_files_count">
-        <item>3</item>
-        <item>5</item>
-        <item>10</item>
-    </string-array>
-
-    <string-array name="dev_logs_file_size">
-        <item>3 MB</item>
-        <item>5 MB</item>
-        <item>10 MB</item>
-    </string-array>
 
     <!-- Reset onboarding -->
     <string name="dev_reset_onboarding">Reset onboarding</string>
@@ -427,53 +401,6 @@
     <string name="dev_mode_deactivated">Developer mode deactivated</string>
     <string name="dev_mode_click_count" formatted="false">Clicks left: %d</string>
     <string name="dev_unknown_error">Unknown error</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGGER =============================================== -->
-    <!-- ============================================================ -->
-
-    <string name="logger_app_name">Logger</string>
-    <string name="logger_title">🐞 Logger</string>
-
-    <!-- Buttons -->
-    <string name="logger_clear">Clear</string>
-    <string name="logger_copy">Copy</string>
-    <string name="logger_pause">Pause</string>
-    <string name="logger_close">Close</string>
-    <string name="logger_save">Save logs</string>
-    <string name="logger_share">Share logs</string>
-    <string name="logger_share_title">Share logs</string>
-
-    <!-- Statuses -->
-    <string name="logger_empty">No logs yet</string>
-    <string name="logger_saved" formatted="false">Logs saved:\n%s</string>
-    <string name="logger_save_error">Failed to save logs</string>
-    <string name="logger_status" formatted="false">Total logs: %d</string>
-    <string name="logger_filter_status" formatted="false">Total logs: %d/%d</string>
-    <string name="logger_copied">Logs copied to clipboard</string>
-    <string name="logger_cleared">Logs cleared</string>
-    <string name="logger_paused">Log collection paused</string>
-    <string name="logger_resumed">Log collection resumed</string>
-
-    <!-- Filters -->
-    <string name="logger_filter_all">All</string>
-
-    <string-array name="logger_levels">
-        <item>All</item>
-        <item>DEBUG</item>
-        <item>INFO</item>
-        <item>WARN</item>
-        <item>ERROR</item>
-    </string-array>
-
-    <string-array name="logger_sources">
-        <item>All</item>
-        <item>Kotlin</item>
-        <item>WebView</item>
-    </string-array>
-
-    <!-- Errors -->
-    <string name="logger_devmode_required">Developer mode is not activated</string>
 
     <!-- ============================================================ -->
     <!-- ===== STORE ================================================ -->
@@ -536,143 +463,5 @@
     <string name="webview_retry_limit_reached" formatted="false">⚠️ Retry limit reached for %s (attempts: %d)</string>
     <string name="webview_retry_attempt" formatted="false">🔄 Reloading %s (attempt %d of %d)</string>
     <string name="webview_render_process_gone">Shell is restarting…</string>
-    <string name="log_webview_render_process_gone" formatted="false">Render process gone. Crashed: %b</string>
-    <string name="log_webview_restart_failed" formatted="false">Failed to restart MainActivity: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — CacheManager ================================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_cache_manager_package_changed" formatted="false">📦 Package change detected: %s -&gt; %s</string>
-    <string name="log_cache_manager_receiver_registered">📦 BroadcastReceiver registered for package tracking</string>
-    <string name="log_cache_manager_receiver_register_error">BroadcastReceiver registration error: %s</string>
-    <string name="log_cache_manager_skipped_dirty">⏭️ Cache skipped (dirty flag)</string>
-    <string name="log_cache_manager_saved">✅ Saved apps to cache: %d</string>
-    <string name="log_cache_manager_cleared">🗑️ Apps cache cleared</string>
-    <string name="log_cache_manager_invalidated">🔄 Apps cache invalidated (dirty flag = true)</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — ShellUpdateManager ============================ -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_update_incompatible">⚠️ Update incompatible with current Quty.Launch version</string>
-    <string name="log_shell_update_found" formatted="false">✅ Update found: %s (current: %s)</string>
-    <string name="log_shell_update_not_found" formatted="false">ℹ️ No updates (current: %s, available: %s)</string>
-    <string name="log_shell_update_check_error">⚠️ Update check error: %d</string>
-    <string name="log_shell_update_check_exception">❌ Update check error: %s</string>
-    <string name="log_shell_update_saved">✅ Shell update saved: %s</string>
-    <string name="log_shell_update_save_error">❌ Error saving shell update</string>
-    <string name="log_shell_update_download_error">❌ Update download error: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — StorageManager ================================ -->
-    <!-- ============================================================ -->
-
-    <string name="log_storage_dir_created">📁 Directory created: %s</string>
-    <string name="log_storage_dir_create_failed">❌ Failed to create: %s</string>
-    <string name="log_storage_file_not_exists">⚠️ File does not exist: %s</string>
-    <string name="log_storage_file_read_error">❌ File read error: %s</string>
-    <string name="log_storage_file_saved">✅ File saved: %s</string>
-    <string name="log_storage_file_save_error">❌ File save error: %s</string>
-    <string name="log_storage_file_stream_saved">✅ File saved from stream: %s</string>
-    <string name="log_storage_file_stream_save_error">❌ File save from stream error: %s</string>
-    <string name="log_storage_file_bytes_saved">✅ File saved (bytes): %s</string>
-    <string name="log_storage_file_bytes_save_error">❌ File save error (bytes): %s</string>
-    <string name="log_storage_file_deleted">🗑️ File deleted: %s</string>
-    <string name="log_storage_file_delete_error">❌ File delete error: %s</string>
-    <string name="log_storage_dir_deleted">🗑️ Directory deleted: %s</string>
-    <string name="log_storage_dir_delete_error">❌ Directory delete error: %s</string>
-    <string name="log_storage_files_deleted">🗑️ All files deleted from %s</string>
-    <string name="log_storage_files_delete_error">❌ Files delete error: %s</string>
-    <string name="log_storage_uri_error">❌ URI error: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — LoggerFileManager / LoggerManager ============= -->
-    <!-- ============================================================ -->
-
-    <string name="log_logger_file_write_error">Error writing log to file</string>
-    <string name="log_logger_initialized">Logger initialized</string>
-    <string name="log_logger_restore_error">Error restoring logs from file</string>
-    <string name="log_logger_cleared">Logs cleared</string>
-    <string name="log_logger_clear_error">Log clear error: %s</string>
-    <string name="log_logger_save_error">Log save error: %s</string>
-
-    <plurals name="log_logger_restored" tools:ignore="UnusedQuantity">
-        <item quantity="one">Restored %d log from file</item>
-        <item quantity="few">Restored %d logs from file</item>
-        <item quantity="many">Restored %d logs from file</item>
-        <item quantity="other">Restored %d logs from file</item>
-    </plurals>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — SystemUpdateManager =========================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_system_update_checking">Checking for updates…</string>
-    <string name="log_system_update_version_check" formatted="false">Current: %d, Available: %d, Update: %b</string>
-    <string name="log_system_update_server_error" formatted="false">Server returned: %d</string>
-    <string name="log_system_update_version_error">Version fetch error: %s</string>
-    <string name="log_system_update_download_start">Starting APK download: %s</string>
-    <string name="log_system_update_apk_exists">APK already downloaded: %s</string>
-    <string name="log_system_update_apk_saved">APK saved: %s</string>
-    <string name="log_system_update_apk_save_error">Error saving APK</string>
-    <string name="log_system_update_uri_error">Failed to get URI for APK</string>
-    <string name="log_system_update_download_error">APK download error: %s</string>
-    <string name="log_system_update_mark_complete" formatted="false">Download completion marked for version %d</string>
-    <string name="log_system_update_clear_mark" formatted="false">Download mark cleared for version %d</string>
-    <string name="log_system_update_cleanup_marks" formatted="false">Cleared %d old download marks</string>
-    <string name="log_system_update_delete_old_apks" formatted="false">Deleted %d old APK files</string>
-    <string name="log_system_update_install_start">Starting APK installation</string>
-    <string name="log_system_update_install_no_permission">No install permission, opening settings</string>
-    <string name="log_system_update_install_error">Installation launch error: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — ShellManager ================================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_manager_unzip_error">Shell unzip error: %s</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — StoreManager ================================== -->
-    <!-- ============================================================ -->
-
-    <string name="log_store_installed_shells_from_manager">✅ Installed shells (from ShellManager): %s</string>
-    <string name="log_store_shell_installed_check" formatted="false">  📦 %s → installed: %b</string>
-    <string name="log_store_load_error">Load error: %d</string>
-    <string name="log_store_error">Error: %s</string>
-    <string name="log_store_shell_installed">Shell installed: %s</string>
-    <string name="log_store_install_error">Install error: %s</string>
-
-    <plurals name="log_store_shells_loaded" tools:ignore="UnusedQuantity">
-        <item quantity="one">Loaded %d shell</item>
-        <item quantity="few">Loaded %d shells</item>
-        <item quantity="many">Loaded %d shells</item>
-        <item quantity="other">Loaded %d shells</item>
-    </plurals>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — ShellListFragment ============================= -->
-    <!-- ============================================================ -->
-
-    <string name="log_shell_list_update_data">🔍 updateData: isDataLoaded=%b</string>
-    <string name="log_shell_list_update_ui">🔍 updateUI: allShells.size=%d</string>
-    <string name="log_shell_list_shells_size">🔍 shells.size=%d</string>
-    <string name="log_shell_list_empty">🔍 EMPTY: emptyText shown</string>
-    <string name="log_shell_list_adapter_count">🔍 adapter.itemCount=%d</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== LOGS — JsBridge / SettingsActivity / Developer ======= -->
-    <!-- ============================================================ -->
-
-    <string name="log_js_bridge_state_notified">Core state notified to shell</string>
-    <string name="log_js_bridge_state_notify_error" formatted="false">Failed to notify core state: %s</string>
-
-    <string name="log_settings_restored_needs_restart" formatted="false">Restored, restart required: %b</string>
-    <string name="log_settings_width_tablet" formatted="false">Width: %.2fdp, Tablet: %b</string>
-    <string name="log_settings_restart_required">Restart required: setting changed</string>
-    <string name="log_settings_checking_restart_state" formatted="false">Checking restart state: needsRestart=%b</string>
-    <string name="log_settings_error">Error</string>
-
-    <string name="log_developer_onboarding_reset">Onboarding flag reset (force_show_onboarding=true)</string>
 
 </resources>

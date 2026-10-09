@@ -10,12 +10,6 @@
     <!-- TabLayout (цвета для текста) -->
     <color name="tab_text_unselected">#8A8A8A</color>
 
-    <!-- Logger backgrounds (остаются статическими для уровней логов) -->
-    <color name="log_debug_bg">#1B5E20</color>
-    <color name="log_info_bg">#0D47A1</color>
-    <color name="log_warn_bg">#E65100</color>
-    <color name="log_error_bg">#B71C1C</color>
-
     <!-- ============================================================ -->
     <!-- ОСНОВНЫЕ ЦВЕТА ТЕМЫ (DARK - для светлой темы по умолчанию) -->
     <!-- ============================================================ -->
@@ -48,7 +42,7 @@
     <color name="status_granted">#4CAF50</color>
     <color name="status_warning">#FF9800</color>
 
-    <!-- Акценты (используются в коде для логов и источников) -->
+    <!-- Акценты (используются в коде) -->
     <color name="accent_green">#4CAF50</color>
     <color name="accent_blue">#2196F3</color>
 

@@ -25,7 +25,6 @@ import by.quty.launch.core.fragments.settings.ShellFragment
 import by.quty.launch.core.fragments.settings.StorageFragment
 import by.quty.launch.core.fragments.settings.ApiMethodsFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
-import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.model.SettingsMenuModel
 import by.quty.launch.databinding.ActivitySettingsBinding
@@ -102,11 +101,6 @@ class SettingsActivity : BaseActivity() {
         }
 
         applyMode()
-
-        LoggerManager.d(
-            "SettingsActivity",
-            getString(R.string.log_settings_restored_needs_restart, needsRestart)
-        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -155,7 +149,6 @@ class SettingsActivity : BaseActivity() {
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
-        LoggerManager.d("SettingsActivity", getString(R.string.log_settings_width_tablet, widthDp, isTabletMode))
     }
 
     private fun applyMode() {
@@ -455,7 +448,6 @@ class SettingsActivity : BaseActivity() {
      * - Обновляет адаптер RecyclerView.
      */
     fun refreshMenuItems() {
-        val oldItems = menuItems
         menuItems = buildMenuItems()
 
         // Если открытый фрагмент больше не в списке — закрываем его
@@ -490,11 +482,6 @@ class SettingsActivity : BaseActivity() {
 
         // Пересчитываем режим (может потребоваться обновить видимость)
         applyMode()
-
-        LoggerManager.d(
-            "SettingsActivity",
-            "refreshMenuItems: ${oldItems.size} → ${menuItems.size} items"
-        )
     }
 
     // ============================================================
@@ -524,7 +511,6 @@ class SettingsActivity : BaseActivity() {
     fun markRestartRequired() {
         if (!needsRestart) {
             needsRestart = true
-            LoggerManager.d("SettingsActivity", getString(R.string.log_settings_restart_required))
         }
     }
 
@@ -550,11 +536,6 @@ class SettingsActivity : BaseActivity() {
      * или при переключении между разделами.
      */
     private fun checkAndShowRestartDialog() {
-        LoggerManager.d(
-            "SettingsActivity",
-            getString(R.string.log_settings_checking_restart_state, needsRestart)
-        )
-
         if (needsRestart) {
             showRestartDialog()
         } else {
@@ -663,8 +644,8 @@ class SettingsActivity : BaseActivity() {
                 .replace(R.id.fragment_container, fragment)
                 .commitNow()
 
-        } catch (e: Exception) {
-            LoggerManager.e("SettingsActivity", getString(R.string.log_settings_error), e)
+        } catch (_: Exception) {
+            // Игнорируем ошибки
         }
 
         /*

@@ -86,8 +86,7 @@ class SystemUpdateManager(private val context: Context) {
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
             packageInfo.longVersionCode
-        } catch (e: Exception) {
-            LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_version_error, e.message))
+        } catch (_: Exception) {
             0L
         }
     }
@@ -102,8 +101,6 @@ class SystemUpdateManager(private val context: Context) {
      */
     suspend fun checkForUpdates(): UpdateCheckResult = withContext(Dispatchers.IO) {
         try {
-            LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_checking))
-
             val connection = URL(versionUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = CoreConfig.CONNECT_TIMEOUT_MS
@@ -116,10 +113,6 @@ class SystemUpdateManager(private val context: Context) {
                 val currentVersionCode = getCurrentVersionCode()
                 val hasUpdate = versionInfo.versionCode > currentVersionCode
 
-                LoggerManager.d("SystemUpdateManager",
-                    context.getString(R.string.log_system_update_version_check, currentVersionCode, versionInfo.versionCode, hasUpdate)
-                )
-
                 if (!hasUpdate) {
                     cleanupOldDownloadMarks()
                     deleteOldApkFiles()
@@ -130,7 +123,6 @@ class SystemUpdateManager(private val context: Context) {
                     versionInfo = if (hasUpdate) versionInfo else null
                 )
             } else {
-                LoggerManager.w("SystemUpdateManager", context.getString(R.string.log_system_update_server_error, connection.responseCode))
                 UpdateCheckResult(
                     hasUpdate = false,
                     error = context.getString(R.string.server_error, connection.responseCode)
@@ -149,7 +141,6 @@ class SystemUpdateManager(private val context: Context) {
                 e.message?.contains("hostname") == true -> context.getString(R.string.no_internet_connection)
                 else -> e.message ?: context.getString(R.string.update_error)
             }
-            LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_download_error, e.message))
             UpdateCheckResult(hasUpdate = false, error = errorMessage)
         }
     }
@@ -217,13 +208,8 @@ class SystemUpdateManager(private val context: Context) {
                 directory = StorageDirectory.UPDATES,
                 filter = { it.startsWith(CoreConfig.APK_FILE_PREFIX) && it.endsWith(".apk") }
             )
-            var deletedCount = 0
             apkFiles.forEach { file ->
                 storageManager.remove(file)
-                deletedCount++
-            }
-            if (deletedCount > 0) {
-                LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_delete_old_apks, deletedCount))
             }
         } catch (_: Exception) {
             // Игнорируем ошибки
@@ -239,7 +225,6 @@ class SystemUpdateManager(private val context: Context) {
      */
     private fun markDownloadComplete(versionCode: Int) {
         prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
-        LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_mark_complete, versionCode))
     }
 
     /**
@@ -254,7 +239,6 @@ class SystemUpdateManager(private val context: Context) {
      */
     fun clearDownloadMark(versionCode: Int) {
         prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
-        LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_clear_mark, versionCode))
     }
 
     /**
@@ -264,20 +248,14 @@ class SystemUpdateManager(private val context: Context) {
         try {
             val currentVersionCode = getCurrentVersionCode()
             val allKeys = prefs.all.keys
-            var removedCount = 0
 
             allKeys.forEach { key ->
                 if (key.startsWith(CoreConfig.DOWNLOAD_COMPLETE_KEY)) {
                     val versionCode = key.replace(CoreConfig.DOWNLOAD_COMPLETE_KEY, "").toIntOrNull()
                     if (versionCode != null && versionCode <= currentVersionCode) {
                         prefs.edit { remove(key) }
-                        removedCount++
                     }
                 }
-            }
-
-            if (removedCount > 0) {
-                LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_cleanup_marks, removedCount))
             }
         } catch (_: Exception) {
             // Игнорируем ошибки
@@ -307,7 +285,6 @@ class SystemUpdateManager(private val context: Context) {
             if (!forceDownload) {
                 val (exists, existingUri) = checkIfApkExists(versionInfo)
                 if (exists && existingUri != null) {
-                    LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_apk_exists, fileName))
                     withContext(Dispatchers.Main) {
                         listener.onSuccess(existingUri)
                     }
@@ -329,8 +306,6 @@ class SystemUpdateManager(private val context: Context) {
                 prefix = "apk_download_${versionInfo.versionCode}",
                 extension = "tmp"
             )
-
-            LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_download_start, fileName))
 
             // Скачиваем через UpdateHelper
             val file = UpdateHelper.downloadFile(
@@ -382,7 +357,6 @@ class SystemUpdateManager(private val context: Context) {
             file.delete()
 
             if (!success) {
-                LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_apk_save_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
                 }
@@ -397,21 +371,18 @@ class SystemUpdateManager(private val context: Context) {
             val uri = storageManager.getUri(savedFile)
 
             if (uri == null) {
-                LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_uri_error))
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
                 }
                 return@withContext false
             }
 
-            LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_apk_saved, fileName))
             withContext(Dispatchers.Main) {
                 listener.onSuccess(uri)
             }
             true
 
         } catch (e: Exception) {
-            LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_download_error, e.message))
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))
             }
@@ -452,11 +423,8 @@ class SystemUpdateManager(private val context: Context) {
     @Suppress("UNUSED_PARAMETER")
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
-            LoggerManager.d("SystemUpdateManager", context.getString(R.string.log_system_update_install_start))
-
             // Проверяем разрешение на установку (для Android 8+)
             if (!context.packageManager.canRequestPackageInstalls()) {
-                LoggerManager.w("SystemUpdateManager", context.getString(R.string.log_system_update_install_no_permission))
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
                 intent.data = "package:${context.packageName}".toUri()
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -476,7 +444,6 @@ class SystemUpdateManager(private val context: Context) {
             // Автоочистка произойдёт в cleanupOldDownloadMarks() при следующей проверке.
 
         } catch (e: Exception) {
-            LoggerManager.e("SystemUpdateManager", context.getString(R.string.log_system_update_install_error, e.message))
             Toast.makeText(
                 context,
                 context.getString(R.string.update_install_failed, e.message),
