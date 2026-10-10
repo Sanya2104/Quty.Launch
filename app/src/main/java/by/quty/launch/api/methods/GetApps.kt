@@ -102,10 +102,23 @@ class GetApps(
 
         customApps.add(
             AppInfo(
-                name = context.getString(R.string.store_title),
+                name = context.getString(R.string.api_getapps_store_name),
                 packageName = ApiConfig.STORE_PACKAGE,
                 isCustom = true,
                 iconBase64 = storeIconBase64
+            )
+        )
+
+        // 3. Терминал
+        val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
+        val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_terminal_name),
+                packageName = ApiConfig.TERMINAL_PACKAGE,
+                isCustom = true,
+                iconBase64 = terminalIconBase64
             )
         )
 

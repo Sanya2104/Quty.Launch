@@ -1,0 +1,13 @@
+<!-- res/layout/item_terminal_line.xml -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/terminal_line_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs"
+    android:fontFamily="monospace"
+    android:textSize="@dimen/text_m"
+    android:textColor="?attr/textPrimaryColor"
+    android:textIsSelectable="true"
+    tools:text="> status" />

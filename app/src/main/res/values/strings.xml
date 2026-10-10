@@ -223,6 +223,8 @@
 
     <!-- Имена виртуальных приложений (GetApps) -->
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
+    <string name="api_getapps_store_name">Магазин</string>
+    <string name="api_getapps_terminal_name">Терминал</string>
 
     <!-- Ошибки LaunchApp -->
     <string name="api_launchapp_package_required">Требуется имя пакета</string>
@@ -476,6 +478,139 @@
     <string name="store_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
     <string name="store_download_error">Ошибка скачивания</string>
     <string name="store_save_error">Ошибка сохранения оболочки</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ТЕРМИНАЛ ============================================= -->
+    <!-- ============================================================ -->
+
+    <string name="terminal_title">Терминал</string>
+    <string name="terminal_input_hint">Введите команду…</string>
+    <string name="terminal_send">Отправить</string>
+    <string name="terminal_welcome">Терминал Quty.Launch. Введите команду.</string>
+
+    <!-- Формат вывода version -->
+    <string name="terminal_version_format" formatted="false">Quty.Launch %s</string>
+    <string name="terminal_version_code" formatted="false">versionCode: %s</string>
+    <string name="terminal_version_channel" formatted="false">channel: %s</string>
+
+    <!-- status -->
+    <string name="terminal_value_none">—</string>
+    <string name="terminal_theme_auto">auto</string>
+
+    <!-- Описания команд (для help и ошибок) -->
+    <string name="terminal_cmd_version_desc">Версия ядра</string>
+    <string name="terminal_cmd_status_desc">Сводка о состоянии ядра</string>
+    <string name="terminal_cmd_clear_desc">Очистить лог терминала</string>
+    <string name="terminal_cmd_exit_desc">Закрыть терминал</string>
+
+    <!-- Описания команд (порция 1) -->
+    <string name="terminal_cmd_help_desc">Список команд или справка по конкретной</string>
+    <string name="terminal_cmd_device_desc">Информация об устройстве</string>
+    <string name="terminal_cmd_shell_info_desc">Информация об активной оболочке</string>
+    <string name="terminal_cmd_shell_list_desc">Список доступных оболочек</string>
+    <string name="terminal_cmd_theme_desc">Текущий режим темы</string>
+    <string name="terminal_cmd_lang_desc">Текущий язык</string>
+    <string name="terminal_cmd_orientation_desc">Текущая ориентация</string>
+    <string name="terminal_cmd_devmode_desc">Статус DevMode</string>
+
+    <!-- Описания команд (порция 2, write) -->
+    <string name="terminal_cmd_set_desc">Изменить параметр (set theme "dark")</string>
+    <string name="terminal_cmd_reload_shell_desc">Перезагрузить активную оболочку</string>
+    <string name="terminal_cmd_clear_webview_desc">Очистить кэш WebView</string>
+    <string name="terminal_cmd_clear_cache_desc">Очистить кэш приложений</string>
+    <string name="terminal_cmd_reset_onboarding_desc">Сбросить онбординг и перезапустить</string>
+    <string name="terminal_cmd_restart_desc">Перезапустить приложение</string>
+
+    <!-- Описания команд (порция 3a, read-only) -->
+    <string name="terminal_cmd_about_desc">Краткая информация о ядре</string>
+    <string name="terminal_cmd_storage_desc">Занятое место по категориям</string>
+    <string name="terminal_cmd_api_list_desc">Список зарегистрированных API-методов</string>
+    <string name="terminal_cmd_api_call_desc">Вызвать API-метод напрямую</string>
+    <string name="terminal_cmd_echo_desc">Повторить аргумент</string>
+
+    <!-- Описания команд (порция 3d, диагностика) -->
+    <string name="terminal_cmd_doctor_desc">Диагностика состояния ядра</string>
+    <string name="terminal_cmd_memory_desc">Использование Java heap</string>
+    <string name="terminal_cmd_webview_desc">Информация о WebView</string>
+    <string name="terminal_cmd_screen_desc">Разрешение и плотность экрана</string>
+
+    <!-- history -->
+    <string name="terminal_cmd_history_desc">Показать историю команд</string>
+    <string name="terminal_cmd_history_clear_desc">Очистить историю команд</string>
+    <string name="terminal_history_empty">История пуста</string>
+    <string name="terminal_history_cleared">История очищена</string>
+
+    <!-- help -->
+    <string name="terminal_help_header">Доступные команды:</string>
+    <string name="terminal_help_command" formatted="false">%1$s — %2$s</string>
+
+    <!-- shell.info -->
+    <string name="terminal_shell_info_none">Активная оболочка не найдена</string>
+
+    <!-- shell.list -->
+    <string name="terminal_shell_list_header">Доступные оболочки:</string>
+    <string name="terminal_shell_list_empty">Оболочки не найдены</string>
+    <string name="terminal_shell_marker_active">(активная)</string>
+    <string name="terminal_shell_marker_custom">[пользовательская]</string>
+
+    <!-- set / write-команды -->
+    <string name="terminal_set_usage">Использование: set &lt;ключ&gt; "&lt;значение&gt;"</string>
+    <string name="terminal_set_unknown_key" formatted="false">Неизвестный параметр: %s</string>
+    <string name="terminal_set_invalid_value" formatted="false">Неверное значение: %s. Допустимо: %s</string>
+    <string name="terminal_set_ok_restart">OK. Изменение применится после перезапуска приложения.</string>
+    <string name="terminal_clear_ok">OK</string>
+    <string name="terminal_restart_ok">OK. Перезапуск…</string>
+    <string name="terminal_reset_onboarding_ok">OK. Онбординг сброшен. Перезапуск…</string>
+
+    <!-- storage -->
+    <string name="terminal_storage_divider">───────────────────</string>
+
+    <!-- api.list -->
+    <string name="terminal_api_list_header" formatted="false">Зарегистрированные API-методы (%d):</string>
+    <string name="terminal_api_list_empty">Нет зарегистрированных методов</string>
+    <string name="terminal_api_list_declared">declared</string>
+    <string name="terminal_api_list_called">called</string>
+
+    <!-- api.call -->
+    <string name="terminal_api_call_usage">Использование: api.call "&lt;Name&gt;" "&lt;json&gt;"</string>
+
+    <!-- doctor -->
+    <string name="terminal_doctor_header">Проверка состояния ядра:</string>
+    <string name="terminal_doctor_ok">✔️</string>
+    <string name="terminal_doctor_warn">⁉️</string>
+    <string name="terminal_doctor_fail">❌</string>
+
+    <string name="terminal_doctor_devmode_on">активен</string>
+    <string name="terminal_doctor_devmode_off">выключен</string>
+    <string name="terminal_doctor_shell_missing">не найдена</string>
+    <string name="terminal_doctor_manifest_ok">валиден</string>
+    <string name="terminal_doctor_manifest_warn">версия не указана</string>
+    <string name="terminal_doctor_perms_ok" formatted="false">%1$d из %2$d выданы</string>
+    <string name="terminal_doctor_perms_fail" formatted="false">%1$d из %2$d выданы</string>
+    <string name="terminal_doctor_free_space_low" formatted="false">мало (%s)</string>
+    <string name="terminal_doctor_cache_empty">нет (будет создан)</string>
+    <string name="terminal_doctor_cache_fresh" formatted="false">свежий (%s мин назад)</string>
+    <string name="terminal_doctor_cache_stale" formatted="false">старше 30 минут (%s мин назад)</string>
+    <string name="terminal_doctor_webview_ok" formatted="false">доступен (v%s)</string>
+    <string name="terminal_doctor_webview_fail">недоступен</string>
+
+    <string name="terminal_doctor_label_devmode">DevMode</string>
+    <string name="terminal_doctor_label_shell">Активная оболочка</string>
+    <string name="terminal_doctor_label_manifest">Manifest</string>
+    <string name="terminal_doctor_label_perms">Разрешения</string>
+    <string name="terminal_doctor_label_free_space">Свободное место</string>
+    <string name="terminal_doctor_label_cache">Кэш приложений</string>
+    <string name="terminal_doctor_label_webview">WebView</string>
+
+    <string name="terminal_doctor_summary" formatted="false">Итог: %1$d ✔️, %2$d ⁉️, %3$d ❌</string>
+
+    <!-- webview -->
+    <string name="terminal_webview_not_found">WebView не найден</string>
+
+    <!-- Ошибки -->
+    <string name="terminal_error_unknown_command" formatted="false">Неизвестная команда: %s</string>
+    <string name="terminal_error_devmode_required">Команда требует активного DevMode</string>
+    <string name="terminal_error_execution" formatted="false">Ошибка выполнения: %s</string>
 
     <!-- ============================================================ -->
     <!-- ===== АВТОРЫ =============================================== -->

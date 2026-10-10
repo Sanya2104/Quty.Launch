@@ -1,0 +1,157 @@
+<!-- res/layout/activity_terminal.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/terminal_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs">
+
+    <!-- ============================================================ -->
+    <!-- ===== ШАПКА С ГРАДИЕНТОМ (как в Настройках) ================ -->
+    <!-- ============================================================ -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_m"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/spacing_m"
+        android:paddingEnd="@dimen/spacing_m"
+        android:paddingTop="@dimen/spacing_m"
+        android:paddingBottom="@dimen/spacing_xs"
+        android:background="@drawable/bg_toolbar_gradient"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="4dp">
+
+        <TextView
+            style="@style/Text.Title.Large"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="@dimen/spacing_sm"
+            android:text="@string/terminal_title" />
+
+        <LinearLayout
+            android:id="@+id/terminal_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_m"
+            android:background="@drawable/bg_glass_icon_ripple"
+            android:padding="@dimen/spacing_s"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageButton
+                android:layout_width="@dimen/icon_medium"
+                android:layout_height="@dimen/icon_medium"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/close"
+                android:src="@drawable/ic_close"
+                app:tint="?attr/iconTintColor"
+                android:clickable="false"
+                android:focusable="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ============================================================ -->
+    <!-- ===== КАРТОЧКА ТЕРМИНАЛА (лог + поле ввода) ================ -->
+    <!-- ============================================================ -->
+
+    <LinearLayout
+        android:id="@+id/terminal_card"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="@dimen/spacing_s"
+        android:layout_marginEnd="@dimen/spacing_s"
+        android:layout_marginTop="@dimen/spacing_l"
+        android:layout_marginBottom="@dimen/spacing_l"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        tools:ignore="NestedWeights">
+
+        <!-- Лог -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/terminal_log"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingStart="@dimen/spacing_m"
+            android:paddingEnd="@dimen/spacing_m"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_s"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+        <!-- Разделитель -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/dividerColor" />
+
+        <!-- Поле ввода: фон не задаём — его даёт карточка bg_card_rounded,
+             чтобы нижние скруглённые углы отображались корректно. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_m"
+            android:paddingEnd="@dimen/spacing_s"
+            android:paddingTop="@dimen/spacing_s"
+            android:paddingBottom="@dimen/spacing_s">
+
+            <ImageView
+                android:layout_width="@dimen/icon_medium"
+                android:layout_height="@dimen/icon_medium"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:src="@drawable/ic_terminal"
+                android:contentDescription="@string/empty"
+                app:tint="?attr/buttonPrimaryColor" />
+
+            <EditText
+                android:id="@+id/terminal_input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+
+                android:background="@android:color/transparent"
+                android:fontFamily="monospace"
+                android:hint="@string/terminal_input_hint"
+                android:imeOptions="actionSend"
+
+                android:importantForAutofill="no"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"
+                android:paddingStart="@dimen/spacing_xs"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_xs"
+                android:paddingBottom="@dimen/spacing_m"
+                android:textColor="?attr/textPrimaryColor"
+                android:textColorHint="?attr/textHintColor"
+                android:textSize="@dimen/text_m" />
+
+            <ImageButton
+                android:id="@+id/terminal_send"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:src="@drawable/ic_send"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/terminal_send"
+                android:padding="@dimen/spacing_m"
+                app:tint="?attr/buttonPrimaryColor" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

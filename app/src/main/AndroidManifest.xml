@@ -95,6 +95,15 @@
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
+        <!-- Терминал -->
+        <activity
+            android:name=".TerminalActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.AppCompat.Translucent">
+        </activity>
+
         <!-- ============================================================ -->
         <!-- FILE PROVIDER                                                -->
         <!-- ============================================================ -->

@@ -222,7 +222,9 @@
     <string name="api_getcorestate_desc">Core state for shell</string>
 
     <!-- Virtual app names (GetApps) -->
-    <string name="api_getapps_settings_name">Quty.Launch Settings</string>
+    <string name="api_getapps_settings_name">Settings Quty.Launch</string>
+    <string name="api_getapps_store_name">Store</string>
+    <string name="api_getapps_terminal_name">Terminal</string>
 
     <!-- LaunchApp errors -->
     <string name="api_launchapp_package_required">Package name required</string>
@@ -476,6 +478,139 @@
     <string name="store_incompatible">Shell is incompatible with the current Quty.Launch version</string>
     <string name="store_download_error">Download error</string>
     <string name="store_save_error">Failed to save shell</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== TERMINAL ============================================= -->
+    <!-- ============================================================ -->
+
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_input_hint">Enter a command…</string>
+    <string name="terminal_send">Send</string>
+    <string name="terminal_welcome">Quty.Launch terminal. Enter a command.</string>
+
+    <!-- version output format -->
+    <string name="terminal_version_format" formatted="false">Quty.Launch %s</string>
+    <string name="terminal_version_code" formatted="false">versionCode: %s</string>
+    <string name="terminal_version_channel" formatted="false">channel: %s</string>
+
+    <!-- status -->
+    <string name="terminal_value_none">—</string>
+    <string name="terminal_theme_auto">auto</string>
+
+    <!-- Command descriptions (for help and errors) -->
+    <string name="terminal_cmd_version_desc">Kernel version</string>
+    <string name="terminal_cmd_status_desc">Kernel state summary</string>
+    <string name="terminal_cmd_clear_desc">Clear terminal log</string>
+    <string name="terminal_cmd_exit_desc">Close terminal</string>
+
+    <!-- Command descriptions (part 1) -->
+    <string name="terminal_cmd_help_desc">List of commands or help for a specific one</string>
+    <string name="terminal_cmd_device_desc">Device information</string>
+    <string name="terminal_cmd_shell_info_desc">Active shell information</string>
+    <string name="terminal_cmd_shell_list_desc">List of available shells</string>
+    <string name="terminal_cmd_theme_desc">Current theme mode</string>
+    <string name="terminal_cmd_lang_desc">Current language</string>
+    <string name="terminal_cmd_orientation_desc">Current orientation</string>
+    <string name="terminal_cmd_devmode_desc">DevMode status</string>
+
+    <!-- Command descriptions (part 2, write) -->
+    <string name="terminal_cmd_set_desc">Change a parameter (set theme "dark")</string>
+    <string name="terminal_cmd_reload_shell_desc">Reload active shell</string>
+    <string name="terminal_cmd_clear_webview_desc">Clear WebView cache</string>
+    <string name="terminal_cmd_clear_cache_desc">Clear app cache</string>
+    <string name="terminal_cmd_reset_onboarding_desc">Reset onboarding and restart</string>
+    <string name="terminal_cmd_restart_desc">Restart app</string>
+
+    <!-- Command descriptions (part 3a, read-only) -->
+    <string name="terminal_cmd_about_desc">Short kernel info</string>
+    <string name="terminal_cmd_storage_desc">Used space by category</string>
+    <string name="terminal_cmd_api_list_desc">List of registered API methods</string>
+    <string name="terminal_cmd_api_call_desc">Call an API method directly</string>
+    <string name="terminal_cmd_echo_desc">Echo the argument</string>
+
+    <!-- Command descriptions (part 3d, diagnostics) -->
+    <string name="terminal_cmd_doctor_desc">Kernel state diagnostics</string>
+    <string name="terminal_cmd_memory_desc">Java heap usage</string>
+    <string name="terminal_cmd_webview_desc">WebView information</string>
+    <string name="terminal_cmd_screen_desc">Screen resolution and density</string>
+
+    <!-- history -->
+    <string name="terminal_cmd_history_desc">Show command history</string>
+    <string name="terminal_cmd_history_clear_desc">Clear command history</string>
+    <string name="terminal_history_empty">History is empty</string>
+    <string name="terminal_history_cleared">History cleared</string>
+
+    <!-- help -->
+    <string name="terminal_help_header">Available commands:</string>
+    <string name="terminal_help_command" formatted="false">%1$s — %2$s</string>
+
+    <!-- shell.info -->
+    <string name="terminal_shell_info_none">Active shell not found</string>
+
+    <!-- shell.list -->
+    <string name="terminal_shell_list_header">Available shells:</string>
+    <string name="terminal_shell_list_empty">No shells found</string>
+    <string name="terminal_shell_marker_active">(active)</string>
+    <string name="terminal_shell_marker_custom">[custom]</string>
+
+    <!-- set / write commands -->
+    <string name="terminal_set_usage">Usage: set &lt;key&gt; "&lt;value&gt;"</string>
+    <string name="terminal_set_unknown_key" formatted="false">Unknown parameter: %s</string>
+    <string name="terminal_set_invalid_value" formatted="false">Invalid value: %s. Allowed: %s</string>
+    <string name="terminal_set_ok_restart">OK. The change will be applied after restart.</string>
+    <string name="terminal_clear_ok">OK</string>
+    <string name="terminal_restart_ok">OK. Restarting…</string>
+    <string name="terminal_reset_onboarding_ok">OK. Onboarding reset. Restarting…</string>
+
+    <!-- storage -->
+    <string name="terminal_storage_divider">───────────────────</string>
+
+    <!-- api.list -->
+    <string name="terminal_api_list_header" formatted="false">Registered API methods (%d):</string>
+    <string name="terminal_api_list_empty">No registered methods</string>
+    <string name="terminal_api_list_declared">declared</string>
+    <string name="terminal_api_list_called">called</string>
+
+    <!-- api.call -->
+    <string name="terminal_api_call_usage">Usage: api.call "&lt;Name&gt;" "&lt;json&gt;"</string>
+
+    <!-- doctor -->
+    <string name="terminal_doctor_header">Kernel state check:</string>
+    <string name="terminal_doctor_ok">✔️</string>
+    <string name="terminal_doctor_warn">⁉️</string>
+    <string name="terminal_doctor_fail">❌</string>
+
+    <string name="terminal_doctor_devmode_on">enabled</string>
+    <string name="terminal_doctor_devmode_off">disabled</string>
+    <string name="terminal_doctor_shell_missing">not found</string>
+    <string name="terminal_doctor_manifest_ok">valid</string>
+    <string name="terminal_doctor_manifest_warn">version missing</string>
+    <string name="terminal_doctor_perms_ok" formatted="false">%1$d of %2$d granted</string>
+    <string name="terminal_doctor_perms_fail" formatted="false">%1$d of %2$d granted</string>
+    <string name="terminal_doctor_free_space_low" formatted="false">low (%s)</string>
+    <string name="terminal_doctor_cache_empty">none (will be created)</string>
+    <string name="terminal_doctor_cache_fresh" formatted="false">fresh (%s min ago)</string>
+    <string name="terminal_doctor_cache_stale" formatted="false">older than 30 min (%s min ago)</string>
+    <string name="terminal_doctor_webview_ok" formatted="false">available (v%s)</string>
+    <string name="terminal_doctor_webview_fail">unavailable</string>
+
+    <string name="terminal_doctor_label_devmode">DevMode</string>
+    <string name="terminal_doctor_label_shell">Active shell</string>
+    <string name="terminal_doctor_label_manifest">Manifest</string>
+    <string name="terminal_doctor_label_perms">Permissions</string>
+    <string name="terminal_doctor_label_free_space">Free space</string>
+    <string name="terminal_doctor_label_cache">Apps cache</string>
+    <string name="terminal_doctor_label_webview">WebView</string>
+
+    <string name="terminal_doctor_summary" formatted="false">Summary: %1$d ✔️, %2$d ⁉️, %3$d ❌</string>
+
+    <!-- webview -->
+    <string name="terminal_webview_not_found">WebView not found</string>
+
+    <!-- Errors -->
+    <string name="terminal_error_unknown_command" formatted="false">Unknown command: %s</string>
+    <string name="terminal_error_devmode_required">Command requires active DevMode</string>
+    <string name="terminal_error_execution" formatted="false">Execution error: %s</string>
 
     <!-- ============================================================ -->
     <!-- ===== AUTHORS ============================================== -->
