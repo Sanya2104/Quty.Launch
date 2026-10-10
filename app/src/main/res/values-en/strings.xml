@@ -51,9 +51,6 @@
     <string name="settings_api_methods_title">API methods</string>
     <string name="settings_recovery_title">Backup &amp; reset</string>
 
-    <!-- Fragment descriptions (placeholders) -->
-    <string name="settings_recovery_desc">Will be here:\n• Export/Import settings</string>
-
     <!-- ============================================================ -->
     <!-- ===== SETTINGS — THEME ===================================== -->
     <!-- ============================================================ -->
@@ -297,6 +294,40 @@
 
     <!-- Shell update -->
     <string name="shell_update_not_enough_space">Not enough free space to download the shell.\nPlease free up space and try again.</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== BACKUP and RESET (RECOVERY) ========================== -->
+    <!-- ============================================================ -->
+
+    <string name="settings_recovery_section_title">Settings recovery</string>
+
+    <!-- Backup -->
+    <string name="recovery_backup_title">Backup settings</string>
+    <string name="recovery_backup_desc">Save all settings to a .qutyconfig file</string>
+    <string name="recovery_backup_share_title">Share backup</string>
+    <string name="recovery_backup_share_subject">Quty.Launch — settings backup</string>
+    <string name="recovery_backup_error" formatted="false">Backup error: %s</string>
+
+    <!-- Restore -->
+    <string name="recovery_restore_title">Restore settings</string>
+    <string name="recovery_restore_desc">Import settings from a .qutyconfig file</string>
+    <string name="recovery_import_confirm_title">Restore settings?</string>
+    <string name="recovery_import_confirm_message">All current settings will be replaced with data from the file. A restart is required after import.</string>
+    <string name="recovery_import_confirm_button">Restore</string>
+    <string name="recovery_import_version_mismatch_title">Version mismatch</string>
+    <string name="recovery_import_version_mismatch_message" formatted="false">The file was created with format version %1$s, but the current version is %2$s.\n\nCompatibility may be lost. Continue?</string>
+    <string name="recovery_import_continue">Continue</string>
+    <string name="recovery_import_invalid_format" formatted="false">Invalid file: %s</string>
+    <string name="recovery_import_error" formatted="false">Import error: %s</string>
+
+    <!-- Full reset -->
+    <string name="recovery_reset_section_title">Full reset</string>
+    <string name="recovery_reset_title">Full reset</string>
+    <string name="recovery_reset_desc">Delete all data and return the app to its post-install state</string>
+    <string name="recovery_reset_confirm_title">Full reset?</string>
+    <string name="recovery_reset_confirm_message">All settings, user shells, cache, and data will be permanently deleted.\n\nThe app will return to its post-install state. This action cannot be undone.</string>
+    <string name="recovery_reset_confirm_button">Reset all</string>
+    <string name="recovery_reset_error">Reset error</string>
 
     <!-- ============================================================ -->
     <!-- ===== ABOUT ================================================ -->

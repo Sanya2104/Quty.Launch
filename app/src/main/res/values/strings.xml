@@ -51,9 +51,6 @@
     <string name="settings_api_methods_title">API методы</string>
     <string name="settings_recovery_title">Восстановление и сброс</string>
 
-    <!-- Описания фрагментов (для заглушек) -->
-    <string name="settings_recovery_desc">Здесь будут:\n• Экспорт/Импорт настроек</string>
-
     <!-- ============================================================ -->
     <!-- ===== НАСТРОЙКИ — ТЕМА ===================================== -->
     <!-- ============================================================ -->
@@ -297,6 +294,40 @@
 
     <!-- Обновление оболочки -->
     <string name="shell_update_not_enough_space">Недостаточно свободного места для загрузки оболочки.\nПожалуйста, освободите место и попробуйте снова.</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== ВОССТАНОВЛЕНИЕ И СБРОС (RECOVERY) ==================== -->
+    <!-- ============================================================ -->
+
+    <string name="settings_recovery_section_title">Восстановление настроек</string>
+
+    <!-- Backup -->
+    <string name="recovery_backup_title">Сделать backup настроек</string>
+    <string name="recovery_backup_desc">Сохранить все настройки в файл .qutyconfig</string>
+    <string name="recovery_backup_share_title">Поделиться резервной копией</string>
+    <string name="recovery_backup_share_subject">Quty.Launch — резервная копия настроек</string>
+    <string name="recovery_backup_error" formatted="false">Ошибка backup: %s</string>
+
+    <!-- Restore -->
+    <string name="recovery_restore_title">Восстановить настройки</string>
+    <string name="recovery_restore_desc">Импортировать настройки из файла .qutyconfig</string>
+    <string name="recovery_import_confirm_title">Восстановить настройки?</string>
+    <string name="recovery_import_confirm_message">Все текущие настройки будут заменены данными из файла. После импорта потребуется перезапуск приложения.</string>
+    <string name="recovery_import_confirm_button">Восстановить</string>
+    <string name="recovery_import_version_mismatch_title">Несовпадение версии</string>
+    <string name="recovery_import_version_mismatch_message" formatted="false">Файл создан в версии формата %1$s, а текущая версия — %2$s.\n\nВозможна потеря совместимости. Продолжить?</string>
+    <string name="recovery_import_continue">Продолжить</string>
+    <string name="recovery_import_invalid_format" formatted="false">Неверный файл: %s</string>
+    <string name="recovery_import_error" formatted="false">Ошибка импорта: %s</string>
+
+    <!-- Full reset -->
+    <string name="recovery_reset_section_title">Полный сброс настроек</string>
+    <string name="recovery_reset_title">Полный сброс настроек</string>
+    <string name="recovery_reset_desc">Удалить все данные и вернуть приложение в состояние после установки</string>
+    <string name="recovery_reset_confirm_title">Полный сброс?</string>
+    <string name="recovery_reset_confirm_message">Все настройки, оболочки пользователя, кэш и данные будут удалены безвозвратно.\n\nПриложение вернётся в состояние после установки. Это действие нельзя отменить.</string>
+    <string name="recovery_reset_confirm_button">Сбросить всё</string>
+    <string name="recovery_reset_error">Ошибка сброса</string>
 
     <!-- ============================================================ -->
     <!-- ===== О СИСТЕМЕ (ABOUT) ==================================== -->
