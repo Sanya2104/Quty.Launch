@@ -17,7 +17,7 @@
 
     <!-- Общие статусы -->
     <string name="permission_granted">Разрешено</string>
-    <string name="permission_denied">Не разрешено</string>
+    <string name="permission_denied">Нет разрешения</string>
     <string name="version_unknown">Неизвестный</string>
     <string name="unknown">Неизвестно</string>
 
@@ -40,7 +40,7 @@
     <string name="settings_menu_api_methods_desc">Доступ оболочки</string>
     <string name="settings_menu_updates">Центр обновления</string>
     <string name="settings_menu_updates_desc">Проверка обновлений</string>
-    <string name="settings_menu_developer">Разработчикам</string>
+    <string name="settings_menu_developer">Для разработчиков</string>
     <string name="settings_menu_developer_desc">Инструменты и отладка</string>
     <string name="settings_menu_recovery">Восстановление и сброс</string>
     <string name="settings_menu_recovery_desc">Управление настройками</string>
@@ -190,8 +190,6 @@
     <string name="storage_category_temp">Временные файлы</string>
     <string name="storage_category_updates">Обновления</string>
     <string name="storage_category_shells">Оболочки</string>
-    <string name="storage_category_exports">Экспорты</string>
-    <string name="storage_category_backups">Резервные копии</string>
 
     <!-- Состояния и очистка -->
     <string name="storage_empty_state">Нет данных для отображения</string>
@@ -304,9 +302,8 @@
     <!-- Backup -->
     <string name="recovery_backup_title">Сделать backup настроек</string>
     <string name="recovery_backup_desc">Сохранить все настройки в файл .qutyconfig</string>
-    <string name="recovery_backup_share_title">Поделиться резервной копией</string>
-    <string name="recovery_backup_share_subject">Quty.Launch — резервная копия настроек</string>
     <string name="recovery_backup_error" formatted="false">Ошибка backup: %s</string>
+    <string name="recovery_backup_success">Резервная копия сохранена</string>
 
     <!-- Restore -->
     <string name="recovery_restore_title">Восстановить настройки</string>
@@ -328,6 +325,14 @@
     <string name="recovery_reset_confirm_message">Все настройки, оболочки пользователя, кэш и данные будут удалены безвозвратно.\n\nПриложение вернётся в состояние после установки. Это действие нельзя отменить.</string>
     <string name="recovery_reset_confirm_button">Сбросить всё</string>
     <string name="recovery_reset_error">Ошибка сброса</string>
+
+    <!-- Ошибки чтения .qutyconfig -->
+    <string name="recovery_error_file_not_found">Файл не найден</string>
+    <string name="recovery_error_file_empty">Файл пуст</string>
+    <string name="recovery_error_invalid_format" formatted="false">Неверный формат файла: ожидается %s</string>
+    <string name="recovery_error_no_data">Отсутствует секция data</string>
+    <string name="recovery_error_parse">Ошибка парсинга файла</string>
+    <string name="recovery_error_cant_open_file">Не удалось открыть файл</string>
 
     <!-- ============================================================ -->
     <!-- ===== О СИСТЕМЕ (ABOUT) ==================================== -->
@@ -364,6 +369,8 @@
     <string name="welcome_subtitle">Для корректной работы приложения необходимо предоставить доступ к функциям устройства:</string>
 
     <!-- Разрешения -->
+    <string name="welcome_permissions_section">Разрешения</string>
+    <string name="welcome_permissions_counter" formatted="false">%1$d из %2$d</string>
     <string name="welcome_permission_phone">Информация о телефоне</string>
     <string name="welcome_permission_phone_desc">Для отображения уровня сигнала и типа сети (2G/3G/4G/5G)</string>
     <string name="welcome_permission_network">Состояние сети</string>

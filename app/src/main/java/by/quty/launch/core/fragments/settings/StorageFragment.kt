@@ -43,8 +43,6 @@ import kotlinx.coroutines.withContext
  * - Временные (TEMP)
  * - Обновления (UPDATES)
  * - Оболочки (SHELLS) — не очищаются здесь
- * - Экспорты (EXPORTS)
- * - Резервные копии (BACKUPS)
  *
  * Клик по категории — только выделение (полоса + строка).
  * Очистка — только через кнопку «Очистка» (диалог dialog_storage_clear).
@@ -170,7 +168,7 @@ class StorageFragment : Fragment() {
             StorageCategoryItem(
                 id = "cache",
                 titleRes = R.string.storage_category_cache,
-                colorRes = R.color.scheme_orange_primary,
+                colorRes = R.color.scheme_green_primary,
                 directory = StorageDirectory.CACHE,
                 size = cacheTotal,
                 canClear = true,
@@ -179,7 +177,7 @@ class StorageFragment : Fragment() {
             StorageCategoryItem(
                 id = "temp",
                 titleRes = R.string.storage_category_temp,
-                colorRes = R.color.scheme_cyan_primary,
+                colorRes = R.color.scheme_orange_primary,
                 directory = StorageDirectory.TEMP,
                 size = storageManager.getDirectorySize(StorageDirectory.TEMP),
                 canClear = true
@@ -195,26 +193,10 @@ class StorageFragment : Fragment() {
             StorageCategoryItem(
                 id = "shells",
                 titleRes = R.string.storage_category_shells,
-                colorRes = R.color.scheme_teal_primary,
+                colorRes = R.color.scheme_purple_primary,
                 directory = StorageDirectory.SHELLS,
                 size = storageManager.getDirectorySize(StorageDirectory.SHELLS),
                 canClear = false
-            ),
-            StorageCategoryItem(
-                id = "exports",
-                titleRes = R.string.storage_category_exports,
-                colorRes = R.color.scheme_purple_primary,
-                directory = StorageDirectory.EXPORTS,
-                size = storageManager.getDirectorySize(StorageDirectory.EXPORTS),
-                canClear = true
-            ),
-            StorageCategoryItem(
-                id = "backups",
-                titleRes = R.string.storage_category_backups,
-                colorRes = R.color.scheme_pink_primary,
-                directory = StorageDirectory.BACKUPS,
-                size = storageManager.getDirectorySize(StorageDirectory.BACKUPS),
-                canClear = true
             )
         )
     }

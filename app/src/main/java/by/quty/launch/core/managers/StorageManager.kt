@@ -21,8 +21,9 @@ import java.util.Locale
  * - updates: .../updates/
  * - cache: .../cache/
  * - temp: .../temp/
- * - exports: .../exports/
- * - backups: .../backups/
+ *
+ * ВАЖНО: папки `exports` и `backups` удалены — backup'ы сохраняются
+ * во внешнее хранилище через SAF (ActivityResultContracts.CreateDocument).
  */
 class StorageManager(private val context: Context) {
 
@@ -32,8 +33,6 @@ class StorageManager(private val context: Context) {
         private const val DIR_UPDATES = "updates"
         private const val DIR_CACHE = "cache"
         private const val DIR_TEMP = "temp"
-        private const val DIR_EXPORTS = "exports"
-        private const val DIR_BACKUPS = "backups"
 
         private const val EXT_TEMP = ".tmp"
     }
@@ -47,11 +46,9 @@ class StorageManager(private val context: Context) {
     private val updatesDir: File by lazy { File(baseDir, DIR_UPDATES) }
     private val cacheDir: File by lazy { File(baseDir, DIR_CACHE) }
     private val tempDir: File by lazy { File(baseDir, DIR_TEMP) }
-    private val exportsDir: File by lazy { File(baseDir, DIR_EXPORTS) }
-    private val backupsDir: File by lazy { File(baseDir, DIR_BACKUPS) }
 
     private val allDirs: List<File> by lazy {
-        listOf(shellsDir, updatesDir, cacheDir, tempDir, exportsDir, backupsDir)
+        listOf(shellsDir, updatesDir, cacheDir, tempDir)
     }
 
     init {
@@ -73,11 +70,6 @@ class StorageManager(private val context: Context) {
     // БАЗОВЫЕ ОПЕРАЦИИ
     // ============================================================
 
-    /**
-     * Получить файл по пути
-     * @param path путь к файлу (абсолютный или относительно baseDir)
-     * @return File объект (существование не проверяется)
-     */
     fun get(path: String): File {
         return if (path.startsWith("/") || path.contains(":")) {
             File(path)
@@ -86,21 +78,10 @@ class StorageManager(private val context: Context) {
         }
     }
 
-    /**
-     * Получить файл в указанной директории
-     * @param directory директория
-     * @param name имя файла
-     * @return File объект
-     */
     fun get(directory: StorageDirectory, name: String): File {
         return File(getDirectory(directory), name)
     }
 
-    /**
-     * Получить содержимое файла как строку
-     * @param file файл для чтения
-     * @return содержимое файла или null при ошибке
-     */
     suspend fun getString(file: File): String? = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
@@ -112,16 +93,10 @@ class StorageManager(private val context: Context) {
         }
     }
 
-    /**
-     * Получить содержимое файла как строку по имени в директории
-     */
     suspend fun getString(directory: StorageDirectory, name: String): String? {
         return getString(get(directory, name))
     }
 
-    /**
-     * Получить список файлов в директории с фильтром
-     */
     fun list(
         directory: StorageDirectory,
         filter: ((String) -> Boolean)? = null,
@@ -145,9 +120,6 @@ class StorageManager(private val context: Context) {
         } ?: emptyList()
     }
 
-    /**
-     * Получить URI для файла (для FileProvider)
-     */
     fun getUri(file: File): Uri? {
         return try {
             if (!file.exists()) {
@@ -315,8 +287,6 @@ class StorageManager(private val context: Context) {
             StorageDirectory.UPDATES -> updatesDir
             StorageDirectory.CACHE -> cacheDir
             StorageDirectory.TEMP -> tempDir
-            StorageDirectory.EXPORTS -> exportsDir
-            StorageDirectory.BACKUPS -> backupsDir
             StorageDirectory.BASE -> baseDir
         }
     }
@@ -334,7 +304,5 @@ enum class StorageDirectory {
     SHELLS,
     UPDATES,
     CACHE,
-    TEMP,
-    EXPORTS,
-    BACKUPS
+    TEMP
 }

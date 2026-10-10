@@ -17,7 +17,7 @@
 
     <!-- Common statuses -->
     <string name="permission_granted">Granted</string>
-    <string name="permission_denied">Denied</string>
+    <string name="permission_denied">No permission</string>
     <string name="version_unknown">Unknown</string>
     <string name="unknown">Unknown</string>
 
@@ -40,7 +40,7 @@
     <string name="settings_menu_api_methods_desc">Shell access</string>
     <string name="settings_menu_updates">Update center</string>
     <string name="settings_menu_updates_desc">Check for updates</string>
-    <string name="settings_menu_developer">Developer</string>
+    <string name="settings_menu_developer">For developers</string>
     <string name="settings_menu_developer_desc">Tools and debugging</string>
     <string name="settings_menu_recovery">Backup &amp; reset</string>
     <string name="settings_menu_recovery_desc">Manage settings</string>
@@ -190,8 +190,6 @@
     <string name="storage_category_temp">Temp files</string>
     <string name="storage_category_updates">Updates</string>
     <string name="storage_category_shells">Shells</string>
-    <string name="storage_category_exports">Exports</string>
-    <string name="storage_category_backups">Backups</string>
 
     <!-- States & cleanup -->
     <string name="storage_empty_state">No data to display</string>
@@ -304,9 +302,8 @@
     <!-- Backup -->
     <string name="recovery_backup_title">Backup settings</string>
     <string name="recovery_backup_desc">Save all settings to a .qutyconfig file</string>
-    <string name="recovery_backup_share_title">Share backup</string>
-    <string name="recovery_backup_share_subject">Quty.Launch — settings backup</string>
     <string name="recovery_backup_error" formatted="false">Backup error: %s</string>
+    <string name="recovery_backup_success">Backup saved</string>
 
     <!-- Restore -->
     <string name="recovery_restore_title">Restore settings</string>
@@ -328,6 +325,14 @@
     <string name="recovery_reset_confirm_message">All settings, user shells, cache, and data will be permanently deleted.\n\nThe app will return to its post-install state. This action cannot be undone.</string>
     <string name="recovery_reset_confirm_button">Reset all</string>
     <string name="recovery_reset_error">Reset error</string>
+
+    <!-- Errors reading .qutyconfig -->
+    <string name="recovery_error_file_not_found">File not found</string>
+    <string name="recovery_error_file_empty">File is empty</string>
+    <string name="recovery_error_invalid_format" formatted="false">Invalid file format: expected %s</string>
+    <string name="recovery_error_no_data">Missing data section</string>
+    <string name="recovery_error_parse">File parse error</string>
+    <string name="recovery_error_cant_open_file">Failed to open file</string>
 
     <!-- ============================================================ -->
     <!-- ===== ABOUT ================================================ -->
@@ -364,6 +369,8 @@
     <string name="welcome_subtitle">For the app to work correctly, please grant access to device features:</string>
 
     <!-- Permissions -->
+    <string name="welcome_permissions_section">Permissions</string>
+    <string name="welcome_permissions_counter" formatted="false">%1$d of %2$d</string>
     <string name="welcome_permission_phone">Phone information</string>
     <string name="welcome_permission_phone_desc">To show signal level and network type (2G/3G/4G/5G)</string>
     <string name="welcome_permission_network">Network state</string>

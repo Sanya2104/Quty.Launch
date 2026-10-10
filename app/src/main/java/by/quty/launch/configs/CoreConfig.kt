@@ -141,4 +141,32 @@ object CoreConfig {
     /** Ключ для метки завершения загрузки APK в SharedPreferences */
     const val DOWNLOAD_COMPLETE_KEY = "download_complete_"
 
+    // ============================================================
+    // ===== ВОССТАНОВЛЕНИЕ И СБРОС (RECOVERY) ====================
+    // ============================================================
+
+    /** Идентификатор формата файла .qutyconfig */
+    const val RECOVERY_FORMAT_NAME = "qutyconfig"
+
+    /** Версия формата файла .qutyconfig */
+    const val RECOVERY_FORMAT_VERSION = 1
+
+    /** Расширение файла .qutyconfig (с точкой) */
+    const val RECOVERY_FILE_EXTENSION = ".qutyconfig"
+
+    /** MIME-тип файла .qutyconfig (для SAF) */
+    const val RECOVERY_MIME_TYPE = "application/json"
+
+    /** Список SharedPreferences, которые попадают в экспорт/импорт */
+    val RECOVERY_EXPORTED_PREFS = listOf(
+        "launcher_prefs",
+        "developer_prefs",
+        "update_prefs"
+    )
+
+    /** Имя prefs с флагом онбординга (не сбрасывается при fullReset) */
+    const val RECOVERY_LAUNCHER_PREFS = "launcher_prefs"
+
+    /** Ключ флага онбординга */
+    const val RECOVERY_KEY_ONBOARDING_COMPLETED = "onboarding_completed"
 }

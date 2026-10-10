@@ -2,7 +2,6 @@
 package by.quty.launch
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -24,22 +24,29 @@ import by.quty.launch.core.managers.PermissionManager
 /**
  * Активность приветствия (онбординг)
  * Запрашивает необходимые разрешения перед запуском приложения
+ *
+ * UI построен по тому же паттерну, что и фрагменты настроек:
+ * - шапка-карточка с иконкой приложения и заголовком;
+ * - секция «Разрешения» — заголовок со счётчиком «X из Y» + карточка bg_card_rounded;
+ * - секция прогресса — общий прогресс по обязательным разрешениям;
+ * - кнопка действия + опциональный блок ошибки.
  */
 class WelcomeActivity : BaseActivity() {
 
-    // Код запроса разрешений (из конфига)
+    // Код запроса разрешений (из конфига) — используется только в legacy-пути
     private val permissionRequestCode = CoreConfig.PERMISSION_REQUEST_CODE
 
     // UI элементы
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
+    private lateinit var permissionsCounter: TextView
     private lateinit var btnGrant: Button
     private lateinit var errorContainer: LinearLayout
     private lateinit var btnRetry: Button
     private lateinit var btnSettings: Button
     private lateinit var permissionsContainer: LinearLayout
 
-    // Карта статусов разрешений
+    // Карта статусов разрешений (permission → TextView статуса в item'е)
     private val permissionStatusViews = mutableMapOf<String, TextView>()
 
     // Флаг, что мы уже запрашивали разрешения
@@ -75,6 +82,7 @@ class WelcomeActivity : BaseActivity() {
     private fun initViews() {
         progressBar = findViewById(R.id.progress_bar)
         progressText = findViewById(R.id.progress_text)
+        permissionsCounter = findViewById(R.id.permissions_counter)
         btnGrant = findViewById(R.id.btn_grant)
         errorContainer = findViewById(R.id.error_container)
         btnRetry = findViewById(R.id.btn_retry)
@@ -98,9 +106,21 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    // ============================================================
+    // СПИСОК РАЗРЕШЕНИЙ
+    // ============================================================
+
+    /**
+     * Заполняет контейнер карточки строками из item_welcome_permission.xml.
+     *
+     * Список разрешений формируется здесь же (data-модель PermissionItem),
+     * как это сделано для StorageFragment, SettingsActivity, ApiMethodsFragment.
+     */
     private fun setupPermissionsUI() {
         permissionsContainer.removeAllViews()
         permissionStatusViews.clear()
+
+        val inflater = layoutInflater
 
         // Список разрешений с иконками, названиями, описаниями
         val permissionsData = listOf(
@@ -108,177 +128,81 @@ class WelcomeActivity : BaseActivity() {
                 permission = Manifest.permission.READ_PHONE_STATE,
                 iconRes = R.drawable.ic_phone,
                 titleRes = R.string.welcome_permission_phone,
-                descRes = R.string.welcome_permission_phone_desc,
-                isRequired = true
+                descRes = R.string.welcome_permission_phone_desc
             ),
             PermissionItem(
                 permission = Manifest.permission.ACCESS_NETWORK_STATE,
                 iconRes = R.drawable.ic_network,
                 titleRes = R.string.welcome_permission_network,
-                descRes = R.string.welcome_permission_network_desc,
-                isRequired = true
+                descRes = R.string.welcome_permission_network_desc
             ),
             PermissionItem(
                 permission = Manifest.permission.ACCESS_WIFI_STATE,
                 iconRes = R.drawable.ic_wifi,
                 titleRes = R.string.welcome_permission_wifi,
-                descRes = R.string.welcome_permission_wifi_desc,
-                isRequired = true
+                descRes = R.string.welcome_permission_wifi_desc
             ),
             PermissionItem(
                 permission = Manifest.permission.ACCESS_FINE_LOCATION,
                 iconRes = R.drawable.ic_location,
                 titleRes = R.string.welcome_permission_location,
-                descRes = R.string.welcome_permission_location_desc,
-                isRequired = false
+                descRes = R.string.welcome_permission_location_desc
             )
         )
 
-        for ((permission, iconRes, titleRes, descRes) in permissionsData) {
-            val itemView = createPermissionItem(
-                permission = permission,
-                iconRes = iconRes,
-                title = getString(titleRes),
-                description = getString(descRes)
+        permissionsData.forEachIndexed { index, item ->
+            val row = inflater.inflate(
+                R.layout.item_welcome_permission,
+                permissionsContainer,
+                false
             )
-            permissionsContainer.addView(itemView)
+
+            // Иконка + tint из темы
+            val icon = row.findViewById<AppCompatImageView>(R.id.permission_icon)
+            icon.setImageResource(item.iconRes)
+            icon.imageTintList = android.content.res.ColorStateList.valueOf(
+                getColorFromAttribute(R.attr.textPrimaryColor)
+            )
+
+            // Название / описание
+            row.findViewById<TextView>(R.id.permission_title).text = getString(item.titleRes)
+            row.findViewById<TextView>(R.id.permission_description).text = getString(item.descRes)
+
+            // Статус (id — для последующего обновления)
+            val statusView = row.findViewById<TextView>(R.id.permission_status)
+            permissionStatusViews[item.permission] = statusView
+
+            // Клик по строке — открыть системные настройки приложения
+            row.setOnClickListener { openAppSettings() }
+
+            permissionsContainer.addView(row)
+
+            // Разделитель между строками (как в настройках)
+            if (index < permissionsData.lastIndex) {
+                permissionsContainer.addView(createDivider())
+            }
         }
+
+        // Начальное значение счётчика — проставит updatePermissionsUI()
     }
 
     /**
-     * Создание элемента разрешения
+     * Разделитель между строками внутри карточки.
      */
-    @SuppressLint("SetTextI18n")
-    private fun createPermissionItem(
-        permission: String,
-        iconRes: Int,
-        title: String,
-        description: String
-    ): View {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+    private fun createDivider(): View {
+        val height = (1 * resources.displayMetrics.density).toInt()
+        val margin = resources.getDimensionPixelSize(R.dimen.spacing_l)
+
+        return View(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                height
             ).apply {
-                bottomMargin = resources.getDimension(R.dimen.permission_item_margin_bottom).toInt()
+                marginStart = margin
+                marginEnd = margin
             }
+            setBackgroundColor(getColorFromAttribute(R.attr.dividerColor))
         }
-
-        // Основная строка: иконка + название + статус + стрелка
-        val rowLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            val padding = resources.getDimension(R.dimen.permission_item_padding).toInt()
-            setPadding(padding, padding, padding, padding)
-            setBackgroundResource(R.drawable.bg_permission_item)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                openAppSettings()
-            }
-        }
-
-        // Иконка
-        val iconView = androidx.appcompat.widget.AppCompatImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                resources.getDimension(R.dimen.icon_medium).toInt(),
-                resources.getDimension(R.dimen.icon_medium).toInt()
-            ).apply {
-                marginEnd = resources.getDimension(R.dimen.spacing_l).toInt()
-            }
-            setImageResource(iconRes)
-            setColorFilter(getColorFromAttribute(R.attr.textPrimaryColor))
-        }
-
-        // Блок с названием и описанием
-        val textContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-        }
-
-        val titleView = TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            text = title
-            setTextColor(getColorFromAttribute(R.attr.textPrimaryColor))
-            textSize = resources.getDimension(R.dimen.text_l) / resources.displayMetrics.density
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-        }
-
-        val descView = TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            text = description
-            setTextColor(getColorFromAttribute(R.attr.textDimColor))
-            textSize = resources.getDimension(R.dimen.text_s) / resources.displayMetrics.density
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        }
-
-        textContainer.addView(titleView)
-        textContainer.addView(descView)
-
-        // Статус + стрелка
-        val statusContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        val statusView = TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginEnd = resources.getDimension(R.dimen.spacing_s).toInt()
-            }
-            text = getString(R.string.permission_denied)
-            textSize = resources.getDimension(R.dimen.text_m) / resources.displayMetrics.density
-            id = View.generateViewId()
-            setTextColor(getColorFromAttribute(R.attr.textErrorColor))
-        }
-
-        // Сохраняем для обновления
-        permissionStatusViews[permission] = statusView
-
-        // Стрелка
-        val arrowView = TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            text = "›"
-            textSize = resources.getDimension(R.dimen.text_xxl) / resources.displayMetrics.density
-            setTextColor(getColorFromAttribute(R.attr.textDimColor))
-        }
-
-        statusContainer.addView(statusView)
-        statusContainer.addView(arrowView)
-
-        // Собираем строку
-        rowLayout.addView(iconView)
-        rowLayout.addView(textContainer)
-        rowLayout.addView(statusContainer)
-
-        container.addView(rowLayout)
-
-        return container
     }
 
     private fun setupListeners() {
@@ -389,9 +313,11 @@ class WelcomeActivity : BaseActivity() {
         return this == PackageManager.PERMISSION_GRANTED
     }
 
-    @SuppressLint("SetTextI18n")
+    /**
+     * Обновляет статусы разрешений в карточке, счётчик и прогресс-бар.
+     */
     private fun updatePermissionsUI() {
-        // Обновляем статусы
+        // Обновляем статусы строк
         for ((permission, statusView) in permissionStatusViews) {
             val isGranted = PermissionManager.hasPermission(this, permission)
             statusView.text = if (isGranted) {
@@ -415,6 +341,13 @@ class WelcomeActivity : BaseActivity() {
         val grantedCount = requiredPermissions.count { permission ->
             PermissionManager.hasPermission(this, permission)
         }
+
+        // Счётчик «X из Y» рядом с заголовком секции
+        permissionsCounter.text = getString(
+            R.string.welcome_permissions_counter,
+            grantedCount,
+            totalCount
+        )
 
         val finalProgress = if (totalCount > 0) {
             (grantedCount * 100 / totalCount)
@@ -519,7 +452,6 @@ class WelcomeActivity : BaseActivity() {
         val permission: String,
         val iconRes: Int,
         val titleRes: Int,
-        val descRes: Int,
-        val isRequired: Boolean
+        val descRes: Int
     )
 }

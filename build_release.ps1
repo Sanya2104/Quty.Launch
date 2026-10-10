@@ -426,7 +426,9 @@ Write-Host "  📦 Версия:       " -NoNewline -ForegroundColor Gray
 Write-Host "$newVersionName $currentVersionSuffix" -ForegroundColor White
 Write-Host "  🔢 Version code: " -NoNewline -ForegroundColor Gray
 Write-Host "$newVersionCode" -ForegroundColor White
-Write-Host "  ⚠️  Critical:    " -NoNewline -ForegroundColor Gray
+Write-Host "  🧲 Version code: " -NoNewline -ForegroundColor Gray
+Write-Host "$apkSizeHuman" -ForegroundColor White
+Write-Host "  🚩  Critical:    " -NoNewline -ForegroundColor Gray
 Write-Host "$isCritical" -ForegroundColor White
 Write-Host "  🏷️  Git tag:     " -NoNewline -ForegroundColor Gray
 Write-Host "$createTag" -ForegroundColor White
@@ -436,7 +438,7 @@ Write-Host "$changelog" -ForegroundColor White
 Write-Host ""
 Write-Host "  📁 APK:  " -NoNewline -ForegroundColor Gray
 Write-Host "$destApk" -ForegroundColor White
-Write-Host "  📄 JSON: " -NoNewline -ForegroundColor Gray
+Write-Host "  🧩 JSON: " -NoNewline -ForegroundColor Gray
 Write-Host "$versionJson" -ForegroundColor White
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green

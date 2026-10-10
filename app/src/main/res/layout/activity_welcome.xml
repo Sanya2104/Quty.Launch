@@ -1,50 +1,76 @@
 <!-- res/layout/activity_welcome.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:fillViewport="true"
-    android:scrollbars="none">
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/screen_padding_horizontal"
-        android:gravity="center_horizontal">
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
 
-        <!-- ===== ИКОНКА ===== -->
-        <ImageView
-            android:layout_width="@dimen/icon_xxlarge"
-            android:layout_height="@dimen/icon_xxlarge"
-            android:layout_marginTop="@dimen/spacing_xxxl"
-            android:src="@mipmap/ic_launcher"
-            android:contentDescription="@string/app_name" />
+        <!-- ============================================================ -->
+        <!-- ===== ШАПКА: ИКОНКА + НАЗВАНИЕ + ОПИСАНИЕ ================== -->
+        <!-- ============================================================ -->
 
-        <!-- ===== ЗАГОЛОВОК ===== -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            style="@style/Text.Title.Large"
-            android:text="@string/welcome_title"
-            android:gravity="center" />
-
-        <!-- ===== ПОДЗАГОЛОВОК ===== -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_m"
-            style="@style/Text.Body.Secondary"
-            android:text="@string/welcome_subtitle"
-            android:gravity="center"
-            android:lineSpacingExtra="@dimen/spacing_xxs" />
-
-        <!-- ===== ПРОГРЕСС-БАР ===== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l"
+            tools:ignore="UseCompoundDrawables">
+
+            <ImageView
+                android:layout_width="@dimen/icon_xxlarge"
+                android:layout_height="@dimen/icon_xxlarge"
+                android:src="@mipmap/ic_launcher"
+                android:contentDescription="@string/app_name"
+                android:layout_marginEnd="@dimen/spacing_l" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Title.Medium"
+                    android:text="@string/welcome_title" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Body.Dim"
+                    android:textColor="?attr/textDimColor"
+                    android:text="@string/welcome_subtitle" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: ПРОГРЕСС ===================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
             android:layout_marginTop="@dimen/spacing_xl"
             android:orientation="horizontal"
             android:gravity="center_vertical">
@@ -53,112 +79,162 @@
                 android:id="@+id/progress_bar"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/progress_bar_height"
+                android:layout_height="@dimen/update_progress_height"
                 android:layout_weight="1"
                 android:progress="0"
                 android:max="100"
                 android:progressTint="?attr/buttonPrimaryColor"
-                android:background="@color/background_input" />
+                android:progressBackgroundTint="?attr/dividerColor"
+                android:background="@android:color/transparent" />
 
             <TextView
                 android:id="@+id/progress_text"
+                style="@style/Text.Body"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/spacing_m"
-                style="@style/Text.Body"
-                android:text="@string/_0"
-                android:fontFamily="sans-serif-medium" />
+                android:textStyle="bold"
+                android:textColor="?attr/textPrimaryColor"
+                android:text="@string/_0" />
+
         </LinearLayout>
 
-        <!-- ===== СПИСОК РАЗРЕШЕНИЙ ===== -->
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: РАЗРЕШЕНИЯ (заголовок + счётчик) ============= -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:paddingBottom="@dimen/spacing_s">
+
+            <TextView
+                style="@style/Text.Title.Medium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/welcome_permissions_section" />
+
+            <TextView
+                android:id="@+id/permissions_counter"
+                style="@style/Text.Body.Dim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_s"
+                tools:text="@string/unknown" />
+
+        </LinearLayout>
+
+        <!-- Карточка со списком разрешений (item_welcome_permission) -->
         <LinearLayout
             android:id="@+id/permissions_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
-            android:orientation="vertical" />
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs" />
 
-        <!-- ===== КНОПКА ===== -->
-        <Button
-            android:id="@+id/btn_grant"
-            style="@style/Button.Primary"
-            android:layout_marginTop="@dimen/spacing_xl"
-            android:text="@string/welcome_button_grant"
-            android:enabled="false"
-            android:alpha="0.5" />
+        <!-- ============================================================ -->
+        <!-- ===== БЛОК ОШИБКИ (скрыт по умолчанию) ===================== -->
+        <!-- ============================================================ -->
 
-        <!-- ===== ОШИБКА ===== -->
         <LinearLayout
             android:id="@+id/error_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
             android:layout_marginTop="@dimen/spacing_l"
             android:orientation="vertical"
-            android:background="@color/background_error"
+            android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_l"
-            android:visibility="gone"
-            app:cornerRadius="@dimen/radius_medium">
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/error_title"
+                style="@style/Text.Title.Small"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Text.Title.Small"
                 android:text="@string/welcome_permission_denied_title"
                 android:textColor="?attr/textErrorColor"
                 android:gravity="center" />
 
             <TextView
                 android:id="@+id/error_message"
+                style="@style/Text.Body.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_s"
-                style="@style/Text.Body.Secondary"
                 android:text="@string/welcome_permission_denied_message"
                 android:gravity="center"
                 android:lineSpacingExtra="@dimen/spacing_xxs" />
 
             <LinearLayout
-                style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_m"
                 android:orientation="horizontal"
-                android:gravity="center">
+                android:baselineAligned="false">
 
                 <Button
                     android:id="@+id/btn_retry"
-                    style="@style/Button.Danger"
+                    style="@style/Button.Glass.Danger"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
                     android:layout_weight="1"
                     android:layout_marginEnd="@dimen/spacing_s"
-                    android:text="@string/welcome_button_retry"
-                    app:cornerRadius="@dimen/radius_circle" />
+                    android:minWidth="0dp"
+                    android:text="@string/welcome_button_retry" />
 
                 <Button
                     android:id="@+id/btn_settings"
-                    style="@style/Button.Secondary"
+                    style="@style/Button.Glass.Secondary"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/height_button"
                     android:layout_weight="1"
                     android:layout_marginStart="@dimen/spacing_s"
-                    android:text="@string/welcome_button_settings"
-                    app:cornerRadius="@dimen/radius_circle" />
+                    android:minWidth="0dp"
+                    android:text="@string/welcome_button_settings" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- ===== ВЕРСИЯ ===== -->
+        <!-- ============================================================ -->
+        <!-- ===== КНОПКА ДЕЙСТВИЯ ====================================== -->
+        <!-- ============================================================ -->
+
+        <Button
+            android:id="@+id/btn_grant"
+            style="@style/Button.Glass.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_button"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_l"
+            android:minWidth="0dp"
+            android:text="@string/welcome_button_grant" />
+
+        <!-- ============================================================ -->
+        <!-- ===== ВЕРСИЯ =============================================== -->
+        <!-- ============================================================ -->
+
         <TextView
             android:id="@+id/tv_version"
+            style="@style/Text.XSmall"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xxl"
-            style="@style/Text.XSmall"
-            android:text="@string/version_format"
-            android:gravity="center" />
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginBottom="@dimen/spacing_xxl"
+            android:gravity="center"
+            android:text="@string/version_format" />
 
     </LinearLayout>
 

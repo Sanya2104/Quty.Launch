@@ -5,20 +5,18 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.webkit.WebView
 import androidx.core.content.edit
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.utilities.AppInfoHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * Менеджер восстановления и сброса настроек.
  *
  * Отвечает за:
- * - Экспорт всех SharedPreferences в файл `.qutyconfig` (JSON).
+ * - Генерацию JSON-содержимого `.qutyconfig` (сохранение — во фрагменте через SAF).
  * - Импорт настроек из файла `.qutyconfig`.
  * - Полный сброс приложения в состояние «как после установки».
  *
@@ -37,70 +35,31 @@ import java.util.Locale
  *   }
  * }
  * ```
+ *
+ * ВАЖНО: менеджер НЕ хранит локализованных строк — все сообщения
+ * об ошибках представлены через [ImportReadResult.Failure] как
+ * sealed-иерархия, а фрагмент сам локализует их через `getString(...)`.
  */
 class RecoveryManager(private val context: Context) {
-
-    companion object {
-        /** Идентификатор формата файла */
-        const val FORMAT_NAME = "qutyconfig"
-
-        /** Версия формата файла */
-        const val FORMAT_VERSION = 1
-
-        /** Расширение файла (с точкой) */
-        const val FILE_EXTENSION = ".qutyconfig"
-
-        /**
-         * Список SharedPreferences, которые попадают в экспорт/импорт.
-         *
-         * ВАЖНО: `logger_prefs` исключён — логгер удалён из проекта.
-         */
-        val EXPORTED_PREFS = listOf(
-            "launcher_prefs",
-            "developer_prefs",
-            "update_prefs"
-        )
-
-        /** Имя prefs с флагом онбординга (не сбрасывается при fullReset) */
-        private const val LAUNCHER_PREFS = "launcher_prefs"
-
-        /** Ключ флага онбординга */
-        private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
-    }
-
-    private val storageManager = StorageManager(context)
 
     // ============================================================
     // ЭКСПОРТ
     // ============================================================
 
     /**
-     * Результат экспорта
-     */
-    data class ExportResult(
-        val success: Boolean,
-        val filePath: String? = null,
-        val error: String? = null
-    )
-
-    /**
-     * Экспортирует все SharedPreferences в файл `.qutyconfig`.
+     * Формирует JSON-содержимое файла `.qutyconfig`.
      *
-     * Файл сохраняется в `StorageDirectory.EXPORTS` с именем
-     * `qutyconfig_YYYY-MM-DD_HH-MM-SS.qutyconfig`.
+     * ВАЖНО: НЕ сохраняет файл. Сохранение — задача фрагмента
+     * через SAF (`ActivityResultContracts.CreateDocument`).
      *
-     * @return ExportResult с путём к файлу или ошибкой.
+     * @return JSON-строка или null при ошибке.
      */
-    suspend fun export(): ExportResult = withContext(Dispatchers.IO) {
+    suspend fun buildExportJson(): String? = withContext(Dispatchers.IO) {
         try {
-            // Формируем имя файла
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
-            val fileName = "qutyconfig_${dateFormat.format(Date())}$FILE_EXTENSION"
-
-            // Собираем данные из всех prefs как Map<String, JSONObject>
+            // Собираем данные из всех prefs
             val dataObject = JSONObject()
 
-            EXPORTED_PREFS.forEach { prefsName ->
+            CoreConfig.RECOVERY_EXPORTED_PREFS.forEach { prefsName ->
                 val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                 dataObject.put(prefsName, prefsToJson(prefs))
             }
@@ -111,39 +70,16 @@ class RecoveryManager(private val context: Context) {
             val versionCode = AppInfoHelper.getVersionCode(context)
 
             val root = JSONObject()
-            root.put("format", FORMAT_NAME)
-            root.put("formatVersion", FORMAT_VERSION)
+            root.put("format", CoreConfig.RECOVERY_FORMAT_NAME)
+            root.put("formatVersion", CoreConfig.RECOVERY_FORMAT_VERSION)
             root.put("createdAt", System.currentTimeMillis())
             root.put("appVersion", fullVersion.ifEmpty { appVersionName })
             root.put("appVersionCode", versionCode)
             root.put("data", dataObject)
 
-            // Сохраняем файл через StorageManager
-            val success = storageManager.set(
-                directory = StorageDirectory.EXPORTS,
-                name = fileName,
-                content = root.toString(2),
-                overwrite = true
-            )
-
-            if (!success) {
-                return@withContext ExportResult(
-                    success = false,
-                    error = "Не удалось сохранить файл"
-                )
-            }
-
-            val file = storageManager.get(StorageDirectory.EXPORTS, fileName)
-            ExportResult(
-                success = true,
-                filePath = file.absolutePath
-            )
-
-        } catch (e: Exception) {
-            ExportResult(
-                success = false,
-                error = e.message ?: "Неизвестная ошибка"
-            )
+            root.toString(2)
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -177,6 +113,9 @@ class RecoveryManager(private val context: Context) {
 
     /**
      * Результат чтения файла `.qutyconfig` (до применения).
+     *
+     * Ошибки представлены sealed-иерархией, а не строками —
+     * локализация выполняется во фрагменте.
      */
     sealed class ImportReadResult {
         /** Файл прочитан успешно. */
@@ -187,7 +126,22 @@ class RecoveryManager(private val context: Context) {
         ) : ImportReadResult()
 
         /** Ошибка чтения/парсинга. */
-        data class Failure(val error: String) : ImportReadResult()
+        sealed class Failure : ImportReadResult() {
+            /** Файл не найден по указанному пути. */
+            object FileNotFound : Failure()
+
+            /** Файл пуст (0 байт или только пробелы). */
+            object FileEmpty : Failure()
+
+            /** Файл — не .qutyconfig. */
+            data class InvalidFormat(val expectedFormat: String) : Failure()
+
+            /** В файле отсутствует секция data. */
+            object NoData : Failure()
+
+            /** Ошибка парсинга JSON или другая ошибка чтения. */
+            data class ParseError(val message: String?) : Failure()
+        }
     }
 
     /**
@@ -202,21 +156,21 @@ class RecoveryManager(private val context: Context) {
         try {
             val file = File(filePath)
             if (!file.exists()) {
-                return@withContext ImportReadResult.Failure("Файл не найден")
+                return@withContext ImportReadResult.Failure.FileNotFound
             }
 
             val content = file.readText()
             if (content.isBlank()) {
-                return@withContext ImportReadResult.Failure("Файл пуст")
+                return@withContext ImportReadResult.Failure.FileEmpty
             }
 
             val root = JSONObject(content)
 
             // Проверяем формат
             val format = root.optString("format", "")
-            if (format != FORMAT_NAME) {
-                return@withContext ImportReadResult.Failure(
-                    "Неверный формат файла: ожидается $FORMAT_NAME"
+            if (format != CoreConfig.RECOVERY_FORMAT_NAME) {
+                return@withContext ImportReadResult.Failure.InvalidFormat(
+                    CoreConfig.RECOVERY_FORMAT_NAME
                 )
             }
 
@@ -224,7 +178,7 @@ class RecoveryManager(private val context: Context) {
             val appVersion = root.optString("appVersion", "")
 
             val dataObject = root.optJSONObject("data")
-                ?: return@withContext ImportReadResult.Failure("Отсутствует секция data")
+                ?: return@withContext ImportReadResult.Failure.NoData
 
             // Парсим prefs
             val data = mutableMapOf<String, Map<String, Any>>()
@@ -247,7 +201,7 @@ class RecoveryManager(private val context: Context) {
             )
 
         } catch (e: Exception) {
-            ImportReadResult.Failure(e.message ?: "Ошибка парсинга файла")
+            ImportReadResult.Failure.ParseError(e.message)
         }
     }
 
@@ -266,7 +220,7 @@ class RecoveryManager(private val context: Context) {
     suspend fun applyImport(data: Map<String, Map<String, Any>>): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                EXPORTED_PREFS.forEach { prefsName ->
+                CoreConfig.RECOVERY_EXPORTED_PREFS.forEach { prefsName ->
                     val prefsData = data[prefsName] ?: return@forEach
                     val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
@@ -299,35 +253,40 @@ class RecoveryManager(private val context: Context) {
      * Полностью сбрасывает приложение в состояние «как после установки».
      *
      * Что делает:
-     * - Очищает все SharedPreferences из [EXPORTED_PREFS].
+     * - Очищает все SharedPreferences из [CoreConfig.RECOVERY_EXPORTED_PREFS].
      * - Восстанавливает только флаг онбординга (чтобы не выкинуло в Welcome).
-     * - Удаляет все пользовательские файлы из StorageManager.
+     * - Удаляет пользовательские файлы из StorageManager (shells, updates, cache, temp).
      * - Очищает cacheDir приложения.
      * - Очищает WebView кэш.
+     *
+     * ВАЖНО: папки `exports` и `backups` больше не существуют —
+     * backup'ы сохраняются во внешнее хранилище через SAF.
      *
      * @return true при успехе.
      */
     suspend fun fullReset(): Boolean = withContext(Dispatchers.IO) {
         try {
             // 1. Очищаем SharedPreferences
-            EXPORTED_PREFS.forEach { prefsName ->
+            CoreConfig.RECOVERY_EXPORTED_PREFS.forEach { prefsName ->
                 val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                 prefs.edit(commit = true) { clear() }
             }
 
             // 2. Восстанавливаем флаг онбординга (чтобы не выкинуло в Welcome)
-            val launcherPrefs = context.getSharedPreferences(LAUNCHER_PREFS, Context.MODE_PRIVATE)
+            val launcherPrefs = context.getSharedPreferences(
+                CoreConfig.RECOVERY_LAUNCHER_PREFS,
+                Context.MODE_PRIVATE
+            )
             launcherPrefs.edit(commit = true) {
-                putBoolean(KEY_ONBOARDING_COMPLETED, true)
+                putBoolean(CoreConfig.RECOVERY_KEY_ONBOARDING_COMPLETED, true)
             }
 
             // 3. Очищаем пользовательские папки StorageManager
+            val storageManager = StorageManager(context)
             storageManager.removeAll(StorageDirectory.SHELLS)
             storageManager.removeAll(StorageDirectory.UPDATES)
             storageManager.removeAll(StorageDirectory.CACHE)
             storageManager.removeAll(StorageDirectory.TEMP)
-            storageManager.removeAll(StorageDirectory.EXPORTS)
-            storageManager.removeAll(StorageDirectory.BACKUPS)
 
             // 4. Очищаем cacheDir приложения
             try {

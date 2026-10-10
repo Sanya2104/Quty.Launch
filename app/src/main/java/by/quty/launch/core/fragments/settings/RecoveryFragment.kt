@@ -15,24 +15,31 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.RecoveryManager
 import by.quty.launch.core.managers.StorageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Фрагмент "Восстановление настроек" для Настроек.
  *
  * Содержит:
  * - Секция "Восстановление настроек":
- *   • Сделать backup настроек → экспорт в .qutyconfig + шаринг через FileProvider
- *   - Восстановить настройки → импорт из .qutyconfig
+ *   • Сделать backup настроек → создание .qutyconfig через SAF (CreateDocument)
+ *   - Восстановить настройки → импорт из .qutyconfig через SAF (OpenDocument)
  *
  * - Секция "Полный сброс настроек":
  *   • Полный сброс настроек → очистка prefs + всех папок StorageManager
  *                                + cacheDir + WebView кэша
+ *
+ * ВАЖНО: backup сохраняется в выбранное пользователем место (Downloads,
+ * Google Drive, любая папка) — файл НЕ хранится внутри приложения.
  */
 class RecoveryFragment : Fragment() {
 
@@ -59,6 +66,21 @@ class RecoveryFragment : Fragment() {
     ) { uri: Uri? ->
         if (uri == null) return@registerForActivityResult
         handleImportUri(uri)
+    }
+
+    /**
+     * ActivityResult для сохранения backup-файла `.qutyconfig` через SAF.
+     *
+     * Пользователь сам выбирает папку и имя файла.
+     */
+    private val createDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument(CoreConfig.RECOVERY_MIME_TYPE)
+    ) { uri: Uri? ->
+        if (uri == null) {
+            isProcessing = false
+            return@registerForActivityResult
+        }
+        writeExportToUri(uri)
     }
 
     override fun onCreateView(
@@ -105,66 +127,24 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    // ---------- BACKUP ----------
+    // ---------- BACKUP (через SAF) ----------
 
     /**
-     * Выполняет экспорт всех prefs в файл `.qutyconfig` и открывает диалог шаринга.
+     * Запускает SAF-диалог сохранения файла `.qutyconfig`.
+     *
+     * Пользователь сам выбирает папку (Downloads, Drive, ...).
+     * Имя файла по умолчанию — `qutyconfig_YYYY-MM-DD_HH-MM-SS.qutyconfig`.
      */
     private fun performBackup() {
         isProcessing = true
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            val result = recoveryManager.export()
-            isProcessing = false
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
+        val defaultFileName = "qutyconfig_${dateFormat.format(Date())}${CoreConfig.RECOVERY_FILE_EXTENSION}"
 
-            if (!result.success || result.filePath == null) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(
-                        R.string.recovery_backup_error,
-                        result.error ?: getString(R.string.unknown)
-                    ),
-                    Toast.LENGTH_LONG
-                ).show()
-                return@launch
-            }
-
-            // Открываем диалог "Поделиться" через FileProvider
-            shareFile(result.filePath)
-        }
-    }
-
-    /**
-     * Открывает диалог шаринга файла через FileProvider.
-     */
-    private fun shareFile(filePath: String) {
         try {
-            val file = java.io.File(filePath)
-            val uri = storageManager.getUri(file)
-
-            if (uri == null) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.recovery_backup_error, getString(R.string.unknown)),
-                    Toast.LENGTH_LONG
-                ).show()
-                return
-            }
-
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/json"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.recovery_backup_share_subject))
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            startActivity(
-                Intent.createChooser(
-                    shareIntent,
-                    getString(R.string.recovery_backup_share_title)
-                )
-            )
+            createDocumentLauncher.launch(defaultFileName)
         } catch (e: Exception) {
+            isProcessing = false
             Toast.makeText(
                 requireContext(),
                 getString(R.string.recovery_backup_error, e.message ?: getString(R.string.unknown)),
@@ -173,7 +153,56 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    // ---------- IMPORT ----------
+    /**
+     * Записывает JSON-содержимое в выбранный URI.
+     *
+     * @param uri URI, выбранный пользователем в SAF-диалоге.
+     */
+    private fun writeExportToUri(uri: Uri) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val json = recoveryManager.buildExportJson()
+
+            if (json == null) {
+                isProcessing = false
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.recovery_backup_error, getString(R.string.unknown)),
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+
+            val success = withContext(Dispatchers.IO) {
+                try {
+                    requireContext().contentResolver.openOutputStream(uri)?.use { output ->
+                        output.write(json.toByteArray(Charsets.UTF_8))
+                        output.flush()
+                    } ?: return@withContext false
+                    true
+                } catch (_: Exception) {
+                    false
+                }
+            }
+
+            isProcessing = false
+
+            if (success) {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.recovery_backup_success,
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.recovery_backup_error, getString(R.string.unknown)),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    // ---------- IMPORT (через SAF) ----------
 
     /**
      * Открывает системный файловый пикер для выбора `.qutyconfig`.
@@ -224,11 +253,13 @@ class RecoveryFragment : Fragment() {
                 tempFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
-            } ?: return@withContext ReadPickedFileResult.Error("Не удалось открыть файл")
+            } ?: return@withContext ReadPickedFileResult.Error(
+                getString(R.string.recovery_error_cant_open_file)
+            )
 
             ReadPickedFileResult.Success(tempFile.absolutePath)
         } catch (e: Exception) {
-            ReadPickedFileResult.Error(e.message ?: "Неизвестная ошибка")
+            ReadPickedFileResult.Error(e.message ?: getString(R.string.unknown))
         }
     }
 
@@ -242,15 +273,18 @@ class RecoveryFragment : Fragment() {
                 withContext(Dispatchers.IO) {
                     java.io.File(filePath).delete()
                 }
+
+                val errorText = getImportFailureText(readResult)
+
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.recovery_import_invalid_format, readResult.error),
+                    getString(R.string.recovery_import_invalid_format, errorText),
                     Toast.LENGTH_LONG
                 ).show()
             }
 
             is RecoveryManager.ImportReadResult.Success -> {
-                val versionMismatch = readResult.formatVersion != RecoveryManager.FORMAT_VERSION
+                val versionMismatch = readResult.formatVersion != CoreConfig.RECOVERY_FORMAT_VERSION
 
                 if (versionMismatch) {
                     showVersionMismatchDialog(
@@ -264,6 +298,28 @@ class RecoveryFragment : Fragment() {
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Локализует ошибку чтения `.qutyconfig` из sealed-иерархии.
+     */
+    private fun getImportFailureText(failure: RecoveryManager.ImportReadResult.Failure): String {
+        return when (failure) {
+            is RecoveryManager.ImportReadResult.Failure.FileNotFound ->
+                getString(R.string.recovery_error_file_not_found)
+
+            is RecoveryManager.ImportReadResult.Failure.FileEmpty ->
+                getString(R.string.recovery_error_file_empty)
+
+            is RecoveryManager.ImportReadResult.Failure.InvalidFormat ->
+                getString(R.string.recovery_error_invalid_format, failure.expectedFormat)
+
+            is RecoveryManager.ImportReadResult.Failure.NoData ->
+                getString(R.string.recovery_error_no_data)
+
+            is RecoveryManager.ImportReadResult.Failure.ParseError ->
+                failure.message ?: getString(R.string.recovery_error_parse)
         }
     }
 
@@ -297,7 +353,7 @@ class RecoveryFragment : Fragment() {
         val message = getString(
             R.string.recovery_import_version_mismatch_message,
             readResult.formatVersion.toString(),
-            RecoveryManager.FORMAT_VERSION.toString()
+            CoreConfig.RECOVERY_FORMAT_VERSION.toString()
         )
         messageView.text = message
 
