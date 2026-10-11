@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.webkit.WebView
 import androidx.core.content.edit
+import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.utilities.AppInfoHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,8 +79,16 @@ class RecoveryManager(private val context: Context) {
             root.put("appVersionCode", versionCode)
             root.put("data", dataObject)
 
-            root.toString(2)
-        } catch (_: Exception) {
+            val result = root.toString(2)
+
+            LoggerManager.info(
+                LoggerTagModel.RECOVERY,
+                "buildExportJson OK: ${result.length} chars"
+            )
+
+            result
+        } catch (e: Exception) {
+            LoggerManager.error(LoggerTagModel.RECOVERY, "buildExportJson failed", e)
             null
         }
     }
@@ -239,8 +249,15 @@ class RecoveryManager(private val context: Context) {
                         }
                     }
                 }
+
+                LoggerManager.info(
+                    LoggerTagModel.RECOVERY,
+                    "applyImport OK: ${data.size} prefs"
+                )
+
                 true
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                LoggerManager.error(LoggerTagModel.RECOVERY, "applyImport failed", e)
                 false
             }
         }
@@ -266,6 +283,11 @@ class RecoveryManager(private val context: Context) {
      */
     suspend fun fullReset(): Boolean = withContext(Dispatchers.IO) {
         try {
+            LoggerManager.warn(
+                LoggerTagModel.RECOVERY,
+                context.getString(R.string.log_recovery_reset_started)
+            )
+
             // 1. Очищаем SharedPreferences
             CoreConfig.RECOVERY_EXPORTED_PREFS.forEach { prefsName ->
                 val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
@@ -310,8 +332,14 @@ class RecoveryManager(private val context: Context) {
                 }
             }
 
+            LoggerManager.info(
+                LoggerTagModel.RECOVERY,
+                context.getString(R.string.log_recovery_reset_done)
+            )
+
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LoggerManager.error(LoggerTagModel.RECOVERY, "fullReset failed", e)
             false
         }
     }

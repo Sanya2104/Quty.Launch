@@ -56,7 +56,7 @@
                 <ImageView
                     android:layout_width="@dimen/icon_small"
                     android:layout_height="@dimen/icon_small"
-                    android:src="@drawable/ic_update_folder"
+                    android:src="@drawable/ic_folder"
                     android:contentDescription="@string/empty"
                     android:layout_marginEnd="@dimen/spacing_m" />
 
@@ -303,7 +303,7 @@
                         android:layout_width="@dimen/icon_medium"
                         android:layout_height="@dimen/icon_medium"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_update_folder"
+                        android:src="@drawable/ic_folder"
                         android:contentDescription="@string/empty" />
 
                 </FrameLayout>

@@ -26,7 +26,7 @@ import by.quty.launch.core.fragments.settings.StorageFragment
 import by.quty.launch.core.fragments.settings.ApiMethodsFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.managers.ShellManager
-import by.quty.launch.core.model.SettingsMenuModel
+import by.quty.launch.core.model.MenuModel
 import by.quty.launch.databinding.ActivitySettingsBinding
 import androidx.core.graphics.drawable.toDrawable
 
@@ -47,7 +47,7 @@ class SettingsActivity : BaseActivity() {
     private var needsRestart = false
 
     // Кэш текущего списка пунктов меню (может меняться при DevMode)
-    private var menuItems: List<SettingsMenuModel> = emptyList()
+    private var menuItems: List<MenuModel> = emptyList()
 
     // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
@@ -324,15 +324,15 @@ class SettingsActivity : BaseActivity() {
      *
      * @return список пунктов меню
      */
-    private fun buildMenuItems(): List<SettingsMenuModel> {
+    private fun buildMenuItems(): List<MenuModel> {
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)
 
-        val items = mutableListOf<SettingsMenuModel>()
+        val items = mutableListOf<MenuModel>()
 
         // === ГРУППА 1: Основное ===
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 1,
                 R.drawable.ic_settings,
                 R.string.settings_menu_main,
@@ -345,7 +345,7 @@ class SettingsActivity : BaseActivity() {
 
         // === ГРУППА 2: Персонализация ===
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 2,
                 R.drawable.ic_palette,
                 R.string.settings_menu_personalization,
@@ -358,7 +358,7 @@ class SettingsActivity : BaseActivity() {
 
         // === ГРУППА 3: Система ===
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 6,
                 R.drawable.ic_storage,
                 R.string.settings_menu_storage,
@@ -371,7 +371,7 @@ class SettingsActivity : BaseActivity() {
 
         // === API методы ===
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 8,
                 R.drawable.ic_api_method,
                 R.string.settings_menu_api_methods,
@@ -383,7 +383,7 @@ class SettingsActivity : BaseActivity() {
         )
 
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 3,
                 R.drawable.ic_download,
                 R.string.settings_menu_updates,
@@ -397,7 +397,7 @@ class SettingsActivity : BaseActivity() {
         // === Пункт "Разработчикам" — только при активном DevMode ===
         if (isDevMode) {
             items.add(
-                SettingsMenuModel(
+                MenuModel(
                     4,
                     R.drawable.ic_developer,
                     R.string.settings_menu_developer,
@@ -410,7 +410,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 7,
                 R.drawable.ic_recovery,
                 R.string.settings_menu_recovery,
@@ -422,7 +422,7 @@ class SettingsActivity : BaseActivity() {
         )
 
         items.add(
-            SettingsMenuModel(
+            MenuModel(
                 5,
                 R.drawable.ic_info,
                 R.string.settings_menu_about,
@@ -527,13 +527,6 @@ class SettingsActivity : BaseActivity() {
 
     /**
      * Проверяет, были ли изменения, требующие перезапуска.
-     *
-     * ВАЖНО:
-     * Состояние больше не определяется через текущий Fragment.
-     *
-     * Ранее использовался findFragmentByTag()/findFragmentById(),
-     * из-за чего состояние могло теряться при пересоздании Fragment
-     * или при переключении между разделами.
      */
     private fun checkAndShowRestartDialog() {
         if (needsRestart) {
@@ -620,7 +613,7 @@ class SettingsActivity : BaseActivity() {
         }, 500)
     }
 
-    private fun showItem(item: SettingsMenuModel) {
+    private fun showItem(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
         binding.contentTitle.text = getString(item.title)
@@ -659,7 +652,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
-    private fun restoreFragment(item: SettingsMenuModel) {
+    private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
         binding.contentTitle.text = getString(item.title)

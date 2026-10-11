@@ -3,6 +3,8 @@ package by.quty.launch.api.router
 
 import by.quty.launch.api.base.BaseApiMethod
 import by.quty.launch.api.base.ApiResponse
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.model.LoggerTagModel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.serializer
 import java.util.concurrent.ConcurrentHashMap
@@ -33,16 +35,38 @@ object ApiRouter {
     }
 
     suspend fun execute(methodName: String, params: String?): String {
+        val startTime = System.currentTimeMillis()
+
         val method = methods[methodName]
-            ?: return json.encodeToString(
-                ApiResponse.serializer(Unit.serializer()),
-                ApiResponse(success = false, error = "Method not found: $methodName")
-            )
+            ?: run {
+                LoggerManager.warn(
+                    LoggerTagModel.API,
+                    "execute: method not found: $methodName"
+                )
+                return json.encodeToString(
+                    ApiResponse.serializer(Unit.serializer()),
+                    ApiResponse(success = false, error = "Method not found: $methodName")
+                )
+            }
 
         // Помечаем метод как активный
         markMethodActive(methodName)
 
-        return method.execute(params)
+        // Логируем вход — DEBUG, чтобы не спамить в INFO.
+        // Формат технический — не локализуется.
+        val paramsInfo = if (params.isNullOrEmpty()) "no params" else "${params.length} chars"
+        LoggerManager.debug(LoggerTagModel.API, "execute: $methodName ($paramsInfo)")
+
+        return try {
+            val result = method.execute(params)
+            val elapsed = System.currentTimeMillis() - startTime
+            LoggerManager.debug(LoggerTagModel.API, "$methodName OK (${elapsed}ms)")
+            result
+        } catch (e: Exception) {
+            val elapsed = System.currentTimeMillis() - startTime
+            LoggerManager.error(LoggerTagModel.API, "$methodName failed (${elapsed}ms)", e)
+            throw e
+        }
     }
 
     /**

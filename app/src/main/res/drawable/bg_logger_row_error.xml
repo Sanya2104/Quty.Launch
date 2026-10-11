@@ -1,0 +1,6 @@
+<!-- res/drawable/bg_logger_row_error.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 10% opacity от text_error (#D32F2F) -->
+    <solid android:color="#1AD32F2F" />
+</shape>

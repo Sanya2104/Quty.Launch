@@ -3,6 +3,7 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import by.quty.launch.R
+import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.utilities.AppInfoHelper
 import by.quty.launch.core.utilities.UpdateHelper
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,11 @@ class ShellUpdateManager(private val context: Context) {
                 "$repoUrl/shell.json"
             }
 
+            LoggerManager.info(
+                LoggerTagModel.UPDATE,
+                "checkShellUpdate: ${shell.name}"
+            )
+
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
@@ -69,6 +75,10 @@ class ShellUpdateManager(private val context: Context) {
                 // Сравниваем версии
                 val currentVersion = shell.version ?: "0.0.0"
                 if (UpdateHelper.isNewerVersion(repoInfo.version, currentVersion)) {
+                    LoggerManager.info(
+                        LoggerTagModel.UPDATE,
+                        "shell update available: ${shell.name} -> ${repoInfo.version}"
+                    )
                     repoInfo
                 } else {
                     null
@@ -76,7 +86,12 @@ class ShellUpdateManager(private val context: Context) {
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LoggerManager.warn(
+                LoggerTagModel.UPDATE,
+                "checkShellUpdate failed: ${shell.name}",
+                e
+            )
             null
         }
     }
@@ -120,6 +135,11 @@ class ShellUpdateManager(private val context: Context) {
         var tempFile: File? = null
 
         try {
+            LoggerManager.info(
+                LoggerTagModel.UPDATE,
+                "downloadShellUpdate: start: ${repoInfo.name}"
+            )
+
             // Создаём временный файл для скачивания
             tempFile = storageManager.createTempFile(
                 prefix = "shell_update_${repoInfo.name}",
@@ -186,11 +206,19 @@ class ShellUpdateManager(private val context: Context) {
             file.delete()
 
             if (success) {
+                LoggerManager.info(
+                    LoggerTagModel.UPDATE,
+                    "downloadShellUpdate OK: ${repoInfo.name}"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onSuccess()
                 }
                 true
             } else {
+                LoggerManager.error(
+                    LoggerTagModel.UPDATE,
+                    "downloadShellUpdate: save failed: ${repoInfo.name}"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.shell_install_error))
                 }
@@ -199,6 +227,11 @@ class ShellUpdateManager(private val context: Context) {
 
         } catch (e: Exception) {
             tempFile?.delete()
+            LoggerManager.error(
+                LoggerTagModel.UPDATE,
+                "downloadShellUpdate failed: ${repoInfo.name}",
+                e
+            )
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.download_error))
             }

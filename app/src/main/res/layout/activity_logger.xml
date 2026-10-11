@@ -1,0 +1,186 @@
+<!-- res/layout/activity_logger.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) -->
+    <LinearLayout
+        android:id="@+id/menu_pane"
+        android:layout_width="340dp"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:orientation="vertical">
+
+        <!-- ШАПКА МЕНЮ С ГРАДИЕНТОМ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_m"
+            android:paddingEnd="@dimen/spacing_m"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_xs"
+            android:background="@drawable/bg_toolbar_gradient"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:elevation="4dp">
+
+            <TextView
+                style="@style/Text.Title.Large"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="@dimen/spacing_sm"
+                android:text="@string/logger_title" />
+
+            <LinearLayout
+                android:id="@+id/btn_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:background="@drawable/bg_glass_icon_ripple"
+                android:padding="@dimen/spacing_s"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageButton
+                    android:layout_width="@dimen/icon_medium"
+                    android:layout_height="@dimen/icon_medium"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/settings_close"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/iconTintColor"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_menu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="@dimen/spacing_s"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ) -->
+    <FrameLayout
+        android:id="@+id/content_pane"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- ФРАГМЕНТ КОНТЕНТА -->
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                android:background="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- ШАПКА С ГРАДИЕНТОМ -->
+            <LinearLayout
+                android:id="@+id/content_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_m"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingBottom="@dimen/spacing_xs"
+                android:background="@drawable/bg_toolbar_gradient"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <!-- Кнопка НАЗАД / МЕНЮ -->
+                <LinearLayout
+                    android:id="@+id/btn_back_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_m"
+                    android:background="@drawable/bg_glass_icon_ripple"
+                    android:padding="@dimen/spacing_s"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/btn_back_content_icon"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/back"
+                        android:src="@drawable/ic_back"
+                        app:tint="?attr/iconTintColor"
+                        android:clickable="false"
+                        android:focusable="false" />
+
+                </LinearLayout>
+
+                <!-- Название раздела -->
+                <TextView
+                    android:id="@+id/content_title"
+                    style="@style/Text.Title.Large"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="@dimen/spacing_sm"
+                    android:text="@string/settings_fragment" />
+
+                <!-- Кнопка ЗАКРЫТЬ ФРАГМЕНТ -->
+                <LinearLayout
+                    android:id="@+id/btn_close_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_m"
+                    android:background="@drawable/bg_glass_icon_ripple"
+                    android:padding="@dimen/spacing_s"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/settings_close"
+                        android:src="@drawable/ic_close"
+                        app:tint="?attr/iconTintColor"
+                        android:clickable="false"
+                        android:focusable="false" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

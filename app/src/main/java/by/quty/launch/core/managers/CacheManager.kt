@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import by.quty.launch.api.model.AppInfo
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.model.LoggerTagModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -128,6 +129,7 @@ object CacheManager {
     fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
+        LoggerManager.debug(LoggerTagModel.CORE, "invalidateCache")
     }
 
     /**
@@ -186,6 +188,8 @@ object CacheManager {
         if (storageManager != null) {
             saveToDisk(storageManager, cached)
         }
+
+        LoggerManager.debug(LoggerTagModel.CORE, "saveApps: ${apps.size} apps cached")
     }
 
     /**
@@ -258,5 +262,7 @@ object CacheManager {
                 // Игнорируем ошибки
             }
         }
+
+        LoggerManager.info(LoggerTagModel.CORE, "clearCache")
     }
 }

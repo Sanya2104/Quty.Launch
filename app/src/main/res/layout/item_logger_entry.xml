@@ -1,0 +1,72 @@
+<!-- res/layout/item_logger_entry.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="top"
+    android:paddingTop="@dimen/spacing_s"
+    android:paddingBottom="@dimen/spacing_s"
+    tools:ignore="UseCompoundDrawables">
+
+    <!-- Вертикальная полоска уровня -->
+    <View
+        android:id="@+id/logger_level_bar"
+        android:layout_width="3dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="@dimen/spacing_m"
+        android:background="@drawable/bg_logger_level_bar"
+        tools:backgroundTint="@color/scheme_blue_primary" />
+
+    <!-- Колонка: время + тег, сообщение -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Строка 1: время + тег -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Время -->
+            <TextView
+                android:id="@+id/logger_time"
+                style="@style/Text.XSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="?attr/textDimColor"
+                tools:text="12:34:56.789" />
+
+            <!-- Тег -->
+            <TextView
+                android:id="@+id/logger_tag"
+                style="@style/Text.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:fontFamily="monospace"
+                android:textColor="?attr/textDimColor"
+                tools:text="CORE" />
+
+        </LinearLayout>
+
+        <!-- Строка 2: сообщение -->
+        <TextView
+            android:id="@+id/logger_message"
+            style="@style/Text.Body.Dim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xxs"
+            android:fontFamily="monospace"
+            android:textColor="?attr/textPrimaryColor"
+            android:textIsSelectable="true"
+            tools:text="Core initialized" />
+
+    </LinearLayout>
+
+</LinearLayout>

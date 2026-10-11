@@ -1,0 +1,6 @@
+<!-- res/drawable/bg_logger_level_badge.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFF" />
+    <corners android:radius="@dimen/radius_small" />
+</shape>

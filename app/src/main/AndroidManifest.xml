@@ -79,6 +79,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Логгер -->
+        <activity
+            android:name=".LoggerActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.Translucent">
+        </activity>
+
         <!-- Настройки -->
         <activity
             android:name=".SettingsActivity"

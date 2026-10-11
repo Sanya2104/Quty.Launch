@@ -19,7 +19,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.PermissionManager
+import by.quty.launch.core.model.LoggerTagModel
 
 /**
  * Активность приветствия (онбординг)
@@ -67,6 +69,11 @@ class WelcomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_welcome)
 
+        LoggerManager.info(
+            LoggerTagModel.CORE,
+            getString(R.string.log_core_welcome_created)
+        )
+
         initViews()
         setupVersionInfo()
         setupPermissionsUI()
@@ -112,9 +119,6 @@ class WelcomeActivity : BaseActivity() {
 
     /**
      * Заполняет контейнер карточки строками из item_welcome_permission.xml.
-     *
-     * Список разрешений формируется здесь же (data-модель PermissionItem),
-     * как это сделано для StorageFragment, SettingsActivity, ApiMethodsFragment.
      */
     private fun setupPermissionsUI() {
         permissionsContainer.removeAllViews()
@@ -182,8 +186,6 @@ class WelcomeActivity : BaseActivity() {
                 permissionsContainer.addView(createDivider())
             }
         }
-
-        // Начальное значение счётчика — проставит updatePermissionsUI()
     }
 
     /**
@@ -398,6 +400,11 @@ class WelcomeActivity : BaseActivity() {
     private fun finishAndGoToMain() {
         if (isFinishingActivity) return
         isFinishingActivity = true
+
+        LoggerManager.info(
+            LoggerTagModel.CORE,
+            getString(R.string.log_core_onboarding_completed)
+        )
 
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
         prefs.edit {

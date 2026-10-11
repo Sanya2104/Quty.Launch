@@ -22,6 +22,96 @@
     <string name="unknown">Неизвестно</string>
 
     <!-- ============================================================ -->
+    <!-- ===== ЛОГГЕР =============================================== -->
+    <!-- ============================================================ -->
+
+    <string name="logger_title">Логгер</string>
+    <string name="logger_empty">Логов пока нет</string>
+
+    <!-- Пункты меню -->
+    <string name="logger_menu_logs">Логи</string>
+    <string name="logger_menu_logs_desc">Записи в реальном времени</string>
+    <string name="logger_menu_files">Файлы</string>
+    <string name="logger_menu_files_desc">Сохранённые логи</string>
+    <string name="logger_menu_settings">Настройки</string>
+    <string name="logger_menu_settings_desc">Запись, сохранение, очистка</string>
+
+    <!-- Панель действий -->
+    <string name="logger_counter_format" formatted="false">%1$d / %2$d</string>
+    <string name="logger_action_clear">Очистить лог</string>
+    <string name="logger_action_copy">Копировать всё</string>
+    <string name="logger_action_scroll_bottom">Вниз</string>
+    <string name="logger_copy_success" formatted="false">Скопировано %d записей</string>
+    <string name="logger_copy_empty">Нечего копировать</string>
+
+    <!-- Диалог просмотра файла лога -->
+    <string name="logger_file_dialog_title">Файл лога</string>
+    <string name="logger_file_dialog_copy">Копировать</string>
+
+    <!-- Пустое состояние файлов -->
+    <string name="logger_files_empty">Файлов логов нет</string>
+
+    <!-- Меню файла -->
+    <string name="logger_files_menu_share">Поделиться</string>
+    <string name="logger_files_menu_delete">Удалить</string>
+
+    <!-- Настройки логгера -->
+    <string name="logger_settings_section_recording">Запись</string>
+    <string name="logger_settings_section_actions">Действия</string>
+
+    <string name="logger_settings_enabled">Включить логирование</string>
+    <string name="logger_settings_autosave">Автосохранение в файл</string>
+
+    <string name="logger_settings_save_current">Сохранить текущий лог</string>
+    <string name="logger_settings_save_current_desc">Записать буфер в файл в папке logs</string>
+
+    <string name="logger_settings_clear_buffer">Очистить буфер</string>
+    <string name="logger_settings_clear_buffer_desc">Удалить все записи из памяти</string>
+
+    <!-- Toast-сообщения -->
+    <string name="logger_files_copied">Скопировано в буфер обмена</string>
+    <string name="logger_files_deleted">Файл удалён</string>
+    <string name="logger_settings_enabled_on">Логирование включено</string>
+    <string name="logger_settings_enabled_off">Логирование выключено</string>
+    <string name="logger_settings_autosave_on">Автосохранение включено</string>
+    <string name="logger_settings_autosave_off">Автосохранение выключено</string>
+    <string name="logger_settings_save_empty">Нет записей для сохранения</string>
+    <string name="logger_settings_save_success" formatted="false">Лог сохранён: %s</string>
+    <string name="logger_settings_save_error">Не удалось сохранить лог</string>
+    <string name="logger_settings_clear_empty">Буфер пуст</string>
+    <string name="logger_settings_clear_success">Буфер очищен</string>
+
+    <!-- ===== ЛОГГЕР — сообщения событий ===== -->
+
+    <!-- CORE -->
+    <string name="log_core_initialized">Ядро инициализировано</string>
+    <string name="log_core_main_created">Главный экран открыт</string>
+    <string name="log_core_welcome_created">Экран приветствия открыт</string>
+    <string name="log_core_onboarding_completed">Онбординг завершён</string>
+    <string name="log_core_language_changed">Язык изменён: %1$s → %2$s</string>
+    <string name="log_core_cache_cleared">Кэш приложений очищен</string>
+
+    <!-- SHELL -->
+    <string name="log_shell_changed">Оболочка изменена: %1$s → %2$s</string>
+    <string name="log_shell_restored_default">Активная оболочка не найдена, восстановлена по умолчанию: %s</string>
+    <string name="log_shell_deleted">Оболочка удалена: %s</string>
+
+    <!-- UPDATE -->
+    <string name="log_update_available">Доступно обновление: %1$s (код %2$s)</string>
+    <string name="log_update_up_to_date">Обновлений нет</string>
+
+    <!-- STORE -->
+    <string name="log_store_loaded">Магазин загружен: %d оболочек</string>
+
+    <!-- RECOVERY -->
+    <string name="log_recovery_reset_started">Полный сброс: старт</string>
+    <string name="log_recovery_reset_done">Полный сброс завершён</string>
+
+    <!-- TERMINAL -->
+    <string name="log_terminal_reset_onboarding">Сброс онбординга из терминала</string>
+    <string name="log_terminal_restart">Перезапуск из терминала</string>
+
+    <!-- ============================================================ -->
     <!-- ===== НАСТРОЙКИ — МЕНЮ И ЗАГОЛОВКИ ========================= -->
     <!-- ============================================================ -->
 
@@ -189,6 +279,7 @@
     <string name="storage_category_cache">Кэш</string>
     <string name="storage_category_temp">Временные файлы</string>
     <string name="storage_category_updates">Обновления</string>
+    <string name="storage_category_logs">Логи</string>
     <string name="storage_category_shells">Оболочки</string>
 
     <!-- Состояния и очистка -->
@@ -222,6 +313,7 @@
     <string name="api_getcorestate_desc">Состояние ядра для оболочки</string>
 
     <!-- Имена виртуальных приложений (GetApps) -->
+    <string name="api_getapps_logger_name">Логгер</string>
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
     <string name="api_getapps_store_name">Магазин</string>
     <string name="api_getapps_terminal_name">Терминал</string>

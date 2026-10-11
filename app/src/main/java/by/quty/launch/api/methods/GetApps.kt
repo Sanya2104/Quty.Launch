@@ -81,9 +81,25 @@ class GetApps(
         // Для кастомных используем PNG-иконки (ic_app_*) из drawable-nodpi,
         // а не VectorDrawable — у вектора tint задан через ?attr/iconTintColor,
         // который не резолвится в applicationContext, и иконка получается пустой.
+        //
+        // Порядок — строго по алфавиту отображаемых имён:
+        // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
-        // 1. Настройки Quty.Launch
+        // 1. Логгер
+        val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
+        val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_logger_name),
+                packageName = ApiConfig.LOGGER_PACKAGE,
+                isCustom = true,
+                iconBase64 = loggerIconBase64
+            )
+        )
+
+        // 2. Настройки Quty.Launch
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
@@ -96,20 +112,20 @@ class GetApps(
             )
         )
 
-        // 2. Магазин оболочек (всегда доступен)
+        // 3. Магазин оболочек (всегда доступен)
         val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 
         customApps.add(
             AppInfo(
-                name = context.getString(R.string.api_getapps_store_name),
+                name = context.getString(R.string.store_title),
                 packageName = ApiConfig.STORE_PACKAGE,
                 isCustom = true,
                 iconBase64 = storeIconBase64
             )
         )
 
-        // 3. Терминал
+        // 4. Терминал
         val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
         val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
 

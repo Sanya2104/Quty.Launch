@@ -22,6 +22,96 @@
     <string name="unknown">Unknown</string>
 
     <!-- ============================================================ -->
+    <!-- ===== LOGGER =============================================== -->
+    <!-- ============================================================ -->
+
+    <string name="logger_title">Logger</string>
+    <string name="logger_empty">No logs yet</string>
+
+    <!-- Menu items -->
+    <string name="logger_menu_logs">Logs</string>
+    <string name="logger_menu_logs_desc">Real-time entries</string>
+    <string name="logger_menu_files">Files</string>
+    <string name="logger_menu_files_desc">Saved logs</string>
+    <string name="logger_menu_settings">Settings</string>
+    <string name="logger_menu_settings_desc">Recording, save, clear</string>
+
+    <!-- Action bar -->
+    <string name="logger_counter_format" formatted="false">%1$d / %2$d</string>
+    <string name="logger_action_clear">Clear log</string>
+    <string name="logger_action_copy">Copy all</string>
+    <string name="logger_action_scroll_bottom">Scroll down</string>
+    <string name="logger_copy_success" formatted="false">Copied %d entries</string>
+    <string name="logger_copy_empty">Nothing to copy</string>
+
+    <!-- Log file dialog -->
+    <string name="logger_file_dialog_title">Log file</string>
+    <string name="logger_file_dialog_copy">Copy</string>
+
+    <!-- Empty state of files -->
+    <string name="logger_files_empty">No log files</string>
+
+    <!-- File menu -->
+    <string name="logger_files_menu_share">Share</string>
+    <string name="logger_files_menu_delete">Delete</string>
+
+    <!-- Logger settings -->
+    <string name="logger_settings_section_recording">Recording</string>
+    <string name="logger_settings_section_actions">Actions</string>
+
+    <string name="logger_settings_enabled">Enable logging</string>
+    <string name="logger_settings_autosave">Auto-save to file</string>
+
+    <string name="logger_settings_save_current">Save current log</string>
+    <string name="logger_settings_save_current_desc">Write buffer to file in logs folder</string>
+
+    <string name="logger_settings_clear_buffer">Clear buffer</string>
+    <string name="logger_settings_clear_buffer_desc">Delete all entries from memory</string>
+
+    <!-- Toast messages -->
+    <string name="logger_files_copied">Copied to clipboard</string>
+    <string name="logger_files_deleted">File deleted</string>
+    <string name="logger_settings_enabled_on">Logging enabled</string>
+    <string name="logger_settings_enabled_off">Logging disabled</string>
+    <string name="logger_settings_autosave_on">Auto-save enabled</string>
+    <string name="logger_settings_autosave_off">Auto-save disabled</string>
+    <string name="logger_settings_save_empty">No entries to save</string>
+    <string name="logger_settings_save_success" formatted="false">Log saved: %s</string>
+    <string name="logger_settings_save_error">Failed to save log</string>
+    <string name="logger_settings_clear_empty">Buffer is empty</string>
+    <string name="logger_settings_clear_success">Buffer cleared</string>
+
+    <!-- ===== LOGGER — event messages ===== -->
+
+    <!-- CORE -->
+    <string name="log_core_initialized">Core initialized</string>
+    <string name="log_core_main_created">Main screen opened</string>
+    <string name="log_core_welcome_created">Welcome screen opened</string>
+    <string name="log_core_onboarding_completed">Onboarding completed</string>
+    <string name="log_core_language_changed">Language changed: %1$s → %2$s</string>
+    <string name="log_core_cache_cleared">Apps cache cleared</string>
+
+    <!-- SHELL -->
+    <string name="log_shell_changed">Shell changed: %1$s → %2$s</string>
+    <string name="log_shell_restored_default">Active shell not found, restored default: %s</string>
+    <string name="log_shell_deleted">Shell deleted: %s</string>
+
+    <!-- UPDATE -->
+    <string name="log_update_available">Update available: %1$s (code %2$s)</string>
+    <string name="log_update_up_to_date">No updates</string>
+
+    <!-- STORE -->
+    <string name="log_store_loaded">Store loaded: %d shells</string>
+
+    <!-- RECOVERY -->
+    <string name="log_recovery_reset_started">Full reset: start</string>
+    <string name="log_recovery_reset_done">Full reset done</string>
+
+    <!-- TERMINAL -->
+    <string name="log_terminal_reset_onboarding">Onboarding reset from terminal</string>
+    <string name="log_terminal_restart">Restart from terminal</string>
+
+    <!-- ============================================================ -->
     <!-- ===== SETTINGS — MENU & TITLES ============================= -->
     <!-- ============================================================ -->
 
@@ -189,6 +279,7 @@
     <string name="storage_category_cache">Cache</string>
     <string name="storage_category_temp">Temp files</string>
     <string name="storage_category_updates">Updates</string>
+    <string name="storage_category_logs">Logs</string>
     <string name="storage_category_shells">Shells</string>
 
     <!-- States & cleanup -->
@@ -222,6 +313,7 @@
     <string name="api_getcorestate_desc">Core state for shell</string>
 
     <!-- Virtual app names (GetApps) -->
+    <string name="api_getapps_logger_name">Logger</string>
     <string name="api_getapps_settings_name">Settings Quty.Launch</string>
     <string name="api_getapps_store_name">Store</string>
     <string name="api_getapps_terminal_name">Terminal</string>

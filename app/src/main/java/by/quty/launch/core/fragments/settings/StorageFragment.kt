@@ -26,8 +26,10 @@ import by.quty.launch.R
 import by.quty.launch.SettingsActivity
 import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.model.LoggerTagModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +44,7 @@ import kotlinx.coroutines.withContext
  * - Кэш (CACHE + context.cacheDir)
  * - Временные (TEMP)
  * - Обновления (UPDATES)
+ * - Логи (LOGS)
  * - Оболочки (SHELLS) — не очищаются здесь
  *
  * Клик по категории — только выделение (полоса + строка).
@@ -188,6 +191,14 @@ class StorageFragment : Fragment() {
                 colorRes = R.color.scheme_blue_primary,
                 directory = StorageDirectory.UPDATES,
                 size = storageManager.getDirectorySize(StorageDirectory.UPDATES),
+                canClear = true
+            ),
+            StorageCategoryItem(
+                id = "logs",
+                titleRes = R.string.storage_category_logs,
+                colorRes = R.color.scheme_pink_primary,
+                directory = StorageDirectory.LOGS,
+                size = storageManager.getDirectorySize(StorageDirectory.LOGS),
                 canClear = true
             ),
             StorageCategoryItem(
@@ -478,6 +489,13 @@ class StorageFragment : Fragment() {
                             requireContext().cacheDir.deleteRecursively()
                             requireContext().cacheDir.mkdirs()
                             CacheManager.clearCache()
+                        }
+                        "logs" -> {
+                            storageManager.removeAll(StorageDirectory.LOGS)
+                            LoggerManager.info(
+                                LoggerTagModel.LOGGER,
+                                "logs directory cleared from Storage settings"
+                            )
                         }
                         else -> {
                             storageManager.removeAll(category.directory)

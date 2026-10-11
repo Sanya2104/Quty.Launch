@@ -10,6 +10,7 @@ import androidx.core.content.edit
 import by.quty.launch.R
 import by.quty.launch.api.router.ApiRouter
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.model.LoggerTagModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -157,6 +158,14 @@ class ShellManager(
         // Сохраняем оболочку по умолчанию как активную
         activeShell = defaultShell
         configManager.setActiveShell(defaultShell.name)
+
+        LoggerManager.warn(
+            LoggerTagModel.SHELL,
+            context.getString(
+                R.string.log_shell_restored_default,
+                defaultShell.displayName ?: defaultShell.name
+            )
+        )
 
         // Показываем уведомление о восстановлении
         val message = context.getString(R.string.shell_active_not_found) + "\n" +
@@ -329,7 +338,12 @@ class ShellManager(
                     json.decodeFromString<ShellManifest>(it.readText())
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LoggerManager.warn(
+                LoggerTagModel.SHELL,
+                "readManifestFromZip failed: ${zipFile.name}",
+                e
+            )
             null
         }
     }
@@ -424,6 +438,11 @@ class ShellManager(
         val activeShellId = configManager.getActiveShell()
         activeShell = shells.find { it.name == activeShellId }
         saveForcedOrientation()
+
+        LoggerManager.info(
+            LoggerTagModel.SHELL,
+            "reloadActiveShell: $activeShellId"
+        )
     }
 
     /**
@@ -436,6 +455,11 @@ class ShellManager(
      * «кто что вызывал» в разделе Настроек → API методы.
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
+        LoggerManager.info(
+            LoggerTagModel.SHELL,
+            "setActiveShell: ${shell.name} (custom=${shell.isCustom}, asset=${shell.isAsset})"
+        )
+
         // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
@@ -449,6 +473,14 @@ class ShellManager(
         // реально поменялась
         if (previousShellName != shell.name) {
             ApiRouter.clearActiveMethods()
+            LoggerManager.info(
+                LoggerTagModel.SHELL,
+                context.getString(
+                    R.string.log_shell_changed,
+                    previousShellName ?: "—",
+                    shell.name
+                )
+            )
         }
 
         // Сохраняем принудительную ориентацию
@@ -493,7 +525,13 @@ class ShellManager(
      */
     private suspend fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
-        if (!zipFile.exists()) return
+        if (!zipFile.exists()) {
+            LoggerManager.warn(
+                LoggerTagModel.SHELL,
+                "unzipShell: file not found: $zipPath"
+            )
+            return
+        }
 
         try {
             withContext(Dispatchers.IO) {
@@ -513,8 +551,12 @@ class ShellManager(
                     }
                 }
             }
-        } catch (_: Exception) {
-            // Игнорируем ошибки распаковки
+        } catch (e: Exception) {
+            LoggerManager.error(
+                LoggerTagModel.SHELL,
+                "unzipShell failed: $zipPath",
+                e
+            )
         }
     }
 
@@ -565,6 +607,18 @@ class ShellManager(
                 name = fileName
             )
 
+            if (deleted) {
+                LoggerManager.info(
+                    LoggerTagModel.SHELL,
+                    context.getString(R.string.log_shell_deleted, name)
+                )
+            } else {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "deleteShellByName: failed to delete $name"
+                )
+            }
+
             // Если оболочка была активной — перезагружаем
             if (deleted) {
                 val currentActive = getActiveShell()
@@ -574,7 +628,12 @@ class ShellManager(
             }
 
             deleted
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LoggerManager.error(
+                LoggerTagModel.SHELL,
+                "deleteShellByName failed: $name",
+                e
+            )
             false
         }
     }

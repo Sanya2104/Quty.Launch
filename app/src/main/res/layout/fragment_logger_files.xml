@@ -1,0 +1,40 @@
+<!-- res/layout/fragment_logger_files.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:paddingTop="@dimen/fragment_top">
+
+    <!-- ============================================================ -->
+    <!-- ===== СПИСОК ФАЙЛОВ ======================================== -->
+    <!-- ============================================================ -->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/logger_files_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="@dimen/spacing_s"
+        android:paddingEnd="@dimen/spacing_s"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingBottom="@dimen/spacing_s"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
+
+    <!-- ============================================================ -->
+    <!-- ===== ПУСТОЕ СОСТОЯНИЕ ===================================== -->
+    <!-- ============================================================ -->
+
+    <TextView
+        android:id="@+id/logger_files_empty"
+        style="@style/Text.Body.Secondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:alpha="0.5"
+        android:gravity="center"
+        android:text="@string/logger_files_empty"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</FrameLayout>

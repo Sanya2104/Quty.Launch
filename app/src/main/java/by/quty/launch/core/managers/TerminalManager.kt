@@ -13,6 +13,7 @@ import by.quty.launch.R
 import by.quty.launch.api.router.ApiRouter
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.ColorSchemeModel
+import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.model.TerminalCommandModel
 import by.quty.launch.core.utilities.AppInfoHelper
 import kotlinx.coroutines.Dispatchers
@@ -675,7 +676,7 @@ object TerminalManager {
         }
         sb.appendLine("  $shellMark " + context.getString(R.string.terminal_doctor_label_shell) + ": $shellText")
 
-        // 3. Валидность manifest (у shell есть name и version)
+        // 3. Валидность manifest
         val (manifestMark, manifestText) = if (shell != null && shell.name.isNotEmpty() && !shell.version.isNullOrEmpty()) {
             okCount++
             ok to context.getString(R.string.terminal_doctor_manifest_ok)
@@ -985,6 +986,7 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
                 }
                 prefs.edit { putString(KEY_THEME_MODE, value) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set theme: $value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "lang" -> {
@@ -992,6 +994,7 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
                 }
                 prefs.edit { putString(KEY_LANGUAGE, value) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set lang: $value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "orientation" -> {
@@ -999,18 +1002,21 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
                 }
                 prefs.edit { putString(KEY_ORIENTATION, value) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set orientation: $value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "fullscreen" -> {
                 val bool = parseOnOff(value)
                     ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                 prefs.edit { putBoolean(KEY_FULLSCREEN, bool) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set fullscreen: $bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "strict" -> {
                 val bool = parseOnOff(value)
                     ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                 prefs.edit { putBoolean(KEY_STRICT_MODE, bool) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set strict: $bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "color" -> {
@@ -1023,6 +1029,7 @@ object TerminalManager {
                     )
                 }
                 prefs.edit { putString(KEY_COLOR_SCHEME, value) }
+                LoggerManager.info(LoggerTagModel.TERMINAL, "set color: $value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             else -> context.getString(R.string.terminal_set_unknown_key, key)
@@ -1035,6 +1042,7 @@ object TerminalManager {
     ): String = withContext(Dispatchers.Main) {
         val shellManager = ShellManager(context, configManager)
         shellManager.reloadActiveShell()
+        LoggerManager.info(LoggerTagModel.TERMINAL, "reload.shell")
         context.getString(R.string.terminal_set_ok_restart)
     }
 
@@ -1048,6 +1056,8 @@ object TerminalManager {
                 webView.clearSslPreferences()
                 webView.destroy()
 
+                LoggerManager.info(LoggerTagModel.TERMINAL, "clear.webview")
+
                 context.getString(R.string.terminal_clear_ok)
             } catch (e: Exception) {
                 context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
@@ -1056,11 +1066,17 @@ object TerminalManager {
 
     private suspend fun clearCacheHandler(): String = withContext(Dispatchers.IO) {
         CacheManager.clearCache()
+        LoggerManager.info(LoggerTagModel.TERMINAL, "clear.cache")
         "OK"
     }
 
     private suspend fun resetOnboardingHandler(context: Context): String =
         withContext(Dispatchers.Main) {
+            LoggerManager.warn(
+                LoggerTagModel.TERMINAL,
+                context.getString(R.string.log_terminal_reset_onboarding)
+            )
+
             val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
             prefs.edit {
                 remove(KEY_ONBOARDING_COMPLETED)
@@ -1072,6 +1088,10 @@ object TerminalManager {
 
     private suspend fun restartHandler(context: Context): String =
         withContext(Dispatchers.Main) {
+            LoggerManager.info(
+                LoggerTagModel.TERMINAL,
+                context.getString(R.string.log_terminal_restart)
+            )
             restartApp(context)
             context.getString(R.string.terminal_restart_ok)
         }

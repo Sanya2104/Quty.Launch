@@ -14,6 +14,8 @@ import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.model.LoggerTagModel
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLConnection
@@ -160,8 +162,17 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                         }
                     }
 
+                    LoggerManager.warn(
+                        LoggerTagModel.WEBVIEW,
+                        "handleQutyScheme: file not found: $path"
+                    )
                     return null
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    LoggerManager.warn(
+                        LoggerTagModel.WEBVIEW,
+                        "handleQutyScheme failed: $url",
+                        e
+                    )
                     return null
                 }
             }
@@ -232,6 +243,10 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 // Всё остальное — внешняя ссылка, открываем во внешнем браузере
                 try {
+                    LoggerManager.debug(
+                        LoggerTagModel.WEBVIEW,
+                        "open external link: $url"
+                    )
                     val intent = android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
                         url.toUri()
@@ -257,6 +272,11 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 val url = failingUrl ?: "unknown"
 
+                LoggerManager.error(
+                    LoggerTagModel.WEBVIEW,
+                    "onReceivedError: $errorCode $description ($url)"
+                )
+
                 // Если это страница оболочки (не ресурс) — пробуем перезагрузить
                 if (isShellPage(url)) {
                     scheduleRetry(url)
@@ -271,6 +291,11 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 view: WebView?,
                 detail: RenderProcessGoneDetail?
             ): Boolean {
+                LoggerManager.error(
+                    LoggerTagModel.WEBVIEW,
+                    "onRenderProcessGone: crashed=${detail?.didCrash()}"
+                )
+
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                     android.widget.Toast.makeText(
                         appContext,
@@ -320,8 +345,17 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 // Если превышен лимит — не перезагружаем
                 if (errorRetryCount > MAX_RETRY_COUNT) {
+                    LoggerManager.warn(
+                        LoggerTagModel.WEBVIEW,
+                        "retry limit reached: $url (attempts=$errorRetryCount)"
+                    )
                     return
                 }
+
+                LoggerManager.warn(
+                    LoggerTagModel.WEBVIEW,
+                    "retry #$errorRetryCount: $url"
+                )
 
                 // Задержка перед перезагрузкой
                 postDelayed({
@@ -345,6 +379,11 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         // Сбрасываем счётчик ошибок при новой загрузке
         errorRetryCount = 0
         lastErrorUrl = null
+
+        LoggerManager.info(
+            LoggerTagModel.WEBVIEW,
+            "loadShell: $shellName (asset=$isAsset)"
+        )
 
         val url = if (isAsset) {
             "https://appassets.androidplatform.net/assets/shells/$shellName/index.html"

@@ -6,7 +6,9 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.core.Core
+import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
 import kotlinx.coroutines.launch
@@ -27,6 +29,11 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        LoggerManager.info(
+            LoggerTagModel.CORE,
+            getString(R.string.log_core_main_created)
+        )
 
         // Проверяем, нужно ли перезапустить приложение для применения ориентации
         if (configManager.needRestartForOrientation()) {
@@ -74,6 +81,11 @@ class MainActivity : BaseActivity() {
             // После установки оболочки повторно применяем ориентацию
             applyOrientation(shellManager)
 
+            LoggerManager.info(
+                LoggerTagModel.CORE,
+                "loadShell: ${shellToActivate.name} (asset=${shellToActivate.isAsset})"
+            )
+
             webView.loadShell(
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
@@ -95,6 +107,10 @@ class MainActivity : BaseActivity() {
         if (::jsBridge.isInitialized && ::webView.isInitialized) {
             val currentLang = configManager.getLanguageCode()
             if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
+                LoggerManager.info(
+                    LoggerTagModel.CORE,
+                    getString(R.string.log_core_language_changed, lastAppliedLanguage, currentLang)
+                )
                 lastAppliedLanguage = currentLang
                 jsBridge.notifyCoreStateChanged()
             }

@@ -6,6 +6,8 @@ import android.webkit.JavascriptInterface
 import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.model.LoggerTagModel
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -58,6 +60,12 @@ class JsBridge(
      */
     @JavascriptInterface
     fun call(method: String, params: String?, callbackId: String) {
+        // Логируем вход — техническое сообщение, не локализуется
+        LoggerManager.debug(
+            LoggerTagModel.JSBRIDGE,
+            "call: $method (callback=$callbackId)"
+        )
+
         // Запускаем выполнение в общем scope
         bridgeScope.launch {
             try {
@@ -71,16 +79,22 @@ class JsBridge(
 
             } catch (e: TimeoutCancellationException) {
                 // Тайм-аут выполнения
+                LoggerManager.warn(
+                    LoggerTagModel.JSBRIDGE,
+                    "timeout: $method (${timeoutMs}ms)"
+                )
                 val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
                 // Отмена выполнения
+                LoggerManager.warn(LoggerTagModel.JSBRIDGE, "cancelled: $method")
                 val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {
                 // Любая другая ошибка
+                LoggerManager.error(LoggerTagModel.JSBRIDGE, "error in $method", e)
                 val error = """{"success": false, "error": "${e.message}"}"""
                 sendResultToJs(callbackId, error, e)
             }

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.ColorSchemeModel
+import by.quty.launch.core.model.LoggerTagModel
 import java.util.Locale
 
 class ConfigManager(context: Context) {
@@ -34,7 +35,12 @@ class ConfigManager(context: Context) {
 
     // Сохранение активной оболочки
     fun setActiveShell(shellId: String) {
+        val previous = getActiveShell()
         prefs.edit { putString("active_shell", shellId) }
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "setActiveShell: $previous -> $shellId"
+        )
     }
 
     // Получение ориентации
@@ -45,6 +51,7 @@ class ConfigManager(context: Context) {
     // Сохранение ориентации
     fun setOrientation(orientation: String) {
         prefs.edit { putString("orientation", orientation) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setOrientation: $orientation")
     }
 
     // Получение полноэкранного режима
@@ -55,6 +62,7 @@ class ConfigManager(context: Context) {
     // Сохранение полноэкранного режима
     fun setFullscreenEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("fullscreen", enabled) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setFullscreenEnabled: $enabled")
     }
 
     // Получение строгого режима
@@ -65,6 +73,7 @@ class ConfigManager(context: Context) {
     // Сохранение строгого режима
     fun setStrictModeEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("strict_mode", enabled) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setStrictModeEnabled: $enabled")
     }
 
     // ============================================================
@@ -77,6 +86,7 @@ class ConfigManager(context: Context) {
 
     fun setColorScheme(schemeId: String) {
         prefs.edit { putString("color_scheme", schemeId) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setColorScheme: $schemeId")
     }
 
     fun getDefaultColorScheme(): String {
@@ -112,6 +122,7 @@ class ConfigManager(context: Context) {
      */
     fun setThemeMode(mode: String) {
         prefs.edit { putString(KEY_THEME_MODE, mode) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setThemeMode: $mode")
     }
 
     /**
@@ -201,6 +212,7 @@ class ConfigManager(context: Context) {
             else -> CoreConfig.LANGUAGE_EN
         }
         prefs.edit { putString(KEY_LANGUAGE, normalized) }
+        LoggerManager.info(LoggerTagModel.CONFIG, "setLanguage: $normalized")
     }
 
     /**

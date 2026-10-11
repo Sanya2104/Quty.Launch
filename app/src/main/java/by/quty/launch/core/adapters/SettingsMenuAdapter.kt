@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
-import by.quty.launch.core.model.SettingsMenuModel
+import by.quty.launch.core.model.MenuModel
 import by.quty.launch.databinding.ItemSettingsMenuBinding
 
 class SettingsMenuAdapter(
-    private val items: List<SettingsMenuModel>,
-    private val onItemClick: (SettingsMenuModel) -> Unit
+    private val items: List<MenuModel>,
+    private val onItemClick: (MenuModel) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -81,9 +81,9 @@ class SettingsMenuAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
-            item: SettingsMenuModel,
+            item: MenuModel,
             isSelected: Boolean,
-            onItemClick: (SettingsMenuModel) -> Unit
+            onItemClick: (MenuModel) -> Unit
         ) {
             val context = binding.root.context
 

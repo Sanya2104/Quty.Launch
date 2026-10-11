@@ -21,9 +21,10 @@ import java.util.Locale
  * - updates: .../updates/
  * - cache: .../cache/
  * - temp: .../temp/
+ * - logs: .../logs/
  *
- * ВАЖНО: папки `exports` и `backups` удалены — backup'ы сохраняются
- * во внешнее хранилище через SAF (ActivityResultContracts.CreateDocument).
+ * ВАЖНО: папки `exports` и `backups` больше не существуют —
+ * backup'ы сохраняются во внешнее хранилище через SAF (ActivityResultContracts.CreateDocument).
  */
 class StorageManager(private val context: Context) {
 
@@ -33,6 +34,7 @@ class StorageManager(private val context: Context) {
         private const val DIR_UPDATES = "updates"
         private const val DIR_CACHE = "cache"
         private const val DIR_TEMP = "temp"
+        private const val DIR_LOGS = "logs"
 
         private const val EXT_TEMP = ".tmp"
     }
@@ -46,9 +48,10 @@ class StorageManager(private val context: Context) {
     private val updatesDir: File by lazy { File(baseDir, DIR_UPDATES) }
     private val cacheDir: File by lazy { File(baseDir, DIR_CACHE) }
     private val tempDir: File by lazy { File(baseDir, DIR_TEMP) }
+    private val logsDir: File by lazy { File(baseDir, DIR_LOGS) }
 
     private val allDirs: List<File> by lazy {
-        listOf(shellsDir, updatesDir, cacheDir, tempDir)
+        listOf(shellsDir, updatesDir, cacheDir, tempDir, logsDir)
     }
 
     init {
@@ -287,6 +290,7 @@ class StorageManager(private val context: Context) {
             StorageDirectory.UPDATES -> updatesDir
             StorageDirectory.CACHE -> cacheDir
             StorageDirectory.TEMP -> tempDir
+            StorageDirectory.LOGS -> logsDir
             StorageDirectory.BASE -> baseDir
         }
     }
@@ -304,5 +308,6 @@ enum class StorageDirectory {
     SHELLS,
     UPDATES,
     CACHE,
-    TEMP
+    TEMP,
+    LOGS
 }

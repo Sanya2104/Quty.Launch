@@ -2,6 +2,7 @@
 package by.quty.launch.core.managers
 
 import android.content.Context
+import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.core.utilities.AppInfoHelper
 import by.quty.launch.configs.CoreConfig
@@ -34,6 +35,8 @@ class StoreManager(private val context: Context) {
         try {
             cachedShells?.let { return@withContext it }
 
+            LoggerManager.info(LoggerTagModel.STORE, "fetchShells: requesting store")
+
             val connection = URL(CoreConfig.STORE_URL).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 10000
@@ -58,11 +61,21 @@ class StoreManager(private val context: Context) {
                     shell.copy(isInstalled = isInstalled)
                 }
 
+                LoggerManager.info(
+                    LoggerTagModel.STORE,
+                    context.getString(R.string.log_store_loaded, cachedShells?.size ?: 0)
+                )
+
                 cachedShells
             } else {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "fetchShells: HTTP ${connection.responseCode}"
+                )
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LoggerManager.error(LoggerTagModel.STORE, "fetchShells failed", e)
             null
         }
     }
@@ -87,6 +100,11 @@ class StoreManager(private val context: Context) {
         try {
             val fileName = "${shell.name}${CoreConfig.SHELL_EXTENSION_WITH_DOT}"
 
+            LoggerManager.info(
+                LoggerTagModel.STORE,
+                "installShell: start: ${shell.name}"
+            )
+
             // Проверяем, не установлена ли уже
             if (shell.isInstalled) {
                 withContext(Dispatchers.Main) {
@@ -97,6 +115,10 @@ class StoreManager(private val context: Context) {
 
             // Проверяем совместимость
             if (!isLauncherCompatible(shell.minQutyLaunchVersion)) {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "installShell: incompatible: ${shell.name}"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_incompatible))
                 }
@@ -121,6 +143,10 @@ class StoreManager(private val context: Context) {
 
             if (!downloadResult) {
                 tempFile.delete()
+                LoggerManager.error(
+                    LoggerTagModel.STORE,
+                    "installShell: download failed: ${shell.name}"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_download_error))
                 }
@@ -138,6 +164,10 @@ class StoreManager(private val context: Context) {
             tempFile.delete()
 
             if (!success) {
+                LoggerManager.error(
+                    LoggerTagModel.STORE,
+                    "installShell: save failed: ${shell.name}"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_save_error))
                 }
@@ -149,12 +179,22 @@ class StoreManager(private val context: Context) {
                 if (it.id == shell.id) it.copy(isInstalled = true) else it
             }
 
+            LoggerManager.info(
+                LoggerTagModel.STORE,
+                "installShell OK: ${shell.name}"
+            )
+
             withContext(Dispatchers.Main) {
                 listener.onSuccess()
             }
             true
 
         } catch (e: Exception) {
+            LoggerManager.error(
+                LoggerTagModel.STORE,
+                "installShell failed: ${shell.name}",
+                e
+            )
             withContext(Dispatchers.Main) {
                 listener.onError(e.message ?: context.getString(R.string.store_install_error))
             }

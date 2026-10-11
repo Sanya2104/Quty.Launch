@@ -1,0 +1,6 @@
+<!-- res/drawable/bg_logger_row_warn.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 10% opacity от status_warning (#FF9800) -->
+    <solid android:color="#1AFF9800" />
+</shape>
