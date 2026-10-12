@@ -623,21 +623,6 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: ДИАГНОСТИКА
     // ============================================================
 
-    /**
-     * doctor — диагностика состояния ядра.
-     *
-     * Проверяет:
-     * - DevMode активен/нет
-     * - есть ли активная оболочка
-     * - валиден ли manifest (у оболочки есть name + version)
-     * - все ли разрешения выданы
-     * - достаточно ли свободного места (>10 MB)
-     * - не протух ли кэш приложений (>30 минут)
-     * - доступен ли WebView
-     *
-     * В конце — сводка: количество ✓ / ⚠ / ✗.
-     * Наличие хотя бы одного ✗ означает проблему, требующую внимания.
-     */
     private fun doctorHandler(context: Context, configManager: ConfigManager): String {
         val ok = context.getString(R.string.terminal_doctor_ok)
         val warn = context.getString(R.string.terminal_doctor_warn)
@@ -657,7 +642,6 @@ object TerminalManager {
             okCount++
             "$ok " + context.getString(R.string.terminal_doctor_devmode_on)
         } else {
-            // DevMode off — это норма, не ошибка и не предупреждение
             okCount++
             "$ok " + context.getString(R.string.terminal_doctor_devmode_off)
         }
@@ -769,15 +753,9 @@ object TerminalManager {
         return sb.toString()
     }
 
-    /**
-     * memory — использование Java heap.
-     */
     private fun memoryHandler(): String {
         val runtime = Runtime.getRuntime()
 
-        // runtime.totalMemory() — текущий размер выделенной JVM памяти (heap)
-        // runtime.freeMemory() — свободно в heap
-        // runtime.maxMemory() — верхняя граница heap
         val maxBytes = runtime.maxMemory()
         val totalBytes = runtime.totalMemory()
         val freeBytes = runtime.freeMemory()
@@ -791,9 +769,6 @@ object TerminalManager {
         }
     }
 
-    /**
-     * webview — информация о WebView: package, version, provider.
-     */
     private fun webViewHandler(context: Context): String {
         val packageInfo = try {
             WebViewCompat.getCurrentWebViewPackage(context)
@@ -818,9 +793,6 @@ object TerminalManager {
         }
     }
 
-    /**
-     * screen — разрешение экрана, плотность, размер в dp.
-     */
     private fun screenHandler(context: Context): String {
         val metrics: DisplayMetrics = context.resources.displayMetrics
 
@@ -841,13 +813,6 @@ object TerminalManager {
         }
     }
 
-    /**
-     * Возвращает возраст кэша приложений в миллисекундах или null,
-     * если кэш отсутствует / повреждён.
-     *
-     * Читает файл CoreConfig.CACHE_APPS_FILE_NAME из StorageDirectory.CACHE,
-     * парсит JSON, извлекает поле timestamp.
-     */
     private fun getCacheAgeMs(context: Context): Long? {
         return try {
             val storageManager = StorageManager(context)
@@ -986,7 +951,7 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
                 }
                 prefs.edit { putString(KEY_THEME_MODE, value) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set theme: $value")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  theme=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "lang" -> {
@@ -994,7 +959,7 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
                 }
                 prefs.edit { putString(KEY_LANGUAGE, value) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set lang: $value")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  lang=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "orientation" -> {
@@ -1002,21 +967,21 @@ object TerminalManager {
                     return context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
                 }
                 prefs.edit { putString(KEY_ORIENTATION, value) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set orientation: $value")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  orientation=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "fullscreen" -> {
                 val bool = parseOnOff(value)
                     ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                 prefs.edit { putBoolean(KEY_FULLSCREEN, bool) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set fullscreen: $bool")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  fullscreen=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "strict" -> {
                 val bool = parseOnOff(value)
                     ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                 prefs.edit { putBoolean(KEY_STRICT_MODE, bool) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set strict: $bool")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  strict=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "color" -> {
@@ -1029,7 +994,7 @@ object TerminalManager {
                     )
                 }
                 prefs.edit { putString(KEY_COLOR_SCHEME, value) }
-                LoggerManager.info(LoggerTagModel.TERMINAL, "set color: $value")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  color=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             else -> context.getString(R.string.terminal_set_unknown_key, key)
@@ -1042,7 +1007,7 @@ object TerminalManager {
     ): String = withContext(Dispatchers.Main) {
         val shellManager = ShellManager(context, configManager)
         shellManager.reloadActiveShell()
-        LoggerManager.info(LoggerTagModel.TERMINAL, "reload.shell")
+        LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.reload.shell")
         context.getString(R.string.terminal_set_ok_restart)
     }
 
@@ -1056,7 +1021,7 @@ object TerminalManager {
                 webView.clearSslPreferences()
                 webView.destroy()
 
-                LoggerManager.info(LoggerTagModel.TERMINAL, "clear.webview")
+                LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.clear.webview")
 
                 context.getString(R.string.terminal_clear_ok)
             } catch (e: Exception) {
@@ -1066,16 +1031,13 @@ object TerminalManager {
 
     private suspend fun clearCacheHandler(): String = withContext(Dispatchers.IO) {
         CacheManager.clearCache()
-        LoggerManager.info(LoggerTagModel.TERMINAL, "clear.cache")
+        LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.clear.cache")
         "OK"
     }
 
     private suspend fun resetOnboardingHandler(context: Context): String =
         withContext(Dispatchers.Main) {
-            LoggerManager.warn(
-                LoggerTagModel.TERMINAL,
-                context.getString(R.string.log_terminal_reset_onboarding)
-            )
+            LoggerManager.warn(LoggerTagModel.TERMINAL, "TERMINAL.reset.onboarding")
 
             val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
             prefs.edit {
@@ -1088,10 +1050,7 @@ object TerminalManager {
 
     private suspend fun restartHandler(context: Context): String =
         withContext(Dispatchers.Main) {
-            LoggerManager.info(
-                LoggerTagModel.TERMINAL,
-                context.getString(R.string.log_terminal_restart)
-            )
+            LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.restart")
             restartApp(context)
             context.getString(R.string.terminal_restart_ok)
         }
@@ -1121,10 +1080,6 @@ object TerminalManager {
         return text.padEnd(STATUS_PAD_WIDTH, ' ')
     }
 
-    /**
-     * Форматирует размер в байтах в читаемую строку (B / KB / MB / GB).
-     * Используется в memoryHandler — чтобы не завязываться на StorageManager.
-     */
     private fun formatBytes(bytes: Long): String {
         val locale = java.util.Locale.US
         return when {

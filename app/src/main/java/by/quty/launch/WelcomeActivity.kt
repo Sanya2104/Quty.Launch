@@ -71,7 +71,7 @@ class WelcomeActivity : BaseActivity() {
 
         LoggerManager.info(
             LoggerTagModel.CORE,
-            getString(R.string.log_core_welcome_created)
+            "CORE.welcome  created"
         )
 
         initViews()
@@ -117,9 +117,6 @@ class WelcomeActivity : BaseActivity() {
     // СПИСОК РАЗРЕШЕНИЙ
     // ============================================================
 
-    /**
-     * Заполняет контейнер карточки строками из item_welcome_permission.xml.
-     */
     private fun setupPermissionsUI() {
         permissionsContainer.removeAllViews()
         permissionStatusViews.clear()
@@ -403,7 +400,7 @@ class WelcomeActivity : BaseActivity() {
 
         LoggerManager.info(
             LoggerTagModel.CORE,
-            getString(R.string.log_core_onboarding_completed)
+            "CORE.onboarding  completed"
         )
 
         val prefs = getSharedPreferences("launcher_prefs", MODE_PRIVATE)

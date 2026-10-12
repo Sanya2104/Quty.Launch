@@ -1,0 +1,40 @@
+<!-- res/layout/item_logger_filter.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingTop="@dimen/spacing_s"
+    android:paddingBottom="@dimen/spacing_s"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground"
+    tools:ignore="UseCompoundDrawables">
+
+    <View
+        android:id="@+id/filter_level_bar"
+        android:layout_width="3dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="@dimen/spacing_m"
+        android:background="@drawable/bg_logger_level_bar"
+        tools:backgroundTint="@color/scheme_blue_primary" />
+
+    <TextView
+        android:id="@+id/filter_level_name"
+        style="@style/Text.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:text="INFO" />
+
+    <CheckBox
+        android:id="@+id/filter_level_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:clickable="false"
+        android:focusable="false" />
+
+</LinearLayout>

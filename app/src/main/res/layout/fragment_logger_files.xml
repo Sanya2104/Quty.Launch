@@ -1,40 +1,40 @@
 <!-- res/layout/fragment_logger_files.xml -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
-    android:paddingTop="@dimen/fragment_top">
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
 
-    <!-- ============================================================ -->
-    <!-- ===== СПИСОК ФАЙЛОВ ======================================== -->
-    <!-- ============================================================ -->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/logger_files_list"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingStart="@dimen/spacing_s"
-        android:paddingEnd="@dimen/spacing_s"
-        android:paddingTop="@dimen/spacing_l"
-        android:paddingBottom="@dimen/spacing_s"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
-
-    <!-- ============================================================ -->
-    <!-- ===== ПУСТОЕ СОСТОЯНИЕ ===================================== -->
-    <!-- ============================================================ -->
-
-    <TextView
-        android:id="@+id/logger_files_empty"
-        style="@style/Text.Body.Secondary"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:alpha="0.5"
-        android:gravity="center"
-        android:text="@string/logger_files_empty"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
 
-</FrameLayout>
+        <LinearLayout
+            android:id="@+id/logger_files_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/spacing_l"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/logger_files_empty"
+            style="@style/Text.Body.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_xl"
+            android:alpha="0.5"
+            android:gravity="center"
+            android:text="@string/logger_files_empty"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</ScrollView>

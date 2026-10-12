@@ -35,7 +35,7 @@ class StoreManager(private val context: Context) {
         try {
             cachedShells?.let { return@withContext it }
 
-            LoggerManager.info(LoggerTagModel.STORE, "fetchShells: requesting store")
+            LoggerManager.info(LoggerTagModel.STORE, "STORE.fetch  start")
 
             val connection = URL(CoreConfig.STORE_URL).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
@@ -63,19 +63,19 @@ class StoreManager(private val context: Context) {
 
                 LoggerManager.info(
                     LoggerTagModel.STORE,
-                    context.getString(R.string.log_store_loaded, cachedShells?.size ?: 0)
+                    "STORE.fetch  ok  items=${cachedShells?.size ?: 0}"
                 )
 
                 cachedShells
             } else {
                 LoggerManager.warn(
                     LoggerTagModel.STORE,
-                    "fetchShells: HTTP ${connection.responseCode}"
+                    "STORE.fetch  error  HTTP ${connection.responseCode}"
                 )
                 null
             }
         } catch (e: Exception) {
-            LoggerManager.error(LoggerTagModel.STORE, "fetchShells failed", e)
+            LoggerManager.error(LoggerTagModel.STORE, "STORE.fetch  error", e)
             null
         }
     }
@@ -102,7 +102,7 @@ class StoreManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.STORE,
-                "installShell: start: ${shell.name}"
+                "STORE.install  start  ${shell.name}"
             )
 
             // Проверяем, не установлена ли уже
@@ -117,7 +117,7 @@ class StoreManager(private val context: Context) {
             if (!isLauncherCompatible(shell.minQutyLaunchVersion)) {
                 LoggerManager.warn(
                     LoggerTagModel.STORE,
-                    "installShell: incompatible: ${shell.name}"
+                    "STORE.install  error  ${shell.name}  incompatible"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_incompatible))
@@ -145,7 +145,7 @@ class StoreManager(private val context: Context) {
                 tempFile.delete()
                 LoggerManager.error(
                     LoggerTagModel.STORE,
-                    "installShell: download failed: ${shell.name}"
+                    "STORE.install  error  ${shell.name}  download failed"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_download_error))
@@ -166,7 +166,7 @@ class StoreManager(private val context: Context) {
             if (!success) {
                 LoggerManager.error(
                     LoggerTagModel.STORE,
-                    "installShell: save failed: ${shell.name}"
+                    "STORE.install  error  ${shell.name}  save failed"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_save_error))
@@ -181,7 +181,7 @@ class StoreManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.STORE,
-                "installShell OK: ${shell.name}"
+                "STORE.install  ok  ${shell.name}"
             )
 
             withContext(Dispatchers.Main) {
@@ -192,7 +192,7 @@ class StoreManager(private val context: Context) {
         } catch (e: Exception) {
             LoggerManager.error(
                 LoggerTagModel.STORE,
-                "installShell failed: ${shell.name}",
+                "STORE.install  error  ${shell.name}  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
             withContext(Dispatchers.Main) {

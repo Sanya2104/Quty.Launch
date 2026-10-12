@@ -37,16 +37,27 @@
                 android:fontFamily="monospace"
                 tools:text="0 / 500" />
 
-            <!-- Скролл вниз -->
+            <!-- Фильтр -->
             <ImageButton
-                android:id="@+id/logger_action_scroll_bottom"
+                android:id="@+id/logger_action_filter"
                 android:layout_width="@dimen/icon_large"
                 android:layout_height="@dimen/icon_large"
-                android:src="@drawable/ic_arrow_down"
+                android:src="@drawable/ic_filter"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/logger_action_scroll_bottom"
+                android:contentDescription="@string/logger_action_filter"
                 android:padding="@dimen/spacing_m"
-                app:tint="?attr/buttonPrimaryColor" />
+                app:tint="?attr/textDimColor" />
+
+            <!-- Сохранить текущий лог в файл -->
+            <ImageButton
+                android:id="@+id/logger_action_save"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:src="@drawable/ic_save"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/logger_action_save"
+                android:padding="@dimen/spacing_m"
+                app:tint="?attr/textDimColor" />
 
             <!-- Очистить -->
             <ImageButton

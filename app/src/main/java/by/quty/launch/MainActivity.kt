@@ -32,7 +32,7 @@ class MainActivity : BaseActivity() {
 
         LoggerManager.info(
             LoggerTagModel.CORE,
-            getString(R.string.log_core_main_created)
+            "CORE.main  created"
         )
 
         // Проверяем, нужно ли перезапустить приложение для применения ориентации
@@ -83,7 +83,7 @@ class MainActivity : BaseActivity() {
 
             LoggerManager.info(
                 LoggerTagModel.CORE,
-                "loadShell: ${shellToActivate.name} (asset=${shellToActivate.isAsset})"
+                "CORE.loadShell  ${shellToActivate.name}  asset=${shellToActivate.isAsset}"
             )
 
             webView.loadShell(
@@ -109,7 +109,7 @@ class MainActivity : BaseActivity() {
             if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
                 LoggerManager.info(
                     LoggerTagModel.CORE,
-                    getString(R.string.log_core_language_changed, lastAppliedLanguage, currentLang)
+                    "CORE.language  $lastAppliedLanguage → $currentLang"
                 )
                 lastAppliedLanguage = currentLang
                 jsBridge.notifyCoreStateChanged()

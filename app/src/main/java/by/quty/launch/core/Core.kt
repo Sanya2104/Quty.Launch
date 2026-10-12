@@ -2,7 +2,6 @@
 package by.quty.launch.core
 
 import android.content.Context
-import by.quty.launch.R
 import by.quty.launch.api.ApiInitializer
 import by.quty.launch.api.router.ApiRouter
 import by.quty.launch.core.managers.CacheManager
@@ -29,10 +28,7 @@ class Core(context: Context) {
         val storageManager = StorageManager(context)
         CacheManager.init(storageManager, context)
 
-        LoggerManager.info(
-            LoggerTagModel.CORE,
-            context.getString(R.string.log_core_initialized)
-        )
+        LoggerManager.info(LoggerTagModel.CORE, "CORE.init")
     }
 
     /**

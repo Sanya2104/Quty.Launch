@@ -63,7 +63,7 @@ class JsBridge(
         // Логируем вход — техническое сообщение, не локализуется
         LoggerManager.debug(
             LoggerTagModel.JSBRIDGE,
-            "call: $method (callback=$callbackId)"
+            "JSBRIDGE.call  $method"
         )
 
         // Запускаем выполнение в общем scope
@@ -81,20 +81,20 @@ class JsBridge(
                 // Тайм-аут выполнения
                 LoggerManager.warn(
                     LoggerTagModel.JSBRIDGE,
-                    "timeout: $method (${timeoutMs}ms)"
+                    "JSBRIDGE.timeout  $method  ${timeoutMs}ms"
                 )
                 val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
                 // Отмена выполнения
-                LoggerManager.warn(LoggerTagModel.JSBRIDGE, "cancelled: $method")
+                LoggerManager.warn(LoggerTagModel.JSBRIDGE, "JSBRIDGE.cancelled  $method")
                 val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled_error)}"}"""
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {
                 // Любая другая ошибка
-                LoggerManager.error(LoggerTagModel.JSBRIDGE, "error in $method", e)
+                LoggerManager.error(LoggerTagModel.JSBRIDGE, "JSBRIDGE.error  $method", e)
                 val error = """{"success": false, "error": "${e.message}"}"""
                 sendResultToJs(callbackId, error, e)
             }

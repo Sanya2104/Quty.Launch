@@ -161,10 +161,7 @@ class ShellManager(
 
         LoggerManager.warn(
             LoggerTagModel.SHELL,
-            context.getString(
-                R.string.log_shell_restored_default,
-                defaultShell.displayName ?: defaultShell.name
-            )
+            "SHELL.restored  ${defaultShell.name}"
         )
 
         // Показываем уведомление о восстановлении
@@ -341,7 +338,7 @@ class ShellManager(
         } catch (e: Exception) {
             LoggerManager.warn(
                 LoggerTagModel.SHELL,
-                "readManifestFromZip failed: ${zipFile.name}",
+                "SHELL.manifest_failed  ${zipFile.nameWithoutExtension}",
                 e
             )
             null
@@ -441,7 +438,7 @@ class ShellManager(
 
         LoggerManager.info(
             LoggerTagModel.SHELL,
-            "reloadActiveShell: $activeShellId"
+            "SHELL.reload  $activeShellId"
         )
     }
 
@@ -455,11 +452,6 @@ class ShellManager(
      * «кто что вызывал» в разделе Настроек → API методы.
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
-        LoggerManager.info(
-            LoggerTagModel.SHELL,
-            "setActiveShell: ${shell.name} (custom=${shell.isCustom}, asset=${shell.isAsset})"
-        )
-
         // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
@@ -473,13 +465,13 @@ class ShellManager(
         // реально поменялась
         if (previousShellName != shell.name) {
             ApiRouter.clearActiveMethods()
+
+            // Маркер [custom] — только для кастомных оболочек
+            val marker = if (shell.isCustom) "  [custom]" else ""
+
             LoggerManager.info(
                 LoggerTagModel.SHELL,
-                context.getString(
-                    R.string.log_shell_changed,
-                    previousShellName ?: "—",
-                    shell.name
-                )
+                "SHELL.active  ${previousShellName ?: "—"} → ${shell.name}$marker"
             )
         }
 
@@ -528,7 +520,7 @@ class ShellManager(
         if (!zipFile.exists()) {
             LoggerManager.warn(
                 LoggerTagModel.SHELL,
-                "unzipShell: file not found: $zipPath"
+                "SHELL.unzip_failed  ${zipFile.nameWithoutExtension}  file not found"
             )
             return
         }
@@ -554,7 +546,7 @@ class ShellManager(
         } catch (e: Exception) {
             LoggerManager.error(
                 LoggerTagModel.SHELL,
-                "unzipShell failed: $zipPath",
+                "SHELL.unzip_failed  ${zipFile.nameWithoutExtension}  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
         }
@@ -610,12 +602,12 @@ class ShellManager(
             if (deleted) {
                 LoggerManager.info(
                     LoggerTagModel.SHELL,
-                    context.getString(R.string.log_shell_deleted, name)
+                    "SHELL.deleted  $name"
                 )
             } else {
                 LoggerManager.warn(
                     LoggerTagModel.SHELL,
-                    "deleteShellByName: failed to delete $name"
+                    "SHELL.delete_failed  $name"
                 )
             }
 
@@ -631,7 +623,7 @@ class ShellManager(
         } catch (e: Exception) {
             LoggerManager.error(
                 LoggerTagModel.SHELL,
-                "deleteShellByName failed: $name",
+                "SHELL.delete_failed  $name  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
             false

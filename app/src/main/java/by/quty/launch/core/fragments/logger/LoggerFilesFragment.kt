@@ -7,16 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
-import by.quty.launch.core.adapters.LoggerFileAdapter
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.utilities.PopupMenuHelper
@@ -24,25 +22,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Фрагмент списка сохранённых файлов логов.
  *
- * Показывает содержимое StorageDirectory.LOGS.
- * Действия:
- * - Тап по файлу — предпросмотр содержимого (диалог dialog_logger_file);
- * - Кнопка меню — «Поделиться», «Удалить».
+ * В отличие от обычного RecyclerView, здесь используется ScrollView +
+ * LinearLayout-контейнер (как в fragment_settings_about.xml) — чтобы
+ * шапка с градиентом не перекрывала контент.
  *
- * Список обновляется в onResume — при возврате во фрагмент
- * он всегда актуален (после сохранения лога в LoggerSettingsFragment).
+ * Действия:
+ * - Тап по файлу — предпросмотр содержимого (dialog_logger_file);
+ * - Кнопка меню — «Поделиться», «Удалить».
  */
 class LoggerFilesFragment : Fragment() {
 
-    private lateinit var recyclerFiles: RecyclerView
+    private lateinit var container: LinearLayout
     private lateinit var emptyText: TextView
-    private lateinit var adapter: LoggerFileAdapter
 
-    private val files = mutableListOf<File>()
+    private val timeFormat = SimpleDateFormat("HH:mm", Locale.US)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,10 +55,8 @@ class LoggerFilesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        recyclerFiles = view.findViewById(R.id.logger_files_list)
+        container = view.findViewById(R.id.logger_files_container)
         emptyText = view.findViewById(R.id.logger_files_empty)
-
-        setupRecycler()
     }
 
     override fun onResume() {
@@ -66,35 +64,68 @@ class LoggerFilesFragment : Fragment() {
         refreshFiles()
     }
 
-    private fun setupRecycler() {
-        adapter = LoggerFileAdapter(
-            files = files,
-            onItemClick = { file -> showFileContent(file) },
-            onMenuClick = { file, anchor -> showFileMenu(file, anchor) }
-        )
-
-        recyclerFiles.layoutManager = LinearLayoutManager(requireContext())
-        recyclerFiles.adapter = adapter
-    }
+    // ============================================================
+    // ЗАГРУЗКА И ОТРИСОВКА СПИСКА
+    // ============================================================
 
     private fun refreshFiles() {
         lifecycleScope.launch {
-            val list = withContext(Dispatchers.IO) {
+            val files = withContext(Dispatchers.IO) {
                 LoggerManager.listLogFiles(requireContext())
             }
-
-            adapter.submitFiles(list)
-            updateEmptyState(list.isEmpty())
+            renderFiles(files)
         }
     }
 
-    private fun updateEmptyState(isEmpty: Boolean) {
-        if (isEmpty) {
+    private fun renderFiles(files: List<File>) {
+        container.removeAllViews()
+
+        if (files.isEmpty()) {
             emptyText.visibility = View.VISIBLE
-            recyclerFiles.visibility = View.GONE
-        } else {
-            emptyText.visibility = View.GONE
-            recyclerFiles.visibility = View.VISIBLE
+            return
+        }
+
+        emptyText.visibility = View.GONE
+
+        files.forEach { file ->
+            val row = layoutInflater.inflate(
+                R.layout.item_logger_file,
+                container,
+                false
+            )
+
+            val nameView = row.findViewById<TextView>(R.id.logger_file_name)
+            val metaView = row.findViewById<TextView>(R.id.logger_file_meta)
+            val menuButton = row.findViewById<ImageButton>(R.id.logger_file_menu)
+
+            nameView.text = file.name
+            metaView.text = formatMeta(file)
+
+            row.setOnClickListener {
+                showFileContent(file)
+            }
+
+            menuButton.setOnClickListener { anchor ->
+                showFileMenu(file, anchor)
+            }
+
+            container.addView(row)
+        }
+    }
+
+    private fun formatMeta(file: File): String {
+        val time = timeFormat.format(Date(file.lastModified()))
+        val size = formatSize(file.length())
+        return "$time · $size"
+    }
+
+    private fun formatSize(bytes: Long): String {
+        val locale = Locale.US
+        return when {
+            bytes >= 1024L * 1024 * 1024 -> String.format(locale, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+            bytes >= 1024L * 1024 -> String.format(locale, "%.2f MB", bytes / (1024.0 * 1024.0))
+            bytes >= 1024 -> String.format(locale, "%.2f KB", bytes / 1024.0)
+            else -> "$bytes B"
         }
     }
 
@@ -128,25 +159,20 @@ class LoggerFilesFragment : Fragment() {
 
             dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-            // Имя файла под заголовком
             val nameView: TextView = dialogView.findViewById(R.id.logger_file_dialog_name)
             nameView.text = file.name
 
-            // Содержимое
             val contentTextView: TextView = dialogView.findViewById(R.id.logger_file_dialog_content)
             contentTextView.text = content
 
-            // Кнопка-крестик
             dialogView.findViewById<ImageButton>(R.id.logger_file_dialog_close_button).setOnClickListener {
                 dialog.dismiss()
             }
 
-            // Кнопка «Закрыть»
             dialogView.findViewById<Button>(R.id.logger_file_dialog_close_action).setOnClickListener {
                 dialog.dismiss()
             }
 
-            // Кнопка «Копировать»
             dialogView.findViewById<Button>(R.id.logger_file_dialog_copy_button).setOnClickListener {
                 val clipboard = requireContext()
                     .getSystemService(android.content.Context.CLIPBOARD_SERVICE)

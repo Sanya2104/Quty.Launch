@@ -86,20 +86,7 @@ class GetApps(
         // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
-        // 1. Логгер
-        val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
-        val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
-
-        customApps.add(
-            AppInfo(
-                name = context.getString(R.string.api_getapps_logger_name),
-                packageName = ApiConfig.LOGGER_PACKAGE,
-                isCustom = true,
-                iconBase64 = loggerIconBase64
-            )
-        )
-
-        // 2. Настройки Quty.Launch
+        // 1. Настройки Quty.Launch
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
@@ -112,7 +99,7 @@ class GetApps(
             )
         )
 
-        // 3. Магазин оболочек (всегда доступен)
+        // 2. Магазин оболочек (всегда доступен)
         val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 
@@ -125,7 +112,7 @@ class GetApps(
             )
         )
 
-        // 4. Терминал
+        // 3. Терминал
         val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
         val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
 
@@ -135,6 +122,19 @@ class GetApps(
                 packageName = ApiConfig.TERMINAL_PACKAGE,
                 isCustom = true,
                 iconBase64 = terminalIconBase64
+            )
+        )
+
+        // 4. Логгер
+        val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
+        val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_logger_name),
+                packageName = ApiConfig.LOGGER_PACKAGE,
+                isCustom = true,
+                iconBase64 = loggerIconBase64
             )
         )
 

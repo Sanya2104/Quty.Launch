@@ -27,13 +27,26 @@ import java.util.concurrent.CopyOnWriteArrayList
  * - файлы в StorageDirectory.LOGS — сохраняются по запросу из UI
  *   (вручную или автосохранением при выходе, если включено).
  *
+ * Опциональные детали (details):
+ * - Полный JSON параметров/ответа, доступный для раскрытия по тапу.
+ * - Если details.length > limit — обрезается до limit символов.
+ * - Лимит хранится в prefs и настраивается в LoggerSettingsFragment.
+ *
+ * Фильтр:
+ * - Уровни: набор LoggerLevelModel, хранится под logger_filter_levels.
+ * - Теги: набор LoggerTagModel, хранится под logger_filter_tags.
+ * - Если ключа нет — считается дефолтным (все включены).
+ * - Пустая строка = ничего не показывать.
+ * - Запись проходит фильтр, если её уровень И тег включены.
+ *
  * Потокобезопасность:
  * - запись логов может идти из Dispatchers.IO (например, ApiRouter);
  * - чтение/уведомление UI — из Main;
  * - список подписчиков — CopyOnWriteArrayList (безопасные итерации);
  * - буфер — ConcurrentLinkedDeque.
  *
- * Настройки (enabled, autoSave) хранятся в SharedPreferences "terminal_prefs".
+ * Настройки (enabled, autoSave, detailsLimit, filterLevels, filterTags)
+ * хранятся в SharedPreferences "terminal_prefs".
  */
 object LoggerManager {
 
@@ -49,6 +62,15 @@ object LoggerManager {
 
     private const val KEY_ENABLED = "logger_enabled"
     private const val KEY_AUTO_SAVE = "logger_auto_save"
+    private const val KEY_DETAILS_LIMIT = "logger_details_limit"
+    private const val KEY_FILTER_LEVELS = "logger_filter_levels"
+    private const val KEY_FILTER_TAGS = "logger_filter_tags"
+
+    /**
+     * Лимит длины details по умолчанию.
+     * Пользователь может поменять в LoggerSettingsFragment.
+     */
+    const val DEFAULT_DETAILS_LIMIT = 3000
 
     /**
      * Кольцевой буфер. Хранит записи в порядке добавления
@@ -64,8 +86,7 @@ object LoggerManager {
     private val listeners = CopyOnWriteArrayList<LoggerListener>()
 
     /**
-     * Флаг «логирование включено». Инициализируется из prefs при первом
-     * обращении. Значение @Volatile — читается из разных потоков.
+     * Флаг «логирование включено». Инициализируется из prefs при init().
      */
     @Volatile
     private var enabled = true
@@ -77,6 +98,13 @@ object LoggerManager {
     @Volatile
     private var autoSave = false
 
+    /**
+     * Лимит длины details. Обрезает слишком длинные JSON.
+     * Инициализируется из prefs при init().
+     */
+    @Volatile
+    private var detailsLimit = DEFAULT_DETAILS_LIMIT
+
     // ============================================================
     // ИНИЦИАЛИЗАЦИЯ
     // ============================================================
@@ -86,52 +114,73 @@ object LoggerManager {
      * Вызывается при старте ядра (Core.init).
      */
     fun init(context: Context) {
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val app = context.applicationContext
+        val prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         enabled = prefs.getBoolean(KEY_ENABLED, true)
         autoSave = prefs.getBoolean(KEY_AUTO_SAVE, false)
+        detailsLimit = prefs.getInt(KEY_DETAILS_LIMIT, DEFAULT_DETAILS_LIMIT)
     }
 
     // ============================================================
     // ЗАПИСЬ
     // ============================================================
 
-    fun debug(tag: LoggerTagModel, message: String) {
-        log(LoggerLevelModel.DEBUG, tag, message)
+    fun debug(tag: LoggerTagModel, message: String, details: String? = null) {
+        log(LoggerLevelModel.DEBUG, tag, message, details)
     }
 
-    fun info(tag: LoggerTagModel, message: String) {
-        log(LoggerLevelModel.INFO, tag, message)
+    fun info(tag: LoggerTagModel, message: String, details: String? = null) {
+        log(LoggerLevelModel.INFO, tag, message, details)
     }
 
-    fun warn(tag: LoggerTagModel, message: String, throwable: Throwable? = null) {
+    fun warn(
+        tag: LoggerTagModel,
+        message: String,
+        throwable: Throwable? = null,
+        details: String? = null
+    ) {
         val fullMessage = if (throwable != null) {
-            "$message: ${throwable.message ?: throwable.javaClass.simpleName}"
+            "$message  ${throwable.message ?: throwable.javaClass.simpleName}"
         } else {
             message
         }
-        log(LoggerLevelModel.WARN, tag, fullMessage)
+        log(LoggerLevelModel.WARN, tag, fullMessage, details)
     }
 
-    fun error(tag: LoggerTagModel, message: String, throwable: Throwable? = null) {
+    fun error(
+        tag: LoggerTagModel,
+        message: String,
+        throwable: Throwable? = null,
+        details: String? = null
+    ) {
         val fullMessage = if (throwable != null) {
-            "$message: ${throwable.message ?: throwable.javaClass.simpleName}"
+            "$message  ${throwable.message ?: throwable.javaClass.simpleName}"
         } else {
             message
         }
-        log(LoggerLevelModel.ERROR, tag, fullMessage)
+        log(LoggerLevelModel.ERROR, tag, fullMessage, details)
     }
 
     /**
      * Внутренний метод записи.
      */
-    private fun log(level: LoggerLevelModel, tag: LoggerTagModel, message: String) {
+    private fun log(
+        level: LoggerLevelModel,
+        tag: LoggerTagModel,
+        message: String,
+        details: String?
+    ) {
         if (!enabled) return
+
+        // Обрезаем details, если слишком длинные
+        val trimmedDetails = trimDetails(details)
 
         val entry = LoggerEntryModel(
             timestamp = System.currentTimeMillis(),
             level = level,
             tag = tag,
-            message = message
+            message = message,
+            details = trimmedDetails
         )
 
         buffer.addLast(entry)
@@ -143,6 +192,21 @@ object LoggerManager {
 
         // Уведомляем подписчиков
         notifyListeners(entry)
+    }
+
+    /**
+     * Обрезает details до detailsLimit символов.
+     * Если длина ≤ лимита — возвращает как есть.
+     * Если больше — обрезает и добавляет маркер.
+     */
+    private fun trimDetails(details: String?): String? {
+        if (details.isNullOrEmpty()) return null
+
+        return if (details.length > detailsLimit) {
+            details.take(detailsLimit) + "\n…[truncated]"
+        } else {
+            details
+        }
     }
 
     // ============================================================
@@ -190,6 +254,122 @@ object LoggerManager {
         prefs.edit { putBoolean(KEY_AUTO_SAVE, value) }
     }
 
+    fun getDetailsLimit(): Int = detailsLimit
+
+    fun setDetailsLimit(context: Context, value: Int) {
+        detailsLimit = value
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putInt(KEY_DETAILS_LIMIT, value) }
+    }
+
+    // ============================================================
+    // ФИЛЬТР: УРОВНИ
+    // ============================================================
+
+    /**
+     * Возвращает Set уровней, которые сейчас включены в фильтре.
+     * Если в prefs ничего нет — возвращает все уровни (дефолт).
+     */
+    fun getFilterLevels(context: Context): Set<LoggerLevelModel> {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_FILTER_LEVELS, null)
+            ?: return LoggerLevelModel.entries.toSet()
+
+        if (raw.isEmpty()) {
+            return emptySet()
+        }
+
+        return raw.split(",")
+            .mapNotNull { name ->
+                try {
+                    LoggerLevelModel.valueOf(name)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            .toSet()
+    }
+
+    /**
+     * Сохраняет набор включённых уровней.
+     */
+    fun setFilterLevels(context: Context, levels: Set<LoggerLevelModel>) {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = levels.joinToString(",") { it.name }
+        prefs.edit { putString(KEY_FILTER_LEVELS, raw) }
+    }
+
+    // ============================================================
+    // ФИЛЬТР: ТЕГИ
+    // ============================================================
+
+    /**
+     * Возвращает Set тегов, которые сейчас включены в фильтре.
+     * Если в prefs ничего нет — возвращает все теги (дефолт).
+     */
+    fun getFilterTags(context: Context): Set<LoggerTagModel> {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_FILTER_TAGS, null)
+            ?: return LoggerTagModel.entries.toSet()
+
+        if (raw.isEmpty()) {
+            return emptySet()
+        }
+
+        return raw.split(",")
+            .mapNotNull { name ->
+                try {
+                    LoggerTagModel.valueOf(name)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            .toSet()
+    }
+
+    /**
+     * Сохраняет набор включённых тегов.
+     */
+    fun setFilterTags(context: Context, tags: Set<LoggerTagModel>) {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = tags.joinToString(",") { it.name }
+        prefs.edit { putString(KEY_FILTER_TAGS, raw) }
+    }
+
+    // ============================================================
+    // ФИЛЬТР: ОБЩЕЕ
+    // ============================================================
+
+    /**
+     * Возвращает true, если оба фильтра (уровни и теги) в дефолтном
+     * состоянии (включены все значения).
+     */
+    fun isFilterDefault(context: Context): Boolean {
+        val levelsDefault = getFilterLevels(context) == LoggerLevelModel.entries.toSet()
+        val tagsDefault = getFilterTags(context) == LoggerTagModel.entries.toSet()
+        return levelsDefault && tagsDefault
+    }
+
+    /**
+     * Возвращает записи в порядке «новые → старые», отфильтрованные
+     * по текущему набору уровней И тегов.
+     */
+    fun getFilteredEntries(context: Context): List<LoggerEntryModel> {
+        val enabledLevels = getFilterLevels(context)
+        val enabledTags = getFilterTags(context)
+        val levelsDefault = enabledLevels == LoggerLevelModel.entries.toSet()
+        val tagsDefault = enabledTags == LoggerTagModel.entries.toSet()
+
+        // Быстрый путь — оба фильтра дефолтные
+        if (levelsDefault && tagsDefault) {
+            return buffer.toList().asReversed()
+        }
+
+        return buffer.toList()
+            .asReversed()
+            .filter { it.level in enabledLevels && it.tag in enabledTags }
+    }
+
     // ============================================================
     // ФАЙЛОВОЕ ХРАНИЛИЩЕ
     // ============================================================
@@ -199,9 +379,8 @@ object LoggerManager {
      *
      * Suspend-версия для вызова из UI (кнопка «Сохранить текущий лог»).
      *
-     * @param context контекст
-     * @param fileName имя файла без пути; если null — генерируется автоматически.
-     * @return имя сохранённого файла или null при ошибке.
+     * ВАЖНО: сохраняет ВЕСЬ буфер, независимо от активного фильтра —
+     * файл лога должен содержать полную историю.
      */
     suspend fun writeToFile(context: Context, fileName: String? = null): String? =
         withContext(Dispatchers.IO) {
@@ -228,10 +407,6 @@ object LoggerManager {
 
     /**
      * Синхронная версия для вызова из onDestroy (автосохранение при выходе).
-     * Внутри использует runBlocking через GlobalScope, потому что onDestroy
-     * уже не может ждать suspend-функцию.
-     *
-     * @return имя сохранённого файла или null.
      */
     fun writeToFileBlocking(context: Context): String? {
         return try {
@@ -252,9 +427,6 @@ object LoggerManager {
         }
     }
 
-    /**
-     * Возвращает список файлов логов, отсортированный по имени (новые — сверху).
-     */
     fun listLogFiles(context: Context): List<File> {
         return try {
             val storageManager = StorageManager(context.applicationContext)
@@ -268,9 +440,6 @@ object LoggerManager {
         }
     }
 
-    /**
-     * Удаляет файл лога по имени.
-     */
     suspend fun deleteLogFile(context: Context, fileName: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -285,8 +454,24 @@ object LoggerManager {
         }
 
     /**
+     * Удаляет все файлы логов из StorageDirectory.LOGS.
+     *
+     * @return true при успехе (файлы удалены или директория уже пуста).
+     */
+    suspend fun deleteAllLogFiles(context: Context): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val storageManager = StorageManager(context.applicationContext)
+            storageManager.removeAll(StorageDirectory.LOGS)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
      * Формирует содержимое файла из списка записей.
      * Формат: `[HH:mm:ss.SSS] LEVEL [TAG] message`
+     *
+     * Details (если есть) пишутся с отступом под сообщением.
      */
     private fun formatEntries(entries: List<LoggerEntryModel>): String {
         val formatter = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
@@ -300,14 +485,18 @@ object LoggerManager {
                 append(entry.tag.displayName)
                 append("] ")
                 appendLine(entry.message)
+
+                // Если есть details — добавляем с отступом
+                entry.details?.let { details ->
+                    details.lines().forEach { line ->
+                        append("    ")
+                        appendLine(line)
+                    }
+                }
             }
         }
     }
 
-    /**
-     * Генерирует имя файла по текущей дате и времени:
-     * `log_2026-10-11_14-30-00.log`
-     */
     private fun generateFileName(): String {
         val formatter = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
         return "log_${formatter.format(Date())}.log"

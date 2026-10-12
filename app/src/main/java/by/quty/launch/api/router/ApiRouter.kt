@@ -30,6 +30,12 @@ object ApiRouter {
      */
     private val activeMethods: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    /**
+     * Максимальная длина JSON параметров, попадающих в message.
+     * Полные параметры всегда доступны в details (см. LoggerManager).
+     */
+    private const val PARAMS_LOG_MAX_LENGTH = 120
+
     fun register(method: BaseApiMethod<*>) {
         methods[method.name] = method
     }
@@ -39,9 +45,15 @@ object ApiRouter {
 
         val method = methods[methodName]
             ?: run {
+                // ─── Лог: метод не найден ───
                 LoggerManager.warn(
                     LoggerTagModel.API,
-                    "execute: method not found: $methodName"
+                    "→ $methodName  params=${formatParams(params)}",
+                    details = params
+                )
+                LoggerManager.warn(
+                    LoggerTagModel.API,
+                    "← $methodName  error  method not found"
                 )
                 return json.encodeToString(
                     ApiResponse.serializer(Unit.serializer()),
@@ -52,19 +64,36 @@ object ApiRouter {
         // Помечаем метод как активный
         markMethodActive(methodName)
 
-        // Логируем вход — DEBUG, чтобы не спамить в INFO.
-        // Формат технический — не локализуется.
-        val paramsInfo = if (params.isNullOrEmpty()) "no params" else "${params.length} chars"
-        LoggerManager.debug(LoggerTagModel.API, "execute: $methodName ($paramsInfo)")
+        // ─── Лог: вход (message — краткая сводка, details — полный params) ───
+        LoggerManager.debug(
+            LoggerTagModel.API,
+            "→ $methodName  params=${formatParams(params)}",
+            details = params
+        )
 
         return try {
             val result = method.execute(params)
             val elapsed = System.currentTimeMillis() - startTime
-            LoggerManager.debug(LoggerTagModel.API, "$methodName OK (${elapsed}ms)")
+
+            // ─── Лог: успех (details — полный ответ) ───
+            val sizeInfo = formatResultSize(result)
+            LoggerManager.debug(
+                LoggerTagModel.API,
+                "← $methodName  ok  $sizeInfo  time=${elapsed}ms",
+                details = result
+            )
+
             result
         } catch (e: Exception) {
             val elapsed = System.currentTimeMillis() - startTime
-            LoggerManager.error(LoggerTagModel.API, "$methodName failed (${elapsed}ms)", e)
+
+            // ─── Лог: ошибка (details — сообщение исключения) ───
+            LoggerManager.error(
+                LoggerTagModel.API,
+                "← $methodName  error  ${e.message ?: e.javaClass.simpleName}  time=${elapsed}ms",
+                throwable = e,
+                details = e.stackTraceToString()
+            )
             throw e
         }
     }
@@ -96,5 +125,55 @@ object ApiRouter {
      */
     fun clearActiveMethods() {
         activeMethods.clear()
+    }
+
+    // ============================================================
+    // ХЕЛПЕРЫ ДЛЯ ЛОГИРОВАНИЯ
+    // ============================================================
+
+    /**
+     * Форматирует params для краткого message.
+     * - null / пустая строка → "null"
+     * - строка длиннее PARAMS_LOG_MAX_LENGTH → обрезается с «…»
+     *
+     * Полная версия всегда передаётся в details.
+     */
+    private fun formatParams(params: String?): String {
+        if (params.isNullOrEmpty()) return "null"
+
+        return if (params.length > PARAMS_LOG_MAX_LENGTH) {
+            params.take(PARAMS_LOG_MAX_LENGTH) + "…"
+        } else {
+            params
+        }
+    }
+
+    /**
+     * Форматирует размер результата для краткого message.
+     *
+     * Пытается распарсить JSON и определить:
+     * - если есть data как массив → "items=N"
+     * - иначе → "bytes=N"
+     * - если парсинг не удался → "bytes=N"
+     *
+     * Никогда не бросает — при любой ошибке возвращает "bytes=N".
+     */
+    private fun formatResultSize(result: String): String {
+        return try {
+            val bytes = result.toByteArray(Charsets.UTF_8).size
+
+            // Пытаемся понять, массив ли это
+            val element = json.parseToJsonElement(result)
+            val obj = element as? kotlinx.serialization.json.JsonObject
+            val data = obj?.get("data")
+
+            if (data is kotlinx.serialization.json.JsonArray) {
+                "items=${data.size}"
+            } else {
+                "bytes=$bytes"
+            }
+        } catch (_: Exception) {
+            "bytes=${result.toByteArray(Charsets.UTF_8).size}"
+        }
     }
 }

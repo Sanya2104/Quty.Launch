@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.webkit.WebView
 import androidx.core.content.edit
-import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.utilities.AppInfoHelper
@@ -83,12 +82,12 @@ class RecoveryManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.RECOVERY,
-                "buildExportJson OK: ${result.length} chars"
+                "RECOVERY.export  ok  bytes=${result.toByteArray(Charsets.UTF_8).size}"
             )
 
             result
         } catch (e: Exception) {
-            LoggerManager.error(LoggerTagModel.RECOVERY, "buildExportJson failed", e)
+            LoggerManager.error(LoggerTagModel.RECOVERY, "RECOVERY.export  error", e)
             null
         }
     }
@@ -252,12 +251,12 @@ class RecoveryManager(private val context: Context) {
 
                 LoggerManager.info(
                     LoggerTagModel.RECOVERY,
-                    "applyImport OK: ${data.size} prefs"
+                    "RECOVERY.import  ok  items=${data.size}"
                 )
 
                 true
             } catch (e: Exception) {
-                LoggerManager.error(LoggerTagModel.RECOVERY, "applyImport failed", e)
+                LoggerManager.error(LoggerTagModel.RECOVERY, "RECOVERY.import  error", e)
                 false
             }
         }
@@ -283,10 +282,7 @@ class RecoveryManager(private val context: Context) {
      */
     suspend fun fullReset(): Boolean = withContext(Dispatchers.IO) {
         try {
-            LoggerManager.warn(
-                LoggerTagModel.RECOVERY,
-                context.getString(R.string.log_recovery_reset_started)
-            )
+            LoggerManager.warn(LoggerTagModel.RECOVERY, "RECOVERY.reset  start")
 
             // 1. Очищаем SharedPreferences
             CoreConfig.RECOVERY_EXPORTED_PREFS.forEach { prefsName ->
@@ -332,14 +328,11 @@ class RecoveryManager(private val context: Context) {
                 }
             }
 
-            LoggerManager.info(
-                LoggerTagModel.RECOVERY,
-                context.getString(R.string.log_recovery_reset_done)
-            )
+            LoggerManager.info(LoggerTagModel.RECOVERY, "RECOVERY.reset  ok")
 
             true
         } catch (e: Exception) {
-            LoggerManager.error(LoggerTagModel.RECOVERY, "fullReset failed", e)
+            LoggerManager.error(LoggerTagModel.RECOVERY, "RECOVERY.reset  error", e)
             false
         }
     }

@@ -164,13 +164,13 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                     LoggerManager.warn(
                         LoggerTagModel.WEBVIEW,
-                        "handleQutyScheme: file not found: $path"
+                        "WEBVIEW.quty  file not found  $path"
                     )
                     return null
                 } catch (e: Exception) {
                     LoggerManager.warn(
                         LoggerTagModel.WEBVIEW,
-                        "handleQutyScheme failed: $url",
+                        "WEBVIEW.quty  error  ${e.message ?: e.javaClass.simpleName}",
                         e
                     )
                     return null
@@ -245,7 +245,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 try {
                     LoggerManager.debug(
                         LoggerTagModel.WEBVIEW,
-                        "open external link: $url"
+                        "WEBVIEW.external  $url"
                     )
                     val intent = android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
@@ -274,7 +274,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
                 LoggerManager.error(
                     LoggerTagModel.WEBVIEW,
-                    "onReceivedError: $errorCode $description ($url)"
+                    "WEBVIEW.error  code=$errorCode  $description"
                 )
 
                 // Если это страница оболочки (не ресурс) — пробуем перезагрузить
@@ -293,7 +293,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
             ): Boolean {
                 LoggerManager.error(
                     LoggerTagModel.WEBVIEW,
-                    "onRenderProcessGone: crashed=${detail?.didCrash()}"
+                    "WEBVIEW.crash  crashed=${detail?.didCrash()}"
                 )
 
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -347,14 +347,14 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 if (errorRetryCount > MAX_RETRY_COUNT) {
                     LoggerManager.warn(
                         LoggerTagModel.WEBVIEW,
-                        "retry limit reached: $url (attempts=$errorRetryCount)"
+                        "WEBVIEW.retry_limit  attempts=$errorRetryCount"
                     )
                     return
                 }
 
                 LoggerManager.warn(
                     LoggerTagModel.WEBVIEW,
-                    "retry #$errorRetryCount: $url"
+                    "WEBVIEW.retry  attempt=$errorRetryCount"
                 )
 
                 // Задержка перед перезагрузкой
@@ -382,7 +382,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
         LoggerManager.info(
             LoggerTagModel.WEBVIEW,
-            "loadShell: $shellName (asset=$isAsset)"
+            "WEBVIEW.load  $shellName  asset=$isAsset"
         )
 
         val url = if (isAsset) {

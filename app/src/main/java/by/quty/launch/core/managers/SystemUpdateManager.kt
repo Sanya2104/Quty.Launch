@@ -102,7 +102,7 @@ class SystemUpdateManager(private val context: Context) {
      */
     suspend fun checkForUpdates(): UpdateCheckResult = withContext(Dispatchers.IO) {
         try {
-            LoggerManager.info(LoggerTagModel.UPDATE, "checkForUpdates: start")
+            LoggerManager.info(LoggerTagModel.UPDATE, "UPDATE.check  start")
 
             val connection = URL(versionUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
@@ -121,16 +121,12 @@ class SystemUpdateManager(private val context: Context) {
                     deleteOldApkFiles()
                     LoggerManager.info(
                         LoggerTagModel.UPDATE,
-                        context.getString(R.string.log_update_up_to_date)
+                        "UPDATE.check  up-to-date"
                     )
                 } else {
                     LoggerManager.info(
                         LoggerTagModel.UPDATE,
-                        context.getString(
-                            R.string.log_update_available,
-                            versionInfo.version,
-                            versionInfo.versionCode.toString()
-                        )
+                        "UPDATE.check  available  ${versionInfo.version} (code=${versionInfo.versionCode})"
                     )
                 }
 
@@ -141,7 +137,7 @@ class SystemUpdateManager(private val context: Context) {
             } else {
                 LoggerManager.warn(
                     LoggerTagModel.UPDATE,
-                    "checkForUpdates: HTTP ${connection.responseCode}"
+                    "UPDATE.check  error  HTTP ${connection.responseCode}"
                 )
                 UpdateCheckResult(
                     hasUpdate = false,
@@ -155,7 +151,7 @@ class SystemUpdateManager(private val context: Context) {
         } catch (_: SocketTimeoutException) {
             UpdateCheckResult(hasUpdate = false, error = context.getString(R.string.no_internet_connection))
         } catch (e: Exception) {
-            LoggerManager.error(LoggerTagModel.UPDATE, "checkForUpdates failed", e)
+            LoggerManager.error(LoggerTagModel.UPDATE, "UPDATE.check  error", e)
             val errorMessage = when {
                 e.message?.contains("Network") == true -> context.getString(R.string.no_internet_connection)
                 e.message?.contains("Unable to resolve host") == true -> context.getString(R.string.no_internet_connection)
@@ -304,7 +300,7 @@ class SystemUpdateManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.UPDATE,
-                "downloadApk: start: ${versionInfo.version}"
+                "UPDATE.download  start  ${versionInfo.version}"
             )
 
             // Проверяем, существует ли уже скачанный APK
@@ -385,7 +381,7 @@ class SystemUpdateManager(private val context: Context) {
             if (!success) {
                 LoggerManager.error(
                     LoggerTagModel.UPDATE,
-                    "downloadApk: save failed: ${versionInfo.version}"
+                    "UPDATE.download  error  ${versionInfo.version}  save failed"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
@@ -403,7 +399,7 @@ class SystemUpdateManager(private val context: Context) {
             if (uri == null) {
                 LoggerManager.error(
                     LoggerTagModel.UPDATE,
-                    "downloadApk: uri null: ${versionInfo.version}"
+                    "UPDATE.download  error  ${versionInfo.version}  uri null"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_error))
@@ -413,7 +409,7 @@ class SystemUpdateManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.UPDATE,
-                "downloadApk OK: ${versionInfo.version}"
+                "UPDATE.download  ok  ${versionInfo.version}"
             )
 
             withContext(Dispatchers.Main) {
@@ -424,7 +420,7 @@ class SystemUpdateManager(private val context: Context) {
         } catch (e: Exception) {
             LoggerManager.error(
                 LoggerTagModel.UPDATE,
-                "downloadApk failed: ${versionInfo.version}",
+                "UPDATE.download  error  ${versionInfo.version}  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
             withContext(Dispatchers.Main) {
@@ -467,7 +463,7 @@ class SystemUpdateManager(private val context: Context) {
     @Suppress("UNUSED_PARAMETER")
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
-            LoggerManager.info(LoggerTagModel.UPDATE, "installApk: start")
+            LoggerManager.info(LoggerTagModel.UPDATE, "UPDATE.install  start")
 
             // Проверяем разрешение на установку (для Android 8+)
             if (!context.packageManager.canRequestPackageInstalls()) {
@@ -490,7 +486,7 @@ class SystemUpdateManager(private val context: Context) {
             // Автоочистка произойдёт в cleanupOldDownloadMarks() при следующей проверке.
 
         } catch (e: Exception) {
-            LoggerManager.error(LoggerTagModel.UPDATE, "installApk failed", e)
+            LoggerManager.error(LoggerTagModel.UPDATE, "UPDATE.install  error", e)
             Toast.makeText(
                 context,
                 context.getString(R.string.update_install_failed, e.message),

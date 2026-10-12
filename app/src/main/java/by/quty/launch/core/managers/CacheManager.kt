@@ -129,7 +129,7 @@ object CacheManager {
     fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
-        LoggerManager.debug(LoggerTagModel.CORE, "invalidateCache")
+        LoggerManager.debug(LoggerTagModel.CORE, "CACHE.invalidate")
     }
 
     /**
@@ -189,7 +189,7 @@ object CacheManager {
             saveToDisk(storageManager, cached)
         }
 
-        LoggerManager.debug(LoggerTagModel.CORE, "saveApps: ${apps.size} apps cached")
+        LoggerManager.debug(LoggerTagModel.CORE, "CACHE.save  items=${apps.size}")
     }
 
     /**
@@ -263,6 +263,6 @@ object CacheManager {
             }
         }
 
-        LoggerManager.info(LoggerTagModel.CORE, "clearCache")
+        LoggerManager.info(LoggerTagModel.CORE, "CACHE.clear")
     }
 }

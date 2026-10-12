@@ -54,7 +54,7 @@ class ShellUpdateManager(private val context: Context) {
 
             LoggerManager.info(
                 LoggerTagModel.UPDATE,
-                "checkShellUpdate: ${shell.name}"
+                "UPDATE.shell.check  start  ${shell.name}"
             )
 
             val connection = URL(url).openConnection() as HttpURLConnection
@@ -77,10 +77,14 @@ class ShellUpdateManager(private val context: Context) {
                 if (UpdateHelper.isNewerVersion(repoInfo.version, currentVersion)) {
                     LoggerManager.info(
                         LoggerTagModel.UPDATE,
-                        "shell update available: ${shell.name} -> ${repoInfo.version}"
+                        "UPDATE.shell.check  available  ${shell.name} → ${repoInfo.version}"
                     )
                     repoInfo
                 } else {
+                    LoggerManager.info(
+                        LoggerTagModel.UPDATE,
+                        "UPDATE.shell.check  up-to-date  ${shell.name}"
+                    )
                     null
                 }
             } else {
@@ -89,7 +93,7 @@ class ShellUpdateManager(private val context: Context) {
         } catch (e: Exception) {
             LoggerManager.warn(
                 LoggerTagModel.UPDATE,
-                "checkShellUpdate failed: ${shell.name}",
+                "UPDATE.shell.check  error  ${shell.name}  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
             null
@@ -137,7 +141,7 @@ class ShellUpdateManager(private val context: Context) {
         try {
             LoggerManager.info(
                 LoggerTagModel.UPDATE,
-                "downloadShellUpdate: start: ${repoInfo.name}"
+                "UPDATE.shell.download  start  ${repoInfo.name}"
             )
 
             // Создаём временный файл для скачивания
@@ -208,7 +212,7 @@ class ShellUpdateManager(private val context: Context) {
             if (success) {
                 LoggerManager.info(
                     LoggerTagModel.UPDATE,
-                    "downloadShellUpdate OK: ${repoInfo.name}"
+                    "UPDATE.shell.download  ok  ${repoInfo.name}"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onSuccess()
@@ -217,7 +221,7 @@ class ShellUpdateManager(private val context: Context) {
             } else {
                 LoggerManager.error(
                     LoggerTagModel.UPDATE,
-                    "downloadShellUpdate: save failed: ${repoInfo.name}"
+                    "UPDATE.shell.download  error  ${repoInfo.name}  save failed"
                 )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.shell_install_error))
@@ -229,7 +233,7 @@ class ShellUpdateManager(private val context: Context) {
             tempFile?.delete()
             LoggerManager.error(
                 LoggerTagModel.UPDATE,
-                "downloadShellUpdate failed: ${repoInfo.name}",
+                "UPDATE.shell.download  error  ${repoInfo.name}  ${e.message ?: e.javaClass.simpleName}",
                 e
             )
             withContext(Dispatchers.Main) {

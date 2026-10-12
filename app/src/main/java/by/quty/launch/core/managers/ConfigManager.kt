@@ -33,14 +33,12 @@ class ConfigManager(context: Context) {
         return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
 
-    // Сохранение активной оболочки
+    // Сохранение активной оболочки.
+    //
+    // ВАЖНО: здесь НЕ логируем — это низкоуровневый сеттер,
+    // логирование смены оболочки делает ShellManager (тег SHELL).
     fun setActiveShell(shellId: String) {
-        val previous = getActiveShell()
         prefs.edit { putString("active_shell", shellId) }
-        LoggerManager.info(
-            LoggerTagModel.CONFIG,
-            "setActiveShell: $previous -> $shellId"
-        )
     }
 
     // Получение ориентации
@@ -50,8 +48,14 @@ class ConfigManager(context: Context) {
 
     // Сохранение ориентации
     fun setOrientation(orientation: String) {
+        val previous = getOrientation()
+        if (previous == orientation) return
+
         prefs.edit { putString("orientation", orientation) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setOrientation: $orientation")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.orientation  $previous → $orientation"
+        )
     }
 
     // Получение полноэкранного режима
@@ -61,8 +65,14 @@ class ConfigManager(context: Context) {
 
     // Сохранение полноэкранного режима
     fun setFullscreenEnabled(enabled: Boolean) {
+        val previous = isFullscreenEnabled()
+        if (previous == enabled) return
+
         prefs.edit { putBoolean("fullscreen", enabled) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setFullscreenEnabled: $enabled")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.fullscreen  $previous → $enabled"
+        )
     }
 
     // Получение строгого режима
@@ -72,8 +82,14 @@ class ConfigManager(context: Context) {
 
     // Сохранение строгого режима
     fun setStrictModeEnabled(enabled: Boolean) {
+        val previous = prefs.getBoolean("strict_mode", getDefaultStrictMode())
+        if (previous == enabled) return
+
         prefs.edit { putBoolean("strict_mode", enabled) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setStrictModeEnabled: $enabled")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.strict  $previous → $enabled"
+        )
     }
 
     // ============================================================
@@ -85,8 +101,14 @@ class ConfigManager(context: Context) {
     }
 
     fun setColorScheme(schemeId: String) {
+        val previous = getColorScheme()
+        if (previous == schemeId) return
+
         prefs.edit { putString("color_scheme", schemeId) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setColorScheme: $schemeId")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.color  $previous → $schemeId"
+        )
     }
 
     fun getDefaultColorScheme(): String {
@@ -121,8 +143,14 @@ class ConfigManager(context: Context) {
      * @param mode "light", "dark" или "system"
      */
     fun setThemeMode(mode: String) {
+        val previous = getThemeMode()
+        if (previous == mode) return
+
         prefs.edit { putString(KEY_THEME_MODE, mode) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setThemeMode: $mode")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.theme  $previous → $mode"
+        )
     }
 
     /**
@@ -211,8 +239,15 @@ class ConfigManager(context: Context) {
             CoreConfig.LANGUAGE_RU -> CoreConfig.LANGUAGE_RU
             else -> CoreConfig.LANGUAGE_EN
         }
+
+        val previous = getLanguage()
+        if (previous == normalized) return
+
         prefs.edit { putString(KEY_LANGUAGE, normalized) }
-        LoggerManager.info(LoggerTagModel.CONFIG, "setLanguage: $normalized")
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.language  $previous → $normalized"
+        )
     }
 
     /**

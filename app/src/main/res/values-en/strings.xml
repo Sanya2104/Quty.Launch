@@ -38,11 +38,14 @@
 
     <!-- Action bar -->
     <string name="logger_counter_format" formatted="false">%1$d / %2$d</string>
+    <string name="logger_action_save">Save log</string>
     <string name="logger_action_clear">Clear log</string>
     <string name="logger_action_copy">Copy all</string>
     <string name="logger_action_scroll_bottom">Scroll down</string>
     <string name="logger_copy_success" formatted="false">Copied %d entries</string>
     <string name="logger_copy_empty">Nothing to copy</string>
+    <string name="logger_action_clear_empty">Buffer is empty</string>
+    <string name="logger_action_clear_success">Buffer cleared</string>
 
     <!-- Log file dialog -->
     <string name="logger_file_dialog_title">Log file</string>
@@ -65,8 +68,32 @@
     <string name="logger_settings_save_current">Save current log</string>
     <string name="logger_settings_save_current_desc">Write buffer to file in logs folder</string>
 
-    <string name="logger_settings_clear_buffer">Clear buffer</string>
-    <string name="logger_settings_clear_buffer_desc">Delete all entries from memory</string>
+    <string name="logger_settings_delete_files">Delete all log files</string>
+    <string name="logger_settings_delete_files_desc">Delete all .log files from logs folder</string>
+    <string name="logger_settings_delete_files_empty">No files to delete</string>
+    <string name="logger_settings_delete_files_success">All log files deleted</string>
+    <string name="logger_settings_delete_files_error">Failed to delete files</string>
+
+    <!-- Display section -->
+    <string name="logger_settings_section_display">Display</string>
+    <string name="logger_settings_details_limit">Details limit</string>
+    <string name="logger_settings_details_limit_changed" formatted="false">Limit: %d chars</string>
+
+    <!-- Details dialog -->
+    <string name="logger_details_title">Entry details</string>
+    <string name="logger_details_copy">Copy</string>
+
+    <!-- Filter -->
+    <string name="logger_action_filter">Filter</string>
+    <string name="logger_filter_title">Filter</string>
+    <string name="logger_filter_section_levels">Levels</string>
+    <string name="logger_filter_section_tags">Tags</string>
+    <string name="logger_filter_reset">Reset</string>
+    <string name="logger_filter_apply">Apply</string>
+    <string name="logger_filter_applied" formatted="false">Levels: %1$d, tags: %2$d</string>
+    <string name="logger_filter_applied_levels_only" formatted="false">Levels: %d (all tags)</string>
+    <string name="logger_filter_applied_tags_only" formatted="false">Tags: %d (all levels)</string>
+    <string name="logger_filter_applied_none">Nothing selected</string>
 
     <!-- Toast messages -->
     <string name="logger_files_copied">Copied to clipboard</string>
@@ -78,38 +105,6 @@
     <string name="logger_settings_save_empty">No entries to save</string>
     <string name="logger_settings_save_success" formatted="false">Log saved: %s</string>
     <string name="logger_settings_save_error">Failed to save log</string>
-    <string name="logger_settings_clear_empty">Buffer is empty</string>
-    <string name="logger_settings_clear_success">Buffer cleared</string>
-
-    <!-- ===== LOGGER — event messages ===== -->
-
-    <!-- CORE -->
-    <string name="log_core_initialized">Core initialized</string>
-    <string name="log_core_main_created">Main screen opened</string>
-    <string name="log_core_welcome_created">Welcome screen opened</string>
-    <string name="log_core_onboarding_completed">Onboarding completed</string>
-    <string name="log_core_language_changed">Language changed: %1$s → %2$s</string>
-    <string name="log_core_cache_cleared">Apps cache cleared</string>
-
-    <!-- SHELL -->
-    <string name="log_shell_changed">Shell changed: %1$s → %2$s</string>
-    <string name="log_shell_restored_default">Active shell not found, restored default: %s</string>
-    <string name="log_shell_deleted">Shell deleted: %s</string>
-
-    <!-- UPDATE -->
-    <string name="log_update_available">Update available: %1$s (code %2$s)</string>
-    <string name="log_update_up_to_date">No updates</string>
-
-    <!-- STORE -->
-    <string name="log_store_loaded">Store loaded: %d shells</string>
-
-    <!-- RECOVERY -->
-    <string name="log_recovery_reset_started">Full reset: start</string>
-    <string name="log_recovery_reset_done">Full reset done</string>
-
-    <!-- TERMINAL -->
-    <string name="log_terminal_reset_onboarding">Onboarding reset from terminal</string>
-    <string name="log_terminal_restart">Restart from terminal</string>
 
     <!-- ============================================================ -->
     <!-- ===== SETTINGS — MENU & TITLES ============================= -->
