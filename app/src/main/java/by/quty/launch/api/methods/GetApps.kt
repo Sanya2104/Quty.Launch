@@ -86,6 +86,16 @@ class GetApps(
         // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
+        // Проверяем DevMode — без него Терминал и Логгер скрыты
+        val developerPrefs = context.getSharedPreferences(
+            PREFS_DEVELOPER, Context.MODE_PRIVATE
+        )
+        val devMode = developerPrefs.getBoolean(KEY_DEVELOPER_MODE, false)
+
+        // Флаги отображения Терминала и Логгера в списке приложений
+        val showTerminal = devMode && developerPrefs.getBoolean(KEY_SHOW_TERMINAL, false)
+        val showLogger = devMode && developerPrefs.getBoolean(KEY_SHOW_LOGGER, false)
+
         // 1. Настройки Quty.Launch
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
@@ -112,31 +122,35 @@ class GetApps(
             )
         )
 
-        // 3. Терминал
-        val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
-        val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
+        // 3. Терминал — только если включён DevMode и флаг showTerminal
+        if (showTerminal) {
+            val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
+            val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
 
-        customApps.add(
-            AppInfo(
-                name = context.getString(R.string.api_getapps_terminal_name),
-                packageName = ApiConfig.TERMINAL_PACKAGE,
-                isCustom = true,
-                iconBase64 = terminalIconBase64
+            customApps.add(
+                AppInfo(
+                    name = context.getString(R.string.api_getapps_terminal_name),
+                    packageName = ApiConfig.TERMINAL_PACKAGE,
+                    isCustom = true,
+                    iconBase64 = terminalIconBase64
+                )
             )
-        )
+        }
 
-        // 4. Логгер
-        val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
-        val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
+        // 4. Логгер — только если включён DevMode и флаг showLogger
+        if (showLogger) {
+            val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
+            val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
 
-        customApps.add(
-            AppInfo(
-                name = context.getString(R.string.api_getapps_logger_name),
-                packageName = ApiConfig.LOGGER_PACKAGE,
-                isCustom = true,
-                iconBase64 = loggerIconBase64
+            customApps.add(
+                AppInfo(
+                    name = context.getString(R.string.api_getapps_logger_name),
+                    packageName = ApiConfig.LOGGER_PACKAGE,
+                    isCustom = true,
+                    iconBase64 = loggerIconBase64
+                )
             )
-        )
+        }
 
         // Объединяем: сначала кастомные, потом обычные
         customApps + realApps
@@ -166,5 +180,13 @@ class GetApps(
         } catch (_: Exception) {
             null
         }
+    }
+
+    companion object {
+        // SharedPreferences с настройками DevMode
+        private const val PREFS_DEVELOPER = "developer_prefs"
+        private const val KEY_DEVELOPER_MODE = "developer_mode"
+        private const val KEY_SHOW_TERMINAL = "show_terminal_in_apps"
+        private const val KEY_SHOW_LOGGER = "show_logger_in_apps"
     }
 }

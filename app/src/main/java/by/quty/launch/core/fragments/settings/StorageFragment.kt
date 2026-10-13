@@ -442,6 +442,15 @@ class StorageFragment : Fragment() {
 
             row.alpha = if (isEmpty) 0.5f else 1f
 
+            // Клик по всей строке — переключает чекбокс.
+            // Сам чекбокс некликабельный (isClickable=false в XML),
+            // поэтому двойного переключения не будет.
+            if (!isEmpty) {
+                row.setOnClickListener {
+                    cb.isChecked = !cb.isChecked
+                }
+            }
+
             checkboxesContainer.addView(row)
             checkboxes[category.id] = cb
         }

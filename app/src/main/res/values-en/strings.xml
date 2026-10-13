@@ -485,8 +485,13 @@
 
     <!-- Sections -->
     <string name="dev_section_shell">Shell info</string>
+    <string name="dev_section_apps">Applications</string>
     <string name="dev_section_data">Data management</string>
     <string name="dev_section_tools">Tools</string>
+
+    <!-- Apps: Terminal and Logger visibility in app list -->
+    <string name="dev_show_terminal">Show Terminal</string>
+    <string name="dev_show_logger">Show Logger</string>
 
     <!-- WebView -->
     <string name="dev_webview_clear_cache">Clear WebView cache</string>

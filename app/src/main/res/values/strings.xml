@@ -485,8 +485,13 @@
 
     <!-- Секции -->
     <string name="dev_section_shell">Информация об оболочке</string>
+    <string name="dev_section_apps">Приложения</string>
     <string name="dev_section_data">Управление данными</string>
     <string name="dev_section_tools">Инструменты</string>
+
+    <!-- Приложения: видимость Терминала и Логгера в списке -->
+    <string name="dev_show_terminal">Показывать Терминал</string>
+    <string name="dev_show_logger">Показывать Логгер</string>
 
     <!-- WebView -->
     <string name="dev_webview_clear_cache">Очистить кэш WebView</string>

@@ -15,12 +15,14 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StorageManager
@@ -54,6 +56,10 @@ class DeveloperFragment : Fragment() {
     private lateinit var shellManifestRow: View
     private lateinit var shellReloadRow: View
 
+    // UI — Приложения (видимость Терминала и Логгера)
+    private lateinit var showTerminalSwitch: SwitchCompat
+    private lateinit var showLoggerSwitch: SwitchCompat
+
     // UI — Данные
     private lateinit var clearWebViewCacheRow: View
     private lateinit var resetOnboardingRow: View
@@ -63,6 +69,11 @@ class DeveloperFragment : Fragment() {
 
     // JSON парсер для manifest.json
     private val json = Json { prettyPrint = true }
+
+    // SharedPreferences с настройками DevMode
+    private val devPrefs by lazy {
+        requireContext().getSharedPreferences(PREFS_DEVELOPER, Context.MODE_PRIVATE)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -87,11 +98,14 @@ class DeveloperFragment : Fragment() {
         // Инициализация UI-ссылок
         shellManifestRow = view.findViewById(R.id.dev_shell_manifest_row)
         shellReloadRow = view.findViewById(R.id.dev_shell_reload_row)
+        showTerminalSwitch = view.findViewById(R.id.dev_show_terminal_switch)
+        showLoggerSwitch = view.findViewById(R.id.dev_show_logger_switch)
         clearWebViewCacheRow = view.findViewById(R.id.dev_clear_webview_cache_row)
         resetOnboardingRow = view.findViewById(R.id.dev_reset_onboarding_row)
         restartAppRow = view.findViewById(R.id.dev_restart_app_row)
 
         setupShellSection()
+        setupAppsSection()
         setupDataSection()
         setupToolsSection()
     }
@@ -218,6 +232,53 @@ class DeveloperFragment : Fragment() {
         } catch (_: Exception) {
             null
         }
+    }
+
+    // ============================================================
+    // СЕКЦИЯ 1.5: ПРИЛОЖЕНИЯ (ВИДИМОСТЬ ТЕРМИНАЛА И ЛОГГЕРА)
+    // ============================================================
+
+    /**
+     * Настраивает два переключателя — отображение Терминала и Логгера
+     * в списке приложений, который возвращает API-метод GetApps.
+     *
+     * Изменение любого из переключателей:
+     * - сохраняет флаг в developer_prefs;
+     * - инвалидирует кэш приложений (CacheManager.invalidateCache());
+     * - помечает SettingsActivity, что нужен перезапуск (при выходе —
+     *   стандартный диалог "Применить параметры").
+     *
+     * Само отображение в списке приложений регулируется на стороне
+     * GetApps: он проверяет DevMode + соответствующий флаг.
+     */
+    private fun setupAppsSection() {
+        showTerminalSwitch.isChecked = devPrefs.getBoolean(KEY_SHOW_TERMINAL, false)
+        showLoggerSwitch.isChecked = devPrefs.getBoolean(KEY_SHOW_LOGGER, false)
+
+        showTerminalSwitch.setOnCheckedChangeListener { _, isChecked ->
+            devPrefs.edit { putBoolean(KEY_SHOW_TERMINAL, isChecked) }
+            onAppVisibilityChanged()
+        }
+
+        showLoggerSwitch.setOnCheckedChangeListener { _, isChecked ->
+            devPrefs.edit { putBoolean(KEY_SHOW_LOGGER, isChecked) }
+            onAppVisibilityChanged()
+        }
+    }
+
+    /**
+     * Общая реакция на смену видимости приложений:
+     * инвалидация кэша + пометка о необходимости перезапуска.
+     *
+     * Без перезапуска MainActivity не перезапросит список приложений
+     * у оболочки — и изменения не применятся до следующего запуска.
+     */
+    private fun onAppVisibilityChanged() {
+        // Сбрасываем кэш приложений — при следующем GetApps соберётся заново
+        CacheManager.invalidateCache()
+
+        // Сообщаем SettingsActivity о необходимости перезапуска
+        (activity as? SettingsActivity)?.markRestartRequired()
     }
 
     // ============================================================
@@ -412,5 +473,12 @@ class DeveloperFragment : Fragment() {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         requireActivity().finish()
+    }
+
+    companion object {
+        // SharedPreferences с настройками DevMode
+        private const val PREFS_DEVELOPER = "developer_prefs"
+        private const val KEY_SHOW_TERMINAL = "show_terminal_in_apps"
+        private const val KEY_SHOW_LOGGER = "show_logger_in_apps"
     }
 }

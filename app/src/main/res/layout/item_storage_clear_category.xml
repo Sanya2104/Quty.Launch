@@ -5,6 +5,11 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
+    android:background="@drawable/bg_item_rounded"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingStart="@dimen/spacing_s"
+    android:paddingEnd="@dimen/spacing_s"
     android:paddingTop="@dimen/spacing_s"
     android:paddingBottom="@dimen/spacing_s">
 
@@ -13,7 +18,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:minWidth="0dp"
-        android:minHeight="0dp" />
+        android:minHeight="0dp"
+        android:clickable="false"
+        android:focusable="false" />
 
     <TextView
         android:id="@+id/clear_category_title"
