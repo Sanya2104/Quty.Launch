@@ -3,6 +3,7 @@ package by.quty.launch.core.managers
 
 import android.content.Context
 import android.content.res.Configuration
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import by.quty.launch.configs.CoreConfig
@@ -203,6 +204,68 @@ class ConfigManager(context: Context) {
     }
 
     // ============================================================
+    // АНИМАЦИИ
+    // ============================================================
+
+    /**
+     * Пользовательская настройка: хочет ли пользователь анимации.
+     * НЕ учитывает системный флаг ANIMATOR_DURATION_SCALE.
+     */
+    fun isAnimationsEnabled(): Boolean {
+        return prefs.getBoolean(KEY_ANIMATIONS_ENABLED, getDefaultAnimationsEnabled())
+    }
+
+    /**
+     * Сохраняет пользовательскую настройку анимаций.
+     */
+    fun setAnimationsEnabled(enabled: Boolean) {
+        val previous = isAnimationsEnabled()
+        if (previous == enabled) return
+
+        prefs.edit { putBoolean(KEY_ANIMATIONS_ENABLED, enabled) }
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.animations  $previous → $enabled"
+        )
+    }
+
+    /**
+     * Значение по умолчанию для пользовательской настройки анимаций.
+     */
+    fun getDefaultAnimationsEnabled(): Boolean = CoreConfig.DEFAULT_ANIMATIONS_ENABLED
+
+    /**
+     * Системный флаг: включены ли анимации на уровне ОС.
+     * Читает Settings.Global.ANIMATOR_DURATION_SCALE.
+     *
+     * Возвращает true, если не удалось прочитать (fail-safe: не отключаем
+     * анимации из-за ошибки доступа к Settings).
+     */
+    fun isSystemAnimationEnabled(): Boolean {
+        return try {
+            val scale = Settings.Global.getFloat(
+                appContext.contentResolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE,
+                1f
+            )
+            scale > 0f
+        } catch (_: Exception) {
+            true
+        }
+    }
+
+    /**
+     * Фактическое состояние анимаций: пользовательская настройка
+     * И системный флаг.
+     *
+     * Используется в BaseActivity (overridePendingTransition) и для
+     * передачи в WebView через CSS-инжект.
+     */
+    fun isEffectiveAnimationsEnabled(): Boolean {
+        return isAnimationsEnabled() && isSystemAnimationEnabled()
+    }
+
+    // ============================================================
     // ЯЗЫК
     // ============================================================
 
@@ -264,6 +327,7 @@ class ConfigManager(context: Context) {
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_LANGUAGE = "app_language"
         private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
+        private const val KEY_ANIMATIONS_ENABLED = "animations_enabled"
     }
 
 }

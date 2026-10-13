@@ -218,6 +218,11 @@
     <string name="settings_personalization_open_store">More shells in Store</string>
     <string name="settings_personalization_color_scheme_title">Color scheme</string>
 
+    <!-- Animations -->
+    <string name="settings_personalization_animations_title">Animations</string>
+    <string name="settings_personalization_animations">Enable animations</string>
+    <string name="settings_personalization_animations_system_disabled">System animations are disabled</string>
+
     <!-- Shell info dialog -->
     <string name="settings_personalization_shell_info_title">Shell information</string>
     <string name="settings_personalization_shell_info_name">Name</string>

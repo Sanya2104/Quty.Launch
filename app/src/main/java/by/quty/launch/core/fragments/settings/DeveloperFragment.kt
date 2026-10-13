@@ -19,6 +19,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
+import by.quty.launch.BaseActivity
 import by.quty.launch.MainActivity
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
@@ -37,11 +38,12 @@ import java.util.zip.ZipFile
  * Доступен только в DevMode (флаг в developer_prefs).
  * Содержит:
  * - Секция "Оболочка": просмотр manifest.json (с копированием), перезагрузка оболочки
+ * - Секция "Приложения": переключатели отображения Терминала и Логгера в списке приложений
  * - Секция "Управление данными": очистка кэша WebView, сброс онбординга
  * - Секция "Инструменты": перезапуск приложения
  *
  * Действия, требующие перезапуска приложения (reload shell, clear WebView cache,
- * reset onboarding), помечаются через
+ * reset onboarding, смена видимости приложений), помечаются через
  * SettingsActivity.markRestartRequired() — при выходе из настроек пользователю
  * будет предложен диалог перезапуска.
  */
@@ -467,12 +469,25 @@ class DeveloperFragment : Fragment() {
 
     /**
      * Перезапускает приложение — открывает MainActivity с флагом CLEAR_TASK.
+     *
+     * Если анимации отключены (в настройках Персонализации), переход
+     * выполняется без анимации — через BaseActivity.startActivityAnimated.
+     * Фрагмент не является наследником BaseActivity, поэтому вызываем
+     * метод через (activity as? BaseActivity).
      */
     private fun restartApp() {
         val intent = Intent(requireContext(), MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-        requireActivity().finish()
+
+        val baseActivity = activity as? BaseActivity
+        if (baseActivity != null) {
+            baseActivity.startActivityAnimated(intent)
+            baseActivity.finishAnimated()
+        } else {
+            // Fallback — на случай, если фрагмент вдруг окажется не в BaseActivity
+            startActivity(intent)
+            requireActivity().finish()
+        }
     }
 
     companion object {

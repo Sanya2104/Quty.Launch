@@ -45,6 +45,7 @@ class GetCoreState(
             orientation = configManager.getOrientation(),
             fullscreen = configManager.isFullscreenEnabled(),
             strictMode = configManager.isStrictModeEnabled(),
+            animationsEnabled = configManager.isEffectiveAnimationsEnabled(),
             colorScheme = ColorSchemeInfo(
                 id = configManager.getColorScheme(),
                 primary = configManager.getSchemePrimaryColor(),

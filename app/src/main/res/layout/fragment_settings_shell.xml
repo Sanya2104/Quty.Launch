@@ -190,6 +190,69 @@
             android:layout_marginEnd="@dimen/spacing_s"
             android:clipToPadding="false" />
 
+        <!-- ============================================================ -->
+        <!-- ===== АНИМАЦИИ ============================================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/settings_personalization_animations_title" />
+
+        <!-- Подсказка: системные анимации отключены -->
+        <TextView
+            android:id="@+id/animations_system_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:background="@drawable/bg_orientation_lock_hint"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginBottom="@dimen/spacing_s"
+            style="@style/Text.Body"
+            android:text="@string/settings_personalization_animations_system_disabled"
+            android:textColor="@color/status_warning" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_l"
+            android:paddingBottom="@dimen/spacing_l">
+
+            <ImageView
+                android:layout_width="@dimen/icon_small"
+                android:layout_height="@dimen/icon_small"
+                android:src="@drawable/ic_animation"
+                android:contentDescription="@string/empty"
+                android:layout_marginEnd="@dimen/spacing_m" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/animations_switch"
+                style="@style/Text.Body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:minHeight="0dp"
+                android:text="@string/settings_personalization_animations"
+                tools:ignore="VisualLintButtonSize" />
+
+        </LinearLayout>
+
         <!-- Отступ снизу -->
         <View
             android:layout_width="match_parent"

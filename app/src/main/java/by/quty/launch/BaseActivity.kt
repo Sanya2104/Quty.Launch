@@ -3,6 +3,7 @@ package by.quty.launch
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
@@ -79,8 +80,8 @@ abstract class BaseActivity : AppCompatActivity() {
 
         if (!onboardingCompleted && this !is WelcomeActivity) {
             // Если онбординг не пройден, а мы не в WelcomeActivity — перенаправляем
-            val intent = android.content.Intent(this, WelcomeActivity::class.java)
-            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+            val intent = Intent(this, WelcomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
             return
@@ -124,6 +125,50 @@ abstract class BaseActivity : AppCompatActivity() {
             else -> R.style.Theme_QutyLaunch_Teal
         }
         setTheme(themeRes)
+    }
+
+    // ============================================================
+    // АНИМАЦИИ ПЕРЕХОДОВ
+    // ============================================================
+
+    /**
+     * Запускает Activity. Если анимации отключены (пользовательская
+     * настройка ИЛИ системный флаг ANIMATOR_DURATION_SCALE == 0) —
+     * переход выполняется без анимации.
+     *
+     * ВАЖНО: public, а не protected — чтобы фрагменты (DeveloperFragment,
+     * ShellFragment и т.п.) могли вызывать через (activity as? BaseActivity).
+     * Фрагменты не являются наследниками BaseActivity, protected им не виден.
+     */
+    fun startActivityAnimated(intent: Intent) {
+        startActivity(intent)
+        applyTransitionIfNeeded()
+    }
+
+    /**
+     * Закрывает текущую Activity. Если анимации отключены — без анимации.
+     *
+     * ВАЖНО: public по той же причине, что и startActivityAnimated().
+     */
+    fun finishAnimated() {
+        finish()
+        applyTransitionIfNeeded()
+    }
+
+    /**
+     * Отключает анимацию перехода, если она должна быть отключена.
+     *
+     * overridePendingTransition(0, 0) — синхронный вызов, работает
+     * сразу после startActivity() / finish(). На Android 14+ помечен
+     * как deprecated, но всё ещё работает и является самым простым
+     * способом без ActivityOptions bundle при каждом вызове.
+     */
+    @Suppress("DEPRECATION")
+    private fun applyTransitionIfNeeded() {
+        if (!::_configManager.isInitialized) return
+        if (!configManager.isEffectiveAnimationsEnabled()) {
+            overridePendingTransition(0, 0)
+        }
     }
 
     /**

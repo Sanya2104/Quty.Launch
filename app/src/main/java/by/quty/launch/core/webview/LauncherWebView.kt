@@ -33,6 +33,14 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
     // Храним имя активной оболочки для корректной загрузки
     private var activeShellName: String? = null
 
+    /**
+     * Последнее применённое состояние анимаций.
+     * Хранится, чтобы после onPageFinished повторно применить CSS-инжект —
+     * страница загружается асинхронно, и evaluateJavascript на момент
+     * loadShell() может уйти в никуда (head ещё пуст).
+     */
+    private var lastAnimationsEnabled: Boolean = true
+
     // Счётчик попыток перезагрузки при ошибке
     private var errorRetryCount = 0
     private var lastErrorUrl: String? = null
@@ -261,6 +269,19 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return true
             }
 
+            /**
+             * Страница загружена — повторно применяем состояние анимаций.
+             *
+             * Нужно, потому что loadShell() вызывается ДО того, как документ
+             * готов: evaluateJavascript из applyAnimationsEnabled() на этот
+             * момент может не найти document.head.
+             */
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Повторно применяем к уже загруженному документу
+                applyAnimationsEnabledInternal(lastAnimationsEnabled)
+            }
+
             @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView?,
@@ -392,5 +413,61 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
             "quty://shells/active/index.html"
         }
         loadUrl(url)
+    }
+
+    /**
+     * Применяет состояние анимаций к содержимому WebView.
+     *
+     * Если enabled == false — инжектит тег <style id="__quty_no_anim">
+     * в <head>, который глушит все CSS-анимации и transitions:
+     *   *, *::before, *::after { animation-duration: 0s !important;
+     *                             transition-duration: 0s !important; }
+     *
+     * Если enabled == true — удаляет этот тег.
+     *
+     * ВАЖНО: работает независимо от того, поддерживает ли оболочка
+     * флаг animationsEnabled из GetCoreState. Если не поддерживает —
+     * CSS-инжект всё равно погасит все CSS-анимации.
+     *
+     * Состояние сохраняется в lastAnimationsEnabled и повторно
+     * применяется в onPageFinished — потому что loadShell() может быть
+     * вызван раньше, чем документ готов.
+     */
+    fun applyAnimationsEnabled(enabled: Boolean) {
+        lastAnimationsEnabled = enabled
+        applyAnimationsEnabledInternal(enabled)
+    }
+
+    /**
+     * Внутренний метод — выполняет сам инжект.
+     * Вызывается из applyAnimationsEnabled() и onPageFinished().
+     */
+    private fun applyAnimationsEnabledInternal(enabled: Boolean) {
+        val js = if (enabled) {
+            """
+                (function() {
+                    var el = document.getElementById('__quty_no_anim');
+                    if (el) el.remove();
+                })();
+            """.trimIndent()
+        } else {
+            """
+                (function() {
+                    if (document.getElementById('__quty_no_anim')) return;
+                    var s = document.createElement('style');
+                    s.id = '__quty_no_anim';
+                    s.textContent = '*, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }';
+                    (document.head || document.documentElement).appendChild(s);
+                })();
+            """.trimIndent()
+        }
+
+        post {
+            try {
+                evaluateJavascript(js, null)
+            } catch (_: Exception) {
+                // Игнорируем — WebView может быть не готов
+            }
+        }
     }
 }

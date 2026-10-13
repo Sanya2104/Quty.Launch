@@ -17,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -52,6 +53,10 @@ class ShellFragment : Fragment() {
     // Ссылка на магазин
     private lateinit var storeRow: View
 
+    // Секция «Анимации»
+    private lateinit var animationsSwitch: SwitchCompat
+    private lateinit var animationsSystemHint: TextView
+
     // Флаг, что требуется перезагрузка
     private var needsRestart = false
 
@@ -80,6 +85,10 @@ class ShellFragment : Fragment() {
         shellMenuButton = view.findViewById(R.id.shell_menu_button)
         storeRow = view.findViewById(R.id.store_row)
 
+        // Секция «Анимации»
+        animationsSwitch = view.findViewById(R.id.animations_switch)
+        animationsSystemHint = view.findViewById(R.id.animations_system_hint)
+
         // Кнопка сразу открывает диалог с информацией об активной оболочке
         shellMenuButton.setOnClickListener {
             showShellInfoDialog()
@@ -91,6 +100,7 @@ class ShellFragment : Fragment() {
         }
 
         setupColorSchemeSelector(view)
+        setupAnimationsSection()
         refreshActiveShell()
     }
 
@@ -102,6 +112,7 @@ class ShellFragment : Fragment() {
         }
 
         refreshActiveShell()
+        setupAnimationsSection()
     }
 
     /**
@@ -173,6 +184,47 @@ class ShellFragment : Fragment() {
 
         recyclerView.adapter = colorSchemeAdapter
         colorSchemeAdapter.setSelectedScheme(currentSchemeId)
+    }
+
+    /**
+     * Секция «Анимации».
+     *
+     * Логика:
+     * - Если система разрешает анимации (ANIMATOR_DURATION_SCALE > 0):
+     *   переключатель активен, отражает пользовательскую настройку.
+     * - Если система глушит анимации: переключатель заблокирован,
+     *   выключен, снизу показывается подсказка.
+     *
+     * Изменение переключателя:
+     * - сохраняет настройку в ConfigManager;
+     * - помечает SettingsActivity, что при выходе нужен перезапуск;
+     * - (само применение — через MainActivity.onResume() →
+     *    webView.applyAnimationsEnabled + notifyCoreStateChanged).
+     */
+    private fun setupAnimationsSection() {
+        val systemEnabled = configManager.isSystemAnimationEnabled()
+        val userEnabled = configManager.isAnimationsEnabled()
+
+        if (systemEnabled) {
+            // Система разрешает — переключатель активен
+            animationsSwitch.isEnabled = true
+            animationsSwitch.alpha = 1.0f
+            animationsSwitch.isChecked = userEnabled
+            animationsSystemHint.visibility = View.GONE
+
+            animationsSwitch.setOnCheckedChangeListener { _, isChecked ->
+                configManager.setAnimationsEnabled(isChecked)
+                // При выходе из настроек пользователю предложат перезапуск
+                (activity as? SettingsActivity)?.markRestartRequired()
+            }
+        } else {
+            // Система глушит анимации — блокируем переключатель
+            animationsSwitch.isEnabled = false
+            animationsSwitch.alpha = 0.5f
+            animationsSwitch.isChecked = false
+            animationsSystemHint.visibility = View.VISIBLE
+            animationsSwitch.setOnCheckedChangeListener(null)
+        }
     }
 
     /**

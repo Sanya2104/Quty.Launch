@@ -16,6 +16,7 @@ data class CoreStateInfo(
     val orientation: String,        // "portrait" | "landscape" | "sensor" | "user"
     val fullscreen: Boolean,
     val strictMode: Boolean,
+    val animationsEnabled: Boolean,
     val colorScheme: ColorSchemeInfo,
     val shell: ShellInfo?,
     val app: CoreAppInfo

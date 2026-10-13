@@ -27,6 +27,9 @@ class MainActivity : BaseActivity() {
     // Последнее применённое состояние — чтобы не дёргать WebView зря
     private var lastAppliedLanguage: String? = null
 
+    // Последнее применённое состояние анимаций — чтобы не инжектить CSS зря
+    private var lastAppliedAnimations: Boolean? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -40,8 +43,8 @@ class MainActivity : BaseActivity() {
             configManager.clearRestartForOrientationFlag()
             val intent = Intent(this, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            startActivity(intent)
-            finish()
+            startActivityAnimated(intent)
+            finishAnimated()
             return
         }
 
@@ -57,6 +60,11 @@ class MainActivity : BaseActivity() {
         webView.addJavascriptInterface(jsBridge, "Android")
 
         lastAppliedLanguage = configManager.getLanguageCode()
+        lastAppliedAnimations = configManager.isEffectiveAnimationsEnabled()
+
+        // Применяем состояние анимаций к WebView сразу — CSS-инжект
+        // повторится в onPageFinished, когда документ будет готов.
+        webView.applyAnimationsEnabled(lastAppliedAnimations == true)
 
         // Загружаем оболочку
         loadShell()
@@ -90,6 +98,11 @@ class MainActivity : BaseActivity() {
                 shellName = shellToActivate.name,
                 isAsset = shellToActivate.isAsset
             )
+
+            // Повторно применяем состояние анимаций к новой странице —
+            // onPageFinished в WebViewClient тоже это сделает,
+            // но здесь мы страхуемся на случай, если страница уже в кэше.
+            webView.applyAnimationsEnabled(lastAppliedAnimations == true)
         }
     }
 
@@ -112,6 +125,19 @@ class MainActivity : BaseActivity() {
                     "CORE.language  $lastAppliedLanguage → $currentLang"
                 )
                 lastAppliedLanguage = currentLang
+                jsBridge.notifyCoreStateChanged()
+            }
+
+            // Проверяем смену состояния анимаций → инжектим/снимаем CSS
+            val currentAnimations = configManager.isEffectiveAnimationsEnabled()
+            if (lastAppliedAnimations != currentAnimations) {
+                LoggerManager.info(
+                    LoggerTagModel.CORE,
+                    "CORE.animations  $lastAppliedAnimations → $currentAnimations"
+                )
+                lastAppliedAnimations = currentAnimations
+                webView.applyAnimationsEnabled(currentAnimations)
+                // Пуш в оболочку — чтобы она тоже обновила своё состояние
                 jsBridge.notifyCoreStateChanged()
             }
         }

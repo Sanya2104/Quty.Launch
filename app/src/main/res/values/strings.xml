@@ -218,6 +218,11 @@
     <string name="settings_personalization_open_store">Больше оболочек в Store</string>
     <string name="settings_personalization_color_scheme_title">Цветовая схема</string>
 
+    <!-- Анимации -->
+    <string name="settings_personalization_animations_title">Анимации</string>
+    <string name="settings_personalization_animations">Включить анимации</string>
+    <string name="settings_personalization_animations_system_disabled">Системные анимации отключены</string>
+
     <!-- Диалог информации об оболочке -->
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
