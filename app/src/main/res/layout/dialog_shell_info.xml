@@ -346,7 +346,7 @@
 
                                 <Button
                                     android:id="@+id/shell_info_repo_button"
-                                    style="@style/Button.Secondary"
+                                    style="@style/Button.Glass.Primary"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:minWidth="0dp"
@@ -356,6 +356,58 @@
                                     android:paddingTop="@dimen/spacing_s"
                                     android:paddingBottom="@dimen/spacing_s"
                                     android:text="@string/settings_personalization_shell_info_repo_open" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- TELEGRAM -->
+                        <LinearLayout
+                            android:id="@+id/shell_info_telegram_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:background="?attr/dividerColor" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingTop="@dimen/spacing_s"
+                                android:paddingBottom="@dimen/spacing_s">
+
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_telegram"
+                                    android:contentDescription="@string/empty"
+                                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    style="@style/Text.Body.Dim"
+                                    android:text="@string/settings_personalization_shell_info_telegram" />
+
+                                <Button
+                                    android:id="@+id/shell_info_telegram_button"
+                                    style="@style/Button.Glass.Primary"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="0dp"
+                                    android:minHeight="0dp"
+                                    android:paddingStart="@dimen/spacing_m"
+                                    android:paddingEnd="@dimen/spacing_m"
+                                    android:paddingTop="@dimen/spacing_s"
+                                    android:paddingBottom="@dimen/spacing_s"
+                                    android:text="@string/settings_personalization_shell_info_telegram_open" />
 
                             </LinearLayout>
 

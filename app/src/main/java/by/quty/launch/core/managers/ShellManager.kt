@@ -35,6 +35,11 @@ data class Shell(
     val previewBase64: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
+    /**
+     * Ссылка на Telegram-канал/чат оболочки (опционально).
+     * Задаётся в manifest.json в поле "telegram".
+     */
+    val telegramUrl: String? = null,
     val minQutyLaunchVersion: String? = null,
     /**
      * Список API методов, заявленных оболочкой в manifest.json.
@@ -54,6 +59,11 @@ data class ShellManifest(
     val preview: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
+    /**
+     * Ссылка на Telegram-канал/чат оболочки (опционально).
+     * Соответствует полю "telegram" в manifest.json.
+     */
+    val telegram: String? = null,
     val minQutyLaunchVersion: String? = null,
     /**
      * Список API методов, которые использует оболочка.
@@ -256,6 +266,7 @@ class ShellManager(
                     previewBase64 = previewBase64,
                     orientation = manifest?.orientation,
                     repoUrl = manifest?.repoUrl,
+                    telegramUrl = manifest?.telegram,
                     minQutyLaunchVersion = manifest?.minQutyLaunchVersion,
                     apiMethods = manifest?.apiMethods ?: emptyList()
                 )
@@ -308,6 +319,7 @@ class ShellManager(
                         previewBase64 = previewBase64,
                         orientation = manifest?.orientation,
                         repoUrl = manifest?.repoUrl,
+                        telegramUrl = manifest?.telegram,
                         minQutyLaunchVersion = manifest?.minQutyLaunchVersion,
                         apiMethods = manifest?.apiMethods ?: emptyList()
                     )

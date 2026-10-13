@@ -229,6 +229,8 @@
     <string name="settings_personalization_shell_info_repo">Репозиторий</string>
     <string name="settings_personalization_shell_info_repo_open">Открыть</string>
     <string name="settings_personalization_shell_info_repo_error">Не удалось открыть ссылку</string>
+    <string name="settings_personalization_shell_info_telegram">Telegram</string>
+    <string name="settings_personalization_shell_info_telegram_open">Открыть</string>
     <string name="shell_info_orientation_none">Не задана</string>
 
     <!-- Типы оболочки -->

@@ -229,6 +229,8 @@
     <string name="settings_personalization_shell_info_repo">Repository</string>
     <string name="settings_personalization_shell_info_repo_open">Open</string>
     <string name="settings_personalization_shell_info_repo_error">Failed to open link</string>
+    <string name="settings_personalization_shell_info_telegram">Telegram</string>
+    <string name="settings_personalization_shell_info_telegram_open">Open</string>
     <string name="shell_info_orientation_none">Not specified</string>
 
     <!-- Shell types -->

@@ -264,6 +264,19 @@ class ShellFragment : Fragment() {
             repoContainer.visibility = View.GONE
         }
 
+        // Telegram
+        val telegramContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_container)
+        val telegramButton = dialogView.findViewById<Button>(R.id.shell_info_telegram_button)
+
+        if (!shell.telegramUrl.isNullOrEmpty()) {
+            telegramContainer.visibility = View.VISIBLE
+            telegramButton.setOnClickListener {
+                openUrl(shell.telegramUrl)
+            }
+        } else {
+            telegramContainer.visibility = View.GONE
+        }
+
         // Создаём диалог с прозрачной темой — фон прозрачный, чтобы был виден CardView со скруглением
         val dialog = AlertDialog.Builder(
             requireContext(),
