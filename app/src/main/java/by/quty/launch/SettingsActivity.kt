@@ -26,7 +26,9 @@ import by.quty.launch.core.fragments.settings.StorageFragment
 import by.quty.launch.core.fragments.settings.ApiMethodsFragment
 import by.quty.launch.core.fragments.settings.UpdateFragment
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.model.MenuModel
+import by.quty.launch.core.utilities.BadgeHelper
 import by.quty.launch.databinding.ActivitySettingsBinding
 import androidx.core.graphics.drawable.toDrawable
 
@@ -49,6 +51,10 @@ class SettingsActivity : BaseActivity() {
     // Кэш текущего списка пунктов меню (может меняться при DevMode)
     private var menuItems: List<MenuModel> = emptyList()
 
+    // Последнее известное состояние «есть обновление» — чтобы
+    // в onResume() понять, надо ли пересобрать меню (маркер на «Центр обновления»)
+    private var lastUpdateAvailable: Boolean = false
+
     // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
         (340 * resources.displayMetrics.density).toInt()
@@ -63,7 +69,14 @@ class SettingsActivity : BaseActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Формируем меню (с учётом текущего состояния DevMode)
+        // Запоминаем начальное состояние обновления
+        lastUpdateAvailable = try {
+            SystemUpdateManager(this).getCachedUpdate()?.hasUpdate == true
+        } catch (_: Exception) {
+            false
+        }
+
+        // Формируем меню (с учётом текущего состояния DevMode и обновления)
         menuItems = buildMenuItems()
 
         checkMode()
@@ -321,12 +334,36 @@ class SettingsActivity : BaseActivity() {
      * Строит список пунктов меню с учётом текущего состояния DevMode.
      *
      * Пункт "Разработчикам" появляется только когда DevMode активирован.
+     * На пункт "Центр обновления" вешается маркер, если в кэше
+     * SystemUpdateManager есть обновление.
      *
-     * @return список пунктов меню
+     * HEX-цвет маркера рассчитывается через BadgeHelper — единая
+     * точка правды, синхронизирована с GetApps и GetCoreState.
      */
     private fun buildMenuItems(): List<MenuModel> {
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)
+
+        // Определяем, есть ли обновление — для маркера на "Центр обновления"
+        val cachedUpdate = try {
+            SystemUpdateManager(this).getCachedUpdate()
+        } catch (_: Exception) {
+            null
+        }
+        val hasUpdate = cachedUpdate?.hasUpdate == true
+
+        val updateBadgeColor: String?
+        val updateBadgeColorHex: String?
+
+        if (hasUpdate) {
+            val isCritical = cachedUpdate.versionInfo?.isCritical == true
+            val pair = BadgeHelper.resolveUpdateBadge(isCritical, this)
+            updateBadgeColor = pair.first
+            updateBadgeColorHex = pair.second
+        } else {
+            updateBadgeColor = null
+            updateBadgeColorHex = null
+        }
 
         val items = mutableListOf<MenuModel>()
 
@@ -382,6 +419,7 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
+        // === Центр обновления — с маркером при наличии обновления ===
         items.add(
             MenuModel(
                 3,
@@ -390,7 +428,10 @@ class SettingsActivity : BaseActivity() {
                 R.string.settings_menu_updates_desc,
                 UpdateFragment::class.java,
                 R.color.scheme_orange_primary,
-                true
+                true,
+                badge = hasUpdate,
+                badgeColor = updateBadgeColor,
+                badgeColorHex = updateBadgeColorHex
             )
         )
 
@@ -672,6 +713,21 @@ class SettingsActivity : BaseActivity() {
         super.onResume()
 
         applyOrientation(shellManager)
+
+        // Проверяем, не появилось ли обновление (например, из фоновой проверки
+        // в MainActivity, пока пользователь был в настройках).
+        // Если состояние изменилось — пересобираем меню, чтобы маркер
+        // на «Центр обновления» появился/исчез.
+        val currentUpdateAvailable = try {
+            SystemUpdateManager(this).getCachedUpdate()?.hasUpdate == true
+        } catch (_: Exception) {
+            false
+        }
+
+        if (currentUpdateAvailable != lastUpdateAvailable) {
+            lastUpdateAvailable = currentUpdateAvailable
+            refreshMenuItems()
+        }
 
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()

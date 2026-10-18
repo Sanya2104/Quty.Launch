@@ -5,17 +5,31 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
+import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.webview.JsBridge
 import by.quty.launch.core.webview.LauncherWebView
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Главная активность Quty.Launch
- * Отвечает за отображение WebView с оболочками и обработку API вызовов
+ * Главная активность Quty.Launch.
+ *
+ * Одновременно:
+ * - HOME-лаунчер по умолчанию (если юзер его назначил) — на неё
+ *   система присылает Intent.ACTION_MAIN + CATEGORY_HOME при нажатии
+ *   кнопки Home;
+ * - Хост WebView с активной оболочкой.
+ *
+ * launchMode="singleTask" в манифесте — при повторном запуске Home
+ * система шлёт onNewIntent() в существующий экземпляр, а не создаёт
+ * новый. Мы в onNewIntent() ничего не делаем: WebView уже загружен,
+ * повторно грузить оболочку нет смысла.
  */
 class MainActivity : BaseActivity() {
 
@@ -23,12 +37,20 @@ class MainActivity : BaseActivity() {
     private lateinit var webView: LauncherWebView
     private lateinit var shellManager: ShellManager
     private lateinit var jsBridge: JsBridge
+    private lateinit var updateManager: SystemUpdateManager
 
     // Последнее применённое состояние — чтобы не дёргать WebView зря
     private var lastAppliedLanguage: String? = null
 
     // Последнее применённое состояние анимаций — чтобы не инжектить CSS зря
     private var lastAppliedAnimations: Boolean? = null
+
+    // Последнее известное состояние обновления — чтобы отследить смену
+    // и уведомить оболочку через notifyCoreStateChanged()
+    private var lastUpdateAvailable: Boolean = false
+
+    // Флаг, что авто-проверка сейчас выполняется (защита от параллельных запусков)
+    private var isAutoCheckRunning: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +77,15 @@ class MainActivity : BaseActivity() {
         // Используем applicationContext для WebView (предотвращает утечки памяти)
         webView = LauncherWebView(applicationContext)
 
+        updateManager = SystemUpdateManager(this)
+
         jsBridge = JsBridge(core, this)
         jsBridge.setWebView(webView)
         webView.addJavascriptInterface(jsBridge, "Android")
 
         lastAppliedLanguage = configManager.getLanguageCode()
         lastAppliedAnimations = configManager.isEffectiveAnimationsEnabled()
+        lastUpdateAvailable = updateManager.getCachedUpdate()?.hasUpdate == true
 
         // Применяем состояние анимаций к WebView сразу — CSS-инжект
         // повторится в onPageFinished, когда документ будет готов.
@@ -75,6 +100,28 @@ class MainActivity : BaseActivity() {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
         }
+
+        // Фоновая авто-проверка обновлений — с задержкой,
+        // чтобы не мешать старту (WebView, ShellManager и т.д.)
+        lifecycleScope.launch {
+            delay(CoreConfig.AUTO_CHECK_START_DELAY_MS.milliseconds)
+            maybeRunAutoUpdateCheck()
+        }
+    }
+
+    /**
+     * Обработка повторного запуска через Home.
+     *
+     * Из-за launchMode="singleTask" система при нажатии Home
+     * шлёт Intent.ACTION_MAIN + CATEGORY_HOME в существующий экземпляр,
+     * а не создаёт новый. WebView уже загружен — просто ничего не делаем.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        LoggerManager.debug(
+            LoggerTagModel.CORE,
+            "CORE.main  onNewIntent  action=${intent.action}"
+        )
     }
 
     /**
@@ -146,6 +193,11 @@ class MainActivity : BaseActivity() {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
         }
+
+        // Авто-проверка обновлений — если прошло больше интервала с последней.
+        // Проверяем на возврате в активность (в т.ч. когда Quty.Launch — HOME
+        // и onCreate случается редко).
+        maybeRunAutoUpdateCheck()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -154,6 +206,76 @@ class MainActivity : BaseActivity() {
         // Пушим оболочке, что ориентация/конфигурация изменилась
         if (::jsBridge.isInitialized && ::webView.isInitialized) {
             jsBridge.notifyCoreStateChanged()
+        }
+    }
+
+    // ============================================================
+    // ФОНОВАЯ АВТО-ПРОВЕРКА ОБНОВЛЕНИЙ
+    // ============================================================
+
+    /**
+     * Запускает авто-проверку, если:
+     * - авто-проверка включена в настройках;
+     * - с последней проверки прошло >= интервала (см. SystemUpdateManager.shouldRunAutoCheck());
+     * - сейчас нет другой запущенной проверки (isAutoCheckRunning).
+     *
+     * Логика:
+     * 1. Проверяем условия. Если не проходят — выходим.
+     * 2. Сразу ставим lastCheckTime = now (защита от спама при
+     *    недоступном сервере — следующая попытка будет через интервал).
+     * 3. Вызываем checkForUpdates().
+     * 4. Сохраняем результат в кэш (setCachedUpdate) — его прочитают
+     *    GetApps, GetCoreState, SettingsActivity, UpdateFragment.
+     * 5. Если обновление появилось — уведомляем оболочку через
+     *    notifyCoreStateChanged(), чтобы она перезапросила GetApps
+     *    и показала маркер без перезагрузки.
+     */
+    private fun maybeRunAutoUpdateCheck() {
+        if (!::updateManager.isInitialized) return
+        if (isAutoCheckRunning) return
+        if (!updateManager.shouldRunAutoCheck()) return
+
+        isAutoCheckRunning = true
+
+        // Обновляем lastCheckTime ДО запроса — чтобы при падении
+        // следующая попытка была не раньше, чем через интервал.
+        updateManager.setLastCheckTime(System.currentTimeMillis())
+
+        lifecycleScope.launch {
+            try {
+                val result = updateManager.checkForUpdates()
+
+                // Сохраняем в кэш — его прочитают GetApps / GetCoreState /
+                // SettingsActivity / UpdateFragment
+                updateManager.setCachedUpdate(result)
+
+                // Если обновление появилось и раньше его не было —
+                // уведомляем оболочку, чтобы она перезапросила GetApps
+                val currentUpdateAvailable = result.hasUpdate
+                if (currentUpdateAvailable != lastUpdateAvailable) {
+                    lastUpdateAvailable = currentUpdateAvailable
+                    if (::jsBridge.isInitialized) {
+                        LoggerManager.info(
+                            LoggerTagModel.UPDATE,
+                            "UPDATE.auto  notify shell  hasUpdate=$currentUpdateAvailable"
+                        )
+                        jsBridge.notifyCoreStateChanged()
+                    }
+                }
+
+                LoggerManager.info(
+                    LoggerTagModel.UPDATE,
+                    "UPDATE.auto  done  hasUpdate=${result.hasUpdate}  error=${result.error ?: "—"}"
+                )
+            } catch (e: Exception) {
+                LoggerManager.error(
+                    LoggerTagModel.UPDATE,
+                    "UPDATE.auto  error  ${e.message ?: e.javaClass.simpleName}",
+                    e
+                )
+            } finally {
+                isAutoCheckRunning = false
+            }
         }
     }
 }

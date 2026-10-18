@@ -14,6 +14,8 @@ import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.AppInfo
 import by.quty.launch.configs.ApiConfig
 import by.quty.launch.core.managers.CacheManager
+import by.quty.launch.core.managers.SystemUpdateManager
+import by.quty.launch.core.utilities.BadgeHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
@@ -39,20 +41,66 @@ class GetApps(
         if (cachedApps != null) {
             return json.encodeToString(
                 ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
-                ApiResponse(success = true, data = cachedApps)
+                ApiResponse(success = true, data = applyBadges(cachedApps))
             )
         }
 
         // 2. Если кэша нет - загружаем свежие
         val freshApps = loadFreshApps()
 
-        // 3. Сохраняем в кэш
+        // 3. Сохраняем в кэш (без маркеров — маркеры навешиваются на выдаче)
         CacheManager.saveApps(freshApps)
 
         return json.encodeToString(
             ApiResponse.serializer(ListSerializer(AppInfo.serializer())),
-            ApiResponse(success = true, data = freshApps)
+            ApiResponse(success = true, data = applyBadges(freshApps))
         )
+    }
+
+    /**
+     * Вешает маркеры на приложения, которым они нужны.
+     *
+     * Сейчас: если в кэше SystemUpdateManager есть обновление ядра —
+     * маркер вешается на «Настройки Quty.Launch».
+     *
+     * Маркеры НЕ сохраняются в кэш приложений (CacheManager) — они
+     * динамические, зависят от текущего состояния. Кэш хранит «чистый»
+     * список, а маркеры навешиваются при каждой выдаче.
+     *
+     * HEX для маркера рассчитывается через BadgeHelper из R.color.status_* —
+     * источник правды один (colors.xml), а не дублирующие константы.
+     */
+    private fun applyBadges(apps: List<AppInfo>): List<AppInfo> {
+        val cachedUpdate = try {
+            SystemUpdateManager(context).getCachedUpdate()
+        } catch (_: Exception) {
+            null
+        }
+
+        // Нет обновления — возвращаем как есть
+        if (cachedUpdate?.hasUpdate != true) {
+            return apps
+        }
+
+        val versionInfo = cachedUpdate.versionInfo ?: return apps
+
+        // Семантика + HEX через BadgeHelper (единый источник правды)
+        val (badgeColor, badgeColorHex) = BadgeHelper.resolveUpdateBadge(
+            isCritical = versionInfo.isCritical,
+            context = context
+        )
+
+        return apps.map { app ->
+            if (app.packageName == ApiConfig.SETTINGS_PACKAGE) {
+                app.copy(
+                    badge = true,
+                    badgeColor = badgeColor,
+                    badgeColorHex = badgeColorHex
+                )
+            } else {
+                app
+            }
+        }
     }
 
     @SuppressLint("QueryPermissionsNeeded")

@@ -16,7 +16,24 @@ data class CoreStateInfo(
     val orientation: String,        // "portrait" | "landscape" | "sensor" | "user"
     val fullscreen: Boolean,
     val strictMode: Boolean,
+    /**
+     * Фактическое состояние анимаций: пользовательская настройка
+     * И системный флаг ANIMATOR_DURATION_SCALE.
+     */
     val animationsEnabled: Boolean,
+    /**
+     * Флаг наличия обновления ядра.
+     */
+    val updateBadge: Boolean = false,
+    /**
+     * Семантический цвет маркера обновления:
+     * "accent" | "warning" | "error".
+     */
+    val updateBadgeColor: String? = null,
+    /**
+     * HEX-цвет маркера обновления ("#RRGGBB") — готов к прямой подстановке.
+     */
+    val updateBadgeColorHex: String? = null,
     val colorScheme: ColorSchemeInfo,
     val shell: ShellInfo?,
     val app: CoreAppInfo

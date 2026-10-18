@@ -31,9 +31,15 @@
     <!-- ============================================================ -->
 
     <queries>
+        <!-- Приложения с иконкой на рабочем столе (для GetApps) -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Home-приложения (для проверки текущего лаунчера по умолчанию) -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
         </intent>
     </queries>
 
@@ -57,11 +63,18 @@
         <!-- АКТИВНОСТИ                                                   -->
         <!-- ============================================================ -->
 
-        <!-- Главный экран -->
+        <!-- Главный экран (WebView + HOME-лаунчер) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- Экран приветствия (онбординг) -->
@@ -70,13 +83,6 @@
             android:exported="true"
             android:theme="@style/Theme.QutyLaunch"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
 
         <!-- Логгер -->

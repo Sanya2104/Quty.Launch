@@ -423,6 +423,55 @@
             android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_xs">
 
+            <!-- Домашний экран (Default launcher) -->
+            <LinearLayout
+                android:id="@+id/home_screen_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_home"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body"
+                    android:text="@string/settings_home_screen_title" />
+
+                <TextView
+                    android:id="@+id/home_screen_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body.Dim"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="@string/settings_home_screen_not_assigned" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
             <!-- Полноэкранный режим -->
             <LinearLayout
                 android:layout_width="match_parent"

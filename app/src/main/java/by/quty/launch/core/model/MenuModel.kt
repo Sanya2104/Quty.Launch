@@ -20,7 +20,10 @@ import androidx.fragment.app.Fragment
  * - description — описание (string resource);
  * - fragment — фрагмент, который открывается по клику;
  * - iconColor — цвет фона иконки (color resource, 0 = без фона);
- * - applyTint — true = иконка белая, false = оригинальные цвета.
+ * - applyTint — true = иконка белая, false = оригинальные цвета;
+ * - badge — флаг наличия маркера на иконке;
+ * - badgeColor — семантика маркера ("accent" | "warning" | "error");
+ * - badgeColorHex — HEX-цвет маркера ("#RRGGBB") для прямой подстановки.
  */
 data class MenuModel(
     val id: Int,
@@ -29,5 +32,8 @@ data class MenuModel(
     @StringRes val description: Int,
     val fragment: Class<out Fragment>,
     @ColorRes val iconColor: Int = 0,
-    val applyTint: Boolean = true
+    val applyTint: Boolean = true,
+    val badge: Boolean = false,
+    val badgeColor: String? = null,
+    val badgeColorHex: String? = null
 )

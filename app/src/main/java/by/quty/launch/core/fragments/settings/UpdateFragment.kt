@@ -12,13 +12,16 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -36,10 +39,15 @@ import java.io.File
  * Фрагмент "Центр обновления" для Настроек
  * Содержит управление обновлениями приложения:
  * - проверка онлайн-обновлений через SystemUpdateManager;
- * - локальная установка APK из файла.
+ * - локальная установка APK из файла;
+ * - настройки авто-проверки обновлений (switch + интервал).
  *
  * Все состояния (проверка, доступно обновление, скачивание, ошибка)
  * отображаются inline — в блоке под пунктами, без AlertDialog.
+ *
+ * При входе в фрагмент: если в кэше SystemUpdateManager есть результат
+ * последней проверки с hasUpdate = true — сразу показываем блок
+ * «Доступно обновление» с уже загруженной информацией.
  *
  * Информация о версии приложения вынесена в AboutFragment («О системе»).
  */
@@ -72,6 +80,12 @@ class UpdateFragment : Fragment() {
     private lateinit var installStateBtnPrimary: Button
     private lateinit var installStateBtnSecondary: Button
 
+    // ===== Настройки авто-проверки =====
+    private lateinit var autoCheckSwitch: SwitchCompat
+    private lateinit var autoCheckIntervalContainer: LinearLayout
+    private lateinit var autoCheckIntervalDivider: View
+    private lateinit var autoCheckIntervalSpinner: Spinner
+
     private lateinit var updateManager: SystemUpdateManager
     private lateinit var storageManager: StorageManager
 
@@ -83,6 +97,9 @@ class UpdateFragment : Fragment() {
 
     // URI локально выбранного APK (для кнопки «Установить» в блоке локальной установки)
     private var pendingLocalApkUri: Uri? = null
+
+    // Защита от срабатывания OnItemSelectedListener при программной установке
+    private var isSpinnerInitializing = false
 
     // Регистрируем ActivityResult для выбора APK
     private val selectApkLauncher = registerForActivityResult(
@@ -115,6 +132,15 @@ class UpdateFragment : Fragment() {
         initViews(view)
         setupUpdateCheck()
         setupInstallFromFile()
+        setupAutoCheckSection()
+
+        // При входе — если в кэше есть обновление, сразу показываем
+        // блок «Доступно обновление» с уже загруженной информацией.
+        val cached = updateManager.getCachedUpdate()
+        if (cached?.hasUpdate == true && cached.versionInfo != null) {
+            pendingVersionInfo = cached.versionInfo
+            showUpdateStateAvailable(cached.versionInfo)
+        }
     }
 
     private fun initViews(view: View) {
@@ -143,6 +169,83 @@ class UpdateFragment : Fragment() {
         installStateActions = view.findViewById(R.id.install_state_actions)
         installStateBtnPrimary = view.findViewById(R.id.install_state_btn_primary)
         installStateBtnSecondary = view.findViewById(R.id.install_state_btn_secondary)
+
+        // Настройки авто-проверки
+        autoCheckSwitch = view.findViewById(R.id.auto_check_switch)
+        autoCheckIntervalContainer = view.findViewById(R.id.auto_check_interval_container)
+        autoCheckIntervalDivider = view.findViewById(R.id.auto_check_interval_divider)
+        autoCheckIntervalSpinner = view.findViewById(R.id.auto_check_interval_spinner)
+    }
+
+    // ============================================================
+    // НАСТРОЙКИ АВТО-ПРОВЕРКИ
+    // ============================================================
+
+    private fun setupAutoCheckSection() {
+        // Switch
+        autoCheckSwitch.isChecked = updateManager.isAutoCheckEnabled()
+        updateIntervalVisibility(autoCheckSwitch.isChecked)
+
+        autoCheckSwitch.setOnCheckedChangeListener { _, isChecked ->
+            updateManager.setAutoCheckEnabled(isChecked)
+            updateIntervalVisibility(isChecked)
+        }
+
+        // Spinner с интервалами
+        val intervals = CoreConfig.AUTO_CHECK_AVAILABLE_INTERVALS
+        val labels = intervals.map { hours ->
+            when (hours) {
+                6 -> getString(R.string.update_auto_check_interval_6h)
+                12 -> getString(R.string.update_auto_check_interval_12h)
+                24 -> getString(R.string.update_auto_check_interval_24h)
+                72 -> getString(R.string.update_auto_check_interval_72h)
+                else -> "$hours h"
+            }
+        }
+
+        val adapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_spinner,
+            labels
+        )
+        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        autoCheckIntervalSpinner.adapter = adapter
+
+        // Устанавливаем текущее значение
+        val currentHours = updateManager.getAutoCheckIntervalHours()
+        val currentIndex = intervals.indexOf(currentHours).takeIf { it >= 0 } ?: 2
+        isSpinnerInitializing = true
+        autoCheckIntervalSpinner.setSelection(currentIndex, false)
+        isSpinnerInitializing = false
+
+        autoCheckIntervalSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: android.widget.AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                if (isSpinnerInitializing) return
+
+                val newHours = intervals[position]
+                if (newHours == updateManager.getAutoCheckIntervalHours()) return
+
+                updateManager.setAutoCheckIntervalHours(newHours)
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                // Ничего не делаем
+            }
+        }
+    }
+
+    /**
+     * Показывает/скрывает контейнер интервала (и разделитель)
+     * в зависимости от состояния switch.
+     */
+    private fun updateIntervalVisibility(visible: Boolean) {
+        autoCheckIntervalContainer.isVisible = visible
+        autoCheckIntervalDivider.isVisible = visible
     }
 
     // ============================================================
@@ -304,6 +407,11 @@ class UpdateFragment : Fragment() {
 
         lifecycleScope.launch {
             val result = updateManager.checkForUpdates()
+
+            // Сохраняем результат в кэш — его прочитают GetApps, GetCoreState,
+            // SettingsActivity (маркер на пункте «Центр обновления»),
+            // а также сам UpdateFragment при следующем открытии.
+            updateManager.setCachedUpdate(result)
 
             if (result.hasUpdate && result.versionInfo != null) {
                 pendingVersionInfo = result.versionInfo

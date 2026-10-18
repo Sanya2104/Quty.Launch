@@ -27,6 +27,7 @@ import by.quty.launch.core.managers.CacheManager
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.managers.SystemUpdateManager
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.File
@@ -40,7 +41,7 @@ import java.util.zip.ZipFile
  * - Секция "Оболочка": просмотр manifest.json (с копированием), перезагрузка оболочки
  * - Секция "Приложения": переключатели отображения Терминала и Логгера в списке приложений
  * - Секция "Управление данными": очистка кэша WebView, сброс онбординга
- * - Секция "Инструменты": перезапуск приложения
+ * - Секция "Инструменты": сброс таймера авто-проверки обновлений, перезапуск приложения
  *
  * Действия, требующие перезапуска приложения (reload shell, clear WebView cache,
  * reset onboarding, смена видимости приложений), помечаются через
@@ -53,6 +54,7 @@ class DeveloperFragment : Fragment() {
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
     private lateinit var storageManager: StorageManager
+    private lateinit var updateManager: SystemUpdateManager
 
     // UI — Оболочка
     private lateinit var shellManifestRow: View
@@ -67,6 +69,7 @@ class DeveloperFragment : Fragment() {
     private lateinit var resetOnboardingRow: View
 
     // UI — Инструменты
+    private lateinit var resetUpdateTimerRow: View
     private lateinit var restartAppRow: View
 
     // JSON парсер для manifest.json
@@ -96,6 +99,7 @@ class DeveloperFragment : Fragment() {
         }
         shellManager = ShellManager(requireContext(), configManager)
         storageManager = StorageManager(requireContext())
+        updateManager = SystemUpdateManager(requireContext())
 
         // Инициализация UI-ссылок
         shellManifestRow = view.findViewById(R.id.dev_shell_manifest_row)
@@ -104,6 +108,7 @@ class DeveloperFragment : Fragment() {
         showLoggerSwitch = view.findViewById(R.id.dev_show_logger_switch)
         clearWebViewCacheRow = view.findViewById(R.id.dev_clear_webview_cache_row)
         resetOnboardingRow = view.findViewById(R.id.dev_reset_onboarding_row)
+        resetUpdateTimerRow = view.findViewById(R.id.dev_reset_update_timer_row)
         restartAppRow = view.findViewById(R.id.dev_restart_app_row)
 
         setupShellSection()
@@ -237,7 +242,7 @@ class DeveloperFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 1.5: ПРИЛОЖЕНИЯ (ВИДИМОСТЬ ТЕРМИНАЛА И ЛОГГЕРА)
+    // СЕКЦИЯ 2: ПРИЛОЖЕНИЯ (ВИДИМОСТЬ ТЕРМИНАЛА И ЛОГГЕРА)
     // ============================================================
 
     /**
@@ -284,7 +289,7 @@ class DeveloperFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 2: УПРАВЛЕНИЕ ДАННЫМИ
+    // СЕКЦИЯ 3: УПРАВЛЕНИЕ ДАННЫМИ
     // ============================================================
 
     private fun setupDataSection() {
@@ -426,13 +431,42 @@ class DeveloperFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 3: ИНСТРУМЕНТЫ
+    // СЕКЦИЯ 4: ИНСТРУМЕНТЫ
     // ============================================================
 
     private fun setupToolsSection() {
+        resetUpdateTimerRow.setOnClickListener {
+            resetUpdateTimer()
+        }
+
         restartAppRow.setOnClickListener {
             showRestartAppDialog()
         }
+    }
+
+    /**
+     * Сбрасывает таймер авто-проверки обновлений.
+     *
+     * Что делает:
+     * - setLastCheckTime(0) — при следующем MainActivity.onResume()
+     *   авто-проверка сработает сразу (now - 0 >= interval);
+     * - clearCachedUpdate() — сбрасывает кэш последнего результата,
+     *   чтобы маркер на «Настройки» / «Центр обновления» исчез до
+     *   новой проверки.
+     *
+     * Перезапуск приложения НЕ требуется — просто тост. Следующая
+     * проверка произойдёт при возврате в MainActivity (там вызывается
+     * maybeRunAutoUpdateCheck()).
+     */
+    private fun resetUpdateTimer() {
+        updateManager.setLastCheckTime(0L)
+        updateManager.clearCachedUpdate()
+
+        Toast.makeText(
+            requireContext(),
+            R.string.dev_reset_update_timer_success,
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     /**

@@ -40,7 +40,10 @@
 
     <!-- Цвета статусов -->
     <color name="status_granted">#4CAF50</color>
+    <color name="status_accent">#009688</color>
     <color name="status_warning">#FF9800</color>
+    <color name="status_error">#F44336</color>
+
 
     <!-- Акценты (используются в коде) -->
     <color name="accent_green">#4CAF50</color>

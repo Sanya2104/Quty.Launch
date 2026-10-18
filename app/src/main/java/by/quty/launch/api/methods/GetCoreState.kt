@@ -12,7 +12,9 @@ import by.quty.launch.api.model.CoreStateInfo
 import by.quty.launch.api.model.ShellInfo
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.utilities.AppInfoHelper
+import by.quty.launch.core.utilities.BadgeHelper
 
 /**
  * Возвращает полное состояние ядра Quty.Launch для текущей оболочки.
@@ -37,6 +39,28 @@ class GetCoreState(
     override suspend fun executeInternal(params: Unit?): String {
         val themeMode = normalizeThemeMode(configManager.getThemeMode())
 
+        // Кэш обновления — прокидываем в оболочку, чтобы она могла
+        // отреагировать на появление обновления без перезапроса GetApps
+        val cachedUpdate = try {
+            SystemUpdateManager(context).getCachedUpdate()
+        } catch (_: Exception) {
+            null
+        }
+
+        val updateBadge = cachedUpdate?.hasUpdate == true
+        val updateBadgeSemantic: String?
+        val updateBadgeHex: String?
+
+        if (updateBadge) {
+            val isCritical = cachedUpdate.versionInfo?.isCritical == true
+            val pair = BadgeHelper.resolveUpdateBadge(isCritical, context)
+            updateBadgeSemantic = pair.first
+            updateBadgeHex = pair.second
+        } else {
+            updateBadgeSemantic = null
+            updateBadgeHex = null
+        }
+
         val coreState = CoreStateInfo(
             theme = resolveTheme(themeMode),
             themeMode = themeMode,
@@ -46,6 +70,9 @@ class GetCoreState(
             fullscreen = configManager.isFullscreenEnabled(),
             strictMode = configManager.isStrictModeEnabled(),
             animationsEnabled = configManager.isEffectiveAnimationsEnabled(),
+            updateBadge = updateBadge,
+            updateBadgeColor = updateBadgeSemantic,
+            updateBadgeColorHex = updateBadgeHex,
             colorScheme = ColorSchemeInfo(
                 id = configManager.getColorScheme(),
                 primary = configManager.getSchemePrimaryColor(),

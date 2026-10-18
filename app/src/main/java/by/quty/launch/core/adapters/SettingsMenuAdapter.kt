@@ -5,10 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.databinding.ItemSettingsMenuBinding
+import androidx.core.graphics.toColorInt
 
 class SettingsMenuAdapter(
     private val items: List<MenuModel>,
@@ -114,12 +116,33 @@ class SettingsMenuAdapter(
             binding.tvTitle.text = context.getString(item.title)
             binding.tvDescription.text = context.getString(item.description)
 
+            // ===== МАРКЕР =====
+            if (item.badge) {
+                binding.badgeDot.visibility = View.VISIBLE
+
+                // Приоритет: badgeColorHex (готовый HEX от ядра).
+                // Fallback: R.color.status_accent — на случай, если HEX не задан.
+                val colorInt = try {
+                    item.badgeColorHex?.toColorInt()
+                } catch (_: Exception) {
+                    null
+                } ?: ContextCompat.getColor(context, R.color.status_accent)
+
+                // Красим drawable (bg_badge_dot) через tint
+                val dotDrawable = ContextCompat.getDrawable(context, R.drawable.bg_badge_dot)?.mutate()
+                if (dotDrawable != null) {
+                    val wrapped = DrawableCompat.wrap(dotDrawable)
+                    DrawableCompat.setTint(wrapped, colorInt)
+                    binding.badgeDot.background = wrapped
+                }
+            } else {
+                binding.badgeDot.visibility = View.GONE
+            }
+
             // === ВЫДЕЛЕНИЕ АКТИВНОГО ПУНКТА ===
             if (isSelected) {
-                // Используем фон с подсветкой
                 binding.root.setBackgroundResource(R.drawable.bg_settings_menu_item_selected)
             } else {
-                // Обычный фон - прозрачный или с лёгким наведением
                 binding.root.setBackgroundResource(R.drawable.bg_settings_menu_item)
             }
 

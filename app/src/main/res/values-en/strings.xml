@@ -195,6 +195,12 @@
     <string name="additional_fullscreen">Fullscreen mode</string>
     <string name="additional_strict_mode">Strict mode</string>
 
+    <!-- Home screen (default launcher) -->
+    <string name="settings_home_screen_title">Home screen</string>
+    <string name="settings_home_screen_assigned">Assigned</string>
+    <string name="settings_home_screen_not_assigned">Not assigned</string>
+    <string name="settings_home_screen_open_error">Failed to open home screen settings</string>
+
     <string name="toast_fullscreen_enabled">Fullscreen mode enabled</string>
     <string name="toast_fullscreen_disabled">Fullscreen mode disabled</string>
     <string name="toast_strict_mode_enabled">Strict mode enabled</string>
@@ -331,6 +337,15 @@
     <string name="update_info_title">System update</string>
     <string name="check_updates_online_button">Online update</string>
     <string name="checking_updates">Checking…</string>
+
+    <!-- Auto-check settings -->
+    <string name="update_auto_check_section">Update auto-check</string>
+    <string name="update_auto_check_title">Check for updates automatically</string>
+    <string name="update_auto_check_interval_title">Check interval</string>
+    <string name="update_auto_check_interval_6h">Every 6 hours</string>
+    <string name="update_auto_check_interval_12h">Every 12 hours</string>
+    <string name="update_auto_check_interval_24h">Once a day</string>
+    <string name="update_auto_check_interval_72h">Every 3 days</string>
 
     <!-- Errors -->
     <string name="update_error">Error</string>
@@ -526,6 +541,8 @@
 
     <!-- Tools -->
     <string name="dev_restart_app">Restart app</string>
+    <string name="dev_reset_update_timer">Reset update check timer</string>
+    <string name="dev_reset_update_timer_success">Timer reset. Update check will run on next launch.</string>
     <string name="dev_restart_app_dialog_title">Restart the app?</string>
     <string name="dev_restart_app_dialog_message">The app will be closed and launched again.</string>
     <string name="dev_restart_app_dialog_confirm">Restart</string>

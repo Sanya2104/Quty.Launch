@@ -61,11 +61,103 @@ class SystemUpdateManager(private val context: Context) {
     // URL для проверки обновлений (из конфига)
     private val versionUrl = CoreConfig.UPDATE_SERVER_URL
 
-    // SharedPreferences для меток завершённых загрузок
+    // SharedPreferences для настроек авто-проверки и меток загрузки
     private val prefs = context.getSharedPreferences("update_prefs", Context.MODE_PRIVATE)
 
     init {
         cleanupOldDownloadMarks()
+    }
+
+    // ============================================================
+    // КЭШ ПОСЛЕДНЕГО РЕЗУЛЬТАТА ПРОВЕРКИ (ОБЩИЙ)
+    // ============================================================
+    //
+    // ВАЖНО: cachedUpdate живёт в companion object, а НЕ как поле
+    // экземпляра. Раньше каждый SystemUpdateManager(context) имел
+    // свой кэш — UpdateFragment писал в один, GetApps читал из другого
+    // (свежего) и всегда видел null → маркер обновления не появлялся.
+    //
+    // Теперь кэш один на процесс:
+    // - MainActivity (авто-проверка) → setCachedUpdate()
+    // - UpdateFragment (ручная проверка) → setCachedUpdate()
+    // - GetApps / GetCoreState / SettingsActivity → getCachedUpdate()
+    // все видят одно и то же значение.
+
+    fun getCachedUpdate(): UpdateCheckResult? = cachedUpdate
+
+    fun setCachedUpdate(result: UpdateCheckResult) {
+        cachedUpdate = result
+    }
+
+    fun clearCachedUpdate() {
+        cachedUpdate = null
+    }
+
+    // ============================================================
+    // НАСТРОЙКИ АВТО-ПРОВЕРКИ
+    // ============================================================
+
+    fun isAutoCheckEnabled(): Boolean {
+        return prefs.getBoolean(KEY_AUTO_CHECK_ENABLED, CoreConfig.AUTO_CHECK_DEFAULT_ENABLED)
+    }
+
+    fun setAutoCheckEnabled(enabled: Boolean) {
+        val previous = isAutoCheckEnabled()
+        if (previous == enabled) return
+
+        prefs.edit { putBoolean(KEY_AUTO_CHECK_ENABLED, enabled) }
+        LoggerManager.info(
+            LoggerTagModel.UPDATE,
+            "UPDATE.auto_check.enabled  $previous → $enabled"
+        )
+    }
+
+    fun getAutoCheckIntervalHours(): Int {
+        return prefs.getInt(KEY_AUTO_CHECK_INTERVAL_HOURS, CoreConfig.AUTO_CHECK_DEFAULT_INTERVAL_HOURS)
+    }
+
+    fun setAutoCheckIntervalHours(hours: Int) {
+        val normalized = if (hours in CoreConfig.AUTO_CHECK_AVAILABLE_INTERVALS) {
+            hours
+        } else {
+            CoreConfig.AUTO_CHECK_DEFAULT_INTERVAL_HOURS
+        }
+
+        val previous = getAutoCheckIntervalHours()
+        if (previous == normalized) return
+
+        prefs.edit { putInt(KEY_AUTO_CHECK_INTERVAL_HOURS, normalized) }
+        LoggerManager.info(
+            LoggerTagModel.UPDATE,
+            "UPDATE.auto_check.interval  $previous → $normalized"
+        )
+    }
+
+    fun getLastCheckTime(): Long {
+        return prefs.getLong(KEY_LAST_CHECK_TIME, 0L)
+    }
+
+    fun setLastCheckTime(time: Long) {
+        prefs.edit { putLong(KEY_LAST_CHECK_TIME, time) }
+    }
+
+    /**
+     * Проверяет, нужно ли запускать авто-проверку прямо сейчас.
+     *
+     * Условия:
+     * - авто-проверка включена;
+     * - с последней проверки прошло >= интервала.
+     *
+     * Если юзер зашёл позже заданного времени — тоже true
+     * (now - lastCheckTime будет больше интервала).
+     */
+    fun shouldRunAutoCheck(): Boolean {
+        if (!isAutoCheckEnabled()) return false
+
+        val intervalMs = getAutoCheckIntervalHours().toLong() * 60L * 60L * 1000L
+        val elapsed = System.currentTimeMillis() - getLastCheckTime()
+
+        return elapsed >= intervalMs
     }
 
     // ============================================================
@@ -503,5 +595,27 @@ class SystemUpdateManager(private val context: Context) {
         fun onProgress(percent: Int)
         fun onSuccess(uri: Uri)
         fun onError(message: String)
+    }
+
+    // ============================================================
+    // КЛЮЧИ SHAREDPREFERENCES + ОБЩИЙ КЭШ
+    // ============================================================
+
+    companion object {
+        private const val KEY_AUTO_CHECK_ENABLED = "auto_check_enabled"
+        private const val KEY_AUTO_CHECK_INTERVAL_HOURS = "auto_check_interval_hours"
+        private const val KEY_LAST_CHECK_TIME = "last_check_time"
+
+        /**
+         * Общий кэш последнего результата checkForUpdates().
+         *
+         * @Volatile — пишется из Dispatchers.IO (MainActivity / UpdateFragment),
+         * читается из UI / других потоков (GetApps, GetCoreState, SettingsActivity).
+         *
+         * Живёт в рамках процесса. При перезапуске приложения — null,
+         * пока не отработает первая проверка.
+         */
+        @Volatile
+        private var cachedUpdate: UpdateCheckResult? = null
     }
 }

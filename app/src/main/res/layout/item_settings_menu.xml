@@ -67,6 +67,17 @@
 
     </LinearLayout>
 
+    <!-- Маркер (badge). Показывается, если badge = true. -->
+    <View
+        android:id="@+id/badge_dot"
+        android:layout_width="@dimen/spacing_sm"
+        android:layout_height="@dimen/spacing_sm"
+        android:layout_marginEnd="@dimen/spacing_s"
+        android:background="@drawable/bg_badge_dot"
+        android:visibility="gone"
+        tools:backgroundTint="@color/scheme_teal_primary"
+        tools:visibility="visible" />
+
     <!-- Стрелка -->
     <ImageView
         android:layout_width="@dimen/icon_small"

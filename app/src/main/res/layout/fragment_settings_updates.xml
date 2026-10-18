@@ -17,6 +17,105 @@
         android:orientation="vertical">
 
         <!-- ============================================================ -->
+        <!-- ===== НАСТРОЙКИ АВТО-ПРОВЕРКИ ОБНОВЛЕНИЙ =================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/update_auto_check_section" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Switch «Автопроверка обновлений» -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_update_autocheck"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/auto_check_switch"
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="0dp"
+                    android:text="@string/update_auto_check_title"
+                    tools:ignore="VisualLintButtonSize" />
+
+            </LinearLayout>
+
+            <!-- Разделитель + Spinner интервала (виден только когда switch on) -->
+            <View
+                android:id="@+id/auto_check_interval_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <LinearLayout
+                android:id="@+id/auto_check_interval_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_s"
+                android:paddingBottom="@dimen/spacing_s">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="@dimen/icon_small"
+                    android:layout_marginEnd="@dimen/spacing_m"
+                    android:contentDescription="@string/empty"
+                    android:src="@drawable/ic_update_interval" />
+
+                <TextView
+                    style="@style/Text.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/update_auto_check_interval_title" />
+
+                <Spinner
+                    android:id="@+id/auto_check_interval_spinner"
+                    style="@style/Spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="100dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
         <!-- ===== ОБНОВЛЕНИЕ СИСТЕМЫ =================================== -->
         <!-- ============================================================ -->
 

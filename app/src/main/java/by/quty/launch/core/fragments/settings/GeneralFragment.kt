@@ -2,9 +2,12 @@
 package by.quty.launch.core.fragments.settings
 
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -22,7 +25,8 @@ import by.quty.launch.core.managers.ShellManager
 /**
  * Фрагмент "Основное" для Настроек
  * Содержит: переключение темы (Light/Dark/System), ориентация экрана,
- * полноэкранный режим, строгий режим, выбор языка
+ * полноэкранный режим, строгий режим, выбор языка,
+ * статус «Домашний экран» (default launcher).
  */
 class GeneralFragment : Fragment() {
 
@@ -46,6 +50,10 @@ class GeneralFragment : Fragment() {
     // UI элементы для языка
     private lateinit var languageRussianCard: LinearLayout
     private lateinit var languageEnglishCard: LinearLayout
+
+    // UI элементы для «Домашний экран»
+    private lateinit var homeScreenRow: View
+    private lateinit var homeScreenState: TextView
 
     // Флаг для предотвращения множественных обновлений
     private var isUpdating = false
@@ -88,17 +96,122 @@ class GeneralFragment : Fragment() {
         languageRussianCard = view.findViewById(R.id.language_russian_card)
         languageEnglishCard = view.findViewById(R.id.language_english_card)
 
+        // Домашний экран
+        homeScreenRow = view.findViewById(R.id.home_screen_row)
+        homeScreenState = view.findViewById(R.id.home_screen_state)
+
         setupThemeSelector()
         setupOrientationSelector()
         setupFullscreenSelector()
         setupStrictModeSelector()
         setupLanguageSelector()
+        setupHomeScreenRow()
 
         Handler(Looper.getMainLooper()).postDelayed({
             updateOrientationLockState()
         }, 50)
 
         refreshSettings()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        (activity as? SettingsActivity)?.let {
+            needsRestart = it.getNeedsRestart()
+        }
+
+        refreshSettings()
+
+        // Проверяем статус «Домашний экран» при возврате с системных настроек
+        // (юзер мог вернуться из ACTION_HOME_SETTINGS, где выбрал наш лаунчер).
+        updateHomeScreenState()
+    }
+
+    // ============================================================
+    // ДОМАШНИЙ ЭКРАН (DEFAULT LAUNCHER)
+    // ============================================================
+
+    private fun setupHomeScreenRow() {
+        updateHomeScreenState()
+
+        homeScreenRow.setOnClickListener {
+            try {
+                // Системный экран выбора HOME-приложения.
+                // После выбора система вернёт нас сюда через onResume(),
+                // где мы перепроверим состояние.
+                val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.settings_home_screen_open_error,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    /**
+     * Проверяет, является ли Quty.Launch лаунчером по умолчанию,
+     * и обновляет TextView состояния.
+     */
+    private fun updateHomeScreenState() {
+        if (!isAdded) return
+
+        val isDefault = isQutyLaunchDefaultHome()
+
+        if (isDefault) {
+            homeScreenState.text = getString(R.string.settings_home_screen_assigned)
+            homeScreenState.setTextColor(
+                androidx.core.content.ContextCompat.getColor(
+                    requireContext(),
+                    R.color.status_granted
+                )
+            )
+        } else {
+            homeScreenState.text = getString(R.string.settings_home_screen_not_assigned)
+            homeScreenState.setTextColor(
+                androidx.core.content.ContextCompat.getColor(
+                    requireContext(),
+                    R.color.text_error
+                )
+            )
+        }
+    }
+
+    /**
+     * Проверяет, обрабатывает ли Quty.Launch HOME-интент сейчас.
+     *
+     * Использует PackageManager.resolveActivity() с MATCH_DEFAULT_ONLY —
+     * это не-deprecated способ узнать, какая Activity выберется системой
+     * для HOME-интента. Если это наша MainActivity — мы назначены
+     * дефолтным лаунчером.
+     *
+     * Fallback (когда HOME-приложение вообще не выбрано) НЕ считается
+     * назначением — resolveActivity в этом случае может вернуть
+     * системный resolver или null.
+     */
+    private fun isQutyLaunchDefaultHome(): Boolean {
+        return try {
+            val packageManager = requireContext().packageManager
+
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+
+            val resolved = packageManager.resolveActivity(
+                homeIntent,
+                PackageManager.MATCH_DEFAULT_ONLY
+            )
+
+            val resolvedPackage = resolved?.activityInfo?.packageName
+            resolvedPackage == requireContext().packageName
+        } catch (_: Exception) {
+            // На некоторых прошивках resolveActivity может бросать
+            // SecurityException или возвращать null — считаем, что не назначены
+            false
+        }
     }
 
     // ============================================================
@@ -394,17 +507,10 @@ class GeneralFragment : Fragment() {
         // Язык
         selectLanguage(configManager.getLanguage())
 
+        // Домашний экран
+        updateHomeScreenState()
+
         isUpdating = false
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        (activity as? SettingsActivity)?.let {
-            needsRestart = it.getNeedsRestart()
-        }
-
-        refreshSettings()
     }
 
     private fun getColorFromAttribute(context: Context, attr: Int): Int {

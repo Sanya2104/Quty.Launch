@@ -195,6 +195,12 @@
     <string name="additional_fullscreen">Полноэкранный режим</string>
     <string name="additional_strict_mode">Строгий режим</string>
 
+    <!-- Домашний экран (default launcher) -->
+    <string name="settings_home_screen_title">Домашний экран</string>
+    <string name="settings_home_screen_assigned">Назначен</string>
+    <string name="settings_home_screen_not_assigned">Не назначен</string>
+    <string name="settings_home_screen_open_error">Не удалось открыть настройки домашнего экрана</string>
+
     <string name="toast_fullscreen_enabled">Полноэкранный режим включён</string>
     <string name="toast_fullscreen_disabled">Полноэкранный режим выключен</string>
     <string name="toast_strict_mode_enabled">Строгий режим включён</string>
@@ -331,6 +337,15 @@
     <string name="update_info_title">Обновление системы</string>
     <string name="check_updates_online_button">Онлайн обновление</string>
     <string name="checking_updates">Проверка…</string>
+
+    <!-- Настройки авто-проверки -->
+    <string name="update_auto_check_section">Автопроверка обновлений</string>
+    <string name="update_auto_check_title">Проверять обновления автоматически</string>
+    <string name="update_auto_check_interval_title">Интервал проверки</string>
+    <string name="update_auto_check_interval_6h">Каждые 6 часов</string>
+    <string name="update_auto_check_interval_12h">Каждые 12 часов</string>
+    <string name="update_auto_check_interval_24h">Раз в сутки</string>
+    <string name="update_auto_check_interval_72h">Раз в 3 дня</string>
 
     <!-- Ошибки -->
     <string name="update_error">Ошибка</string>
@@ -526,6 +541,8 @@
 
     <!-- Инструменты -->
     <string name="dev_restart_app">Перезапустить приложение</string>
+    <string name="dev_reset_update_timer">Сбросить таймер проверки обновлений</string>
+    <string name="dev_reset_update_timer_success">Таймер сброшен. Проверка обновлений запустится при следующем входе.</string>
     <string name="dev_restart_app_dialog_title">Перезапустить приложение?</string>
     <string name="dev_restart_app_dialog_message">Приложение будет закрыто и запущено заново.</string>
     <string name="dev_restart_app_dialog_confirm">Перезапустить</string>
