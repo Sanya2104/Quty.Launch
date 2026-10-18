@@ -269,7 +269,7 @@ class ShellFragment : Fragment() {
         } catch (_: Exception) {
             Toast.makeText(
                 requireContext(),
-                R.string.store_load_error,
+                R.string.settings_personalization_store_open_error,
                 Toast.LENGTH_SHORT
             ).show()
         }

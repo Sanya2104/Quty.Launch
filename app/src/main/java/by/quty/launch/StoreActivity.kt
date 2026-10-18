@@ -1,217 +1,352 @@
 // *** StoreActivity.kt *** //
 package by.quty.launch
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
-import by.quty.launch.core.fragments.store.ShellDetailFragment
-import by.quty.launch.core.fragments.store.ShellListFragment
-import by.quty.launch.core.managers.StoreManager
-import kotlinx.coroutines.launch
-import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
+import by.quty.launch.core.adapters.SettingsMenuAdapter
+import by.quty.launch.core.fragments.store.StoreInstalledFragment
+import by.quty.launch.core.fragments.store.StoreSettingsFragment
+import by.quty.launch.core.fragments.store.StoreShellsFragment
+import by.quty.launch.core.model.MenuModel
+import by.quty.launch.databinding.ActivityStoreBinding
 
 /**
- * Активность магазина оболочек Quty.Launch
- * Позволяет просматривать и устанавливать оболочки из репозитория
+ * Активность магазина оболочек Quty.Launch.
+ *
+ * Вёрстка по паттерну LoggerActivity:
+ * - на телефоне — меню и контент переключаются как экраны;
+ * - на планшете — меню слева, контент справа.
+ *
+ * Пока — каркас с заглушками. Вся логика магазина будет добавлена позже.
  */
 class StoreActivity : BaseActivity() {
 
-    private lateinit var viewPager: ViewPager2
-    private lateinit var tabLayout: TabLayout
-    private lateinit var closeButton: ImageButton
-    private lateinit var progressBar: ProgressBar
-    private lateinit var progressText: TextView
-
-    private lateinit var storeManager: StoreManager
-    private var isLoading = false
-
     companion object {
-        private const val TAB_SHELLS = 0
-        private const val TAB_MY = 1
+        /**
+         * id пункта меню «Оболочки» — используется для определения,
+         * какая иконка должна быть на кнопке назад.
+         */
+        private const val SHELLS_FRAGMENT_ID = 1
+    }
+
+    private lateinit var binding: ActivityStoreBinding
+
+    private var isFragmentVisible = false
+    private var isTabletMode = false
+    private var selectedItemId = -1
+
+    private var menuItems: List<MenuModel> = emptyList()
+
+    private val menuWidthPx: Int by lazy {
+        (340 * resources.displayMetrics.density).toInt()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_store)
-
         applyOrientation()
 
-        storeManager = StoreManager(this)
+        binding = ActivityStoreBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        initViews()
-        setupTabs()
+        menuItems = buildMenuItems()
 
-        // Загружаем оболочки
-        loadShells()
+        checkMode()
+        setupMenu()
+        setupButtons()
+        setupBackHandler()
 
-        // Включаем иммерсивный режим
+        if (savedInstanceState != null) {
+            selectedItemId = savedInstanceState.getInt("selected_item_id", -1)
+            isFragmentVisible = savedInstanceState.getBoolean("fragment_visible", false)
+
+            if (isFragmentVisible && selectedItemId != -1) {
+                val item = menuItems.find { it.id == selectedItemId }
+                if (item != null) {
+                    restoreFragment(item)
+                } else {
+                    isFragmentVisible = false
+                    selectedItemId = -1
+                }
+            }
+        }
+
+        // При первом открытии сразу показываем первый пункт — «Оболочки».
+        if (selectedItemId == -1 && menuItems.isNotEmpty()) {
+            showItem(menuItems.first())
+        }
+
+        applyMode()
+
+        // Иммерсивный режим
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
         }
+    }
 
-        // ===== ОБРАБОТКА СИСТЕМНОЙ КНОПКИ "НАЗАД" =====
-        // Перехватываем нажатие "Назад" и корректно закрываем детальный вид
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Если открыт детальный вид — закрываем его
-                if (isDetailVisible()) {
-                    hideDetail()
-                } else {
-                    // Если детальный вид не открыт — закрываем активность
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putInt("selected_item_id", selectedItemId)
+        outState.putBoolean("fragment_visible", isFragmentVisible)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        applyOrientation()
+
+        val previousTabletMode = isTabletMode
+        checkMode()
+
+        if (!previousTabletMode && isTabletMode) {
+            if (selectedItemId == -1) {
+                if (menuItems.isNotEmpty()) {
+                    showItem(menuItems.first())
                 }
-            }
-        })
-    }
-
-    private fun initViews() {
-        viewPager = findViewById(R.id.view_pager)
-        tabLayout = findViewById(R.id.tab_layout)
-        closeButton = findViewById(R.id.btn_close)
-        progressBar = findViewById(R.id.progress_bar)
-        progressText = findViewById(R.id.progress_text)
-
-        closeButton.setOnClickListener {
-            finish()
-        }
-    }
-
-    private fun setupTabs() {
-        val adapter = StorePagerAdapter(this, storeManager)
-        viewPager.adapter = adapter
-
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            when (position) {
-                TAB_SHELLS -> tab.text = getString(R.string.store_tab_shells)
-                TAB_MY -> tab.text = getString(R.string.store_tab_my)
-            }
-        }.attach()
-    }
-
-    private fun loadShells() {
-        if (isLoading) return
-        isLoading = true
-
-        showLoading(true)
-
-        lifecycleScope.launch {
-            val shells = storeManager.fetchShells()
-            isLoading = false
-            showLoading(false)
-
-            if (shells == null) {
-                Toast.makeText(
-                    this@StoreActivity,
-                    getString(R.string.store_load_error),
-                    Toast.LENGTH_LONG
-                ).show()
             } else {
-                // Фрагменты уже получили StoreManager через адаптер
-                // Просто уведомляем их об обновлении
-                viewPager.post {
-                    val fragments = listOf(
-                        supportFragmentManager.findFragmentByTag("f0"),
-                        supportFragmentManager.findFragmentByTag("f1")
-                    )
-                    fragments.forEach { fragment ->
-                        (fragment as? ShellListFragment)?.notifyDataChanged()
-                    }
+                val item = menuItems.find { it.id == selectedItemId }
+                if (item != null) {
+                    showItem(item)
                 }
             }
+            return
         }
+
+        applyMode()
     }
 
-    private fun showLoading(show: Boolean) {
-        if (show) {
-            progressBar.visibility = View.VISIBLE
-            progressText.visibility = View.VISIBLE
-            progressText.text = getString(R.string.store_loading)
+    private fun checkMode() {
+        val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
+        isTabletMode = widthDp >= 600
+    }
+
+    private fun applyMode() {
+        val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
+        val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
+
+        if (isTabletMode) {
+            menuParams.width = menuWidthPx
+            menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.weight = 0f
+
+            contentParams.width = 0
+            contentParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.weight = 1f
+
+            binding.menuPane.visibility = View.VISIBLE
+            binding.contentPane.visibility = View.VISIBLE
+
+            binding.btnClose.visibility = View.GONE
+            binding.btnCloseContent.visibility = View.VISIBLE
+
         } else {
-            progressBar.visibility = View.GONE
-            progressText.visibility = View.GONE
+            menuParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.weight = 0f
+
+            contentParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.weight = 0f
+
+            binding.btnClose.visibility = View.VISIBLE
+            binding.btnCloseContent.visibility = View.VISIBLE
+
+            if (isFragmentVisible) {
+                binding.menuPane.visibility = View.GONE
+                binding.contentPane.visibility = View.VISIBLE
+            } else {
+                binding.menuPane.visibility = View.VISIBLE
+                binding.contentPane.visibility = View.GONE
+            }
+        }
+
+        binding.menuPane.layoutParams = menuParams
+        binding.contentPane.layoutParams = contentParams
+
+        if (isFragmentVisible) {
+            binding.fragmentContainer.visibility = View.VISIBLE
+            binding.contentToolbar.visibility = View.VISIBLE
+            binding.contentTitle.text = getMenuItemTitle()
+
+            if (isTabletMode) {
+                binding.recyclerMenu.visibility = View.VISIBLE
+                binding.btnBackContent.visibility = View.GONE
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
+            } else {
+                binding.recyclerMenu.visibility = View.GONE
+                binding.btnBackContent.visibility = View.VISIBLE
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+
+                updateBackButtonIcon()
+            }
+
+        } else {
+            binding.fragmentContainer.visibility = View.GONE
+            binding.recyclerMenu.visibility = View.VISIBLE
+            binding.contentToolbar.visibility = View.GONE
+            binding.btnBackContent.visibility = View.GONE
+            binding.contentTitle.text = ""
+
+            if (!isTabletMode) {
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+            } else if (selectedItemId != -1) {
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
+            }
         }
     }
 
     /**
-     * Проверяет, открыт ли детальный вид
+     * Иконка «Назад» в шапке контента:
+     * - для корневого «Оболочки» — три полоски (ic_menu),
+     * - для остальных — стрелка (ic_back).
      */
-    private fun isDetailVisible(): Boolean {
-        val fragmentContainer = findViewById<View>(R.id.fragment_container)
-        return fragmentContainer.isVisible
+    private fun updateBackButtonIcon() {
+        val iconRes = if (selectedItemId == SHELLS_FRAGMENT_ID) {
+            R.drawable.ic_menu
+        } else {
+            R.drawable.ic_back
+        }
+        binding.btnBackContentIcon.setImageResource(iconRes)
     }
 
-    /**
-     * Открывает детальный вид оболочки
-     */
-    fun showDetail(shellId: String) {
-        val fragment = ShellDetailFragment.newInstance(shellId)
-        fragment.setStoreManager(storeManager)
-
-        // Добавляем фрагмент в backStack для обработки системной кнопки "Назад"
-        supportFragmentManager.beginTransaction()
-            .add(R.id.fragment_container, fragment)
-            .addToBackStack(null)  // ← ВАЖНО: добавляем в backStack
-            .commit()
-
-        // Показываем контейнер, скрываем ViewPager и TabLayout
-        findViewById<View>(R.id.fragment_container).visibility = View.VISIBLE
-        viewPager.visibility = View.GONE
-        tabLayout.visibility = View.GONE
+    private fun getMenuItemTitle(): String {
+        val item = menuItems.find { it.id == selectedItemId }
+        return if (item != null) getString(item.title) else ""
     }
 
-    /**
-     * Закрывает детальный вид
-     */
-    fun hideDetail() {
-        // Убираем фрагмент из backStack
-        supportFragmentManager.popBackStack()
+    private fun setupMenu() {
+        val adapter = SettingsMenuAdapter(menuItems) { item ->
+            showItem(item)
+        }
 
-        // Показываем ViewPager и TabLayout, скрываем контейнер
-        findViewById<View>(R.id.fragment_container).visibility = View.GONE
-        viewPager.visibility = View.VISIBLE
-        tabLayout.visibility = View.VISIBLE
+        binding.recyclerMenu.layoutManager = LinearLayoutManager(this)
+        binding.recyclerMenu.adapter = adapter
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        storeManager.clearCache()
+    private fun setupButtons() {
+        binding.btnClose.setOnClickListener { finish() }
+        binding.btnCloseContent.setOnClickListener { finish() }
+        binding.btnBackContent.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
-    // ============================================================
-    // ВНУТРЕННИЙ АДАПТЕР
-    // ============================================================
-
-    class StorePagerAdapter(
-        activity: StoreActivity,
-        private val storeManager: StoreManager
-    ) : FragmentStateAdapter(activity) {
-
-        override fun getItemCount(): Int = 2
-
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
-                TAB_SHELLS -> ShellListFragment.newInstance(false).apply {
-                    setStoreManager(storeManager)
+    private fun setupBackHandler() {
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (!isTabletMode && isFragmentVisible) {
+                        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+                        isFragmentVisible = false
+                        applyMode()
+                        return
+                    }
+                    finish()
                 }
-                TAB_MY -> ShellListFragment.newInstance(true).apply {
-                    setStoreManager(storeManager)
-                }
-                else -> ShellListFragment.newInstance(false)
             }
+        )
+    }
+
+    /**
+     * Пункты меню магазина.
+     */
+    private fun buildMenuItems(): List<MenuModel> {
+        val items = mutableListOf<MenuModel>()
+
+        items.add(
+            MenuModel(
+                SHELLS_FRAGMENT_ID,
+                R.drawable.ic_store,
+                R.string.store_menu_shells,
+                R.string.store_menu_shells_desc,
+                StoreShellsFragment::class.java,
+                R.color.scheme_green_primary,
+                true
+            )
+        )
+
+        items.add(
+            MenuModel(
+                2,
+                R.drawable.ic_folder,
+                R.string.store_menu_installed,
+                R.string.store_menu_installed_desc,
+                StoreInstalledFragment::class.java,
+                R.color.scheme_orange_primary,
+                true
+            )
+        )
+
+        items.add(
+            MenuModel(
+                3,
+                R.drawable.ic_settings,
+                R.string.store_menu_settings,
+                R.string.store_menu_settings_desc,
+                StoreSettingsFragment::class.java,
+                R.color.scheme_cyan_primary,
+                true
+            )
+        )
+
+        return items
+    }
+
+    private fun showItem(item: MenuModel) {
+        isFragmentVisible = true
+        selectedItemId = item.id
+        binding.contentTitle.text = getString(item.title)
+
+        try {
+            val fragment = supportFragmentManager.fragmentFactory.instantiate(
+                item.fragment.classLoader!!,
+                item.fragment.name
+            )
+
+            supportFragmentManager
+                .beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
+
+        } catch (_: Exception) {
+        }
+
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
+
+        applyMode()
+    }
+
+    private fun restoreFragment(item: MenuModel) {
+        isFragmentVisible = true
+        selectedItemId = item.id
+        binding.contentTitle.text = getString(item.title)
+
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
+
+        applyMode()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        applyOrientation()
+
+        window.decorView.post {
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
         }
     }
 }
