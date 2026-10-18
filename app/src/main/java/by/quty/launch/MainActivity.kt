@@ -4,6 +4,10 @@ package by.quty.launch
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.KeyEvent
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.Core
@@ -26,10 +30,9 @@ import kotlin.time.Duration.Companion.milliseconds
  *   кнопки Home;
  * - Хост WebView с активной оболочкой.
  *
- * launchMode="singleTask" в манифесте — при повторном запуске Home
- * система шлёт onNewIntent() в существующий экземпляр, а не создаёт
- * новый. Мы в onNewIntent() ничего не делаем: WebView уже загружен,
- * повторно грузить оболочку нет смысла.
+ * Safe Mode: если при запуске зажать Volume Down на 1.5 секунды —
+ * включится безопасный режим (грузится оболочка "default", выбранная
+ * пользователем сохраняется в prefs и вернётся после выхода из Safe Mode).
  */
 class MainActivity : BaseActivity() {
 
@@ -46,11 +49,39 @@ class MainActivity : BaseActivity() {
     private var lastAppliedAnimations: Boolean? = null
 
     // Последнее известное состояние обновления — чтобы отследить смену
-    // и уведомить оболочку через notifyCoreStateChanged()
     private var lastUpdateAvailable: Boolean = false
 
-    // Флаг, что авто-проверка сейчас выполняется (защита от параллельных запусков)
+    // Флаг, что авто-проверка сейчас выполняется
     private var isAutoCheckRunning: Boolean = false
+
+    // ===== Safe Mode: перехват Volume Down =====
+
+    /**
+     * Окно удержания Volume Down для включения Safe Mode (мс).
+     * 1500 мс — достаточно, чтобы случайное нажатие не сработало,
+     * но и не заставлять юзера держать кнопку вечность.
+     */
+    private val safeModeHoldDurationMs = 1500L
+
+    /**
+     * Флаг, что кнопка Volume Down сейчас зажата.
+     * Защита от повторного запуска таймера.
+     */
+    private var isVolumeDownHeld = false
+
+    /**
+     * Флаг, что Safe Mode уже сработал в этой сессии MainActivity.
+     * После срабатывания ничего не делаем — перезапуск сам всё сделает.
+     */
+    private var isSafeModeTriggered = false
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val safeModeRunnable = Runnable {
+        if (isVolumeDownHeld && !isSafeModeTriggered && !configManager.isSafeModeActive()) {
+            isSafeModeTriggered = true
+            enableSafeMode()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +105,6 @@ class MainActivity : BaseActivity() {
         applyOrientation(shellManager)
 
         core = Core(this)
-        // Используем applicationContext для WebView (предотвращает утечки памяти)
         webView = LauncherWebView(applicationContext)
 
         updateManager = SystemUpdateManager(this)
@@ -87,34 +117,141 @@ class MainActivity : BaseActivity() {
         lastAppliedAnimations = configManager.isEffectiveAnimationsEnabled()
         lastUpdateAvailable = updateManager.getCachedUpdate()?.hasUpdate == true
 
-        // Применяем состояние анимаций к WebView сразу — CSS-инжект
-        // повторится в onPageFinished, когда документ будет готов.
         webView.applyAnimationsEnabled(lastAppliedAnimations == true)
 
-        // Загружаем оболочку
         loadShell()
         setContentView(webView)
 
-        // Включаем иммерсивный режим ПОСЛЕ того, как View создан
         window.decorView.post {
             val strictMode = configManager.isStrictModeEnabled()
             enableImmersiveMode(strictMode)
         }
 
-        // Фоновая авто-проверка обновлений — с задержкой,
-        // чтобы не мешать старту (WebView, ShellManager и т.д.)
+        // Фоновая авто-проверка обновлений — с задержкой
         lifecycleScope.launch {
             delay(CoreConfig.AUTO_CHECK_START_DELAY_MS.milliseconds)
             maybeRunAutoUpdateCheck()
         }
     }
 
+    // ============================================================
+    // SAFE MODE (перехват Volume Down)
+    // ============================================================
+
+    /**
+     * Перехват нажатия Volume Down.
+     *
+     * - ACTION_DOWN → запускаем таймер на safeModeHoldDurationMs.
+     * - ACTION_UP или отмена → отменяем таймер.
+     *
+     * Если таймер сработал — включаем Safe Mode.
+     * Если кнопка отпущена раньше — уменьшаем громкость вручную,
+     * компенсируя проглоченный ACTION_DOWN (иначе кнопка работала бы
+     * «через раз» при коротком нажатии).
+     *
+     * ВАЖНО: возвращаем true на ACTION_DOWN / ACTION_UP, чтобы
+     * не пикало при удержании.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (!isVolumeDownHeld && !isSafeModeTriggered && !configManager.isSafeModeActive()) {
+                        isVolumeDownHeld = true
+                        handler.postDelayed(safeModeRunnable, safeModeHoldDurationMs)
+                    }
+                    // Блокируем системный звук, пока считаем таймер
+                    return true
+                }
+                KeyEvent.ACTION_UP -> {
+                    if (isVolumeDownHeld) {
+                        isVolumeDownHeld = false
+                        handler.removeCallbacks(safeModeRunnable)
+
+                        // Если Safe Mode не сработал — компенсируем
+                        // пропущенный ACTION_DOWN вручную.
+                        if (!isSafeModeTriggered) {
+                            decreaseVolumeManually()
+                        }
+                        return true
+                    }
+                    return false
+                }
+                else -> return super.dispatchKeyEvent(event)
+            }
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
+    /**
+     * Уменьшает громкость вручную (компенсация проглоченного ACTION_DOWN).
+     *
+     * Нужно, чтобы юзер не замечал, что кнопка Volume Down
+     * работает «через раз» при коротком нажатии.
+     */
+    private fun decreaseVolumeManually() {
+        try {
+            val audioManager = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+            audioManager.adjustStreamVolume(
+                android.media.AudioManager.STREAM_MUSIC,
+                android.media.AudioManager.ADJUST_LOWER,
+                android.media.AudioManager.FLAG_SHOW_UI
+            )
+        } catch (_: Exception) {
+            // Игнорируем ошибки
+        }
+    }
+
+    /**
+     * Включает Safe Mode:
+     * - ставит флаг safe_mode_active = true;
+     * - показывает тост;
+     * - перезапускает MainActivity, чтобы ShellManager перечитал
+     *   активную оболочку и загрузил default.
+     */
+    private fun enableSafeMode() {
+        LoggerManager.warn(
+            LoggerTagModel.CORE,
+            "CORE.safe_mode  activated"
+        )
+
+        configManager.setSafeModeActive(true)
+
+        Toast.makeText(
+            this,
+            R.string.safe_mode_activated_toast,
+            Toast.LENGTH_LONG
+        ).show()
+
+        // Перезапускаем активность — onCreate пересоздаст ShellManager
+        // и подхватит Safe Mode.
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivityAnimated(intent)
+        finishAnimated()
+    }
+
+    /**
+     * Снимает таймер и освобождает ресурсы.
+     */
+    private fun clearSafeModeState() {
+        handler.removeCallbacks(safeModeRunnable)
+        isVolumeDownHeld = false
+    }
+
+    override fun onDestroy() {
+        clearSafeModeState()
+        super.onDestroy()
+    }
+
+    // ============================================================
+    // ОСТАЛЬНАЯ ЛОГИКА
+    // ============================================================
+
     /**
      * Обработка повторного запуска через Home.
-     *
-     * Из-за launchMode="singleTask" система при нажатии Home
-     * шлёт Intent.ACTION_MAIN + CATEGORY_HOME в существующий экземпляр,
-     * а не создаёт новый. WebView уже загружен — просто ничего не делаем.
      */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -130,15 +267,13 @@ class MainActivity : BaseActivity() {
     private fun loadShell() {
         lifecycleScope.launch {
             val shellToActivate = shellManager.getShellToActivate()
-            // Вызов suspend функции в фоновом потоке
             shellManager.setActiveShell(shellToActivate)
 
-            // После установки оболочки повторно применяем ориентацию
             applyOrientation(shellManager)
 
             LoggerManager.info(
                 LoggerTagModel.CORE,
-                "CORE.loadShell  ${shellToActivate.name}  asset=${shellToActivate.isAsset}"
+                "CORE.loadShell  ${shellToActivate.name}  asset=${shellToActivate.isAsset}  safeMode=${configManager.isSafeModeActive()}"
             )
 
             webView.loadShell(
@@ -146,9 +281,6 @@ class MainActivity : BaseActivity() {
                 isAsset = shellToActivate.isAsset
             )
 
-            // Повторно применяем состояние анимаций к новой странице —
-            // onPageFinished в WebViewClient тоже это сделает,
-            // но здесь мы страхуемся на случай, если страница уже в кэше.
             webView.applyAnimationsEnabled(lastAppliedAnimations == true)
         }
     }
@@ -156,14 +288,12 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
-        // При возврате в активность ПРИНУДИТЕЛЬНО применяем ориентацию
         if (::shellManager.isInitialized) {
             applyOrientation(shellManager)
         } else {
             applyOrientation()
         }
 
-        // Проверяем смену языка → пушим в WebView, если изменилось
         if (::jsBridge.isInitialized && ::webView.isInitialized) {
             val currentLang = configManager.getLanguageCode()
             if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
@@ -175,7 +305,6 @@ class MainActivity : BaseActivity() {
                 jsBridge.notifyCoreStateChanged()
             }
 
-            // Проверяем смену состояния анимаций → инжектим/снимаем CSS
             val currentAnimations = configManager.isEffectiveAnimationsEnabled()
             if (lastAppliedAnimations != currentAnimations) {
                 LoggerManager.info(
@@ -184,7 +313,6 @@ class MainActivity : BaseActivity() {
                 )
                 lastAppliedAnimations = currentAnimations
                 webView.applyAnimationsEnabled(currentAnimations)
-                // Пуш в оболочку — чтобы она тоже обновила своё состояние
                 jsBridge.notifyCoreStateChanged()
             }
         }
@@ -194,16 +322,12 @@ class MainActivity : BaseActivity() {
             enableImmersiveMode(strictMode)
         }
 
-        // Авто-проверка обновлений — если прошло больше интервала с последней.
-        // Проверяем на возврате в активность (в т.ч. когда Quty.Launch — HOME
-        // и onCreate случается редко).
         maybeRunAutoUpdateCheck()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        // Пушим оболочке, что ориентация/конфигурация изменилась
         if (::jsBridge.isInitialized && ::webView.isInitialized) {
             jsBridge.notifyCoreStateChanged()
         }
@@ -213,23 +337,6 @@ class MainActivity : BaseActivity() {
     // ФОНОВАЯ АВТО-ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
-    /**
-     * Запускает авто-проверку, если:
-     * - авто-проверка включена в настройках;
-     * - с последней проверки прошло >= интервала (см. SystemUpdateManager.shouldRunAutoCheck());
-     * - сейчас нет другой запущенной проверки (isAutoCheckRunning).
-     *
-     * Логика:
-     * 1. Проверяем условия. Если не проходят — выходим.
-     * 2. Сразу ставим lastCheckTime = now (защита от спама при
-     *    недоступном сервере — следующая попытка будет через интервал).
-     * 3. Вызываем checkForUpdates().
-     * 4. Сохраняем результат в кэш (setCachedUpdate) — его прочитают
-     *    GetApps, GetCoreState, SettingsActivity, UpdateFragment.
-     * 5. Если обновление появилось — уведомляем оболочку через
-     *    notifyCoreStateChanged(), чтобы она перезапросила GetApps
-     *    и показала маркер без перезагрузки.
-     */
     private fun maybeRunAutoUpdateCheck() {
         if (!::updateManager.isInitialized) return
         if (isAutoCheckRunning) return
@@ -237,20 +344,13 @@ class MainActivity : BaseActivity() {
 
         isAutoCheckRunning = true
 
-        // Обновляем lastCheckTime ДО запроса — чтобы при падении
-        // следующая попытка была не раньше, чем через интервал.
         updateManager.setLastCheckTime(System.currentTimeMillis())
 
         lifecycleScope.launch {
             try {
                 val result = updateManager.checkForUpdates()
-
-                // Сохраняем в кэш — его прочитают GetApps / GetCoreState /
-                // SettingsActivity / UpdateFragment
                 updateManager.setCachedUpdate(result)
 
-                // Если обновление появилось и раньше его не было —
-                // уведомляем оболочку, чтобы она перезапросила GetApps
                 val currentUpdateAvailable = result.hasUpdate
                 if (currentUpdateAvailable != lastUpdateAvailable) {
                     lastUpdateAvailable = currentUpdateAvailable

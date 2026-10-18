@@ -144,9 +144,9 @@ class ShellManager(
         // Ищем оболочку по умолчанию
         var defaultShell = shells.find { it.isDefault }
 
-        // Если оболочка по умолчанию не найдена, ищем по имени "default"
+        // Если оболочка по умолчанию не найдена, ищем по имени "Default"
         if (defaultShell == null) {
-            defaultShell = shells.find { it.name == "default" }
+            defaultShell = shells.find { it.name == "Default" }
         }
 
         // Если всё ещё не найдена, берём первую доступную оболочку
@@ -157,9 +157,9 @@ class ShellManager(
         // Если совсем нет оболочек — создаём базовую оболочку
         if (defaultShell == null) {
             defaultShell = Shell(
-                name = "default",
+                name = "Default",
                 isDefault = true,
-                sourcePath = "shells/default",
+                sourcePath = "shells/Default",
                 isAsset = true,
                 displayName = context.getString(R.string.shell_default_name)
             )
@@ -306,11 +306,11 @@ class ShellManager(
                 shells.add(
                     Shell(
                         name = shellFolder,
-                        isDefault = shellFolder == "default",
+                        isDefault = shellFolder == "Default",
                         sourcePath = "shells/$shellFolder",
                         isAsset = true,
                         displayName = manifest?.name ?: when (shellFolder) {
-                            "default" -> context.getString(R.string.shell_default_name)
+                            "Default" -> context.getString(R.string.shell_default_name)
                             else -> shellFolder.replaceFirstChar { it.uppercase() }
                         },
                         isCustom = false,
@@ -408,9 +408,27 @@ class ShellManager(
 
     /**
      * Получить оболочку для активации
+     *
+     * ВАЖНО: если активен Safe Mode — принудительно возвращаем
+     * встроенную оболочку "Default", игнорируя пользовательский выбор
+     * из prefs. Выбор пользователя НЕ сбрасывается — как только
+     * Safe Mode будет выключен, загрузится его оболочка.
      */
     fun getShellToActivate(): Shell {
         val shells = getAvailableShells()
+
+        // Safe Mode — принудительно Default
+        if (configManager.isSafeModeActive()) {
+            val defaultShell = shells.find { it.name == "Default" }
+            if (defaultShell != null) {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "SHELL.safe_mode  force Default"
+                )
+                return defaultShell
+            }
+        }
+
         val activeShellId = configManager.getActiveShell()
 
         shells.find { it.name == activeShellId }?.let { return it }
@@ -418,12 +436,12 @@ class ShellManager(
         val defaultShellId = configManager.getDefaultShell()
         shells.find { it.name == defaultShellId }?.let { return it }
 
-        shells.find { it.name == "default" }?.let { return it }
+        shells.find { it.name == "Default" }?.let { return it }
 
         return shells.firstOrNull() ?: Shell(
             name = "Default",
             isDefault = true,
-            sourcePath = "shells/default",
+            sourcePath = "shells/Default",
             isAsset = true,
             displayName = context.getString(R.string.shell_default_name)
         )
@@ -462,13 +480,21 @@ class ShellManager(
      * (например, при смене темы Light/Dark) с той же оболочкой состояние
      * активных методов сохраняется — пользователь не теряет картину
      * «кто что вызывал» в разделе Настроек → API методы.
+     *
+     * Safe Mode: в этом режиме НЕ записываем выбор в prefs — иначе
+     * при выходе из Safe Mode загрузилась бы "Default" вместо оболочки,
+     * которую юзер выбрал до входа в Safe Mode.
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
         // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
-        // Сохраняем в конфиг
-        configManager.setActiveShell(shell.name)
+        // ВАЖНО: если активен Safe Mode — не перезаписываем активную
+        // оболочку в prefs. Иначе при выходе из Safe Mode вместо
+        // пользовательской оболочки (например, QutyAuto) загрузится Default.
+        if (!configManager.isSafeModeActive()) {
+            configManager.setActiveShell(shell.name)
+        }
 
         // Обновляем в памяти
         activeShell = shell

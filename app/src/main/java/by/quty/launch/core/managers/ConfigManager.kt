@@ -42,6 +42,30 @@ class ConfigManager(context: Context) {
         prefs.edit { putString("active_shell", shellId) }
     }
 
+    // ============================================================
+    // БЕЗОПАСНЫЙ РЕЖИМ (SAFE MODE)
+    // ============================================================
+
+    /**
+     * Активен ли безопасный режим.
+     * В этом режиме ShellManager принудительно запускает оболочку "default",
+     * игнорируя пользовательский выбор из prefs.
+     */
+    fun isSafeModeActive(): Boolean {
+        return prefs.getBoolean(KEY_SAFE_MODE, false)
+    }
+
+    fun setSafeModeActive(active: Boolean) {
+        val previous = isSafeModeActive()
+        if (previous == active) return
+
+        prefs.edit { putBoolean(KEY_SAFE_MODE, active) }
+        LoggerManager.info(
+            LoggerTagModel.CONFIG,
+            "CONFIG.safe_mode  $previous → $active"
+        )
+    }
+
     // Получение ориентации
     fun getOrientation(): String {
         return prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
@@ -328,6 +352,7 @@ class ConfigManager(context: Context) {
         private const val KEY_LANGUAGE = "app_language"
         private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
         private const val KEY_ANIMATIONS_ENABLED = "animations_enabled"
+        private const val KEY_SAFE_MODE = "safe_mode_active"
     }
 
 }

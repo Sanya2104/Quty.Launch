@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Default Shell</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+          margin: 0;
+          padding: 0;
+          min-height: 100%;
+          background: #121212;
+          color: #ffffff;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+          max-width: 500px;
+          margin: 0 auto;
+          padding: 40px 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+        }
+        .safe-badge {
+          display: inline-block;
+          padding: 6px 14px;
+          background: rgba(255, 152, 0, 0.2);
+          color: #FF9800;
+          border: 1px solid rgba(255, 152, 0, 0.4);
+          border-radius: 100px;
+          font-size: 13px;
+          font-weight: 600;
+          margin-bottom: 24px;
+        }
+        .title {
+          font-size: 28px;
+          font-weight: 700;
+          margin: 0 0 8px 0;
+          text-align: center;
+        }
+        .subtitle {
+          font-size: 15px;
+          color: #999999;
+          text-align: center;
+          margin: 0 0 40px 0;
+          line-height: 1.5;
+        }
+        .buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+        }
+        .btn {
+          display: flex;
+          align-items: center;
+          padding: 18px 20px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          color: #ffffff;
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          text-align: left;
+          transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.1); }
+        .btn:active { transform: scale(0.98); }
+        .btn-icon {
+          width: 32px;
+          height: 32px;
+          margin-right: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          font-size: 18px;
+        }
+        .btn-icon.settings { background: rgba(76, 175, 80, 0.2); }
+        .btn-icon.store { background: rgba(33, 150, 243, 0.2); }
+        .btn-icon.terminal { background: rgba(156, 39, 176, 0.2); }
+        .btn-icon.logger { background: rgba(233, 30, 99, 0.2); }
+        .error {
+          margin-top: 30px;
+          color: #F44336;
+          font-size: 13px;
+          text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="safe-badge" id="safe-badge">⚠️ Safe Mode</div>
+    <h1 class="title">Quty.Launch</h1>
+    <p class="subtitle" id="subtitle">Загрузка…</p>
+    <div class="buttons" id="buttons"></div>
+    <div class="error" id="error"></div>
+</div>
+
+<script>
+    // --- Мост в Android ---
+    const bridge = window.Android || null
+    window._callbacks = window._callbacks || {}
+
+    function api(method, params) {
+      return new Promise((resolve, reject) => {
+        if (!bridge || typeof bridge.call !== 'function') {
+          reject(new Error('Android bridge недоступен'))
+          return
+        }
+        const id = method + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+        window._callbacks[id] = (result, error) => {
+          if (error) { reject(new Error(error)); return }
+          try {
+            const data = typeof result === 'string' ? JSON.parse(result) : result
+            if (data && data.success) resolve(data.data)
+            else reject(new Error(data?.error || 'Ошибка'))
+          } catch (e) { reject(e) }
+        }
+        try {
+          bridge.call(method, params ? JSON.stringify(params) : null, id)
+        } catch (e) { reject(e) }
+      })
+    }
+
+    // --- Рендер ---
+    const container = document.getElementById('buttons')
+    const subtitle = document.getElementById('subtitle')
+    const badge = document.getElementById('safe-badge')
+    const errorEl = document.getElementById('error')
+
+    function makeButton(label, emoji, className, action) {
+      const b = document.createElement('button')
+      b.className = 'btn'
+      b.innerHTML = `<div class="btn-icon ${className}">${emoji}</div><span>${label}</span>`
+      b.onclick = action
+      return b
+    }
+
+    async function load() {
+      try {
+        const core = await api('GetCoreState', null)
+        if (!core) throw new Error('Нет данных о состоянии')
+
+        // Safe Mode баннер
+        if (core.safeModeActive) {
+          badge.style.display = 'inline-block'
+        } else {
+          badge.style.display = 'none'
+        }
+
+        // Локализация
+        const isRu = core.locale && core.locale.startsWith('ru')
+        subtitle.textContent = isRu
+          ? 'Стандартная оболочка. Выберите действие:'
+          : 'Default shell. Choose an action:'
+
+        const lang = {
+          settings: isRu ? 'Настройки' : 'Settings',
+          store: isRu ? 'Магазин оболочек' : 'Shell store',
+          terminal: isRu ? 'Терминал' : 'Terminal',
+          logger: isRu ? 'Логгер' : 'Logger',
+        }
+
+        container.innerHTML = ''
+
+        // Настройки — всегда
+        container.appendChild(
+          makeButton(lang.settings, '⚙️', 'settings', () => {
+            api('LaunchApp', { packageName: 'by.quty.launch.settings' }).catch(e => errorEl.textContent = e.message)
+          })
+        )
+
+        // Магазин — всегда
+        container.appendChild(
+          makeButton(lang.store, '🛒', 'store', () => {
+            api('LaunchApp', { packageName: 'by.quty.launch.store' }).catch(e => errorEl.textContent = e.message)
+          })
+        )
+
+        // Терминал и Логгер — только если DevMode включён.
+        // Пробуем GetApps — если в списке есть TERMINAL/LOGGER, покажем.
+        // Простой путь: пробуем GetApps, ловим errors.
+        // Но проще — LaunchApp их, если ядро их разрешит через GetApps.
+        // В Safe Mode оба должны быть доступны, если DevMode включён.
+        // Проверим через GetApps.
+        try {
+          const apps = await api('GetApps', null)
+          const hasTerminal = Array.isArray(apps) && apps.some(a => a.packageName === 'by.quty.launch.terminal')
+          const hasLogger = Array.isArray(apps) && apps.some(a => a.packageName === 'by.quty.launch.logger')
+
+          if (hasTerminal) {
+            container.appendChild(
+              makeButton(lang.terminal, '⌨️', 'terminal', () => {
+                api('LaunchApp', { packageName: 'by.quty.launch.terminal' }).catch(e => errorEl.textContent = e.message)
+              })
+            )
+          }
+          if (hasLogger) {
+            container.appendChild(
+              makeButton(lang.logger, '📋', 'logger', () => {
+                api('LaunchApp', { packageName: 'by.quty.launch.logger' }).catch(e => errorEl.textContent = e.message)
+              })
+            )
+          }
+        } catch (e) {
+          // Не критично — просто не покажем Term/Logger
+        }
+
+      } catch (e) {
+        subtitle.textContent = 'Ошибка загрузки'
+        errorEl.textContent = e.message || String(e)
+      }
+    }
+
+    load()
+
+    // Реакция на смену состояния ядра
+    window.onCoreStateChanged = () => {
+      load()
+    }
+</script>
+</body>
+</html>

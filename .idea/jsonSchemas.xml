@@ -17,6 +17,9 @@
                   <Item>
                     <option name="path" value="app/src/main/assets/shells/QutyLauncher/manifest.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="app/src/main/assets/shells/Default/manifest.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

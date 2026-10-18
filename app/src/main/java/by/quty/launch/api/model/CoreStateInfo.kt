@@ -34,6 +34,11 @@ data class CoreStateInfo(
      * HEX-цвет маркера обновления ("#RRGGBB") — готов к прямой подстановке.
      */
     val updateBadgeColorHex: String? = null,
+    /**
+     * Флаг активного Safe Mode. Если true — оболочка должна
+     * показать баннер «Безопасный режим».
+     */
+    val safeModeActive: Boolean = false,
     val colorScheme: ColorSchemeInfo,
     val shell: ShellInfo?,
     val app: CoreAppInfo

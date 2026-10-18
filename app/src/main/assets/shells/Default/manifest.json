@@ -1,0 +1,9 @@
+{
+  "name": "Default",
+  "author": "QutyTeam",
+  "version": "0.0.1",
+  "preview": "preview.png",
+  "orientation": "sensor",
+  "minQutyLaunchVersion": "0.0.0",
+  "apiMethods": ["GetCoreState", "GetApps", "LaunchApp"]
+}

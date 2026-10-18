@@ -259,6 +259,13 @@
     <string name="shell_restored_default" formatted="false">Система изменила оболочку на "%s"</string>
     <string name="shell_default_name">Стандартная</string>
 
+    <!-- Safe Mode -->
+    <string name="safe_mode_banner_title">Безопасный режим</string>
+    <string name="safe_mode_banner_message">Активна стандартная оболочка. Выбранная вами оболочка могла сломаться. Смените её в магазине или выйдите из безопасного режима, чтобы попробовать снова.</string>
+    <string name="safe_mode_exit_button">Выйти из безопасного режима</string>
+    <string name="safe_mode_activated_toast">Безопасный режим активирован</string>
+    <string name="safe_mode_exited_toast">Безопасный режим отключён. Перезапуск…</string>
+
     <!-- ============================================================ -->
     <!-- ===== ЦВЕТОВЫЕ СХЕМЫ ======================================= -->
     <!-- ============================================================ -->

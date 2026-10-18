@@ -73,6 +73,7 @@ class GetCoreState(
             updateBadge = updateBadge,
             updateBadgeColor = updateBadgeSemantic,
             updateBadgeColorHex = updateBadgeHex,
+            safeModeActive = configManager.isSafeModeActive(),
             colorScheme = ColorSchemeInfo(
                 id = configManager.getColorScheme(),
                 primary = configManager.getSchemePrimaryColor(),

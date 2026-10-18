@@ -33,8 +33,6 @@ import by.quty.launch.core.model.ColorSchemeModel
 
 /**
  * Фрагмент "Персонализация" для Настроек
- * Показывает информацию об активной оболочке оформления
- * и позволяет выбрать цветовую схему.
  */
 class ShellFragment : Fragment() {
 
@@ -57,7 +55,10 @@ class ShellFragment : Fragment() {
     private lateinit var animationsSwitch: SwitchCompat
     private lateinit var animationsSystemHint: TextView
 
-    // Флаг, что требуется перезагрузка
+    // Safe Mode баннер и кнопка выхода
+    private lateinit var safeModeBanner: View
+    private lateinit var safeModeExitButton: Button
+
     private var needsRestart = false
 
     override fun onCreateView(
@@ -85,22 +86,23 @@ class ShellFragment : Fragment() {
         shellMenuButton = view.findViewById(R.id.shell_menu_button)
         storeRow = view.findViewById(R.id.store_row)
 
-        // Секция «Анимации»
         animationsSwitch = view.findViewById(R.id.animations_switch)
         animationsSystemHint = view.findViewById(R.id.animations_system_hint)
 
-        // Кнопка сразу открывает диалог с информацией об активной оболочке
+        safeModeBanner = view.findViewById(R.id.safe_mode_banner)
+        safeModeExitButton = view.findViewById(R.id.safe_mode_exit_button)
+
         shellMenuButton.setOnClickListener {
             showShellInfoDialog()
         }
 
-        // Ссылка на магазин
         storeRow.setOnClickListener {
             openStore()
         }
 
         setupColorSchemeSelector(view)
         setupAnimationsSection()
+        setupSafeModeBanner()
         refreshActiveShell()
     }
 
@@ -113,11 +115,53 @@ class ShellFragment : Fragment() {
 
         refreshActiveShell()
         setupAnimationsSection()
+        setupSafeModeBanner()
     }
 
+    // ============================================================
+    // SAFE MODE БАННЕР
+    // ============================================================
+
     /**
-     * Читает активную оболочку и заполняет карточку.
+     * Показывает/скрывает баннер Safe Mode в зависимости от флага.
+     * Кнопка «Выйти» снимает флаг и перезапускает приложение.
      */
+    private fun setupSafeModeBanner() {
+        val isSafeMode = configManager.isSafeModeActive()
+
+        if (isSafeMode) {
+            safeModeBanner.visibility = View.VISIBLE
+
+            safeModeExitButton.setOnClickListener {
+                configManager.setSafeModeActive(false)
+                Toast.makeText(
+                    requireContext(),
+                    R.string.safe_mode_exited_toast,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                // Перезапускаем, чтобы ShellManager подхватил обычную оболочку
+                val baseActivity = activity as? by.quty.launch.BaseActivity
+                val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                if (baseActivity != null) {
+                    baseActivity.startActivityAnimated(intent)
+                    baseActivity.finishAnimated()
+                } else {
+                    startActivity(intent)
+                    requireActivity().finish()
+                }
+            }
+        } else {
+            safeModeBanner.visibility = View.GONE
+            safeModeExitButton.setOnClickListener(null)
+        }
+    }
+
+    // ============================================================
+    // ОБОЛОЧКА
+    // ============================================================
+
     private fun refreshActiveShell() {
         val shell = shellManager.getActiveShell()
 
@@ -141,9 +185,6 @@ class ShellFragment : Fragment() {
         loadPreview(shell.previewBase64)
     }
 
-    /**
-     * Загружает превью из Base64. Если пусто или ошибка — fallback.
-     */
     private fun loadPreview(base64: String?) {
         if (base64.isNullOrEmpty()) {
             shellPreview.setImageResource(R.drawable.ic_image)
@@ -163,13 +204,9 @@ class ShellFragment : Fragment() {
         }
     }
 
-    /**
-     * Настройка выбора цветовой схемы.
-     */
     private fun setupColorSchemeSelector(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.color_scheme_list)
 
-        // Настройка RecyclerView (горизонтальный)
         recyclerView.layoutManager = LinearLayoutManager(
             requireContext(),
             LinearLayoutManager.HORIZONTAL,
@@ -186,60 +223,11 @@ class ShellFragment : Fragment() {
         colorSchemeAdapter.setSelectedScheme(currentSchemeId)
     }
 
-    /**
-     * Секция «Анимации».
-     *
-     * Логика:
-     * - Если система разрешает анимации (ANIMATOR_DURATION_SCALE > 0):
-     *   переключатель активен, отражает пользовательскую настройку.
-     * - Если система глушит анимации: переключатель заблокирован,
-     *   выключен, снизу показывается подсказка.
-     *
-     * Изменение переключателя:
-     * - сохраняет настройку в ConfigManager;
-     * - помечает SettingsActivity, что при выходе нужен перезапуск;
-     * - (само применение — через MainActivity.onResume() →
-     *    webView.applyAnimationsEnabled + notifyCoreStateChanged).
-     */
-    private fun setupAnimationsSection() {
-        val systemEnabled = configManager.isSystemAnimationEnabled()
-        val userEnabled = configManager.isAnimationsEnabled()
-
-        if (systemEnabled) {
-            // Система разрешает — переключатель активен
-            animationsSwitch.isEnabled = true
-            animationsSwitch.alpha = 1.0f
-            animationsSwitch.isChecked = userEnabled
-            animationsSystemHint.visibility = View.GONE
-
-            animationsSwitch.setOnCheckedChangeListener { _, isChecked ->
-                configManager.setAnimationsEnabled(isChecked)
-                // При выходе из настроек пользователю предложат перезапуск
-                (activity as? SettingsActivity)?.markRestartRequired()
-            }
-        } else {
-            // Система глушит анимации — блокируем переключатель
-            animationsSwitch.isEnabled = false
-            animationsSwitch.alpha = 0.5f
-            animationsSwitch.isChecked = false
-            animationsSystemHint.visibility = View.VISIBLE
-            animationsSwitch.setOnCheckedChangeListener(null)
-        }
-    }
-
-    /**
-     * Применяет выбранную цветовую схему.
-     * Мгновенно пересоздаёт текущую активность, чтобы цвета применились.
-     * При выходе из настроек показывается диалог перезапуска.
-     */
     private fun applyColorScheme(scheme: ColorSchemeModel) {
-        // Сохраняем выбранную схему
         configManager.setColorScheme(scheme.id)
 
-        // Отмечаем, что требуется перезапуск при выходе
         (activity as? SettingsActivity)?.markRestartRequired()
 
-        // Показываем тост через applicationContext — он не пересоздаётся при recreate()
         val appContext = requireContext().applicationContext
         val displayName = scheme.getDisplayName(appContext)
         Toast.makeText(
@@ -248,13 +236,32 @@ class ShellFragment : Fragment() {
             Toast.LENGTH_SHORT
         ).show()
 
-        // Мгновенно применяем — recreate() текущей SettingsActivity
         (activity as? SettingsActivity)?.recreate()
     }
 
-    /**
-     * Открывает магазин оболочек.
-     */
+    private fun setupAnimationsSection() {
+        val systemEnabled = configManager.isSystemAnimationEnabled()
+        val userEnabled = configManager.isAnimationsEnabled()
+
+        if (systemEnabled) {
+            animationsSwitch.isEnabled = true
+            animationsSwitch.alpha = 1.0f
+            animationsSwitch.isChecked = userEnabled
+            animationsSystemHint.visibility = View.GONE
+
+            animationsSwitch.setOnCheckedChangeListener { _, isChecked ->
+                configManager.setAnimationsEnabled(isChecked)
+                (activity as? SettingsActivity)?.markRestartRequired()
+            }
+        } else {
+            animationsSwitch.isEnabled = false
+            animationsSwitch.alpha = 0.5f
+            animationsSwitch.isChecked = false
+            animationsSystemHint.visibility = View.VISIBLE
+            animationsSwitch.setOnCheckedChangeListener(null)
+        }
+    }
+
     private fun openStore() {
         try {
             val intent = Intent(requireContext(), StoreActivity::class.java)
@@ -268,10 +275,6 @@ class ShellFragment : Fragment() {
         }
     }
 
-    /**
-     * Показывает диалог с информацией об активной оболочке.
-     * Использует прозрачную тему диалога, чтобы был виден CardView со скруглением.
-     */
     @SuppressLint("InflateParams")
     private fun showShellInfoDialog() {
         val shell = shellManager.getActiveShell()
@@ -282,7 +285,6 @@ class ShellFragment : Fragment() {
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_shell_info, null)
 
-        // Заполняем поля
         dialogView.findViewById<TextView>(R.id.shell_info_name_value).text =
             shell.displayName ?: shell.name
 
@@ -303,7 +305,6 @@ class ShellFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.shell_info_orientation_value).text =
             mapOrientation(shell.orientation)
 
-        // Репозиторий
         val repoContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_container)
         val repoButton = dialogView.findViewById<Button>(R.id.shell_info_repo_button)
 
@@ -316,7 +317,6 @@ class ShellFragment : Fragment() {
             repoContainer.visibility = View.GONE
         }
 
-        // Telegram
         val telegramContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_container)
         val telegramButton = dialogView.findViewById<Button>(R.id.shell_info_telegram_button)
 
@@ -329,7 +329,6 @@ class ShellFragment : Fragment() {
             telegramContainer.visibility = View.GONE
         }
 
-        // Создаём диалог с прозрачной темой — фон прозрачный, чтобы был виден CardView со скруглением
         val dialog = AlertDialog.Builder(
             requireContext(),
             R.style.Theme_QutyLaunch_AlertDialog_Transparent
@@ -337,10 +336,8 @@ class ShellFragment : Fragment() {
             .setView(dialogView)
             .create()
 
-        // Прозрачный фон окна диалога
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
-        // Кнопка-крестик закрывает диалог
         dialogView.findViewById<ImageButton>(R.id.shell_info_close_button).setOnClickListener {
             dialog.dismiss()
         }
@@ -348,9 +345,6 @@ class ShellFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Преобразует код ориентации в читаемый текст.
-     */
     private fun mapOrientation(orientation: String?): String {
         return when (orientation) {
             "portrait" -> getString(R.string.orientation_portrait)
@@ -361,9 +355,6 @@ class ShellFragment : Fragment() {
         }
     }
 
-    /**
-     * Открывает URL во внешнем браузере.
-     */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -377,14 +368,8 @@ class ShellFragment : Fragment() {
         }
     }
 
-    /**
-     * Возвращает флаг необходимости перезагрузки
-     */
     fun getNeedsRestart(): Boolean = needsRestart
 
-    /**
-     * Устанавливает флаг необходимости перезагрузки
-     */
     fun setNeedsRestart(value: Boolean) {
         needsRestart = value
     }
