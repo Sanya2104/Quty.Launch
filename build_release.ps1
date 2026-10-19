@@ -362,6 +362,8 @@ try {
 # ============================================
 Write-StageHeader -Number "7" -Title "GIT PUSH"
 
+$skipGit = $false
+
 if (-not (Test-Path "..\Quty.Launch.Server\.git")) {
     Write-Warn "Папка ..\Quty.Launch.Server не является Git репозиторием!"
     Write-Warn "Пропускаем Git push"
@@ -374,13 +376,25 @@ if (-not (Test-Path "..\Quty.Launch.Server\.git")) {
     Write-Step "git commit -m `"Release $newVersionName`""
     git commit -m "Release $newVersionName"
 
-    Write-Step "git push origin main"
-    git push origin main
+    # Подтягиваем последние изменения с сервера (GitHub Actions мог обновить
+    # store/shells.json пока мы делали релиз), чтобы избежать rejection при push.
+    Write-Step "git pull --rebase origin main"
+    git pull --rebase origin main
 
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "Изменения отправлены в GitHub"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "Ошибка git pull --rebase. Возможно, конфликты — разрешите вручную."
+        Write-Warn "Push и создание tag пропущены."
+        $skipGit = $true
     } else {
-        Write-Err "Ошибка отправки в GitHub (код: $LASTEXITCODE)"
+        Write-Step "git push origin main"
+        git push origin main
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "Изменения отправлены в GitHub"
+        } else {
+            Write-Err "Ошибка отправки в GitHub (код: $LASTEXITCODE)"
+            $skipGit = $true
+        }
     }
 
     Pop-Location
@@ -389,7 +403,7 @@ if (-not (Test-Path "..\Quty.Launch.Server\.git")) {
 # ============================================
 # ЭТАП 8: GIT TAG (если выбрано)
 # ============================================
-if ($createTag) {
+if ($createTag -and -not $skipGit) {
     Write-StageHeader -Number "8" -Title "GIT TAG"
 
     Push-Location "..\Quty.Launch.Server" -ErrorAction SilentlyContinue
@@ -408,8 +422,13 @@ if ($createTag) {
 
     Pop-Location
 } else {
-    Write-Host ""
-    Write-Info "Git tag не создавался"
+    if ($skipGit) {
+        Write-Host ""
+        Write-Warn "Git tag не создавался (из-за ошибки на предыдущем этапе)"
+    } else {
+        Write-Host ""
+        Write-Info "Git tag не создавался"
+    }
 }
 
 # ============================================

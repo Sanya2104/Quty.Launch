@@ -11,8 +11,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.store.StoreInstalledFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
+import by.quty.launch.core.fragments.store.StoreShellDetailFragment
 import by.quty.launch.core.fragments.store.StoreShellsFragment
 import by.quty.launch.core.model.MenuModel
+import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.databinding.ActivityStoreBinding
 
 /**
@@ -21,8 +23,6 @@ import by.quty.launch.databinding.ActivityStoreBinding
  * Вёрстка по паттерну LoggerActivity:
  * - на телефоне — меню и контент переключаются как экраны;
  * - на планшете — меню слева, контент справа.
- *
- * Пока — каркас с заглушками. Вся логика магазина будет добавлена позже.
  */
 class StoreActivity : BaseActivity() {
 
@@ -231,8 +231,8 @@ class StoreActivity : BaseActivity() {
     }
 
     private fun setupButtons() {
-        binding.btnClose.setOnClickListener { finish() }
-        binding.btnCloseContent.setOnClickListener { finish() }
+        binding.btnClose.setOnClickListener { checkAndShowRestartDialog() }
+        binding.btnCloseContent.setOnClickListener { checkAndShowRestartDialog() }
         binding.btnBackContent.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
@@ -243,13 +243,22 @@ class StoreActivity : BaseActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
+                    // Если открыт детальный экран оболочки — закрываем его
+                    if (isDetailVisible()) {
+                        hideDetail()
+                        return
+                    }
+
+                    // Если открыто меню на телефоне — возвращаемся к списку меню
                     if (!isTabletMode && isFragmentVisible) {
                         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
                         isFragmentVisible = false
                         applyMode()
                         return
                     }
-                    finish()
+
+                    // Иначе — проверяем изменения (диалог перезапуска) или закрываем
+                    checkAndShowRestartDialog()
                 }
             }
         )
@@ -337,6 +346,44 @@ class StoreActivity : BaseActivity() {
         )
 
         applyMode()
+    }
+
+    // ============================================================
+    // ДЕТАЛЬНЫЙ ЭКРАН ОБОЛОЧКИ
+    // ============================================================
+
+    /**
+     * Проверяет, открыт ли детальный экран оболочки.
+     */
+    private fun isDetailVisible(): Boolean {
+        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreShellDetailFragment
+    }
+
+    /**
+     * Открывает детальный экран оболочки поверх текущего фрагмента.
+     */
+    fun showDetail(shell: ShellStoreModel) {
+        val fragment = StoreShellDetailFragment.newInstance(shell)
+
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+
+        binding.contentTitle.text = shell.displayName
+        binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
+    }
+
+    /**
+     * Закрывает детальный экран оболочки и возвращается к списку.
+     */
+    fun hideDetail() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        }
+        binding.contentTitle.text = getMenuItemTitle()
+        updateBackButtonIcon()
     }
 
     override fun onResume() {

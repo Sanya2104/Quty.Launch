@@ -258,6 +258,7 @@
     <string name="shell_active_not_found">Previously active shell not found or deleted</string>
     <string name="shell_restored_default" formatted="false">System changed shell to "%s"</string>
     <string name="shell_default_name">Default</string>
+    <string name="shell_applied_toast" formatted="false">Shell "%s" applied. Restart required.</string>
 
     <!-- Shell preview (in active shell card) -->
     <string name="settings_personalization_shell_preview_description">Shell preview</string>
@@ -590,6 +591,27 @@
     <string name="store_placeholder_shells">List of shells from the repository will appear here</string>
     <string name="store_placeholder_installed">Your installed shells will appear here</string>
     <string name="store_placeholder_settings">Store settings will appear here</string>
+
+    <!-- Store buttons -->
+    <string name="store_install">Install</string>
+    <string name="store_update">Update</string>
+    <string name="store_apply">Apply</string>
+    <string name="store_applied">Applied</string>
+    <string name="store_install_hint">To install a shell, go back to the list and tap "Install" on its card.</string>
+    <string name="store_update_hint">To update a shell, go back to the list and tap "Update" on its card.</string>
+    <string name="store_loading">Loading shells…</string>
+    <string name="store_load_error">Failed to load store</string>
+    <string name="store_empty_shells">No shells yet</string>
+    <string name="store_empty_installed">No installed shells</string>
+    <string name="store_installing">Installing shell</string>
+    <string name="store_preparing">Preparing…</string>
+    <string name="store_progress" formatted="false">Downloading: %d%%</string>
+    <string name="store_install_success" formatted="false">Shell "%s" installed successfully!</string>
+    <string name="store_install_error">Installation error</string>
+    <string name="store_already_installed">Shell already installed</string>
+    <string name="store_incompatible">Shell is incompatible with the current Quty.Launch version</string>
+    <string name="store_download_error">Download error</string>
+    <string name="store_save_error">Failed to save shell</string>
 
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->

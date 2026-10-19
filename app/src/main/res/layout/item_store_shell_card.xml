@@ -1,0 +1,119 @@
+<!-- res/layout/item_store_shell_card.xml -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_m"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/radius_large"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Превью -->
+        <ImageView
+            android:id="@+id/shell_preview"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/shell_preview_height"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_image"
+            android:contentDescription="@string/settings_personalization_shell_preview_description" />
+
+        <!-- Информация + Кнопка -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_m"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_m">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="@dimen/spacing_m">
+
+                <TextView
+                    android:id="@+id/shell_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Title.Small"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="QutyAuto" />
+
+                <TextView
+                    android:id="@+id/shell_version"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    style="@style/Text.Body"
+                    android:textColor="?attr/textSecondaryColor"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="Версия: 0.0.1" />
+
+            </LinearLayout>
+
+            <!-- Кнопка (Установить / Прогресс / Применить / Применено) -->
+            <FrameLayout
+                android:id="@+id/button_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+
+                <Button
+                    android:id="@+id/btn_action"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_button"
+                    android:text="@string/store_install"
+                    android:minWidth="0dp"
+                    android:paddingStart="@dimen/spacing_m"
+                    android:paddingEnd="@dimen/spacing_m" />
+
+                <LinearLayout
+                    android:id="@+id/progress_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_button"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:id="@+id/progress_bar"
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:indeterminate="false"
+                        android:max="100"
+                        android:progressTint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/progress_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_xs"
+                        style="@style/Text.Body"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        tools:text="45%" />
+                </LinearLayout>
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

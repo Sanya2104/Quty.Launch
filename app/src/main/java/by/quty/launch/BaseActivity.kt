@@ -6,13 +6,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.widget.Button
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import by.quty.launch.configs.CoreConfig
@@ -35,6 +42,12 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // Флаг, что слушатель активен
     private var isListenerAttached = false
+
+    // Флаг, что были изменения, требующие перезапуска
+    private var needsRestart = false
+
+    // Флаг для предотвращения множественных перезапусков
+    private var isRestarting = false
 
     /**
      * Применяет язык до создания контекста активности.
@@ -88,6 +101,16 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("base_needs_restart", needsRestart)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        needsRestart = savedInstanceState.getBoolean("base_needs_restart", false)
+    }
+
     /**
      * Применяет тему (Light/Dark/System) ДО super.onCreate()
      */
@@ -125,6 +148,122 @@ abstract class BaseActivity : AppCompatActivity() {
             else -> R.style.Theme_QutyLaunch_Teal
         }
         setTheme(themeRes)
+    }
+
+    // ============================================================
+    // ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ (RESTART REQUIRED)
+    // ============================================================
+
+    /**
+     * Отмечает, что пользователь изменил настройку,
+     * которая требует перезапуска приложения.
+     */
+    fun markRestartRequired() {
+        if (!needsRestart) {
+            needsRestart = true
+        }
+    }
+
+    /**
+     * Возвращает текущее состояние необходимости перезапуска.
+     */
+    fun getNeedsRestart(): Boolean {
+        return needsRestart
+    }
+
+    /**
+     * Проверяет, были ли изменения, требующие перезапуска.
+     * Если да — показывает диалог. Если нет — закрывает активность.
+     */
+    fun checkAndShowRestartDialog() {
+        if (needsRestart) {
+            showRestartDialog()
+        } else {
+            finish()
+        }
+    }
+
+    /**
+     * Показывает кастомный Glassmorphism диалог с предложением перезапустить приложение.
+     *
+     * open — чтобы дочерние активности (например, TerminalActivity) могли
+     * при необходимости переопределить поведение (например, добавить свой
+     * текст или действие перед показом).
+     */
+    open fun showRestartDialog() {
+        if (isRestarting) return
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
+
+        // Используем прозрачную тему — у dialog_restart свой bg_glass_dialog
+        val dialog = AlertDialog.Builder(
+            this,
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        // Прозрачный фон окна
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+
+        // ===== РАЗМЫТИЕ ДЛЯ ANDROID 12+ =====
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val decorView = window?.decorView?.rootView
+            decorView?.let { view ->
+                val renderEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
+                view.setRenderEffect(renderEffect)
+                dialog.setOnDismissListener {
+                    view.setRenderEffect(null)
+                }
+            }
+        }
+
+        // Настраиваем кнопки
+        dialogView.findViewById<Button>(R.id.btn_restart).setOnClickListener {
+            dialog.dismiss()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window?.decorView?.rootView?.setRenderEffect(null)
+            }
+            isRestarting = true
+            restartApp()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_later).setOnClickListener {
+            dialog.dismiss()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window?.decorView?.rootView?.setRenderEffect(null)
+            }
+
+            /*
+             * НЕ СБРАСЫВАЕМ needsRestart!
+             *
+             * Пользователь выбрал "Позже", поэтому изменения
+             * всё ещё требуют перезапуска.
+             *
+             * При следующем закрытии настроек диалог снова появится.
+             */
+        }
+
+        dialog.show()
+    }
+
+    /**
+     * Перезапуск приложения с задержкой.
+     *
+     * protected open — дочерние активности могут переопределить,
+     * если нужна своя логика (например, разный набор флагов).
+     */
+    protected open fun restartApp() {
+        // Устанавливаем флаг для применения ориентации
+        configManager.setRestartForOrientationFlag()
+
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivityAnimated(intent)
+            finishAnimated()
+        }, 500)
     }
 
     // ============================================================

@@ -1,20 +1,12 @@
 // *** SettingsActivity.kt *** //
 package by.quty.launch
 
-import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.settings.AboutFragment
@@ -30,7 +22,6 @@ import by.quty.launch.core.managers.SystemUpdateManager
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.core.utilities.BadgeHelper
 import by.quty.launch.databinding.ActivitySettingsBinding
-import androidx.core.graphics.drawable.toDrawable
 
 class SettingsActivity : BaseActivity() {
 
@@ -41,12 +32,6 @@ class SettingsActivity : BaseActivity() {
     private var isFragmentVisible = false
     private var isTabletMode = false
     private var selectedItemId = -1
-
-    // Флаг для предотвращения множественных перезапусков
-    private var isRestarting = false
-
-    // Флаг, что были изменения, требующие перезапуска
-    private var needsRestart = false
 
     // Кэш текущего списка пунктов меню (может меняться при DevMode)
     private var menuItems: List<MenuModel> = emptyList()
@@ -88,14 +73,6 @@ class SettingsActivity : BaseActivity() {
             selectedItemId = savedInstanceState.getInt("selected_item_id", -1)
             isFragmentVisible = savedInstanceState.getBoolean("fragment_visible", false)
 
-            /*
-             * Восстанавливаем состояние необходимости перезапуска.
-             *
-             * Ранее этот флаг находился только внутри Fragment,
-             * поэтому после пересоздания Fragment состояние могло потеряться.
-             */
-            needsRestart = savedInstanceState.getBoolean("needs_restart", false)
-
             if (isFragmentVisible && selectedItemId != -1) {
                 val item = menuItems.find { it.id == selectedItemId }
                 if (item != null) {
@@ -121,14 +98,6 @@ class SettingsActivity : BaseActivity() {
 
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
-
-        /*
-         * Сохраняем флаг необходимости перезапуска.
-         *
-         * Это важно при изменении ориентации, темы или другой
-         * конфигурации, когда Android может пересоздать Activity.
-         */
-        outState.putBoolean("needs_restart", needsRestart)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -535,123 +504,6 @@ class SettingsActivity : BaseActivity() {
      */
     fun applyLanguageAndRecreate() {
         recreate()
-    }
-
-    // ============================================================
-    // СОСТОЯНИЕ НАСТРОЕК
-    // ============================================================
-
-    /**
-     * Отмечает, что пользователь изменил настройку,
-     * которая требует перезапуска приложения.
-     *
-     * Флаг хранится в SettingsActivity, а не в Fragment.
-     * Поэтому переключение между разделами, пересоздание Fragment
-     * или изменение конфигурации не теряет состояние.
-     */
-    fun markRestartRequired() {
-        if (!needsRestart) {
-            needsRestart = true
-        }
-    }
-
-    /**
-     * Возвращает текущее состояние необходимости перезапуска.
-     */
-    fun getNeedsRestart(): Boolean {
-        return needsRestart
-    }
-
-    // ============================================================
-    // ДИАЛОГ ПЕРЕЗАПУСКА
-    // ============================================================
-
-    /**
-     * Проверяет, были ли изменения, требующие перезапуска.
-     */
-    private fun checkAndShowRestartDialog() {
-        if (needsRestart) {
-            showRestartDialog()
-        } else {
-            // Если изменений нет — просто закрываем
-            finish()
-        }
-    }
-
-    /**
-     * Показывает кастомный Glassmorphism диалог с предложением перезапустить приложение
-     */
-    private fun showRestartDialog() {
-        if (isRestarting) return
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
-
-        // Используем прозрачную тему — у dialog_restart свой bg_glass_dialog
-        val dialog = AlertDialog.Builder(
-            this,
-            R.style.Theme_QutyLaunch_AlertDialog_Transparent
-        )
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
-
-        // Прозрачный фон окна
-        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
-
-        // ===== РАЗМЫТИЕ ДЛЯ ANDROID 12+ =====
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val decorView = window?.decorView?.rootView
-            decorView?.let { view ->
-                val renderEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
-                view.setRenderEffect(renderEffect)
-                dialog.setOnDismissListener {
-                    view.setRenderEffect(null)
-                }
-            }
-        }
-
-        // Настраиваем кнопки
-        dialogView.findViewById<Button>(R.id.btn_restart).setOnClickListener {
-            dialog.dismiss()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                window?.decorView?.rootView?.setRenderEffect(null)
-            }
-            isRestarting = true
-            restartApp()
-        }
-
-        dialogView.findViewById<Button>(R.id.btn_later).setOnClickListener {
-            dialog.dismiss()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                window?.decorView?.rootView?.setRenderEffect(null)
-            }
-
-            /*
-             * НЕ СБРАСЫВАЕМ needsRestart!
-             *
-             * Пользователь выбрал "Позже", поэтому изменения
-             * всё ещё требуют перезапуска.
-             *
-             * При следующем закрытии настроек диалог снова появится.
-             */
-        }
-
-        dialog.show()
-    }
-
-    /**
-     * Перезапуск приложения с задержкой
-     */
-    private fun restartApp() {
-        // Устанавливаем флаг для применения ориентации
-        configManager.setRestartForOrientationFlag()
-
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        Handler(Looper.getMainLooper()).postDelayed({
-            startActivityAnimated(intent)
-            finishAnimated()
-        }, 500)
     }
 
     private fun showItem(item: MenuModel) {

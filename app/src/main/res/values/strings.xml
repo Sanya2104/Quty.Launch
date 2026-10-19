@@ -258,6 +258,7 @@
     <string name="shell_active_not_found">Ранее активная оболочка не найдена или была удалена</string>
     <string name="shell_restored_default" formatted="false">Система изменила оболочку на "%s"</string>
     <string name="shell_default_name">Стандартная</string>
+    <string name="shell_applied_toast" formatted="false">Оболочка «%s» применена. Требуется перезапуск.</string>
 
     <!-- Превью оболочки (в карточке активной оболочки) -->
     <string name="settings_personalization_shell_preview_description">Превью оболочки</string>
@@ -590,6 +591,27 @@
     <string name="store_placeholder_shells">Здесь появится список оболочек из репозитория</string>
     <string name="store_placeholder_installed">Здесь будут ваши установленные оболочки</string>
     <string name="store_placeholder_settings">Здесь будут настройки магазина</string>
+
+    <!-- Кнопки магазина -->
+    <string name="store_install">Установить</string>
+    <string name="store_update">Обновить</string>
+    <string name="store_apply">Применить</string>
+    <string name="store_applied">Применено</string>
+    <string name="store_install_hint">Для установки оболочки вернитесь к списку и нажмите «Установить» на карточке.</string>
+    <string name="store_update_hint">Для обновления оболочки вернитесь к списку и нажмите «Обновить» на карточке.</string>
+    <string name="store_loading">Загрузка оболочек…</string>
+    <string name="store_load_error">Ошибка загрузки магазина</string>
+    <string name="store_empty_shells">Оболочек пока нет</string>
+    <string name="store_empty_installed">Нет установленных оболочек</string>
+    <string name="store_installing">Установка оболочки</string>
+    <string name="store_preparing">Подготовка…</string>
+    <string name="store_progress" formatted="false">Скачивание: %d%%</string>
+    <string name="store_install_success" formatted="false">Оболочка "%s" успешно установлена!</string>
+    <string name="store_install_error">Ошибка установки</string>
+    <string name="store_already_installed">Оболочка уже установлена</string>
+    <string name="store_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
+    <string name="store_download_error">Ошибка скачивания</string>
+    <string name="store_save_error">Ошибка сохранения оболочки</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->

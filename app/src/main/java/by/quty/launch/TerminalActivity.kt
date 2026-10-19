@@ -1,22 +1,13 @@
 // *** TerminalActivity.kt *** //
 package by.quty.launch
 
-import android.content.Intent
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -44,9 +35,9 @@ import kotlinx.coroutines.launch
  * WindowInsetsCompat: paddingBottom = max(высота IME, высота навбара) + базовый отступ.
  *
  * Если пользователь применил write-команду (см. TerminalManager.isWriteCommand),
- * выставляется флаг needsRestart. При закрытии (крестик / системная «Назад»)
- * показывается диалог перезапуска — как в SettingsActivity. При вводе
- * команды exit с активным needsRestart приложение перезапускается сразу.
+ * выставляется флаг needsRestart (в BaseActivity). При закрытии
+ * (крестик / системная «Назад») показывается диалог перезапуска (BaseActivity.showRestartDialog).
+ * При вводе команды exit с активным needsRestart приложение перезапускается сразу.
  */
 class TerminalActivity : BaseActivity() {
 
@@ -62,12 +53,6 @@ class TerminalActivity : BaseActivity() {
 
     // Флаг, что команда сейчас выполняется (блокирует повторную отправку)
     private var isExecuting = false
-
-    // Флаг, что есть применённые изменения, требующие перезапуска
-    private var needsRestart = false
-
-    // Флаг, что перезапуск уже запущен (защита от двойного вызова)
-    private var isRestarting = false
 
     // ===== Навигация по истории (стрелки ↑ / ↓) =====
 
@@ -278,8 +263,8 @@ class TerminalActivity : BaseActivity() {
 
         // exit — если есть изменения, сразу перезапуск, иначе просто закрыть
         if (parsed.name == "exit") {
-            if (needsRestart) {
-                isRestarting = true
+            if (getNeedsRestart()) {
+                // restartApp() — protected open метод из BaseActivity
                 restartApp()
             } else {
                 finish()
@@ -300,7 +285,7 @@ class TerminalActivity : BaseActivity() {
                     addOutput(result)
 
                     if (TerminalManager.isWriteCommand(this@TerminalActivity, parsed.name)) {
-                        needsRestart = true
+                        markRestartRequired()
                     }
                 }
             }
@@ -312,69 +297,12 @@ class TerminalActivity : BaseActivity() {
     // ============================================================
 
     private fun checkAndClose() {
-        if (needsRestart) {
+        if (getNeedsRestart()) {
+            // Показываем стандартный диалог из BaseActivity
             showRestartDialog()
         } else {
             finish()
         }
-    }
-
-    private fun showRestartDialog() {
-        if (isRestarting) return
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
-
-        val dialog = AlertDialog.Builder(
-            this,
-            R.style.Theme_QutyLaunch_AlertDialog_Transparent
-        )
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
-
-        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val decorView = window?.decorView?.rootView
-            decorView?.let { view ->
-                val renderEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
-                view.setRenderEffect(renderEffect)
-                dialog.setOnDismissListener {
-                    view.setRenderEffect(null)
-                }
-            }
-        }
-
-        dialogView.findViewById<Button>(R.id.btn_restart).setOnClickListener {
-            dialog.dismiss()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                window?.decorView?.rootView?.setRenderEffect(null)
-            }
-            isRestarting = true
-            restartApp()
-        }
-
-        dialogView.findViewById<Button>(R.id.btn_later).setOnClickListener {
-            dialog.dismiss()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                window?.decorView?.rootView?.setRenderEffect(null)
-            }
-            // needsRestart НЕ сбрасываем
-        }
-
-        dialog.show()
-    }
-
-    private fun restartApp() {
-        configManager.setRestartForOrientationFlag()
-
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            startActivityAnimated(intent)
-            finishAnimated()
-        }, 500)
     }
 
     // ============================================================
