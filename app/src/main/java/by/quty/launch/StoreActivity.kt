@@ -175,16 +175,30 @@ class StoreActivity : BaseActivity() {
             binding.contentToolbar.visibility = View.VISIBLE
             binding.contentTitle.text = getMenuItemTitle()
 
+            /*
+             * Кнопка «Назад» в шапке контента:
+             * - если открыт детальный экран (StoreDetailFragment) — показываем
+             *   всегда (и на телефоне, и на планшете), с иконкой стрелки;
+             * - иначе на планшете — скрываем;
+             * - на телефоне для корневого «Каталог» — три полоски (ic_menu),
+             *   для остальных — стрелка (ic_back).
+             */
+            if (isDetailVisible()) {
+                binding.btnBackContent.visibility = View.VISIBLE
+                binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
+            } else if (isTabletMode) {
+                binding.btnBackContent.visibility = View.GONE
+            } else {
+                binding.btnBackContent.visibility = View.VISIBLE
+                updateBackButtonIcon()
+            }
+
             if (isTabletMode) {
                 binding.recyclerMenu.visibility = View.VISIBLE
-                binding.btnBackContent.visibility = View.GONE
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
             } else {
                 binding.recyclerMenu.visibility = View.GONE
-                binding.btnBackContent.visibility = View.VISIBLE
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
-
-                updateBackButtonIcon()
             }
 
         } else {
@@ -366,6 +380,13 @@ class StoreActivity : BaseActivity() {
             .commit()
 
         binding.contentTitle.text = shell.displayName
+
+        /*
+         * Принудительно показываем кнопку «Назад» — на планшете она
+         * скрыта в обычном каталоге, но в детальном экране нужна,
+         * чтобы пользователь мог вернуться обратно.
+         */
+        binding.btnBackContent.visibility = View.VISIBLE
         binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
     }
 
@@ -374,7 +395,7 @@ class StoreActivity : BaseActivity() {
             supportFragmentManager.popBackStack()
         }
         binding.contentTitle.text = getMenuItemTitle()
-        updateBackButtonIcon()
+        applyMode()
     }
 
     override fun onResume() {
