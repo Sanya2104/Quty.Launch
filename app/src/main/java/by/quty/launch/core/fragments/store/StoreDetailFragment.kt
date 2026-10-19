@@ -1,9 +1,10 @@
-// *** core/fragments/store/StoreShellDetailFragment.kt *** //
+// *** core/fragments/store/StoreDetailFragment.kt *** //
 package by.quty.launch.core.fragments.store
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -22,20 +24,23 @@ import by.quty.launch.core.utilities.UpdateHelper
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Фрагмент детального просмотра оболочки в магазине.
  *
  * Отображает информацию аналогично диалогу "Информация об оболочке".
- * Кнопка действия внизу — "Установить" / "Обновить" / "Применить" / "Применено".
+ * Кнопка действия — "Установить" / "Обновить" / "Применить" / "Применено".
+ * Состояние "Применено" — с обводкой и неактивна.
  */
-class StoreShellDetailFragment : Fragment() {
+class StoreDetailFragment : Fragment() {
 
     companion object {
         private const val ARG_SHELL = "arg_shell"
 
-        fun newInstance(shell: ShellStoreModel): StoreShellDetailFragment {
-            return StoreShellDetailFragment().apply {
+        fun newInstance(shell: ShellStoreModel): StoreDetailFragment {
+            return StoreDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_SHELL, Json.encodeToString(ShellStoreModel.serializer(), shell))
                 }
@@ -57,7 +62,7 @@ class StoreShellDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_store_shell_detail, container, false)
+        return inflater.inflate(R.layout.fragment_store_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -71,6 +76,8 @@ class StoreShellDetailFragment : Fragment() {
         val nameText: TextView = view.findViewById(R.id.shell_name)
         val authorText: TextView = view.findViewById(R.id.shell_author)
         val versionText: TextView = view.findViewById(R.id.shell_version)
+        val sizeText: TextView = view.findViewById(R.id.shell_size)
+        val dateText: TextView = view.findViewById(R.id.shell_date)
         val typeText: TextView = view.findViewById(R.id.shell_type)
         val minVersionText: TextView = view.findViewById(R.id.shell_min_version)
         val orientationText: TextView = view.findViewById(R.id.shell_orientation)
@@ -91,6 +98,8 @@ class StoreShellDetailFragment : Fragment() {
         nameText.text = shell.displayName
         authorText.text = shell.author
         versionText.text = shell.version
+        sizeText.text = shell.fileSize
+        dateText.text = formatDate(shell.datePublished)
         typeText.text = getString(R.string.shell_type_custom)
         minVersionText.text = shell.minQutyLaunchVersion
 
@@ -129,6 +138,21 @@ class StoreShellDetailFragment : Fragment() {
         updateButtonState()
     }
 
+    /**
+     * Форматирует дату из "YYYY-MM-DD" (Git) в "DD.MM.YYYY".
+     */
+    private fun formatDate(isoDate: String): String {
+        if (isoDate.isBlank()) return ""
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy", Locale.US)
+            val date = inputFormat.parse(isoDate) ?: return isoDate
+            outputFormat.format(date)
+        } catch (_: Exception) {
+            isoDate
+        }
+    }
+
     private fun updateButtonState() {
         val activity = activity ?: return
         val shellManager = by.quty.launch.core.managers.ShellManager(
@@ -137,31 +161,30 @@ class StoreShellDetailFragment : Fragment() {
                 ?: by.quty.launch.core.managers.ConfigManager(activity)
         )
 
-        // Установленная версия — из getAvailableShells()
         val installedShell = shellManager.getAvailableShells()
             .find { it.name == shell.name }
         val installedVersion = installedShell?.version
 
-        // Активная оболочка — из getActiveShell()
         val activeShell = shellManager.getActiveShell()
         val isActiveSameVersion =
             activeShell?.name == shell.name && activeShell.version == shell.version
 
         when {
             isActiveSameVersion -> {
-                // Активна с той же версией
+                // Активна с той же версией — "Применено" (secondary — с обводкой, disabled)
+                applyButtonStyle(isPrimary = false)
                 btnInstall.text = getString(R.string.store_applied)
                 btnInstall.isEnabled = false
-                btnInstall.alpha = 0.5f
+                btnInstall.alpha = 0.7f
                 btnInstall.setOnClickListener(null)
             }
             installedVersion != null && UpdateHelper.isNewerVersion(shell.version, installedVersion) -> {
-                // Установлена, но версия в магазине новее — "Обновить"
+                // Есть новая версия — "Обновить" (primary)
+                applyButtonStyle(isPrimary = true)
                 btnInstall.text = getString(R.string.store_update)
                 btnInstall.isEnabled = true
                 btnInstall.alpha = 1.0f
                 btnInstall.setOnClickListener {
-                    // Установка через StoreShellsFragment — возвращаемся к списку
                     Toast.makeText(
                         requireContext(),
                         R.string.store_update_hint,
@@ -171,7 +194,8 @@ class StoreShellDetailFragment : Fragment() {
                 }
             }
             installedVersion != null -> {
-                // Установлена, версия совпадает (или магазин старее), но не активна
+                // Установлена, но не активна — "Применить" (primary)
+                applyButtonStyle(isPrimary = true)
                 btnInstall.text = getString(R.string.store_apply)
                 btnInstall.isEnabled = true
                 btnInstall.alpha = 1.0f
@@ -180,7 +204,8 @@ class StoreShellDetailFragment : Fragment() {
                 }
             }
             else -> {
-                // Не установлена — "Установить"
+                // Не установлена — "Установить" (primary)
+                applyButtonStyle(isPrimary = true)
                 btnInstall.text = getString(R.string.store_install)
                 btnInstall.isEnabled = true
                 btnInstall.alpha = 1.0f
@@ -194,6 +219,32 @@ class StoreShellDetailFragment : Fragment() {
                 }
             }
         }
+    }
+
+    /**
+     * Применяет стиль кнопки:
+     * - isPrimary = true  → bg_glass_button_primary + белый текст
+     * - isPrimary = false → bg_glass_button_secondary + текст из ?attr/textPrimaryColor
+     */
+    private fun applyButtonStyle(isPrimary: Boolean) {
+        val context = requireContext()
+
+        if (isPrimary) {
+            btnInstall.setBackgroundResource(R.drawable.bg_glass_button_primary)
+            btnInstall.setTextColor(ContextCompat.getColor(context, R.color.white))
+        } else {
+            btnInstall.setBackgroundResource(R.drawable.bg_glass_button_secondary)
+            btnInstall.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+        }
+    }
+
+    /**
+     * Резолвит цвет из атрибута темы.
+     */
+    private fun getThemeColor(context: android.content.Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 
     private fun applyShell(shellManager: by.quty.launch.core.managers.ShellManager) {
@@ -212,10 +263,8 @@ class StoreShellDetailFragment : Fragment() {
 
             shellManager.setActiveShell(availableShell)
 
-            // Требуется перезапуск — сообщаем об этом через активность
             (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
 
-            // Обновляем состояние кнопки
             updateButtonState()
 
             Toast.makeText(

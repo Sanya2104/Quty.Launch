@@ -1,5 +1,6 @@
-<!-- res/layout/fragment_store_shell_detail.xml -->
+<!-- res/layout/fragment_store_detail.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,40 +13,85 @@
         android:paddingTop="@dimen/fragment_top"
         android:orientation="vertical">
 
-        <!-- Превью -->
-        <ImageView
-            android:id="@+id/shell_preview"
+        <!-- Превью (обёрнуто в CardView для скругления углов) -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="@dimen/shell_preview_height"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_image"
+            android:layout_marginTop="@dimen/spacing_l"
             android:layout_marginBottom="@dimen/spacing_l"
-            android:contentDescription="@string/settings_personalization_shell_preview_description" />
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="@dimen/radius_large"
+            app:cardElevation="0dp">
 
-        <!-- Название -->
-        <TextView
-            android:id="@+id/shell_name"
-            style="@style/Text.Title.Large"
+            <ImageView
+                android:id="@+id/shell_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_image"
+                android:contentDescription="@string/settings_personalization_shell_preview_description" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Название + версия + кнопка (как в item_store_shell_card) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textPrimaryColor"
-            tools:text="QutyAuto" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_s"
+            android:paddingEnd="@dimen/spacing_s"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_m">
 
-        <!-- Автор -->
-        <TextView
-            android:id="@+id/shell_author"
-            style="@style/Text.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xxs"
-            android:textColor="?attr/textDimColor"
-            tools:text="QutyTeam" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="@dimen/spacing_m">
+
+                <TextView
+                    android:id="@+id/shell_name"
+                    style="@style/Text.Title.Large"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    tools:text="QutyAuto" />
+
+                <TextView
+                    android:id="@+id/shell_author"
+                    style="@style/Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    android:textColor="?attr/textDimColor"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="QutyTeam" />
+
+            </LinearLayout>
+
+            <!-- Кнопка действия (Установить / Обновить / Применить / Применено) -->
+            <Button
+                android:id="@+id/btn_install"
+                style="@style/Button.Glass.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_button"
+                android:minWidth="120dp"
+                android:paddingStart="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_m"
+                android:text="@string/store_install" />
+
+        </LinearLayout>
 
         <!-- Блок информации (как в диалоге оболочки) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginTop="@dimen/spacing_m"
             android:orientation="vertical"
             android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_xs">
@@ -85,6 +131,96 @@
                     android:ellipsize="end"
                     android:textAlignment="viewEnd"
                     tools:text="0.0.1" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Размер -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_weight"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_size" />
+
+                <TextView
+                    android:id="@+id/shell_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="5.2 MB" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <!-- Дата публикации -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_calendar"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_date" />
+
+                <TextView
+                    android:id="@+id/shell_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="20.10.2026" />
 
             </LinearLayout>
 
@@ -339,15 +475,10 @@
 
         </LinearLayout>
 
-        <!-- Кнопка действия -->
-        <Button
-            android:id="@+id/btn_install"
-            style="@style/Button.Glass.Primary"
+        <!-- Отступ снизу -->
+        <View
             android:layout_width="match_parent"
-            android:layout_height="@dimen/height_button_large"
-            android:layout_marginTop="@dimen/spacing_l"
-            android:layout_marginBottom="@dimen/spacing_xxl"
-            android:text="@string/store_install" />
+            android:layout_height="@dimen/spacing_xxl" />
 
     </LinearLayout>
 

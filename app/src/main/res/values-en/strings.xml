@@ -235,6 +235,8 @@
     <string name="settings_personalization_shell_info_version">Version</string>
     <string name="settings_personalization_shell_info_author">Author</string>
     <string name="settings_personalization_shell_info_type">Type</string>
+    <string name="settings_personalization_shell_info_size">Size</string>
+    <string name="settings_personalization_shell_info_date">Published</string>
     <string name="settings_personalization_shell_info_min_version">Min. version of Quty.Launch</string>
     <string name="settings_personalization_shell_info_orientation">Orientation</string>
     <string name="settings_personalization_shell_info_repo">Repository</string>
@@ -579,30 +581,32 @@
     <!-- Заголовок -->
     <string name="store_title">Store</string>
 
-    <!-- Store menu -->
-    <string name="store_menu_shells">Shells</string>
-    <string name="store_menu_shells_desc">Available shells</string>
+    <!-- Меню магазина -->
+    <string name="store_menu_catalog">Store</string>
+    <string name="store_menu_catalog_desc">Shells, themes and more</string>
     <string name="store_menu_installed">My installed</string>
     <string name="store_menu_installed_desc">Manage installed</string>
     <string name="store_menu_settings">Settings</string>
     <string name="store_menu_settings_desc">Store settings</string>
 
-    <!-- Placeholders -->
-    <string name="store_placeholder_shells">List of shells from the repository will appear here</string>
+    <!-- Заглушки -->
+    <string name="store_placeholder_catalog">Store catalog will appear here</string>
     <string name="store_placeholder_installed">Your installed shells will appear here</string>
     <string name="store_placeholder_settings">Store settings will appear here</string>
 
-    <!-- Store buttons -->
+    <!-- Пустые состояния -->
+    <string name="store_empty_catalog">Nothing in the catalog yet</string>
+    <string name="store_empty_installed">No installed shells</string>
+
+    <!-- Остальное (кнопки, состояния) — без изменений -->
     <string name="store_install">Install</string>
     <string name="store_update">Update</string>
     <string name="store_apply">Apply</string>
     <string name="store_applied">Applied</string>
     <string name="store_install_hint">To install a shell, go back to the list and tap "Install" on its card.</string>
     <string name="store_update_hint">To update a shell, go back to the list and tap "Update" on its card.</string>
-    <string name="store_loading">Loading shells…</string>
-    <string name="store_load_error">Failed to load store</string>
-    <string name="store_empty_shells">No shells yet</string>
-    <string name="store_empty_installed">No installed shells</string>
+    <string name="store_loading">Loading catalog…</string>
+    <string name="store_load_error">Failed to load catalog</string>
     <string name="store_installing">Installing shell</string>
     <string name="store_preparing">Preparing…</string>
     <string name="store_progress" formatted="false">Downloading: %d%%</string>

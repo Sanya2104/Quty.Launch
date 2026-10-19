@@ -235,6 +235,8 @@
     <string name="settings_personalization_shell_info_version">Версия</string>
     <string name="settings_personalization_shell_info_author">Автор</string>
     <string name="settings_personalization_shell_info_type">Тип</string>
+    <string name="settings_personalization_shell_info_size">Размер</string>
+    <string name="settings_personalization_shell_info_date">Дата публикации</string>
     <string name="settings_personalization_shell_info_min_version">Мин. версия Quty.Launch</string>
     <string name="settings_personalization_shell_info_orientation">Ориентация</string>
     <string name="settings_personalization_shell_info_repo">Репозиторий</string>
@@ -580,29 +582,31 @@
     <string name="store_title">Магазин</string>
 
     <!-- Меню магазина -->
-    <string name="store_menu_shells">Оболочки</string>
-    <string name="store_menu_shells_desc">Список доступных оболочек</string>
+    <string name="store_menu_catalog">Магазин</string>
+    <string name="store_menu_catalog_desc">Оболочки, темы и не только</string>
     <string name="store_menu_installed">Мои установленные</string>
     <string name="store_menu_installed_desc">Управление установленными</string>
     <string name="store_menu_settings">Настройки</string>
     <string name="store_menu_settings_desc">Настройки магазина</string>
 
     <!-- Заглушки -->
-    <string name="store_placeholder_shells">Здесь появится список оболочек из репозитория</string>
+    <string name="store_placeholder_catalog">Здесь появится каталог магазина</string>
     <string name="store_placeholder_installed">Здесь будут ваши установленные оболочки</string>
     <string name="store_placeholder_settings">Здесь будут настройки магазина</string>
 
-    <!-- Кнопки магазина -->
+    <!-- Пустые состояния -->
+    <string name="store_empty_catalog">В каталоге пока ничего нет</string>
+    <string name="store_empty_installed">Нет установленных оболочек</string>
+
+    <!-- Остальное (кнопки, состояния) — без изменений -->
     <string name="store_install">Установить</string>
     <string name="store_update">Обновить</string>
     <string name="store_apply">Применить</string>
     <string name="store_applied">Применено</string>
     <string name="store_install_hint">Для установки оболочки вернитесь к списку и нажмите «Установить» на карточке.</string>
     <string name="store_update_hint">Для обновления оболочки вернитесь к списку и нажмите «Обновить» на карточке.</string>
-    <string name="store_loading">Загрузка оболочек…</string>
-    <string name="store_load_error">Ошибка загрузки магазина</string>
-    <string name="store_empty_shells">Оболочек пока нет</string>
-    <string name="store_empty_installed">Нет установленных оболочек</string>
+    <string name="store_loading">Загрузка каталога…</string>
+    <string name="store_load_error">Ошибка загрузки каталога</string>
     <string name="store_installing">Установка оболочки</string>
     <string name="store_preparing">Подготовка…</string>
     <string name="store_progress" formatted="false">Скачивание: %d%%</string>

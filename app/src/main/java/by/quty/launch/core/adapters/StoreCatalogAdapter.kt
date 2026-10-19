@@ -1,6 +1,7 @@
-// *** core/adapters/StoreShellsAdapter.kt *** //
+// *** core/adapters/StoreCatalogAdapter.kt *** //
 package by.quty.launch.core.adapters
 
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.core.model.ShellStoreModel
@@ -16,7 +18,7 @@ import by.quty.launch.core.utilities.UpdateHelper
 import com.bumptech.glide.Glide
 
 /**
- * Адаптер для списка оболочек в магазине.
+ * Адаптер для списка оболочек в каталоге магазина.
  *
  * Отображает карточки с превью, названием, версией и кнопкой действия.
  * Кнопка динамически меняет состояние:
@@ -24,16 +26,9 @@ import com.bumptech.glide.Glide
  * - Прогресс (идёт скачивание)
  * - "Применить" (установлена, но не активна)
  * - "Обновить" (установлена, но версия в магазине новее)
- * - "Применено" (активна с той же версией)
- *
- * Логика сравнения:
- * - Оболочка "применена", если name совпадает и version совпадает с активной.
- * - Оболочка "обновлена", если name совпадает, но version в магазине
- *   строго больше установленной.
- * - Оболочка "применена", если name совпадает, version совпадает,
- *   но оболочка не активна (то есть её можно применить).
+ * - "Применено" (активна с той же версией) — с обводкой, не активна
  */
-class StoreShellsAdapter(
+class StoreCatalogAdapter(
     private var shells: List<ShellStoreModel>,
     private val installedShellVersions: Map<String, String>,
     private val activeShellName: String?,
@@ -42,14 +37,14 @@ class StoreShellsAdapter(
     private val onInstallClick: (ShellStoreModel) -> Unit,
     private val onUpdateClick: (ShellStoreModel) -> Unit,
     private val onApplyClick: (ShellStoreModel) -> Unit
-) : RecyclerView.Adapter<StoreShellsAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<StoreCatalogAdapter.ViewHolder>() {
 
     // Карта прогресса скачивания (id оболочки -> процент)
     private val downloadProgress = mutableMapOf<String, Int>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_store_shell_card, parent, false)
+            .inflate(R.layout.item_store_catalog_card, parent, false)
         return ViewHolder(view)
     }
 
@@ -132,7 +127,8 @@ class StoreShellsAdapter(
             val installedVersion = installedShellVersions[item.name]
 
             if (installedVersion == null) {
-                // Не установлена — кнопка "Установить"
+                // Не установлена — кнопка "Установить" (primary — с заливкой)
+                applyButtonStyle(isPrimary = true)
                 actionButton.text = context.getString(R.string.store_install)
                 actionButton.isEnabled = true
                 actionButton.alpha = 1.0f
@@ -144,7 +140,8 @@ class StoreShellsAdapter(
             val hasUpdate = UpdateHelper.isNewerVersion(item.version, installedVersion)
 
             if (hasUpdate) {
-                // Установлена, но есть новая версия — кнопка "Обновить"
+                // Установлена, но есть новая версия — кнопка "Обновить" (primary)
+                applyButtonStyle(isPrimary = true)
                 actionButton.text = context.getString(R.string.store_update)
                 actionButton.isEnabled = true
                 actionButton.alpha = 1.0f
@@ -158,18 +155,46 @@ class StoreShellsAdapter(
                 activeShellName == item.name && activeShellVersion == item.version
 
             if (isActiveSameVersion) {
-                // Активна с той же версией — "Применено"
+                // Активна с той же версией — "Применено" (secondary — с обводкой, disabled)
+                applyButtonStyle(isPrimary = false)
                 actionButton.text = context.getString(R.string.store_applied)
                 actionButton.isEnabled = false
-                actionButton.alpha = 0.5f
+                actionButton.alpha = 0.7f
                 actionButton.setOnClickListener(null)
             } else {
-                // Установлена, но не активна (или активна с другой версией) — "Применить"
+                // Установлена, но не активна (или активна с другой версией) — "Применить" (primary)
+                applyButtonStyle(isPrimary = true)
                 actionButton.text = context.getString(R.string.store_apply)
                 actionButton.isEnabled = true
                 actionButton.alpha = 1.0f
                 actionButton.setOnClickListener { onApplyClick(item) }
             }
+        }
+
+        /**
+         * Применяет стиль кнопки:
+         * - isPrimary = true  → bg_glass_button_primary + белый текст
+         * - isPrimary = false → bg_glass_button_secondary + текст из ?attr/textPrimaryColor
+         */
+        private fun applyButtonStyle(isPrimary: Boolean) {
+            val context = itemView.context
+
+            if (isPrimary) {
+                actionButton.setBackgroundResource(R.drawable.bg_glass_button_primary)
+                actionButton.setTextColor(ContextCompat.getColor(context, R.color.white))
+            } else {
+                actionButton.setBackgroundResource(R.drawable.bg_glass_button_secondary)
+                actionButton.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+            }
+        }
+
+        /**
+         * Резолвит цвет из атрибута темы.
+         */
+        private fun getThemeColor(context: android.content.Context, attr: Int): Int {
+            val typedValue = TypedValue()
+            context.theme.resolveAttribute(attr, typedValue, true)
+            return typedValue.data
         }
     }
 }

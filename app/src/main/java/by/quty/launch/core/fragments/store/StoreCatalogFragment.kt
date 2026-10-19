@@ -1,4 +1,4 @@
-// *** core/fragments/store/StoreShellsFragment.kt *** //
+// *** core/fragments/store/StoreCatalogFragment.kt *** //
 package by.quty.launch.core.fragments.store
 
 import android.os.Bundle
@@ -15,19 +15,22 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.StoreActivity
-import by.quty.launch.core.adapters.StoreShellsAdapter
+import by.quty.launch.core.adapters.StoreCatalogAdapter
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StoreManager
 import by.quty.launch.core.model.ShellStoreModel
 import kotlinx.coroutines.launch
 
 /**
- * Фрагмент «Оболочки» магазина.
+ * Фрагмент «Каталог» магазина.
  *
  * Загружает список оболочек с сервера, отображает карточки.
  * Позволяет устанавливать, обновлять и применять оболочки.
+ *
+ * В будущем здесь могут быть не только оболочки — темы, шрифты и т.п.
+ * Пока — только оболочки.
  */
-class StoreShellsFragment : Fragment() {
+class StoreCatalogFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var loadingState: LinearLayout
@@ -38,7 +41,7 @@ class StoreShellsFragment : Fragment() {
 
     private lateinit var storeManager: StoreManager
     private lateinit var shellManager: ShellManager
-    private lateinit var adapter: StoreShellsAdapter
+    private lateinit var adapter: StoreCatalogAdapter
 
     private var shells: List<ShellStoreModel> = emptyList()
     private var isLoading = false
@@ -48,7 +51,7 @@ class StoreShellsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_store_shells, container, false)
+        return inflater.inflate(R.layout.fragment_store_catalog, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -108,10 +111,10 @@ class StoreShellsFragment : Fragment() {
     /**
      * Создаёт новый адаптер с актуальными данными.
      */
-    private fun buildAdapter(shells: List<ShellStoreModel>): StoreShellsAdapter {
+    private fun buildAdapter(shells: List<ShellStoreModel>): StoreCatalogAdapter {
         val (activeName, activeVersion) = getActiveShellInfo()
 
-        return StoreShellsAdapter(
+        return StoreCatalogAdapter(
             shells = shells,
             installedShellVersions = getInstalledShellVersions(),
             activeShellName = activeName,

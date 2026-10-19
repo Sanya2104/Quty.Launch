@@ -9,16 +9,16 @@ import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
+import by.quty.launch.core.fragments.store.StoreCatalogFragment
+import by.quty.launch.core.fragments.store.StoreDetailFragment
 import by.quty.launch.core.fragments.store.StoreInstalledFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
-import by.quty.launch.core.fragments.store.StoreShellDetailFragment
-import by.quty.launch.core.fragments.store.StoreShellsFragment
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.databinding.ActivityStoreBinding
 
 /**
- * Активность магазина оболочек Quty.Launch.
+ * Активность магазина Quty.Launch.
  *
  * Вёрстка по паттерну LoggerActivity:
  * - на телефоне — меню и контент переключаются как экраны;
@@ -28,10 +28,10 @@ class StoreActivity : BaseActivity() {
 
     companion object {
         /**
-         * id пункта меню «Оболочки» — используется для определения,
+         * id пункта меню «Каталог» — используется для определения,
          * какая иконка должна быть на кнопке назад.
          */
-        private const val SHELLS_FRAGMENT_ID = 1
+        private const val CATALOG_FRAGMENT_ID = 1
     }
 
     private lateinit var binding: ActivityStoreBinding
@@ -76,7 +76,7 @@ class StoreActivity : BaseActivity() {
             }
         }
 
-        // При первом открытии сразу показываем первый пункт — «Оболочки».
+        // При первом открытии сразу показываем первый пункт — «Каталог».
         if (selectedItemId == -1 && menuItems.isNotEmpty()) {
             showItem(menuItems.first())
         }
@@ -204,11 +204,11 @@ class StoreActivity : BaseActivity() {
 
     /**
      * Иконка «Назад» в шапке контента:
-     * - для корневого «Оболочки» — три полоски (ic_menu),
+     * - для корневого «Каталог» — три полоски (ic_menu),
      * - для остальных — стрелка (ic_back).
      */
     private fun updateBackButtonIcon() {
-        val iconRes = if (selectedItemId == SHELLS_FRAGMENT_ID) {
+        val iconRes = if (selectedItemId == CATALOG_FRAGMENT_ID) {
             R.drawable.ic_menu
         } else {
             R.drawable.ic_back
@@ -243,7 +243,7 @@ class StoreActivity : BaseActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Если открыт детальный экран оболочки — закрываем его
+                    // Если открыт детальный экран — закрываем его
                     if (isDetailVisible()) {
                         hideDetail()
                         return
@@ -272,11 +272,11 @@ class StoreActivity : BaseActivity() {
 
         items.add(
             MenuModel(
-                SHELLS_FRAGMENT_ID,
+                CATALOG_FRAGMENT_ID,
                 R.drawable.ic_store,
-                R.string.store_menu_shells,
-                R.string.store_menu_shells_desc,
-                StoreShellsFragment::class.java,
+                R.string.store_menu_catalog,
+                R.string.store_menu_catalog_desc,
+                StoreCatalogFragment::class.java,
                 R.color.scheme_green_primary,
                 true
             )
@@ -349,21 +349,15 @@ class StoreActivity : BaseActivity() {
     }
 
     // ============================================================
-    // ДЕТАЛЬНЫЙ ЭКРАН ОБОЛОЧКИ
+    // ДЕТАЛЬНЫЙ ЭКРАН
     // ============================================================
 
-    /**
-     * Проверяет, открыт ли детальный экран оболочки.
-     */
     private fun isDetailVisible(): Boolean {
-        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreShellDetailFragment
+        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreDetailFragment
     }
 
-    /**
-     * Открывает детальный экран оболочки поверх текущего фрагмента.
-     */
     fun showDetail(shell: ShellStoreModel) {
-        val fragment = StoreShellDetailFragment.newInstance(shell)
+        val fragment = StoreDetailFragment.newInstance(shell)
 
         supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
@@ -375,9 +369,6 @@ class StoreActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
     }
 
-    /**
-     * Закрывает детальный экран оболочки и возвращается к списку.
-     */
     fun hideDetail() {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
