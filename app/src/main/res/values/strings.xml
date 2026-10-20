@@ -584,25 +584,34 @@
     <!-- Меню магазина -->
     <string name="store_menu_catalog">Магазин</string>
     <string name="store_menu_catalog_desc">Оболочки, темы и не только</string>
-    <string name="store_menu_installed">Мои установленные</string>
-    <string name="store_menu_installed_desc">Управление установленными</string>
+    <string name="store_menu_library">Библиотека</string>
+    <string name="store_menu_library_desc">Установленные ресурсы</string>
     <string name="store_menu_settings">Настройки</string>
     <string name="store_menu_settings_desc">Настройки магазина</string>
 
     <!-- Заглушки -->
     <string name="store_placeholder_catalog">Здесь появится каталог магазина</string>
-    <string name="store_placeholder_installed">Здесь будут ваши установленные оболочки</string>
+    <string name="store_placeholder_library">Здесь будут ваши установленные ресурсы</string>
     <string name="store_placeholder_settings">Здесь будут настройки магазина</string>
 
     <!-- Пустые состояния -->
     <string name="store_empty_catalog">В каталоге пока ничего нет</string>
-    <string name="store_empty_installed">Нет установленных оболочек</string>
+    <string name="store_empty_library">Библиотека пуста</string>
+
+    <!-- Карточка каталога -->
+    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
+    <string name="store_card_meta" formatted="false">%1$s · %2$s</string>
+
+    <!-- Статусы карточки -->
+    <string name="store_status_active">Активна</string>
+    <string name="store_status_update">Есть обновление</string>
+    <string name="store_status_installed">Установлено</string>
 
     <!-- Остальное (кнопки, состояния) — без изменений -->
     <string name="store_install">Установить</string>
     <string name="store_update">Обновить</string>
     <string name="store_apply">Применить</string>
-    <string name="store_applied">Применено</string>
+    <string name="store_applied">Активна</string>
     <string name="store_install_hint">Для установки оболочки вернитесь к списку и нажмите «Установить» на карточке.</string>
     <string name="store_update_hint">Для обновления оболочки вернитесь к списку и нажмите «Обновить» на карточке.</string>
     <string name="store_loading">Загрузка каталога…</string>

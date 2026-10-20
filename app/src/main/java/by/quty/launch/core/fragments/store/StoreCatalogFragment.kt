@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.StoreCatalogAdapter
+import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.managers.StoreManager
 import by.quty.launch.core.model.ShellStoreModel
@@ -25,10 +25,13 @@ import kotlinx.coroutines.launch
  * Фрагмент «Каталог» магазина.
  *
  * Загружает список оболочек с сервера, отображает карточки.
- * Позволяет устанавливать, обновлять и применять оболочки.
  *
- * В будущем здесь могут быть не только оболочки — темы, шрифты и т.п.
- * Пока — только оболочки.
+ * Действия (установка/обновление/применение) в карточках отсутствуют —
+ * пользователь открывает карточку и выполняет действия в детальном
+ * экране (StoreDetailFragment) или в Библиотеке.
+ *
+ * При возврате из детального экрана StoreActivity вызывает refresh(),
+ * чтобы обновить статусы (Активна / Есть обновление / Установлено).
  */
 class StoreCatalogFragment : Fragment() {
 
@@ -39,6 +42,7 @@ class StoreCatalogFragment : Fragment() {
     private lateinit var btnRetry: Button
     private lateinit var emptyState: LinearLayout
 
+    private lateinit var configManager: ConfigManager
     private lateinit var storeManager: StoreManager
     private lateinit var shellManager: ShellManager
     private lateinit var adapter: StoreCatalogAdapter
@@ -58,12 +62,13 @@ class StoreCatalogFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as? StoreActivity)?.let { storeActivity ->
+            configManager = storeActivity.configManager
             storeManager = StoreManager(requireContext())
-            shellManager = ShellManager(requireContext(), storeActivity.configManager)
+            shellManager = ShellManager(requireContext(), configManager)
         } ?: run {
             // Fallback, если фрагмент открыт не в StoreActivity
+            configManager = ConfigManager(requireContext())
             storeManager = StoreManager(requireContext())
-            val configManager = by.quty.launch.core.managers.ConfigManager(requireContext())
             shellManager = ShellManager(requireContext(), configManager)
         }
 
@@ -102,10 +107,17 @@ class StoreCatalogFragment : Fragment() {
 
     /**
      * Возвращает пару (name, version) активной оболочки.
+     *
+     * ВАЖНО: version берётся из ConfigManager.getActiveShellVersion(),
+     * а не из ShellManager.getActiveShell().version. Первое — это
+     * «версия, реально загруженная в WebView», второе — версия файла
+     * на диске (может отличаться, если оболочка была обновлена, но
+     * новая версия ещё не применена).
      */
     private fun getActiveShellInfo(): Pair<String?, String?> {
-        val active = shellManager.getActiveShell()
-        return Pair(active?.name, active?.version)
+        val activeName = configManager.getActiveShell()
+        val activeVersion = configManager.getActiveShellVersion()
+        return Pair(activeName, activeVersion)
     }
 
     /**
@@ -121,15 +133,6 @@ class StoreCatalogFragment : Fragment() {
             activeShellVersion = activeVersion,
             onItemClick = { shell ->
                 (activity as? StoreActivity)?.showDetail(shell)
-            },
-            onInstallClick = { shell ->
-                installShell(shell)
-            },
-            onUpdateClick = { shell ->
-                installShell(shell)
-            },
-            onApplyClick = { shell ->
-                applyShell(shell)
             }
         )
     }
@@ -168,84 +171,18 @@ class StoreCatalogFragment : Fragment() {
     }
 
     /**
-     * Устанавливает или обновляет оболочку: скачивает и сохраняет.
+     * Публичный метод для перерисовки карточек при возврате из детального
+     * экрана. Не перезапрашивает список с сервера — только пересоздаёт
+     * адаптер с актуальными installed/active данными.
      *
-     * Для «Установить» и «Обновить» используется один и тот же метод —
-     * файл `.qutyshell` перезаписывается (overwrite = true).
+     * Вызывается из StoreActivity.hideDetail().
      */
-    private fun installShell(shell: ShellStoreModel) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            adapter.updateProgress(shell.id, 0)
+    fun refresh() {
+        if (!isAdded) return
+        if (shells.isEmpty()) return
 
-            val success = storeManager.installShell(
-                shell = shell,
-                listener = object : StoreManager.DownloadListener {
-                    override fun onProgress(percent: Int) {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            adapter.updateProgress(shell.id, percent)
-                        }
-                    }
-
-                    override fun onSuccess() {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            adapter.clearProgress(shell.id)
-                            // Перезагружаем список, чтобы обновить состояние кнопки
-                            loadShells()
-
-                            Toast.makeText(
-                                requireContext(),
-                                getString(R.string.store_install_success, shell.displayName),
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-
-                    override fun onError(message: String) {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            adapter.clearProgress(shell.id)
-                            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
-            )
-
-            if (!success) {
-                adapter.clearProgress(shell.id)
-            }
-        }
-    }
-
-    /**
-     * Применяет оболочку: делает её активной.
-     */
-    private fun applyShell(shell: ShellStoreModel) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val availableShell = shellManager.getAvailableShells()
-                .find { it.name == shell.name }
-
-            if (availableShell == null) {
-                Toast.makeText(
-                    requireContext(),
-                    R.string.store_install_error,
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@launch
-            }
-
-            shellManager.setActiveShell(availableShell)
-
-            // Требуется перезапуск — сообщаем об этом через активность
-            (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
-
-            // Обновляем список, чтобы кнопка стала "Применено"
-            loadShells()
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.shell_applied_toast, shell.displayName),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        adapter = buildAdapter(shells)
+        recyclerView.adapter = adapter
     }
 
     // ============================================================

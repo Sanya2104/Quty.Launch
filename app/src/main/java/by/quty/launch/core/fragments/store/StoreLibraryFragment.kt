@@ -1,4 +1,4 @@
-// *** core/fragments/store/StoreInstalledFragment.kt *** //
+// *** core/fragments/store/StoreLibraryFragment.kt *** //
 package by.quty.launch.core.fragments.store
 
 import android.os.Bundle
@@ -10,12 +10,13 @@ import androidx.fragment.app.Fragment
 import by.quty.launch.R
 
 /**
- * Фрагмент «Мои установленные» магазина.
+ * Фрагмент «Библиотека» магазина.
  *
  * Пока — заглушка. В будущем здесь будет список установленных
- * оболочек с возможностью удаления/обновления.
+ * пользователем ресурсов (оболочки, темы, шрифты и т.д.)
+ * с возможностью удаления/обновления/применения.
  */
-class StoreInstalledFragment : Fragment() {
+class StoreLibraryFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,7 +32,7 @@ class StoreInstalledFragment : Fragment() {
         val title = view.findViewById<TextView>(R.id.placeholder_title)
         val message = view.findViewById<TextView>(R.id.placeholder_message)
 
-        title.text = getString(R.string.store_menu_installed)
-        message.text = getString(R.string.store_placeholder_installed)
+        title.text = getString(R.string.store_menu_library)
+        message.text = getString(R.string.store_placeholder_library)
     }
 }

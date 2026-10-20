@@ -105,4 +105,9 @@
 
     <!-- Spinner -->
     <dimen name="spinner_min_width">100dp</dimen>
+
+    <!-- Превью в карточке каталога магазина -->
+    <dimen name="store_card_preview_width">140dp</dimen>
+    <dimen name="store_card_preview_height">100dp</dimen>
+
 </resources>

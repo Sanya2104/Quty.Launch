@@ -168,6 +168,7 @@ class ShellManager(
         // Сохраняем оболочку по умолчанию как активную
         activeShell = defaultShell
         configManager.setActiveShell(defaultShell.name)
+        configManager.setActiveShellVersion(defaultShell.version ?: "")
 
         LoggerManager.warn(
             LoggerTagModel.SHELL,
@@ -484,6 +485,11 @@ class ShellManager(
      * Safe Mode: в этом режиме НЕ записываем выбор в prefs — иначе
      * при выходе из Safe Mode загрузилась бы "Default" вместо оболочки,
      * которую юзер выбрал до входа в Safe Mode.
+     *
+     * active_shell_version: пишется сюда же — это «версия, реально
+     * загруженная в WebView». Используется магазином, чтобы отличить
+     * «оболочка обновлена, но не применена» от «оболочка активна
+     * с текущей версией».
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
         // Запоминаем имя предыдущей активной оболочки
@@ -494,6 +500,7 @@ class ShellManager(
         // пользовательской оболочки (например, QutyAuto) загрузится Default.
         if (!configManager.isSafeModeActive()) {
             configManager.setActiveShell(shell.name)
+            configManager.setActiveShellVersion(shell.version ?: "")
         }
 
         // Обновляем в памяти

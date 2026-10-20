@@ -1,46 +1,62 @@
 // *** core/adapters/StoreCatalogAdapter.kt *** //
 package by.quty.launch.core.adapters
 
-import android.util.TypedValue
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StrikethroughSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.core.model.ShellStoreModel
 import by.quty.launch.core.utilities.UpdateHelper
 import com.bumptech.glide.Glide
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Адаптер для списка оболочек в каталоге магазина.
  *
- * Отображает карточки с превью, названием, версией и кнопкой действия.
- * Кнопка динамически меняет состояние:
- * - "Установить" (не установлена)
- * - Прогресс (идёт скачивание)
- * - "Применить" (установлена, но не активна)
- * - "Обновить" (установлена, но версия в магазине новее)
- * - "Применено" (активна с той же версией) — с обводкой, не активна
+ * Карточка-строка (стиль Google Play):
+ * - превью слева (140×100dp);
+ * - название + автор/версия + размер/дата по центру;
+ * - статусные плашки снизу (Активна / Есть обновление / Установлено).
+ *
+ * Кнопок действий в карточке нет — установка/обновление/применение
+ * выполняются в детальном экране (StoreDetailFragment) и в Библиотеке.
+ *
+ * Статусы:
+ * - «Активна» (зелёная плашка) — оболочка активна и версия совпадает
+ *   с версией в магазине.
+ * - «Активна» + «Есть обновление» — оболочка активна, но в магазине
+ *   более новая версия.
+ * - «Установлено» (серая плашка) — оболочка установлена, но не активна.
+ * - ничего — оболочка не установлена.
+ *
+ * Строка «автор · версия» при наличии обновления превращается в
+ * «автор · vX.Y.Z → vX.Y.W», где старая зачёркнута и приглушена.
+ *
+ * activeShellVersion — это «версия, реально загруженная в WebView»
+ * (из ConfigManager.getActiveShellVersion()), а не версия файла
+ * на диске. Иначе после установки обновления поверх активной
+ * оболочки статус «Активна» показывался бы до нажатия «Применить».
  */
 class StoreCatalogAdapter(
     private var shells: List<ShellStoreModel>,
     private val installedShellVersions: Map<String, String>,
     private val activeShellName: String?,
     private val activeShellVersion: String?,
-    private val onItemClick: (ShellStoreModel) -> Unit,
-    private val onInstallClick: (ShellStoreModel) -> Unit,
-    private val onUpdateClick: (ShellStoreModel) -> Unit,
-    private val onApplyClick: (ShellStoreModel) -> Unit
+    private val onItemClick: (ShellStoreModel) -> Unit
 ) : RecyclerView.Adapter<StoreCatalogAdapter.ViewHolder>() {
 
-    // Карта прогресса скачивания (id оболочки -> процент)
-    private val downloadProgress = mutableMapOf<String, Int>()
+    // Форматтеры для даты (из "YYYY-MM-DD" в "DD.MM.YYYY")
+    private val inputDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private val outputDateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.US)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -55,38 +71,19 @@ class StoreCatalogAdapter(
 
     override fun getItemCount(): Int = shells.size
 
-    /**
-     * Обновляет прогресс скачивания для конкретной оболочки.
-     */
-    fun updateProgress(shellId: String, progress: Int) {
-        downloadProgress[shellId] = progress
-        val position = shells.indexOfFirst { it.id == shellId }
-        if (position >= 0) {
-            notifyItemChanged(position)
-        }
-    }
-
-    /**
-     * Убирает прогресс скачивания (например, при отмене или завершении).
-     */
-    fun clearProgress(shellId: String) {
-        downloadProgress.remove(shellId)
-        val position = shells.indexOfFirst { it.id == shellId }
-        if (position >= 0) {
-            notifyItemChanged(position)
-        }
-    }
-
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val previewImage: ImageView = itemView.findViewById(R.id.shell_preview)
         private val nameText: TextView = itemView.findViewById(R.id.shell_name)
-        private val versionText: TextView = itemView.findViewById(R.id.shell_version)
+        private val authorVersionText: TextView = itemView.findViewById(R.id.shell_author_version)
+        private val metaText: TextView = itemView.findViewById(R.id.shell_meta)
 
-        private val actionButton: Button = itemView.findViewById(R.id.btn_action)
-        private val progressContainer: LinearLayout = itemView.findViewById(R.id.progress_container)
-        private val progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
-        private val progressText: TextView = itemView.findViewById(R.id.progress_text)
+        private val statusContainer: LinearLayout =
+            itemView.findViewById(R.id.shell_status_container)
+        private val statusActive: TextView = itemView.findViewById(R.id.shell_status_active)
+        private val statusUpdate: TextView = itemView.findViewById(R.id.shell_status_update)
+        private val statusInstalled: TextView =
+            itemView.findViewById(R.id.shell_status_installed)
 
         fun bind(item: ShellStoreModel) {
             val context = itemView.context
@@ -99,92 +96,141 @@ class StoreCatalogAdapter(
                 .centerCrop()
                 .into(previewImage)
 
-            // Название и версия
+            // Название
             nameText.text = item.displayName
-            versionText.text = context.getString(R.string.shell_version_with_label, item.version)
+
+            // Автор · версия (или автор · vX → vY, если есть обновление)
+            bindAuthorVersion(item)
+
+            // Размер · дата
+            metaText.text = context.getString(
+                R.string.store_card_meta,
+                item.fileSize.ifBlank { context.getString(R.string.unknown) },
+                formatDate(item.datePublished)
+            )
 
             // Клик по карточке → детали
             itemView.setOnClickListener {
                 onItemClick(item)
             }
 
-            // Логика кнопки действия
-            val progress = downloadProgress[item.id]
-
-            if (progress != null) {
-                // Идёт скачивание — показываем прогресс
-                actionButton.visibility = View.GONE
-                progressContainer.visibility = View.VISIBLE
-                progressBar.progress = progress
-                progressText.text = "$progress%"
-                return
-            }
-
-            actionButton.visibility = View.VISIBLE
-            progressContainer.visibility = View.GONE
-
-            // Определяем состояние оболочки
-            val installedVersion = installedShellVersions[item.name]
-
-            if (installedVersion == null) {
-                // Не установлена — кнопка "Установить" (primary — с заливкой)
-                applyButtonStyle(isPrimary = true)
-                actionButton.text = context.getString(R.string.store_install)
-                actionButton.isEnabled = true
-                actionButton.alpha = 1.0f
-                actionButton.setOnClickListener { onInstallClick(item) }
-                return
-            }
-
-            // Оболочка установлена. Проверяем, новее ли версия в магазине.
-            val hasUpdate = UpdateHelper.isNewerVersion(item.version, installedVersion)
-
-            if (hasUpdate) {
-                // Установлена, но есть новая версия — кнопка "Обновить" (primary)
-                applyButtonStyle(isPrimary = true)
-                actionButton.text = context.getString(R.string.store_update)
-                actionButton.isEnabled = true
-                actionButton.alpha = 1.0f
-                actionButton.setOnClickListener { onUpdateClick(item) }
-                return
-            }
-
-            // Версия в магазине совпадает или старее, чем установленная.
-            // Проверяем, активна ли эта оболочка и с той же ли версией.
-            val isActiveSameVersion =
-                activeShellName == item.name && activeShellVersion == item.version
-
-            if (isActiveSameVersion) {
-                // Активна с той же версией — "Применено" (secondary — с обводкой, disabled)
-                applyButtonStyle(isPrimary = false)
-                actionButton.text = context.getString(R.string.store_applied)
-                actionButton.isEnabled = false
-                actionButton.alpha = 0.7f
-                actionButton.setOnClickListener(null)
-            } else {
-                // Установлена, но не активна (или активна с другой версией) — "Применить" (primary)
-                applyButtonStyle(isPrimary = true)
-                actionButton.text = context.getString(R.string.store_apply)
-                actionButton.isEnabled = true
-                actionButton.alpha = 1.0f
-                actionButton.setOnClickListener { onApplyClick(item) }
-            }
+            // ==== СТАТУСЫ ====
+            bindStatuses(item)
         }
 
         /**
-         * Применяет стиль кнопки:
-         * - isPrimary = true  → bg_glass_button_primary + белый текст
-         * - isPrimary = false → bg_glass_button_secondary + текст из ?attr/textPrimaryColor
+         * Заполняет строку «автор · версия».
+         *
+         * Если у установленной оболочки версия в магазине новее —
+         * строка превращается в «автор · vX → vY»,
+         * где старая зачёркнута и приглушена.
          */
-        private fun applyButtonStyle(isPrimary: Boolean) {
+        private fun bindAuthorVersion(item: ShellStoreModel) {
             val context = itemView.context
+            val installedVersion = installedShellVersions[item.name]
 
-            if (isPrimary) {
-                actionButton.setBackgroundResource(R.drawable.bg_glass_button_primary)
-                actionButton.setTextColor(ContextCompat.getColor(context, R.color.white))
+            // Нет обновления (или оболочка не установлена) —
+            // простая строка «автор · vX.Y.Z»
+            if (installedVersion == null ||
+                !UpdateHelper.isNewerVersion(item.version, installedVersion)
+            ) {
+                authorVersionText.text = context.getString(
+                    R.string.store_card_author_version,
+                    item.author,
+                    item.version
+                )
+                return
+            }
+
+            // Есть обновление — «автор · vX → vY (зачёркнутая)»
+            val dimColor = getThemeColor(context, R.attr.textDimColor)
+            val strikeSpan = StrikethroughSpan()
+            val dimSpan = ForegroundColorSpan(dimColor)
+
+            val builder = SpannableStringBuilder()
+            builder.append(item.author)
+            builder.append(" · v")
+            builder.append(item.version)
+            builder.append(" → v")
+
+            val oldStart = builder.length
+            builder.append(installedVersion)
+            val oldEnd = builder.length
+
+            builder.setSpan(strikeSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            builder.setSpan(dimSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            authorVersionText.text = builder
+        }
+
+        /**
+         * Определяет и отображает статусные плашки.
+         *
+         * Логика:
+         * - не установлена → ничего;
+         * - активна + версия совпадает → «Активна»;
+         * - активна + в магазине новее → «Активна» + «Есть обновление»;
+         * - установлена, но не активна → «Установлено».
+         */
+        private fun bindStatuses(item: ShellStoreModel) {
+            // Скрываем все плашки
+            statusActive.visibility = View.GONE
+            statusUpdate.visibility = View.GONE
+            statusInstalled.visibility = View.GONE
+
+            val installedVersion = installedShellVersions[item.name]
+
+            if (installedVersion == null) {
+                // Не установлена — статусов нет
+                statusContainer.visibility = View.GONE
+                return
+            }
+
+            // «Активна» — только если имя совпадает И реально загруженная
+            // версия (active_shell_version) равна версии из магазина.
+            val isActive = activeShellName == item.name &&
+                    activeShellVersion == item.version
+
+            if (isActive) {
+                // Активна — показываем «Активна» всегда
+                statusActive.visibility = View.VISIBLE
+
+                // Проверяем, есть ли более новая версия в магазине
+                // (для этой ветки не должно быть, но на всякий случай)
+                val hasUpdate = UpdateHelper.isNewerVersion(item.version, installedVersion)
+                if (hasUpdate) {
+                    statusUpdate.visibility = View.VISIBLE
+                }
+            } else if (activeShellName == item.name) {
+                // Оболочка назначена активной, но реально загружена
+                // старая версия (была обновлена, но не применена) —
+                // показываем «Активна» (по имени) и «Есть обновление»
+                // (потому что в магазине новее, чем реально загружено).
+                statusActive.visibility = View.VISIBLE
+                val hasUpdate = activeShellVersion != null &&
+                        UpdateHelper.isNewerVersion(item.version, activeShellVersion)
+                if (hasUpdate) {
+                    statusUpdate.visibility = View.VISIBLE
+                }
             } else {
-                actionButton.setBackgroundResource(R.drawable.bg_glass_button_secondary)
-                actionButton.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+                // Установлена, но не активна — «Установлено»
+                statusInstalled.visibility = View.VISIBLE
+            }
+
+            statusContainer.visibility = View.VISIBLE
+        }
+
+        /**
+         * Форматирует дату из "YYYY-MM-DD" (Git) в "DD.MM.YYYY".
+         * Если дата пустая или не парсится — возвращает пустую строку.
+         */
+        private fun formatDate(isoDate: String): String {
+            if (isoDate.isBlank()) return ""
+            return try {
+                val date = inputDateFormat.parse(isoDate) ?: return isoDate
+                outputDateFormat.format(date)
+            } catch (_: Exception) {
+                isoDate
             }
         }
 
@@ -192,7 +238,7 @@ class StoreCatalogAdapter(
          * Резолвит цвет из атрибута темы.
          */
         private fun getThemeColor(context: android.content.Context, attr: Int): Int {
-            val typedValue = TypedValue()
+            val typedValue = android.util.TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)
             return typedValue.data
         }

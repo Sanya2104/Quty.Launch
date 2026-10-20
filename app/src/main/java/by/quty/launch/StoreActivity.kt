@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.store.StoreCatalogFragment
 import by.quty.launch.core.fragments.store.StoreDetailFragment
-import by.quty.launch.core.fragments.store.StoreInstalledFragment
+import by.quty.launch.core.fragments.store.StoreLibraryFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.core.model.ShellStoreModel
@@ -300,9 +300,9 @@ class StoreActivity : BaseActivity() {
             MenuModel(
                 2,
                 R.drawable.ic_folder,
-                R.string.store_menu_installed,
-                R.string.store_menu_installed_desc,
-                StoreInstalledFragment::class.java,
+                R.string.store_menu_library,
+                R.string.store_menu_library_desc,
+                StoreLibraryFragment::class.java,
                 R.color.scheme_orange_primary,
                 true
             )
@@ -395,6 +395,16 @@ class StoreActivity : BaseActivity() {
             supportFragmentManager.popBackStack()
         }
         binding.contentTitle.text = getMenuItemTitle()
+
+        /*
+         * После возврата из детального экрана нужно перерисовать карточки
+         * каталога — статусы могли измениться (установили / применили
+         * оболочку). refresh() пересоздаёт адаптер с актуальными данными
+         * без повторной загрузки с сервера.
+         */
+        (supportFragmentManager.findFragmentById(R.id.fragment_container)
+                as? StoreCatalogFragment)?.refresh()
+
         applyMode()
     }
 

@@ -17,7 +17,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="@dimen/shell_preview_height"
-            android:layout_marginTop="@dimen/spacing_m"
+            android:layout_marginTop="@dimen/spacing_l"
             android:layout_marginBottom="@dimen/spacing_l"
             app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="@dimen/radius_large"
@@ -84,6 +84,43 @@
                 android:paddingStart="@dimen/spacing_m"
                 android:paddingEnd="@dimen/spacing_m"
                 android:text="@string/store_install" />
+
+        </LinearLayout>
+
+        <!-- Прогресс скачивания (скрыт по умолчанию) -->
+        <LinearLayout
+            android:id="@+id/install_progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginBottom="@dimen/spacing_m"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ProgressBar
+                android:id="@+id/install_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/update_progress_height"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="?attr/buttonPrimaryColor"
+                android:progressBackgroundTint="?attr/dividerColor"
+                android:background="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/install_progress_text"
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:textStyle="bold"
+                android:textColor="?attr/textPrimaryColor"
+                tools:text="45%" />
 
         </LinearLayout>
 
@@ -265,7 +302,7 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:textAlignment="viewEnd"
-                    tools:text="Встроенная" />
+                    tools:text="Пользовательская" />
 
             </LinearLayout>
 
