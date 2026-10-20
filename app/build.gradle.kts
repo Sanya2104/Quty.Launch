@@ -15,8 +15,8 @@ android {
         minSdk = 29
         //noinspection OldTargetApi
         targetSdk = 36
-    versionCode = 772
-    versionName = "0.0.177"
+    versionCode = 776
+    versionName = "0.0.178"
         versionNameSuffix = "Alpha"
     }
 
@@ -68,4 +68,7 @@ dependencies {
 
     // CardView
     implementation(libs.androidx.cardview)
+
+    // SwipeRefreshLayout
+    implementation(libs.androidx.swiperefreshlayout)
 }

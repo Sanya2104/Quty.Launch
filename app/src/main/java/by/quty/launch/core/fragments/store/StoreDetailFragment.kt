@@ -4,10 +4,6 @@ package by.quty.launch.core.fragments.store
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StrikethroughSpan
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -40,11 +36,21 @@ import java.util.Locale
  * Кнопка действия — динамическая:
  * - "Установить" (primary) — не установлена;
  * - "Обновить" (primary) — установлена, в магазине новее;
- * - "Активна" (secondary, disabled) — установлена, версия совпадает
- *   с магазином и реально загружена в WebView;
- * - "Применить" (primary) — установлена, версия совпадает с магазином,
- *   но не загружена в WebView (обновлена, но не применена;
- *   или не была активна).
+ * - "Активна" (secondary, disabled) — установленная версия совпадает
+ *   с реально загруженной в WebView;
+ * - "Применить" (primary) — установлена (возможно, новее магазинной),
+ *   но не загружена в WebView.
+ *
+ * Поле «Версия» ВСЕГДА показывает версию из репозитория (магазина).
+ *
+ * Если локальная версия отличается от репозиторной — появляется
+ * отдельная строка «Установленная версия»:
+ * - локальная новее → плашка «Новее»;
+ * - магазин новее → просто версия (без плашки, но разница видна
+ *   по двум строкам).
+ *
+ * При совпадении версий строка «Установленная версия» скрыта, чтобы
+ * не дублировать.
  *
  * После установки/обновления:
  * - если оболочка была активна до этого (по имени) — вызываем
@@ -52,9 +58,6 @@ import java.util.Locale
  *   → кнопка "Активна";
  * - если не была активна — setActiveShell() НЕ вызываем
  *   → кнопка "Применить".
- *
- * Поле «Версия» при наличии обновления показывает
- * «vX.Y.Z → vX.Y.W», где старая версия зачёркнута и приглушена.
  *
  * При возврате в каталог StoreActivity.hideDetail() вызывает
  * StoreCatalogFragment.refresh() — статусы карточек перерисовываются.
@@ -84,8 +87,11 @@ class StoreDetailFragment : Fragment() {
     private lateinit var installProgressBar: ProgressBar
     private lateinit var installProgressText: TextView
 
-    // Поле «Версия» — нужно для перерисовки при обновлении статусов
-    private lateinit var versionValueText: TextView
+    // Строка «Установленная версия» (показывается только при расхождении)
+    private lateinit var installedVersionContainer: LinearLayout
+    private lateinit var installedVersionDivider: View
+    private lateinit var installedVersionText: TextView
+    private lateinit var versionNewerBadge: TextView
 
     // Флаг, что установка/применение сейчас выполняется (блокирует повторный клик)
     private var isInstalling = false
@@ -119,7 +125,11 @@ class StoreDetailFragment : Fragment() {
         val previewImage: ImageView = view.findViewById(R.id.shell_preview)
         val nameText: TextView = view.findViewById(R.id.shell_name)
         val authorText: TextView = view.findViewById(R.id.shell_author)
-        versionValueText = view.findViewById(R.id.shell_version)
+        val versionValueText: TextView = view.findViewById(R.id.shell_version)
+        installedVersionContainer = view.findViewById(R.id.shell_installed_version_container)
+        installedVersionDivider = view.findViewById(R.id.shell_installed_version_divider)
+        installedVersionText = view.findViewById(R.id.shell_installed_version)
+        versionNewerBadge = view.findViewById(R.id.shell_status_newer)
         val sizeText: TextView = view.findViewById(R.id.shell_size)
         val dateText: TextView = view.findViewById(R.id.shell_date)
         val typeText: TextView = view.findViewById(R.id.shell_type)
@@ -149,6 +159,9 @@ class StoreDetailFragment : Fragment() {
         dateText.text = formatDate(shell.datePublished)
         typeText.text = getString(R.string.shell_type_custom)
         minVersionText.text = shell.minQutyLaunchVersion
+
+        // Версия — ВСЕГДА из репозитория
+        versionValueText.text = "v${shell.version}"
 
         // Ориентация
         orientationText.text = when (shell.orientation) {
@@ -181,8 +194,8 @@ class StoreDetailFragment : Fragment() {
             telegramContainer.visibility = View.GONE
         }
 
-        // Поле «Версия» и кнопка действия
-        bindVersionValue()
+        // Строка «Установленная версия» и кнопка действия
+        bindInstalledVersion()
         updateButtonState()
     }
 
@@ -202,43 +215,37 @@ class StoreDetailFragment : Fragment() {
     }
 
     /**
-     * Заполняет поле «Версия».
+     * Заполняет строку «Установленная версия».
      *
-     * Если у установленной оболочки версия в магазине новее —
-     * показываем «vНовая → vСтарая», где старая зачёркнута и приглушена.
-     * Иначе — просто «vX.Y.Z».
+     * Показывается только если локальная версия отличается от
+     * репозиторной:
+     * - локальная новее → vЛокальная + плашка «Новее»;
+     * - магазин новее → vЛокальная (без плашки).
+     *
+     * При совпадении версий строка (и разделитель) скрыты.
      */
-    private fun bindVersionValue() {
+    private fun bindInstalledVersion() {
         if (!isAdded) return
 
         val installedVersion = shellManager.getAvailableShells()
             .find { it.name == shell.name }?.version
 
-        if (installedVersion == null ||
-            !UpdateHelper.isNewerVersion(shell.version, installedVersion)
-        ) {
-            versionValueText.text = "v${shell.version}"
+        // Не установлена или версии совпадают — строку скрываем
+        if (installedVersion == null || installedVersion == shell.version) {
+            installedVersionContainer.visibility = View.GONE
+            installedVersionDivider.visibility = View.GONE
+            versionNewerBadge.visibility = View.GONE
             return
         }
 
-        val context = requireContext()
-        val dimColor = getThemeColor(context, R.attr.textDimColor)
-        val strikeSpan = StrikethroughSpan()
-        val dimSpan = ForegroundColorSpan(dimColor)
+        // Версии различаются — показываем строку
+        installedVersionContainer.visibility = View.VISIBLE
+        installedVersionDivider.visibility = View.VISIBLE
+        installedVersionText.text = "v$installedVersion"
 
-        val builder = SpannableStringBuilder()
-        builder.append("v")
-        builder.append(shell.version)
-        builder.append(" → v")
-
-        val oldStart = builder.length
-        builder.append(installedVersion)
-        val oldEnd = builder.length
-
-        builder.setSpan(strikeSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        builder.setSpan(dimSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-        versionValueText.text = builder
+        // Плашка «Новее» — только если локальная новее магазинной
+        val installedIsNewer = UpdateHelper.isNewerVersion(installedVersion, shell.version)
+        versionNewerBadge.visibility = if (installedIsNewer) View.VISIBLE else View.GONE
     }
 
     /**
@@ -246,6 +253,9 @@ class StoreDetailFragment : Fragment() {
      *
      * Источник правды для «активна» — ConfigManager.getActiveShellVersion()
      * (версия, реально загруженная в WebView), а не версия файла на диске.
+     *
+     * ВАЖНО: если установленная версия НОВЕЕ магазинной, сравнение
+     * идёт с installedVersion, а не с shell.version (магазинной).
      */
     private fun updateButtonState() {
         if (!isAdded) return
@@ -256,11 +266,19 @@ class StoreDetailFragment : Fragment() {
         val activeName = configManager.getActiveShell()
         val activeVersion = configManager.getActiveShellVersion()
 
-        val isActiveSameVersion = activeName == shell.name && activeVersion == shell.version
+        // Установленная новее магазинной?
+        val installedIsNewer = installedVersion != null &&
+                UpdateHelper.isNewerVersion(installedVersion, shell.version)
+
+        // Активна с версией, которая реально соответствует установленной?
+        val isActiveSameVersion = activeName == shell.name && (
+                activeVersion == shell.version ||
+                        (installedIsNewer && activeVersion == installedVersion)
+                )
 
         when {
             isActiveSameVersion -> {
-                // Активна с той же версией — "Активна" (secondary, disabled)
+                // Активна с установленной версией — "Активна" (secondary, disabled)
                 applyButtonStyle(isPrimary = false)
                 btnInstall.text = getString(R.string.store_applied)
                 btnInstall.isEnabled = false
@@ -276,7 +294,8 @@ class StoreDetailFragment : Fragment() {
                 btnInstall.setOnClickListener { installOrUpdate() }
             }
             installedVersion != null -> {
-                // Установлена, версия = магазин, но не активна — "Применить" (primary)
+                // Установлена (в т.ч. новее магазинной), но не активна
+                // — "Применить" (primary)
                 applyButtonStyle(isPrimary = true)
                 btnInstall.text = getString(R.string.store_apply)
                 btnInstall.isEnabled = true
@@ -372,7 +391,7 @@ class StoreDetailFragment : Fragment() {
                                 }
                             }
 
-                            bindVersionValue()
+                            bindInstalledVersion()
                             updateButtonState()
 
                             Toast.makeText(

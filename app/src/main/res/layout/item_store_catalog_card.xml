@@ -81,7 +81,7 @@
                 android:ellipsize="end"
                 tools:text="5.2 MB · 20.10.2026" />
 
-            <!-- Статусы (Активна / Есть обновление / Установлено) -->
+            <!-- Статусы (Активна / Есть обновление / Установлено / Новее) -->
             <LinearLayout
                 android:id="@+id/shell_status_container"
                 android:layout_width="match_parent"
@@ -141,6 +141,25 @@
                     android:paddingBottom="@dimen/spacing_xxs"
                     android:text="@string/store_status_installed"
                     android:textColor="?attr/textDimColor"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- Плашка «Новее» (установленная версия новее магазинной) -->
+                <TextView
+                    android:id="@+id/shell_status_newer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_xs"
+                    android:background="@drawable/bg_status_newer"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_newer"
+                    android:textColor="@color/scheme_teal_primary"
                     android:textSize="13sp"
                     android:fontFamily="sans-serif-medium"
                     android:maxLines="1"

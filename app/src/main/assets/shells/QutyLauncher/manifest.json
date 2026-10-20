@@ -3,7 +3,6 @@
     "author":  "QutyTeam",
     "preview":  "preview.png",
     "orientation": "landscape",
-    "repoUrl":  "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Theme.QutyOS/main/",
-    "version":  "0.0.23",
+    "version":  "0.0.24",
     "minQutyLaunchVersion":  "0.0.0"
 }

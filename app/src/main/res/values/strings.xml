@@ -233,6 +233,7 @@
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
     <string name="settings_personalization_shell_info_version">Версия</string>
+    <string name="settings_personalization_shell_info_installed_version">Установленная версия</string>
     <string name="settings_personalization_shell_info_author">Автор</string>
     <string name="settings_personalization_shell_info_type">Тип</string>
     <string name="settings_personalization_shell_info_size">Размер</string>
@@ -606,8 +607,12 @@
     <string name="store_status_active">Активна</string>
     <string name="store_status_update">Есть обновление</string>
     <string name="store_status_installed">Установлено</string>
+    <string name="store_status_newer">Новее</string>
 
-    <!-- Остальное (кнопки, состояния) — без изменений -->
+    <!-- Кэш каталога -->
+    <string name="store_cache_stale_toast">Не удалось обновить каталог. Показан кэш.</string>
+
+    <!-- Остальное (кнопки, состояния) -->
     <string name="store_install">Установить</string>
     <string name="store_update">Обновить</string>
     <string name="store_apply">Применить</string>

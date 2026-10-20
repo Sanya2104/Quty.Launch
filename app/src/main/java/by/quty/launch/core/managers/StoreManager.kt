@@ -18,6 +18,14 @@ import java.net.URL
 /**
  * Менеджер магазина оболочек.
  * Загружает список оболочек из репозитория, управляет установкой.
+ *
+ * Кэш каталога:
+ * - после успешной загрузки список сохраняется в
+ *   StorageDirectory.CACHE/store_shells.json;
+ * - при следующем открытии каталога кэш можно показать сразу,
+ *   пока идёт фоновая загрузка с сервера;
+ * - кэш не имеет срока давности — обновляется при каждом успешном
+ *   fetchShells() (и при swipe-to-refresh).
  */
 class StoreManager(private val context: Context) {
 
@@ -53,6 +61,9 @@ class StoreManager(private val context: Context) {
                     "STORE.fetch  ok  items=${wrapper.shells.size}"
                 )
 
+                // Сохраняем свежий список в кэш
+                saveShellsToCacheInternal(wrapper.shells)
+
                 wrapper.shells
             } else {
                 LoggerManager.warn(
@@ -64,6 +75,87 @@ class StoreManager(private val context: Context) {
         } catch (e: Exception) {
             LoggerManager.error(LoggerTagModel.STORE, "STORE.fetch  error", e)
             null
+        }
+    }
+
+    // ============================================================
+    // КЭШ КАТАЛОГА
+    // ============================================================
+
+    /**
+     * Читает кэш каталога с диска.
+     *
+     * @return список оболочек или null, если кэша нет / он повреждён.
+     */
+    suspend fun getCachedShells(): List<ShellStoreModel>? = withContext(Dispatchers.IO) {
+        try {
+            val file = storageManager.get(StorageDirectory.CACHE, CACHE_FILE_NAME)
+            if (!file.exists() || file.length() == 0L) return@withContext null
+
+            val jsonString = file.readText()
+            if (jsonString.isBlank()) return@withContext null
+
+            val wrapper = json.decodeFromString<ShellsWrapper>(jsonString)
+            LoggerManager.debug(
+                LoggerTagModel.STORE,
+                "STORE.cache.read  items=${wrapper.shells.size}"
+            )
+            wrapper.shells
+        } catch (e: Exception) {
+            LoggerManager.warn(
+                LoggerTagModel.STORE,
+                "STORE.cache.read  error  ${e.message ?: e.javaClass.simpleName}",
+                e
+            )
+            null
+        }
+    }
+
+    /**
+     * Сохраняет список оболочек в кэш (публичная обёртка для совместимости).
+     */
+    suspend fun saveShellsToCache(shells: List<ShellStoreModel>) {
+        saveShellsToCacheInternal(shells)
+    }
+
+    /**
+     * Внутренняя запись кэша на диск.
+     */
+    private suspend fun saveShellsToCacheInternal(shells: List<ShellStoreModel>) {
+        withContext(Dispatchers.IO) {
+            try {
+                val wrapper = ShellsWrapper(shells)
+                val jsonString = json.encodeToString(ShellsWrapper.serializer(), wrapper)
+                storageManager.set(
+                    directory = StorageDirectory.CACHE,
+                    name = CACHE_FILE_NAME,
+                    content = jsonString,
+                    overwrite = true
+                )
+                LoggerManager.debug(
+                    LoggerTagModel.STORE,
+                    "STORE.cache.save  items=${shells.size}"
+                )
+            } catch (e: Exception) {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.cache.save  error  ${e.message ?: e.javaClass.simpleName}",
+                    e
+                )
+            }
+        }
+    }
+
+    /**
+     * Удаляет кэш каталога с диска.
+     */
+    suspend fun clearShellsCache(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val removed = storageManager.remove(StorageDirectory.CACHE, CACHE_FILE_NAME)
+            LoggerManager.info(LoggerTagModel.STORE, "STORE.cache.clear  removed=$removed")
+            removed
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -242,5 +334,10 @@ class StoreManager(private val context: Context) {
         fun onProgress(percent: Int)
         fun onSuccess()
         fun onError(message: String)
+    }
+
+    companion object {
+        /** Имя файла кэша каталога. */
+        private const val CACHE_FILE_NAME = "store_shells.json"
     }
 }

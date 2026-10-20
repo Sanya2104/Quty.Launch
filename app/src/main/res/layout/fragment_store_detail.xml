@@ -74,7 +74,7 @@
 
             </LinearLayout>
 
-            <!-- Кнопка действия (Установить / Обновить / Применить / Применено) -->
+            <!-- Кнопка действия (Установить / Обновить / Применить / Активна) -->
             <Button
                 android:id="@+id/btn_install"
                 style="@style/Button.Glass.Primary"
@@ -133,7 +133,7 @@
             android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_xs">
 
-            <!-- Версия -->
+            <!-- Версия (всегда из репозитория) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -167,7 +167,76 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:textAlignment="viewEnd"
-                    tools:text="0.0.1" />
+                    tools:text="v0.0.1" />
+
+            </LinearLayout>
+
+            <!-- Установленная версия (показывается только когда отличается от репозитория) -->
+            <View
+                android:id="@+id/shell_installed_version_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/shell_installed_version_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version_code"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_installed_version" />
+
+                <!-- Плашка «Новее» (установленная версия новее магазинной) -->
+                <TextView
+                    android:id="@+id/shell_status_newer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:background="@drawable/bg_status_newer"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_newer"
+                    android:textColor="@color/scheme_teal_primary"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/shell_installed_version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="v0.0.2" />
 
             </LinearLayout>
 

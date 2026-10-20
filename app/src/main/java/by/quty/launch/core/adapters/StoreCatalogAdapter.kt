@@ -25,10 +25,17 @@ import java.util.Locale
  * Карточка-строка (стиль Google Play):
  * - превью слева (140×100dp);
  * - название + автор/версия + размер/дата по центру;
- * - статусные плашки снизу (Активна / Есть обновление / Установлено).
+ * - статусные плашки снизу (Активна / Есть обновление / Установлено / Новее).
  *
  * Кнопок действий в карточке нет — установка/обновление/применение
  * выполняются в детальном экране (StoreDetailFragment) и в Библиотеке.
+ *
+ * ВАЖНО: в строке «автор · версия» ВСЕГДА выводится версия из
+ * репозитория (магазина), а не локально установленная. Локальное
+ * расхождение обозначается плашками:
+ * - «Новее» — установленная версия НОВЕЕ магазинной;
+ * - зачёркивание локальной версии рядом с магазинной — когда в
+ *   магазине новее установленной.
  *
  * Статусы:
  * - «Активна» (зелёная плашка) — оболочка активна и версия совпадает
@@ -36,15 +43,13 @@ import java.util.Locale
  * - «Активна» + «Есть обновление» — оболочка активна, но в магазине
  *   более новая версия.
  * - «Установлено» (серая плашка) — оболочка установлена, но не активна.
+ * - «Новее» (teal плашка) — установленная версия новее магазинной.
+ *   Может соседствовать с «Активна» / «Установлено».
  * - ничего — оболочка не установлена.
- *
- * Строка «автор · версия» при наличии обновления превращается в
- * «автор · vX.Y.Z → vX.Y.W», где старая зачёркнута и приглушена.
  *
  * activeShellVersion — это «версия, реально загруженная в WebView»
  * (из ConfigManager.getActiveShellVersion()), а не версия файла
- * на диске. Иначе после установки обновления поверх активной
- * оболочки статус «Активна» показывался бы до нажатия «Применить».
+ * на диске.
  */
 class StoreCatalogAdapter(
     private var shells: List<ShellStoreModel>,
@@ -84,6 +89,7 @@ class StoreCatalogAdapter(
         private val statusUpdate: TextView = itemView.findViewById(R.id.shell_status_update)
         private val statusInstalled: TextView =
             itemView.findViewById(R.id.shell_status_installed)
+        private val statusNewer: TextView = itemView.findViewById(R.id.shell_status_newer)
 
         fun bind(item: ShellStoreModel) {
             val context = itemView.context
@@ -99,7 +105,8 @@ class StoreCatalogAdapter(
             // Название
             nameText.text = item.displayName
 
-            // Автор · версия (или автор · vX → vY, если есть обновление)
+            // Автор · версия (всегда версия из репозитория, с зачёркиванием
+            // локальной, если в магазине новее)
             bindAuthorVersion(item)
 
             // Размер · дата
@@ -121,46 +128,50 @@ class StoreCatalogAdapter(
         /**
          * Заполняет строку «автор · версия».
          *
-         * Если у установленной оболочки версия в магазине новее —
-         * строка превращается в «автор · vX → vY»,
-         * где старая зачёркнута и приглушена.
+         * ВСЕГДА выводится версия из репозитория (item.version).
+         * Если в магазине новее установленной — добавляем
+         * «→ vЛокальная (зачёркнуто)».
+         *
+         * Если локальная новее магазинной — ничего не зачёркиваем,
+         * просто «автор · vМагазин». Локальное расхождение показывается
+         * плашкой «Новее» (см. bindStatuses).
          */
         private fun bindAuthorVersion(item: ShellStoreModel) {
             val context = itemView.context
             val installedVersion = installedShellVersions[item.name]
 
-            // Нет обновления (или оболочка не установлена) —
-            // простая строка «автор · vX.Y.Z»
-            if (installedVersion == null ||
-                !UpdateHelper.isNewerVersion(item.version, installedVersion)
+            // Магазин новее установленной — «автор · vМагазин → vУстановлено»
+            if (installedVersion != null &&
+                UpdateHelper.isNewerVersion(item.version, installedVersion)
             ) {
-                authorVersionText.text = context.getString(
-                    R.string.store_card_author_version,
-                    item.author,
-                    item.version
-                )
+                val dimColor = getThemeColor(context, R.attr.textDimColor)
+                val strikeSpan = StrikethroughSpan()
+                val dimSpan = ForegroundColorSpan(dimColor)
+
+                val builder = SpannableStringBuilder()
+                builder.append(item.author)
+                builder.append(" · v")
+                builder.append(item.version)
+                builder.append(" → v")
+
+                val oldStart = builder.length
+                builder.append(installedVersion)
+                val oldEnd = builder.length
+
+                builder.setSpan(strikeSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(dimSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                authorVersionText.text = builder
                 return
             }
 
-            // Есть обновление — «автор · vX → vY (зачёркнутая)»
-            val dimColor = getThemeColor(context, R.attr.textDimColor)
-            val strikeSpan = StrikethroughSpan()
-            val dimSpan = ForegroundColorSpan(dimColor)
-
-            val builder = SpannableStringBuilder()
-            builder.append(item.author)
-            builder.append(" · v")
-            builder.append(item.version)
-            builder.append(" → v")
-
-            val oldStart = builder.length
-            builder.append(installedVersion)
-            val oldEnd = builder.length
-
-            builder.setSpan(strikeSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            builder.setSpan(dimSpan, oldStart, oldEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            authorVersionText.text = builder
+            // Обычная строка «автор · vМагазин» (в т.ч. когда локальная
+            // новее магазинной — расхождение показывается плашкой «Новее»)
+            authorVersionText.text = context.getString(
+                R.string.store_card_author_version,
+                item.author,
+                item.version
+            )
         }
 
         /**
@@ -168,15 +179,18 @@ class StoreCatalogAdapter(
          *
          * Логика:
          * - не установлена → ничего;
-         * - активна + версия совпадает → «Активна»;
-         * - активна + в магазине новее → «Активна» + «Есть обновление»;
-         * - установлена, но не активна → «Установлено».
+         * - установлена и магазин новее → «Активна» (если активна)
+         *   + «Есть обновление», либо «Установлено» (если не активна);
+         * - установлена, версия = магазин → «Активна» или «Установлено»;
+         * - установленная версия новее магазинной → «Активна» или
+         *   «Установлено» + «Новее».
          */
         private fun bindStatuses(item: ShellStoreModel) {
             // Скрываем все плашки
             statusActive.visibility = View.GONE
             statusUpdate.visibility = View.GONE
             statusInstalled.visibility = View.GONE
+            statusNewer.visibility = View.GONE
 
             val installedVersion = installedShellVersions[item.name]
 
@@ -186,35 +200,46 @@ class StoreCatalogAdapter(
                 return
             }
 
-            // «Активна» — только если имя совпадает И реально загруженная
-            // версия (active_shell_version) равна версии из магазина.
-            val isActive = activeShellName == item.name &&
-                    activeShellVersion == item.version
+            // Активна ли (по имени) и какая версия реально загружена
+            val isActiveByName = activeShellName == item.name
 
-            if (isActive) {
-                // Активна — показываем «Активна» всегда
-                statusActive.visibility = View.VISIBLE
+            // Установленная версия новее магазинной?
+            val installedIsNewer = UpdateHelper.isNewerVersion(installedVersion, item.version)
 
-                // Проверяем, есть ли более новая версия в магазине
-                // (для этой ветки не должно быть, но на всякий случай)
-                val hasUpdate = UpdateHelper.isNewerVersion(item.version, installedVersion)
-                if (hasUpdate) {
+            // Магазин новее установленной?
+            val storeHasNewer = UpdateHelper.isNewerVersion(item.version, installedVersion)
+
+            // Активна и версия совпадает с магазинной (реально загружена)
+            val isActiveSameVersion =
+                isActiveByName && activeShellVersion == item.version
+
+            // --- Базовая плашка (Активна / Установлено) ---
+            when {
+                isActiveSameVersion -> {
+                    // Активна с текущей версией магазина
+                    statusActive.visibility = View.VISIBLE
+                }
+                isActiveByName -> {
+                    // Назначена активной, но загружена другая версия
+                    // (например, обновились — но не применили)
+                    statusActive.visibility = View.VISIBLE
+                }
+                else -> {
+                    // Не активна
+                    statusInstalled.visibility = View.VISIBLE
+                }
+            }
+
+            // --- Дополнительная плашка ---
+            when {
+                storeHasNewer && isActiveByName -> {
+                    // Активна + есть новее в магазине
                     statusUpdate.visibility = View.VISIBLE
                 }
-            } else if (activeShellName == item.name) {
-                // Оболочка назначена активной, но реально загружена
-                // старая версия (была обновлена, но не применена) —
-                // показываем «Активна» (по имени) и «Есть обновление»
-                // (потому что в магазине новее, чем реально загружено).
-                statusActive.visibility = View.VISIBLE
-                val hasUpdate = activeShellVersion != null &&
-                        UpdateHelper.isNewerVersion(item.version, activeShellVersion)
-                if (hasUpdate) {
-                    statusUpdate.visibility = View.VISIBLE
+                installedIsNewer -> {
+                    // Установленная версия новее магазинной — «Новее»
+                    statusNewer.visibility = View.VISIBLE
                 }
-            } else {
-                // Установлена, но не активна — «Установлено»
-                statusInstalled.visibility = View.VISIBLE
             }
 
             statusContainer.visibility = View.VISIBLE

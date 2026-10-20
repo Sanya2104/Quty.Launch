@@ -233,6 +233,7 @@
     <string name="settings_personalization_shell_info_title">Shell information</string>
     <string name="settings_personalization_shell_info_name">Name</string>
     <string name="settings_personalization_shell_info_version">Version</string>
+    <string name="settings_personalization_shell_info_installed_version">Installed version</string>
     <string name="settings_personalization_shell_info_author">Author</string>
     <string name="settings_personalization_shell_info_type">Type</string>
     <string name="settings_personalization_shell_info_size">Size</string>
@@ -606,8 +607,12 @@
     <string name="store_status_active">Active</string>
     <string name="store_status_update">Update available</string>
     <string name="store_status_installed">Installed</string>
+    <string name="store_status_newer">Newer</string>
 
-    <!-- Остальное (кнопки, состояния) — без изменений -->
+    <!-- Кэш каталога -->
+    <string name="store_cache_stale_toast">Failed to refresh catalog. Showing cached version.</string>
+
+    <!-- Остальное (кнопки, состояния) -->
     <string name="store_install">Install</string>
     <string name="store_update">Update</string>
     <string name="store_apply">Apply</string>

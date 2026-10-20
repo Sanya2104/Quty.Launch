@@ -392,7 +392,11 @@ class StoreActivity : BaseActivity() {
 
     fun hideDetail() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
+            /*
+             * popBackStackImmediate() — синхронный pop, чтобы
+             * StoreDetailFragment был удалён ДО applyMode().
+             */
+            supportFragmentManager.popBackStackImmediate()
         }
         binding.contentTitle.text = getMenuItemTitle()
 

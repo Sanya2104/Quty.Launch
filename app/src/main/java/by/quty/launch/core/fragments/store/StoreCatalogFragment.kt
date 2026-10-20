@@ -8,10 +8,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import by.quty.launch.R
 import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.StoreCatalogAdapter
@@ -32,9 +34,23 @@ import kotlinx.coroutines.launch
  *
  * При возврате из детального экрана StoreActivity вызывает refresh(),
  * чтобы обновить статусы (Активна / Есть обновление / Установлено).
+ *
+ * Swipe-to-refresh: потянуть список вниз — перезагрузить каталог с
+ * сервера. Жест работает только когда список виден (не в loading /
+ * error / empty), чтобы не конфликтовать с пустыми состояниями.
+ *
+ * Кэш каталога:
+ * - при первом заходе показываем loading_state и грузим с сервера;
+ * - если кэш есть — сразу показываем его (список виден), фоном
+ *   обновляем с сервера;
+ * - если сервер вернул новые данные — перерисовываем;
+ * - если сервер вернул ошибку, а кэш был показан — оставляем кэш,
+ *   показываем toast «Не удалось обновить»;
+ * - если сервер вернул ошибку и кэша не было — error_state.
  */
 class StoreCatalogFragment : Fragment() {
 
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var loadingState: LinearLayout
     private lateinit var errorState: LinearLayout
@@ -72,6 +88,7 @@ class StoreCatalogFragment : Fragment() {
             shellManager = ShellManager(requireContext(), configManager)
         }
 
+        swipeRefresh = view.findViewById(R.id.swipe_refresh)
         recyclerView = view.findViewById(R.id.recycler_shells)
         loadingState = view.findViewById(R.id.loading_state)
         errorState = view.findViewById(R.id.error_state)
@@ -79,9 +96,30 @@ class StoreCatalogFragment : Fragment() {
         btnRetry = view.findViewById(R.id.btn_retry)
         emptyState = view.findViewById(R.id.empty_state)
 
+        setupSwipeRefresh()
         setupRecyclerView()
         setupButtons()
-        loadShells()
+        loadInitial()
+    }
+
+    /**
+     * Настраивает SwipeRefreshLayout:
+     * - цвет индикатора = акцент темы (buttonPrimaryColor);
+     * - сам жест стартует сверху списка (по умолчанию).
+     */
+    private fun setupSwipeRefresh() {
+        val accentColor = getThemeColor(requireContext(), R.attr.buttonPrimaryColor)
+        swipeRefresh.setColorSchemeColors(accentColor)
+
+        swipeRefresh.setOnRefreshListener {
+            // Пользователь потянул вниз — грузим только с сервера,
+            // кэш игнорируем (пользователь явно хочет свежие данные).
+            if (!isLoading) {
+                loadFromServer(isUserRefresh = true)
+            } else {
+                swipeRefresh.isRefreshing = false
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -92,9 +130,162 @@ class StoreCatalogFragment : Fragment() {
 
     private fun setupButtons() {
         btnRetry.setOnClickListener {
-            loadShells()
+            loadInitial()
         }
     }
+
+    // ============================================================
+    // ЗАГРУЗКА: КЭШ + СЕРВЕР
+    // ============================================================
+
+    /**
+     * Первичная загрузка: сначала пробуем кэш, потом сервер.
+     *
+     * - Кэш есть → показываем его сразу, фоном грузим сервер.
+     * - Кэша нет → показываем loading_state и грузим только сервер.
+     */
+    private fun loadInitial() {
+        if (isLoading) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            isLoading = true
+
+            // 1. Пробуем кэш
+            val cached = storeManager.getCachedShells()
+
+            if (!cached.isNullOrEmpty()) {
+                // Показываем кэш сразу
+                shells = cached
+                adapter = buildAdapter(shells)
+                recyclerView.adapter = adapter
+                recyclerView.visibility = View.VISIBLE
+                swipeRefresh.isEnabled = true
+
+                hideLoading()
+                hideError()
+                hideEmpty()
+
+                // Фоновая загрузка с сервера — без loading_state,
+                // без индикатора SwipeRefreshLayout.
+                isLoading = false
+                loadFromServerInBackground()
+            } else {
+                // Кэша нет — грузим с нуля через сервер
+                isLoading = false
+                loadFromServer(isUserRefresh = false)
+            }
+        }
+    }
+
+    /**
+     * Фоновая загрузка с сервера (когда кэш уже показан).
+     *
+     * Не показывает loading_state, не включает SwipeRefreshLayout.
+     * Если сервер вернул новые данные — перерисовывает список.
+     * Если ошибка — оставляет кэш и показывает короткий toast.
+     */
+    private fun loadFromServerInBackground() {
+        if (isLoading) return
+        isLoading = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = storeManager.fetchShells()
+            isLoading = false
+
+            if (result != null) {
+                shells = result
+                if (shells.isEmpty()) {
+                    showEmpty()
+                    swipeRefresh.isEnabled = false
+                } else {
+                    adapter = buildAdapter(shells)
+                    recyclerView.adapter = adapter
+                    recyclerView.visibility = View.VISIBLE
+                    swipeRefresh.isEnabled = true
+                }
+            } else {
+                // Оставляем кэш, показываем toast
+                if (isAdded) {
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.store_cache_stale_toast,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * Загрузка с сервера.
+     *
+     * @param isUserRefresh true, если инициатор — swipe-to-refresh.
+     *        В этом случае НЕ показываем loading_state (индикатор
+     *        SwipeRefreshLayout уже виден) и НЕ прячем текущий список
+     *        до завершения загрузки.
+     */
+    private fun loadFromServer(isUserRefresh: Boolean) {
+        if (isLoading) {
+            if (isUserRefresh) swipeRefresh.isRefreshing = false
+            return
+        }
+        isLoading = true
+
+        if (!isUserRefresh) {
+            showLoading()
+        }
+        hideError()
+        hideEmpty()
+
+        // Свайп доступен только когда список уже показан. Во время
+        // загрузки (первый раз) и в error/empty — жест не нужен.
+        swipeRefresh.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = storeManager.fetchShells()
+
+            isLoading = false
+
+            if (!isUserRefresh) {
+                hideLoading()
+            } else {
+                swipeRefresh.isRefreshing = false
+            }
+
+            if (result != null) {
+                shells = result
+                if (shells.isEmpty()) {
+                    showEmpty()
+                    swipeRefresh.isEnabled = false
+                } else {
+                    adapter = buildAdapter(shells)
+                    recyclerView.adapter = adapter
+                    recyclerView.visibility = View.VISIBLE
+                    swipeRefresh.isEnabled = true
+                }
+            } else {
+                // Ошибка. Если есть что показать — оставляем список,
+                // показываем toast. Если нечего — error_state.
+                if (shells.isNotEmpty()) {
+                    swipeRefresh.isEnabled = true
+                    if (isAdded) {
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.store_cache_stale_toast,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    showError(getString(R.string.store_load_error))
+                    swipeRefresh.isEnabled = false
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // ДАННЫЕ ДЛЯ АДАПТЕРА
+    // ============================================================
 
     /**
      * Возвращает карту name → version установленных оболочек.
@@ -135,39 +326,6 @@ class StoreCatalogFragment : Fragment() {
                 (activity as? StoreActivity)?.showDetail(shell)
             }
         )
-    }
-
-    /**
-     * Загружает список оболочек с сервера.
-     */
-    private fun loadShells() {
-        if (isLoading) return
-        isLoading = true
-
-        showLoading()
-        hideError()
-        hideEmpty()
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val result = storeManager.fetchShells()
-
-            isLoading = false
-            hideLoading()
-
-            if (result != null) {
-                shells = result
-                if (shells.isEmpty()) {
-                    showEmpty()
-                } else {
-                    // Пересоздаём адаптер с актуальными данными
-                    adapter = buildAdapter(shells)
-                    recyclerView.adapter = adapter
-                    recyclerView.visibility = View.VISIBLE
-                }
-            } else {
-                showError(getString(R.string.store_load_error))
-            }
-        }
     }
 
     /**
@@ -212,5 +370,15 @@ class StoreCatalogFragment : Fragment() {
 
     private fun hideEmpty() {
         emptyState.visibility = View.GONE
+    }
+
+    // ============================================================
+    // ХЕЛПЕРЫ
+    // ============================================================
+
+    private fun getThemeColor(context: android.content.Context, attr: Int): Int {
+        val typedValue = android.util.TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }
