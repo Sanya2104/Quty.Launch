@@ -631,6 +631,20 @@
     <string name="store_download_error">Download error</string>
     <string name="store_save_error">Failed to save shell</string>
 
+    <!-- Библиотека -->
+    <string name="store_library_meta" formatted="false">%1$s · %2$s</string>
+
+    <!-- Local shell (Library detail screen) -->
+    <string name="store_library_detail_path">Path</string>
+    <string name="store_library_detail_share">Share</string>
+    <string name="store_library_detail_delete">Delete</string>
+    <string name="store_library_detail_delete_title">Delete shell?</string>
+    <string name="store_library_detail_delete_message" formatted="false">Shell «%s» will be removed from the device.</string>
+    <string name="store_library_detail_delete_success">Shell deleted</string>
+    <string name="store_library_detail_delete_error">Failed to delete</string>
+
+
+
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->
     <!-- ============================================================ -->

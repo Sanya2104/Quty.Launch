@@ -88,7 +88,7 @@ function Write-CriticalBlock {
 Write-Host ""
 Write-Host "##########################################" -ForegroundColor Magenta
 Write-Host "#                                        #" -ForegroundColor Magenta
-Write-Host "#     🚀 QUTY.LAUNCH — СБОРКА И ПУБЛИКАЦИЯ" -ForegroundColor Magenta
+Write-Host "#  🚀 QUTY.LAUNCH — СБОРКА И ПУБЛИКАЦИЯ  #" -ForegroundColor Magenta
 Write-Host "#                                        #" -ForegroundColor Magenta
 Write-Host "##########################################" -ForegroundColor Magenta
 Write-Host ""
@@ -437,7 +437,7 @@ if ($createTag -and -not $skipGit) {
 Write-Host ""
 Write-Host "##########################################" -ForegroundColor Green
 Write-Host "#                                        #" -ForegroundColor Green
-Write-Host "#     ✅ ПРОЦЕСС ЗАВЕРШЕН УСПЕШНО!      #" -ForegroundColor Green
+Write-Host "#     ✅ ПРОЦЕСС ЗАВЕРШЕН УСПЕШНО!       #" -ForegroundColor Green
 Write-Host "#                                        #" -ForegroundColor Green
 Write-Host "##########################################" -ForegroundColor Green
 Write-Host ""

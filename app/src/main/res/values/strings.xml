@@ -631,6 +631,20 @@
     <string name="store_download_error">Ошибка скачивания</string>
     <string name="store_save_error">Ошибка сохранения оболочки</string>
 
+    <!-- Библиотека -->
+    <string name="store_library_meta" formatted="false">%1$s · %2$s</string>
+
+    <!-- Локальная оболочка (детальный экран Библиотеки) -->
+    <string name="store_library_detail_path">Путь</string>
+    <string name="store_library_detail_share">Поделиться</string>
+    <string name="store_library_detail_delete">Удалить</string>
+    <string name="store_library_detail_delete_title">Удалить оболочку?</string>
+    <string name="store_library_detail_delete_message" formatted="false">Оболочка «%s» будет удалена с устройства.</string>
+    <string name="store_library_detail_delete_success">Оболочка удалена</string>
+    <string name="store_library_detail_delete_error">Не удалось удалить</string>
+
+
+
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->
     <!-- ============================================================ -->

@@ -9,8 +9,9 @@ import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
+import by.quty.launch.core.fragments.store.StoreCatalogDetailFragment
 import by.quty.launch.core.fragments.store.StoreCatalogFragment
-import by.quty.launch.core.fragments.store.StoreDetailFragment
+import by.quty.launch.core.fragments.store.StoreLibraryDetailFragment
 import by.quty.launch.core.fragments.store.StoreLibraryFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
 import by.quty.launch.core.model.MenuModel
@@ -23,6 +24,10 @@ import by.quty.launch.databinding.ActivityStoreBinding
  * Вёрстка по паттерну LoggerActivity:
  * - на телефоне — меню и контент переключаются как экраны;
  * - на планшете — меню слева, контент справа.
+ *
+ * Два типа детальных экранов:
+ * - StoreCatalogDetailFragment (из каталога) — данные из ShellStoreModel;
+ * - StoreLibraryDetailFragment (из Библиотеки) — данные из локальной Shell.
  */
 class StoreActivity : BaseActivity() {
 
@@ -177,13 +182,13 @@ class StoreActivity : BaseActivity() {
 
             /*
              * Кнопка «Назад» в шапке контента:
-             * - если открыт детальный экран (StoreDetailFragment) — показываем
-             *   всегда (и на телефоне, и на планшете), с иконкой стрелки;
+             * - если открыт детальный экран (StoreCatalogDetailFragment или
+             *   StoreLibraryDetailFragment) — показываем всегда;
              * - иначе на планшете — скрываем;
-             * - на телефоне для корневого «Каталог» — три полоски (ic_menu),
-             *   для остальных — стрелка (ic_back).
+             * - на телефоне для корневого «Каталог» — ic_menu,
+             *   для остальных — ic_back.
              */
-            if (isDetailVisible()) {
+            if (isDetailVisible() || isLibraryDetailVisible()) {
                 binding.btnBackContent.visibility = View.VISIBLE
                 binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
             } else if (isTabletMode) {
@@ -257,9 +262,15 @@ class StoreActivity : BaseActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Если открыт детальный экран — закрываем его
+                    // Если открыт детальный экран (каталог) — закрываем его
                     if (isDetailVisible()) {
                         hideDetail()
+                        return
+                    }
+
+                    // Если открыт детальный экран (библиотека) — закрываем его
+                    if (isLibraryDetailVisible()) {
+                        hideLibraryDetail()
                         return
                     }
 
@@ -363,15 +374,15 @@ class StoreActivity : BaseActivity() {
     }
 
     // ============================================================
-    // ДЕТАЛЬНЫЙ ЭКРАН
+    // ДЕТАЛЬНЫЙ ЭКРАН (каталог)
     // ============================================================
 
     private fun isDetailVisible(): Boolean {
-        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreDetailFragment
+        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreCatalogDetailFragment
     }
 
     fun showDetail(shell: ShellStoreModel) {
-        val fragment = StoreDetailFragment.newInstance(shell)
+        val fragment = StoreCatalogDetailFragment.newInstance(shell)
 
         supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
@@ -381,33 +392,53 @@ class StoreActivity : BaseActivity() {
 
         binding.contentTitle.text = shell.displayName
 
-        /*
-         * Принудительно показываем кнопку «Назад» — на планшете она
-         * скрыта в обычном каталоге, но в детальном экране нужна,
-         * чтобы пользователь мог вернуться обратно.
-         */
         binding.btnBackContent.visibility = View.VISIBLE
         binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
     }
 
     fun hideDetail() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            /*
-             * popBackStackImmediate() — синхронный pop, чтобы
-             * StoreDetailFragment был удалён ДО applyMode().
-             */
             supportFragmentManager.popBackStackImmediate()
         }
         binding.contentTitle.text = getMenuItemTitle()
 
-        /*
-         * После возврата из детального экрана нужно перерисовать карточки
-         * каталога — статусы могли измениться (установили / применили
-         * оболочку). refresh() пересоздаёт адаптер с актуальными данными
-         * без повторной загрузки с сервера.
-         */
         (supportFragmentManager.findFragmentById(R.id.fragment_container)
                 as? StoreCatalogFragment)?.refresh()
+
+        applyMode()
+    }
+
+    // ============================================================
+    // ДЕТАЛЬНЫЙ ЭКРАН (библиотека)
+    // ============================================================
+
+    private fun isLibraryDetailVisible(): Boolean {
+        return supportFragmentManager.findFragmentById(R.id.fragment_container) is StoreLibraryDetailFragment
+    }
+
+    fun showLibraryDetail(shellName: String) {
+        val fragment = StoreLibraryDetailFragment.newInstance(shellName)
+
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+
+        binding.contentTitle.text = shellName
+
+        binding.btnBackContent.visibility = View.VISIBLE
+        binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
+    }
+
+    fun hideLibraryDetail() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate()
+        }
+        binding.contentTitle.text = getMenuItemTitle()
+
+        (supportFragmentManager.findFragmentById(R.id.fragment_container)
+                as? StoreLibraryFragment)?.refresh()
 
         applyMode()
     }

@@ -1,4 +1,4 @@
-// *** core/fragments/store/StoreDetailFragment.kt *** //
+// *** core/fragments/store/StoreCatalogDetailFragment.kt *** //
 package by.quty.launch.core.fragments.store
 
 import android.content.ActivityNotFoundException
@@ -62,13 +62,13 @@ import java.util.Locale
  * При возврате в каталог StoreActivity.hideDetail() вызывает
  * StoreCatalogFragment.refresh() — статусы карточек перерисовываются.
  */
-class StoreDetailFragment : Fragment() {
+class StoreCatalogDetailFragment : Fragment() {
 
     companion object {
         private const val ARG_SHELL = "arg_shell"
 
-        fun newInstance(shell: ShellStoreModel): StoreDetailFragment {
-            return StoreDetailFragment().apply {
+        fun newInstance(shell: ShellStoreModel): StoreCatalogDetailFragment {
+            return StoreCatalogDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_SHELL, Json.encodeToString(ShellStoreModel.serializer(), shell))
                 }
@@ -107,7 +107,7 @@ class StoreDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_store_detail, container, false)
+        return inflater.inflate(R.layout.fragment_store_catalog_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
