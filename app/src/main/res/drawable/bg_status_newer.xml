@@ -1,0 +1,6 @@
+<!-- res/drawable/bg_status_newer.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#1A009688" />
+    <corners android:radius="@dimen/radius_small" />
+</shape>

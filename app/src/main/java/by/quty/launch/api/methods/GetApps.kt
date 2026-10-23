@@ -131,7 +131,7 @@ class GetApps(
         // который не резолвится в applicationContext, и иконка получается пустой.
         //
         // Порядок — строго по алфавиту отображаемых имён:
-        // Logger, Settings, Terminal.
+        // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
         // Проверяем DevMode — без него Терминал и Логгер скрыты
@@ -157,7 +157,20 @@ class GetApps(
             )
         )
 
-        // 2. Терминал — только если включён DevMode и флаг showTerminal
+        // 2. Магазин оболочек (всегда доступен)
+        val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
+        val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_store_name),
+                packageName = ApiConfig.STORE_PACKAGE,
+                isCustom = true,
+                iconBase64 = storeIconBase64
+            )
+        )
+
+        // 3. Терминал — только если включён DevMode и флаг showTerminal
         if (showTerminal) {
             val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
             val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
@@ -172,7 +185,7 @@ class GetApps(
             )
         }
 
-        // 3. Логгер — только если включён DevMode и флаг showLogger
+        // 4. Логгер — только если включён DevMode и флаг showLogger
         if (showLogger) {
             val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
             val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }

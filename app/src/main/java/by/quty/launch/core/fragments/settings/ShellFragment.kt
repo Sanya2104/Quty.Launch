@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.ColorSchemeAdapter
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
@@ -263,17 +264,18 @@ class ShellFragment : Fragment() {
 
     /**
      * Открывает магазин оболочек.
-     *
-     * Магазин временно удалён из проекта — заглушка до переписывания.
-     * Строки settings_personalization_open_store и
-     * settings_personalization_store_open_error сохранены для будущей реализации.
      */
     private fun openStore() {
-        Toast.makeText(
-            requireContext(),
-            R.string.settings_personalization_store_open_error,
-            Toast.LENGTH_SHORT
-        ).show()
+        try {
+            val intent = Intent(requireContext(), StoreActivity::class.java)
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_store_open_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     @SuppressLint("InflateParams")

@@ -338,6 +338,7 @@
     <!-- Имена виртуальных приложений (GetApps) -->
     <string name="api_getapps_logger_name">Логгер</string>
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
+    <string name="api_getapps_store_name">Магазин</string>
     <string name="api_getapps_terminal_name">Терминал</string>
 
     <!-- Ошибки LaunchApp -->
@@ -571,6 +572,83 @@
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== МАГАЗИН (STORE) ====================================== -->
+    <!-- ============================================================ -->
+
+    <!-- Общее -->
+    <string name="store_title">Магазин</string>
+    <string name="store_menu_catalog">Каталог</string>
+    <string name="store_menu_catalog_desc">Все доступные ресурсы</string>
+    <string name="store_menu_settings">Настройки</string>
+    <string name="store_menu_settings_desc">Кэш и источник</string>
+
+    <!-- Фильтры -->
+    <string name="store_filter_all">Все</string>
+    <string name="store_filter_installed">Установленные</string>
+    <string name="store_filter_updates">Обновления</string>
+    <string name="store_filter_not_installed">Не установленные</string>
+
+    <!-- Пустые состояния -->
+    <string name="store_empty_all">В каталоге пока ничего нет</string>
+    <string name="store_empty_installed">Нет установленных ресурсов</string>
+    <string name="store_empty_updates">Все ресурсы обновлены</string>
+    <string name="store_empty_not_installed">Все ресурсы уже установлены</string>
+
+    <!-- Состояния загрузки -->
+    <string name="store_loading">Загрузка каталога…</string>
+    <string name="store_load_error">Ошибка загрузки каталога</string>
+    <string name="store_cache_stale_toast">Не удалось обновить каталог. Показан кэш.</string>
+
+    <!-- Карточка -->
+    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
+
+    <!-- Статусы -->
+    <string name="store_status_active">Активна</string>
+    <string name="store_status_update">Есть обновление</string>
+    <string name="store_status_installed">Установлено</string>
+    <string name="store_status_newer">Новее</string>
+
+    <!-- Типы (в карточке / деталях) -->
+    <string name="store_type_builtin">Встроенная</string>
+    <string name="store_type_custom">Пользовательская</string>
+    <string name="store_type_local">Только локально</string>
+    <string name="store_type_catalog">Из каталога</string>
+
+    <!-- Кнопки действий -->
+    <string name="store_install">Установить</string>
+    <string name="store_update">Обновить</string>
+    <string name="store_apply">Применить</string>
+    <string name="store_applied">Активна</string>
+
+    <!-- Детали -->
+    <string name="store_detail_share">Поделиться</string>
+    <string name="store_detail_delete">Удалить</string>
+
+    <!-- Диалог удаления -->
+    <string name="store_delete_title">Удалить ресурс?</string>
+    <string name="store_delete_message" formatted="false">Ресурс «%s» будет удалён с устройства.</string>
+    <string name="store_delete_action">Удалить</string>
+    <string name="store_delete_success">Ресурс удалён</string>
+    <string name="store_delete_error">Не удалось удалить</string>
+
+    <!-- Ошибки -->
+    <string name="store_item_not_found">Ресурс не найден</string>
+    <string name="store_install_error">Ошибка установки</string>
+    <string name="store_incompatible">Ресурс несовместим с текущей версией Quty.Launch</string>
+    <string name="store_download_error">Ошибка скачивания</string>
+    <string name="store_save_error">Ошибка сохранения</string>
+    <string name="store_install_success" formatted="false">Ресурс «%s» установлен!</string>
+
+    <!-- Настройки магазина -->
+    <string name="store_settings_section_source">Источник</string>
+    <string name="store_settings_source_url">URL каталога</string>
+    <string name="store_settings_section_cache">Кэш</string>
+    <string name="store_settings_clear_cache">Очистить кэш каталога</string>
+    <string name="store_settings_clear_cache_desc">Удалить сохранённый список ресурсов</string>
+    <string name="store_cache_cleared">Кэш каталога очищен</string>
+    <string name="store_cache_clear_error">Не удалось очистить кэш</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->

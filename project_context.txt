@@ -108,6 +108,14 @@ FILE: app\src\main\AndroidManifest.xml
             android:theme="@style/Theme.AppCompat.Translucent">
         </activity>
 
+        <!-- Магазин -->
+        <activity
+            android:name=".StoreActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.Translucent">
+        </activity>
+
         <!-- Терминал -->
         <activity
             android:name=".TerminalActivity"
@@ -2082,6 +2090,447 @@ class SettingsActivity : BaseActivity() {
 
 
 ==================================================
+FILE: app\src\main\java\by\quty\launch\StoreActivity.kt
+==================================================
+
+
+// *** StoreActivity.kt *** //
+package by.quty.launch
+
+import android.content.res.Configuration
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.activity.OnBackPressedCallback
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import by.quty.launch.core.adapters.SettingsMenuAdapter
+import by.quty.launch.core.fragments.store.StoreCatalogFragment
+import by.quty.launch.core.fragments.store.StoreItemDetailFragment
+import by.quty.launch.core.fragments.store.StoreSettingsFragment
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.StoreManager
+import by.quty.launch.core.model.MenuModel
+import by.quty.launch.core.model.StoreItemModel
+import by.quty.launch.core.model.StoreRemoteItemModel
+import by.quty.launch.databinding.ActivityStoreBinding
+import kotlinx.coroutines.launch
+
+/**
+ * Активность магазина Quty.Launch.
+ *
+ * Паттерн SettingsActivity / LoggerActivity:
+ * - на телефоне — меню и контент переключаются как экраны;
+ * - на планшете — меню слева, контент справа.
+ *
+ * Меню:
+ * - Каталог (StoreCatalogFragment, id=1)
+ * - Настройки (StoreSettingsFragment, id=2)
+ *
+ * Детальный экран элемента (StoreItemDetailFragment) открывается
+ * через addToBackStack поверх текущего контента.
+ *
+ * При выходе: если было выполнено действие (установка / обновление /
+ * применение / удаление) — показывается диалог перезапуска (BaseActivity).
+ */
+class StoreActivity : BaseActivity() {
+
+    companion object {
+        private const val CATALOG_FRAGMENT_ID = 1
+    }
+
+    private lateinit var binding: ActivityStoreBinding
+
+    private lateinit var shellManager: ShellManager
+    private lateinit var storeManager: StoreManager
+
+    private var isFragmentVisible = false
+    private var isTabletMode = false
+    private var selectedItemId = -1
+
+    private var menuItems: List<MenuModel> = emptyList()
+
+    // Актуальный список элементов (кэш для детального фрагмента)
+    private var currentItems: List<StoreItemModel> = emptyList()
+    private var currentRemote: List<StoreRemoteItemModel> = emptyList()
+
+    private val menuWidthPx: Int by lazy {
+        (340 * resources.displayMetrics.density).toInt()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        applyOrientation()
+
+        binding = ActivityStoreBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        shellManager = ShellManager(this, configManager)
+        storeManager = StoreManager(this)
+
+        menuItems = buildMenuItems()
+
+        checkMode()
+        setupMenu()
+        setupButtons()
+        setupBackHandler()
+
+        if (savedInstanceState != null) {
+            selectedItemId = savedInstanceState.getInt("selected_item_id", -1)
+            isFragmentVisible = savedInstanceState.getBoolean("fragment_visible", false)
+
+            if (isFragmentVisible && selectedItemId != -1) {
+                val item = menuItems.find { it.id == selectedItemId }
+                if (item != null) {
+                    restoreFragment(item)
+                } else {
+                    isFragmentVisible = false
+                    selectedItemId = -1
+                }
+            }
+        }
+
+        if (selectedItemId == -1 && menuItems.isNotEmpty()) {
+            showItem(menuItems.first())
+        }
+
+        applyMode()
+
+        window.decorView.post {
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
+        }
+
+        // Подгружаем данные для детального фрагмента
+        refreshItems()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("selected_item_id", selectedItemId)
+        outState.putBoolean("fragment_visible", isFragmentVisible)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        applyOrientation()
+
+        val previousTabletMode = isTabletMode
+        checkMode()
+
+        if (!previousTabletMode && isTabletMode) {
+            if (selectedItemId == -1) {
+                if (menuItems.isNotEmpty()) {
+                    showItem(menuItems.first())
+                }
+            } else {
+                val item = menuItems.find { it.id == selectedItemId }
+                if (item != null) {
+                    showItem(item)
+                }
+            }
+            return
+        }
+
+        applyMode()
+    }
+
+    private fun checkMode() {
+        val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
+        isTabletMode = widthDp >= 600
+    }
+
+    private fun applyMode() {
+        val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
+        val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
+
+        if (isTabletMode) {
+            menuParams.width = menuWidthPx
+            menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.weight = 0f
+
+            contentParams.width = 0
+            contentParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.weight = 1f
+
+            binding.menuPane.visibility = View.VISIBLE
+            binding.contentPane.visibility = View.VISIBLE
+
+            binding.btnClose.visibility = View.GONE
+            binding.btnCloseContent.visibility = View.VISIBLE
+
+        } else {
+            menuParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            menuParams.weight = 0f
+
+            contentParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            contentParams.weight = 0f
+
+            binding.btnClose.visibility = View.VISIBLE
+            binding.btnCloseContent.visibility = View.VISIBLE
+
+            if (isFragmentVisible) {
+                binding.menuPane.visibility = View.GONE
+                binding.contentPane.visibility = View.VISIBLE
+            } else {
+                binding.menuPane.visibility = View.VISIBLE
+                binding.contentPane.visibility = View.GONE
+            }
+        }
+
+        binding.menuPane.layoutParams = menuParams
+        binding.contentPane.layoutParams = contentParams
+
+        if (isFragmentVisible) {
+            binding.fragmentContainer.visibility = View.VISIBLE
+            binding.contentToolbar.visibility = View.VISIBLE
+            binding.contentTitle.text = getCurrentTitle()
+
+            if (isTabletMode) {
+                binding.recyclerMenu.visibility = View.VISIBLE
+                binding.btnBackContent.visibility = View.GONE
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
+            } else {
+                binding.recyclerMenu.visibility = View.GONE
+                binding.btnBackContent.visibility = View.VISIBLE
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+                updateBackButtonIcon()
+            }
+        } else {
+            binding.fragmentContainer.visibility = View.GONE
+            binding.recyclerMenu.visibility = View.VISIBLE
+            binding.contentToolbar.visibility = View.GONE
+            binding.btnBackContent.visibility = View.GONE
+            binding.contentTitle.text = ""
+
+            if (!isTabletMode) {
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+            } else if (selectedItemId != -1) {
+                (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
+            }
+        }
+    }
+
+    /**
+     * Иконка кнопки «Назад» в шапке контента (телефон):
+     * - корневой «Каталог» > три полоски (ic_menu);
+     * - «Настройки» или детальный экран > стрелка (ic_back).
+     */
+    private fun updateBackButtonIcon() {
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        val isDetail = currentFragment is StoreItemDetailFragment
+        val isCatalog = selectedItemId == CATALOG_FRAGMENT_ID
+
+        val iconRes = if (isDetail || !isCatalog) {
+            R.drawable.ic_back
+        } else {
+            R.drawable.ic_menu
+        }
+        binding.btnBackContentIcon.setImageResource(iconRes)
+    }
+
+    private fun getCurrentTitle(): String {
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        if (currentFragment is StoreItemDetailFragment) {
+            val name = currentFragment.requireArguments().getString("arg_item_name")
+            val found = currentItems.find { it.name == name }
+            return found?.displayName ?: name ?: ""
+        }
+        val item = menuItems.find { it.id == selectedItemId }
+        return if (item != null) getString(item.title) else ""
+    }
+
+    private fun setupMenu() {
+        val adapter = SettingsMenuAdapter(menuItems) { item ->
+            showItem(item)
+        }
+        binding.recyclerMenu.layoutManager = LinearLayoutManager(this)
+        binding.recyclerMenu.adapter = adapter
+    }
+
+    private fun setupButtons() {
+        binding.btnClose.setOnClickListener { checkAndShowRestartDialog() }
+        binding.btnCloseContent.setOnClickListener { checkAndShowRestartDialog() }
+        binding.btnBackContent.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+    }
+
+    private fun setupBackHandler() {
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // 1. Детальный экран — закрыть его
+                    if (supportFragmentManager.backStackEntryCount > 0) {
+                        supportFragmentManager.popBackStackImmediate()
+                        binding.contentTitle.text = getMenuItemTitle()
+                        applyMode()
+                        return
+                    }
+
+                    // 2. Телефон: из фрагмента вернуться в меню
+                    if (!isTabletMode && isFragmentVisible) {
+                        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
+                        isFragmentVisible = false
+                        applyMode()
+                        return
+                    }
+
+                    // 3. Проверяем изменения (диалог перезапуска) или закрываем
+                    checkAndShowRestartDialog()
+                }
+            }
+        )
+    }
+
+    private fun buildMenuItems(): List<MenuModel> {
+        return listOf(
+            MenuModel(
+                CATALOG_FRAGMENT_ID,
+                R.drawable.ic_store,
+                R.string.store_menu_catalog,
+                R.string.store_menu_catalog_desc,
+                StoreCatalogFragment::class.java,
+                R.color.scheme_green_primary,
+                true
+            ),
+            MenuModel(
+                2,
+                R.drawable.ic_settings,
+                R.string.store_menu_settings,
+                R.string.store_menu_settings_desc,
+                StoreSettingsFragment::class.java,
+                R.color.scheme_cyan_primary,
+                true
+            )
+        )
+    }
+
+    private fun getMenuItemTitle(): String {
+        val item = menuItems.find { it.id == selectedItemId }
+        return if (item != null) getString(item.title) else ""
+    }
+
+    private fun showItem(item: MenuModel) {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate()
+        }
+
+        isFragmentVisible = true
+        selectedItemId = item.id
+        binding.contentTitle.text = getString(item.title)
+
+        try {
+            val fragment = supportFragmentManager.fragmentFactory.instantiate(
+                item.fragment.classLoader!!,
+                item.fragment.name
+            )
+
+            supportFragmentManager
+                .beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
+
+        } catch (_: Exception) {
+        }
+
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
+
+        applyMode()
+    }
+
+    private fun restoreFragment(item: MenuModel) {
+        isFragmentVisible = true
+        selectedItemId = item.id
+        binding.contentTitle.text = getString(item.title)
+
+        (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
+            if (isTabletMode) item.id else -1
+        )
+
+        applyMode()
+    }
+
+    // ============================================================
+    // ДЕТАЛЬНЫЙ ЭКРАН
+    // ============================================================
+
+    fun showItemDetail(item: StoreItemModel) {
+        val fragment = StoreItemDetailFragment.newInstance(item.name)
+
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+
+        binding.contentTitle.text = item.displayName
+        binding.btnBackContent.visibility = View.VISIBLE
+        binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
+    }
+
+    fun hideItemDetail() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate()
+        }
+        binding.contentTitle.text = getMenuItemTitle()
+        applyMode()
+    }
+
+    // ============================================================
+    // ДАННЫЕ ДЛЯ ДЕТАЛЬНОГО ФРАГМЕНТА
+    // ============================================================
+
+    fun findItemByName(name: String): StoreItemModel? {
+        return currentItems.find { it.name == name }
+    }
+
+    /**
+     * Пересобирает текущий список (после установки / удаления / активации).
+     *
+     * @param onDone колбэк, вызываемый после пересборки currentItems
+     *               (в основном потоке).
+     */
+    fun refreshItems(onDone: (() -> Unit)? = null) {
+        lifecycleScope.launch {
+            val cached = storeManager.getCachedItems() ?: emptyList()
+            currentRemote = cached
+
+            currentItems = StoreManager.buildItems(
+                remote = cached,
+                localShells = shellManager.getAvailableShells(),
+                activeName = configManager.getActiveShell(),
+                activeVersion = configManager.getActiveShellVersion()
+            )
+            onDone?.invoke()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        applyOrientation()
+
+        refreshItems()
+
+        window.decorView.post {
+            val strictMode = configManager.isStrictModeEnabled()
+            enableImmersiveMode(strictMode)
+        }
+    }
+}
+
+
+==================================================
 FILE: app\src\main\java\by\quty\launch\TerminalActivity.kt
 ==================================================
 
@@ -3165,7 +3614,7 @@ class GetApps(
         // который не резолвится в applicationContext, и иконка получается пустой.
         //
         // Порядок — строго по алфавиту отображаемых имён:
-        // Logger, Settings, Terminal.
+        // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
         // Проверяем DevMode — без него Терминал и Логгер скрыты
@@ -3191,7 +3640,20 @@ class GetApps(
             )
         )
 
-        // 2. Терминал — только если включён DevMode и флаг showTerminal
+        // 2. Магазин оболочек (всегда доступен)
+        val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
+        val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
+
+        customApps.add(
+            AppInfo(
+                name = context.getString(R.string.api_getapps_store_name),
+                packageName = ApiConfig.STORE_PACKAGE,
+                isCustom = true,
+                iconBase64 = storeIconBase64
+            )
+        )
+
+        // 3. Терминал — только если включён DevMode и флаг showTerminal
         if (showTerminal) {
             val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
             val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
@@ -3206,7 +3668,7 @@ class GetApps(
             )
         }
 
-        // 3. Логгер — только если включён DevMode и флаг showLogger
+        // 4. Логгер — только если включён DevMode и флаг showLogger
         if (showLogger) {
             val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
             val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
@@ -3924,6 +4386,7 @@ import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.LoggerActivity
 import by.quty.launch.SettingsActivity
+import by.quty.launch.StoreActivity
 import by.quty.launch.TerminalActivity
 import by.quty.launch.configs.ApiConfig
 import kotlinx.serialization.builtins.serializer
@@ -3952,6 +4415,12 @@ class LaunchApp(
             ApiConfig.SETTINGS_PACKAGE -> {
                 // Открываем Настройки
                 val intent = Intent(context, SettingsActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            ApiConfig.STORE_PACKAGE -> {
+                // Открываем Магазин
+                val intent = Intent(context, StoreActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
@@ -4368,6 +4837,9 @@ object ApiConfig {
     /** Пакет для активности настроек */
     const val SETTINGS_PACKAGE = "by.quty.launch.settings"
 
+    /** Пакет для активности магазина */
+    const val STORE_PACKAGE = "by.quty.launch.store"
+
     /** Пакет для активности терминала */
     const val TERMINAL_PACKAGE = "by.quty.launch.terminal"
 
@@ -4502,6 +4974,9 @@ object CoreConfig {
 
     /** URL для проверки обновлений приложения */
     const val UPDATE_SERVER_URL = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/updates/version.json"
+
+    /** URL каталога магазина (оболочки и другие ресурсы) */
+    const val STORE_URL = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/store/shells.json"
 
     /** Таймаут подключения к сети (мс) */
     const val CONNECT_TIMEOUT_MS = 5000
@@ -5218,6 +5693,220 @@ class SettingsMenuAdapter(
     }
 
     class SpacerViewHolder(view: View) : RecyclerView.ViewHolder(view)
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\adapters\StoreItemAdapter.kt
+==================================================
+
+
+// *** core/adapters/StoreItemAdapter.kt *** //
+package by.quty.launch.core.adapters
+
+import android.util.Base64
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import by.quty.launch.R
+import by.quty.launch.core.model.StoreItemModel
+import com.bumptech.glide.Glide
+
+/**
+ * Адаптер для списка элементов магазина.
+ *
+ * Карточка-строка (стиль Google Play):
+ * - превью слева (140?100dp);
+ * - название + автор/версия + размер/дата по центру;
+ * - статусные плашки снизу.
+ *
+ * Кнопок действий в карточке нет — установка/обновление/применение
+ * выполняются в детальном экране (StoreItemDetailFragment).
+ *
+ * Превью: приоритет — previewUrl (магазин), fallback — previewBase64 (локальный).
+ */
+class StoreItemAdapter(
+    private var items: List<StoreItemModel>,
+    private val onItemClick: (StoreItemModel) -> Unit
+) : RecyclerView.Adapter<StoreItemAdapter.ViewHolder>() {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_store_list, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(items[position])
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    /**
+     * Заменяет весь список.
+     *
+     * Использует точечные уведомления:
+     * - если состав и порядок (по name) не изменились — notifyItemChanged
+     *   только для реально изменившихся записей;
+     * - иначе — notifyItemRangeRemoved + notifyItemRangeInserted.
+     *
+     * notifyDataSetChanged() не используется — lint flag + плохой UX
+     * (перерисовка всех ячеек, потеря позиции скролла).
+     */
+    fun submitItems(newItems: List<StoreItemModel>) {
+        val oldItems = items
+        items = newItems
+
+        // Быстрый путь: тот же состав и порядок по name —
+        // точечно обновляем только изменившиеся элементы.
+        if (oldItems.size == newItems.size &&
+            oldItems.map { it.name } == newItems.map { it.name }
+        ) {
+            for (i in newItems.indices) {
+                if (oldItems[i] != newItems[i]) {
+                    notifyItemChanged(i)
+                }
+            }
+            return
+        }
+
+        // Состав/размер другой — сбрасываем и вставляем заново.
+        if (oldItems.isNotEmpty()) {
+            notifyItemRangeRemoved(0, oldItems.size)
+        }
+        if (newItems.isNotEmpty()) {
+            notifyItemRangeInserted(0, newItems.size)
+        }
+    }
+
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        private val previewImage: ImageView = itemView.findViewById(R.id.item_preview)
+        private val nameText: TextView = itemView.findViewById(R.id.item_name)
+        private val authorVersionText: TextView = itemView.findViewById(R.id.item_author_version)
+        private val metaText: TextView = itemView.findViewById(R.id.item_meta)
+
+        private val statusContainer: LinearLayout = itemView.findViewById(R.id.item_status_container)
+        private val statusActive: TextView = itemView.findViewById(R.id.item_status_active)
+        private val statusUpdate: TextView = itemView.findViewById(R.id.item_status_update)
+        private val statusInstalled: TextView = itemView.findViewById(R.id.item_status_installed)
+        private val statusNewer: TextView = itemView.findViewById(R.id.item_status_newer)
+
+        fun bind(item: StoreItemModel) {
+            val context = itemView.context
+
+            // Превью — приоритет URL, fallback Base64
+            bindPreview(item)
+
+            // Название
+            nameText.text = item.displayName
+
+            // Автор · версия
+            val author = item.author ?: context.getString(R.string.author_default)
+            val version = item.version ?: context.getString(R.string.unknown)
+            authorVersionText.text = context.getString(
+                R.string.store_card_author_version,
+                author,
+                version
+            )
+
+            // Метаданные: размер · дата, иначе тип
+            val metaParts = mutableListOf<String>()
+            item.fileSize?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
+            item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
+
+            if (metaParts.isEmpty()) {
+                val typeText = if (item.isLocalOnly) {
+                    context.getString(R.string.store_type_local)
+                } else {
+                    context.getString(R.string.store_type_catalog)
+                }
+                metaParts.add(typeText)
+            }
+            metaText.text = metaParts.joinToString(" · ")
+
+            // Клик по карточке > детали
+            itemView.setOnClickListener {
+                onItemClick(item)
+            }
+
+            // ==== СТАТУСЫ ====
+            bindStatuses(item)
+        }
+
+        /**
+         * Загружает превью: сначала previewUrl (Glide), fallback — previewBase64.
+         */
+        private fun bindPreview(item: StoreItemModel) {
+            val context = itemView.context
+
+            if (!item.previewUrl.isNullOrEmpty()) {
+                Glide.with(context)
+                    .load(item.previewUrl)
+                    .placeholder(R.drawable.ic_image)
+                    .error(R.drawable.ic_image)
+                    .centerCrop()
+                    .into(previewImage)
+                return
+            }
+
+            val base64 = item.previewBase64
+            if (base64.isNullOrEmpty()) {
+                previewImage.setImageResource(R.drawable.ic_image)
+                return
+            }
+
+            try {
+                val bytes = Base64.decode(base64, Base64.DEFAULT)
+                Glide.with(context)
+                    .load(bytes)
+                    .placeholder(R.drawable.ic_image)
+                    .error(R.drawable.ic_image)
+                    .centerCrop()
+                    .into(previewImage)
+            } catch (_: Exception) {
+                previewImage.setImageResource(R.drawable.ic_image)
+            }
+        }
+
+        /**
+         * Заполняет статусные плашки.
+         */
+        private fun bindStatuses(item: StoreItemModel) {
+            statusActive.visibility = View.GONE
+            statusUpdate.visibility = View.GONE
+            statusInstalled.visibility = View.GONE
+            statusNewer.visibility = View.GONE
+
+            var hasAny = false
+
+            if (item.isActive) {
+                statusActive.visibility = View.VISIBLE
+                hasAny = true
+            }
+
+            if (item.updateAvailable) {
+                statusUpdate.visibility = View.VISIBLE
+                hasAny = true
+            }
+
+            if (item.isInstalled && !item.isActive) {
+                statusInstalled.visibility = View.VISIBLE
+                hasAny = true
+            }
+
+            if (item.installedIsNewer) {
+                statusNewer.visibility = View.VISIBLE
+                hasAny = true
+            }
+
+            statusContainer.visibility = if (hasAny) View.VISIBLE else View.GONE
+        }
+    }
 }
 
 
@@ -8748,6 +9437,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.SettingsActivity
+import by.quty.launch.StoreActivity
 import by.quty.launch.core.adapters.ColorSchemeAdapter
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
@@ -8986,17 +9676,18 @@ class ShellFragment : Fragment() {
 
     /**
      * Открывает магазин оболочек.
-     *
-     * Магазин временно удалён из проекта — заглушка до переписывания.
-     * Строки settings_personalization_open_store и
-     * settings_personalization_store_open_error сохранены для будущей реализации.
      */
     private fun openStore() {
-        Toast.makeText(
-            requireContext(),
-            R.string.settings_personalization_store_open_error,
-            Toast.LENGTH_SHORT
-        ).show()
+        try {
+            val intent = Intent(requireContext(), StoreActivity::class.java)
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_store_open_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     @SuppressLint("InflateParams")
@@ -10644,6 +11335,1121 @@ class UpdateFragment : Fragment() {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
+    }
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\fragments\store\StoreCatalogFragment.kt
+==================================================
+
+
+// *** core/fragments/store/StoreCatalogFragment.kt *** //
+package by.quty.launch.core.fragments.store
+
+import android.os.Bundle
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import by.quty.launch.R
+import by.quty.launch.StoreActivity
+import by.quty.launch.core.adapters.StoreItemAdapter
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.StoreManager
+import by.quty.launch.core.model.StoreFilterModel
+import by.quty.launch.core.model.StoreItemModel
+import by.quty.launch.core.model.StoreRemoteItemModel
+import kotlinx.coroutines.launch
+
+/**
+ * Фрагмент «Каталог» магазина.
+ *
+ * Один экран для всего: показывает объединённый список элементов
+ * (с сервера + локальные). Сверху — чипы-фильтры (одиночный выбор).
+ *
+ * Загрузка:
+ * - при первом заходе показываем кэш (если есть), фоном грузим сервер;
+ * - если кэша нет — loading_state и грузим сервер;
+ * - swipe-to-refresh — принудительная перезагрузка с сервера.
+ *
+ * Действия (установка / обновление / применение / удаление) —
+ * в детальном экране (StoreItemDetailFragment), открывается через
+ * StoreActivity.showItemDetail().
+ */
+class StoreCatalogFragment : Fragment() {
+
+    private lateinit var configManager: ConfigManager
+    private lateinit var shellManager: ShellManager
+    private lateinit var storeManager: StoreManager
+
+    // ===== UI =====
+    private lateinit var filtersContainer: LinearLayout
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var loadingState: LinearLayout
+    private lateinit var errorState: LinearLayout
+    private lateinit var errorMessage: TextView
+    private lateinit var btnRetry: Button
+    private lateinit var emptyState: LinearLayout
+    private lateinit var emptyMessage: TextView
+
+    // ===== Данные =====
+    private lateinit var adapter: StoreItemAdapter
+
+    // Полный список (без фильтра)
+    private var allItems: List<StoreItemModel> = emptyList()
+
+    // Текущий фильтр
+    private var currentFilter: StoreFilterModel = StoreFilterModel.ALL
+
+    // Флаги
+    private var isLoading = false
+    private var isCacheShown = false
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_store_catalog, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        (activity as? StoreActivity)?.let { storeActivity ->
+            configManager = storeActivity.configManager
+        } ?: run {
+            configManager = ConfigManager(requireContext())
+        }
+        shellManager = ShellManager(requireContext(), configManager)
+        storeManager = StoreManager(requireContext())
+
+        filtersContainer = view.findViewById(R.id.store_filters_container)
+        swipeRefresh = view.findViewById(R.id.swipe_refresh)
+        recyclerView = view.findViewById(R.id.recycler_items)
+        loadingState = view.findViewById(R.id.loading_state)
+        errorState = view.findViewById(R.id.error_state)
+        errorMessage = view.findViewById(R.id.error_message)
+        btnRetry = view.findViewById(R.id.btn_retry)
+        emptyState = view.findViewById(R.id.empty_state)
+        emptyMessage = view.findViewById(R.id.empty_message)
+
+        setupSwipeRefresh()
+        setupRecyclerView()
+        setupButtons()
+        buildFilterChips()
+        loadInitial()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // После возврата из детального экрана локальный список мог измениться
+        // (установка, удаление, активация) — пересобрать без сети.
+        if (isCacheShown) {
+            rebuildFromLocal()
+        }
+    }
+
+    // ============================================================
+    // НАСТРОЙКА UI
+    // ============================================================
+
+    private fun setupSwipeRefresh() {
+        val accentColor = getThemeColor(R.attr.buttonPrimaryColor)
+        swipeRefresh.setColorSchemeColors(accentColor)
+
+        swipeRefresh.setOnRefreshListener {
+            if (isLoading) {
+                swipeRefresh.isRefreshing = false
+            } else {
+                loadFromServer(isUserRefresh = true)
+            }
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = StoreItemAdapter(emptyList()) { item ->
+            (activity as? StoreActivity)?.showItemDetail(item)
+        }
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+    }
+
+    private fun setupButtons() {
+        btnRetry.setOnClickListener {
+            loadInitial()
+        }
+    }
+
+    /**
+     * Создаёт чипы-фильтры в HorizontalScrollView.
+     */
+    private fun buildFilterChips() {
+        filtersContainer.removeAllViews()
+
+        StoreFilterModel.entries.forEach { filter ->
+            val chip = TextView(requireContext()).apply {
+                text = getString(filter.labelRes)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                gravity = Gravity.CENTER
+                val padH = resources.getDimensionPixelSize(R.dimen.spacing_l)
+                val padV = resources.getDimensionPixelSize(R.dimen.spacing_s)
+                setPadding(padH, padV, padH, padV)
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    if (currentFilter == filter) return@setOnClickListener
+                    currentFilter = filter
+                    updateChipStyles()
+                    applyFilter()
+                }
+            }
+
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            if (filtersContainer.childCount > 0) {
+                lp.marginStart = resources.getDimensionPixelSize(R.dimen.spacing_s)
+            }
+            chip.layoutParams = lp
+            filtersContainer.addView(chip)
+        }
+
+        updateChipStyles()
+    }
+
+    private fun updateChipStyles() {
+        for (i in 0 until filtersContainer.childCount) {
+            val chip = filtersContainer.getChildAt(i) as? TextView ?: continue
+            val filter = StoreFilterModel.entries.getOrNull(i) ?: continue
+
+            if (filter == currentFilter) {
+                chip.setBackgroundResource(R.drawable.bg_store_filter_chip_selected)
+                chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            } else {
+                chip.setBackgroundResource(R.drawable.bg_store_filter_chip)
+                chip.setTextColor(getThemeColor(R.attr.textPrimaryColor))
+            }
+        }
+    }
+
+    // ============================================================
+    // ЗАГРУЗКА: КЭШ + СЕРВЕР
+    // ============================================================
+
+    private fun loadInitial() {
+        if (isLoading) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            isLoading = true
+
+            val cached = storeManager.getCachedItems()
+
+            if (!cached.isNullOrEmpty()) {
+                rebuildFromData(cached)
+                isCacheShown = true
+                isLoading = false
+                loadFromServer(isUserRefresh = false, silentIfCache = true)
+            } else {
+                isLoading = false
+                loadFromServer(isUserRefresh = false, silentIfCache = false)
+            }
+        }
+    }
+
+    private fun rebuildFromLocal() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val cached = storeManager.getCachedItems() ?: emptyList()
+            rebuildFromData(cached)
+        }
+    }
+
+    private fun rebuildFromData(remote: List<StoreRemoteItemModel>) {
+        val localShells = shellManager.getAvailableShells()
+        val activeName = configManager.getActiveShell()
+        val activeVersion = configManager.getActiveShellVersion()
+
+        allItems = StoreManager.buildItems(
+            remote = remote,
+            localShells = localShells,
+            activeName = activeName,
+            activeVersion = activeVersion
+        )
+
+        applyFilter()
+    }
+
+    /**
+     * Загрузка с сервера.
+     *
+     * @param isUserRefresh true, если инициатор — swipe-to-refresh.
+     * @param silentIfCache true, если уже показан кэш — не показывать loading_state.
+     */
+    private fun loadFromServer(isUserRefresh: Boolean, silentIfCache: Boolean = false) {
+        if (isLoading) {
+            if (isUserRefresh) swipeRefresh.isRefreshing = false
+            return
+        }
+        isLoading = true
+
+        if (!silentIfCache && !isUserRefresh) {
+            showLoading()
+        }
+        hideError()
+        hideEmpty()
+        swipeRefresh.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = storeManager.fetchRemoteItems()
+
+            isLoading = false
+
+            if (!isUserRefresh && !silentIfCache) {
+                hideLoading()
+            }
+            if (isUserRefresh) {
+                swipeRefresh.isRefreshing = false
+            }
+
+            if (result != null) {
+                rebuildFromData(result)
+                isCacheShown = true
+                swipeRefresh.isEnabled = true
+            } else {
+                if (allItems.isNotEmpty()) {
+                    swipeRefresh.isEnabled = true
+                    if (isAdded) {
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.store_cache_stale_toast,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    showError(getString(R.string.store_load_error))
+                    swipeRefresh.isEnabled = false
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // ФИЛЬТРАЦИЯ
+    // ============================================================
+
+    private fun applyFilter() {
+        val filtered = allItems.filter(currentFilter.predicate)
+        render(filtered)
+    }
+
+    private fun render(items: List<StoreItemModel>) {
+        if (items.isEmpty()) {
+            showEmpty()
+        } else {
+            hideEmpty()
+            adapter.submitItems(items)
+            recyclerView.visibility = View.VISIBLE
+        }
+    }
+
+    // ============================================================
+    // УПРАВЛЕНИЕ СОСТОЯНИЯМИ
+    // ============================================================
+
+    private fun showLoading() {
+        loadingState.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+    }
+
+    private fun hideLoading() {
+        loadingState.visibility = View.GONE
+    }
+
+    private fun showError(message: String) {
+        errorMessage.text = message
+        errorState.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+    }
+
+    private fun hideError() {
+        errorState.visibility = View.GONE
+    }
+
+    private fun showEmpty() {
+        emptyMessage.text = getString(currentFilter.emptyRes)
+        emptyState.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+    }
+
+    private fun hideEmpty() {
+        emptyState.visibility = View.GONE
+    }
+
+    // ============================================================
+    // ХЕЛПЕРЫ
+    // ============================================================
+
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\fragments\store\StoreItemDetailFragment.kt
+==================================================
+
+
+// *** core/fragments/store/StoreItemDetailFragment.kt *** //
+package by.quty.launch.core.fragments.store
+
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.Bundle
+import android.util.Base64
+import android.util.TypedValue
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import by.quty.launch.R
+import by.quty.launch.StoreActivity
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.StoreManager
+import by.quty.launch.core.managers.StorageManager
+import by.quty.launch.core.model.StoreItemModel
+import com.bumptech.glide.Glide
+import kotlinx.coroutines.launch
+import java.io.File
+
+/**
+ * Детальный экран элемента магазина.
+ *
+ * Один фрагмент на все случаи. Принимает имя элемента через arguments;
+ * сам элемент запрашивает из StoreActivity.findItemByName().
+ *
+ * Кнопка действия динамическая:
+ * - «Установить» (primary) — canInstall;
+ * - «Обновить» (primary) — canUpdate;
+ * - «Применить» (primary) — canApply;
+ * - «Активна» (secondary, disabled) — isActiveSameVersion.
+ *
+ * Нижние действия:
+ * - «Поделиться» (secondary) — canShare;
+ * - «Удалить» (danger) — canDelete.
+ *
+ * После установки / применения / удаления — markRestartRequired() на
+ * StoreActivity, чтобы при выходе показался диалог перезапуска.
+ */
+class StoreItemDetailFragment : Fragment() {
+
+    companion object {
+        private const val ARG_ITEM_NAME = "arg_item_name"
+
+        fun newInstance(itemName: String): StoreItemDetailFragment {
+            return StoreItemDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_ITEM_NAME, itemName)
+                }
+            }
+        }
+    }
+
+    private lateinit var itemName: String
+    private var item: StoreItemModel? = null
+
+    private lateinit var configManager: ConfigManager
+    private lateinit var shellManager: ShellManager
+    private lateinit var storeManager: StoreManager
+    private lateinit var storageManager: StorageManager
+
+    // ===== UI =====
+    private lateinit var previewImage: ImageView
+    private lateinit var nameText: TextView
+    private lateinit var authorText: TextView
+    private lateinit var btnAction: Button
+
+    private lateinit var installProgressContainer: LinearLayout
+    private lateinit var installProgressBar: ProgressBar
+    private lateinit var installProgressText: TextView
+
+    private lateinit var versionContainer: LinearLayout
+    private lateinit var versionDivider: View
+    private lateinit var versionValue: TextView
+
+    private lateinit var installedVersionContainer: LinearLayout
+    private lateinit var installedVersionValue: TextView
+    private lateinit var statusNewerBadge: TextView
+    private lateinit var installedVersionDivider: View
+
+    private lateinit var sizeContainer: LinearLayout
+    private lateinit var sizeValue: TextView
+    private lateinit var sizeDivider: View
+    private lateinit var dateContainer: LinearLayout
+    private lateinit var dateValue: TextView
+    private lateinit var dateDivider: View
+    private lateinit var typeContainer: LinearLayout
+    private lateinit var typeValue: TextView
+    private lateinit var typeDivider: View
+    private lateinit var minVersionContainer: LinearLayout
+    private lateinit var minVersionValue: TextView
+    private lateinit var minVersionDivider: View
+    private lateinit var orientationContainer: LinearLayout
+    private lateinit var orientationValue: TextView
+    private lateinit var orientationDivider: View
+
+    private lateinit var repoContainer: LinearLayout
+    private lateinit var repoButton: Button
+    private lateinit var telegramContainer: LinearLayout
+    private lateinit var telegramButton: Button
+
+    private lateinit var shareButton: Button
+    private lateinit var deleteButton: Button
+    private lateinit var actionsContainer: LinearLayout
+
+    // Флаг, что установка/применение сейчас выполняется
+    private var isProcessing = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        itemName = arguments?.getString(ARG_ITEM_NAME) ?: return
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_store_item_detail, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        configManager = (activity as? by.quty.launch.BaseActivity)?.configManager
+            ?: ConfigManager(requireContext())
+        shellManager = ShellManager(requireContext(), configManager)
+        storeManager = StoreManager(requireContext())
+        storageManager = StorageManager(requireContext())
+
+        setupViews(view)
+
+        val found = (activity as? StoreActivity)?.findItemByName(itemName)
+        if (found == null) {
+            Toast.makeText(
+                requireContext(),
+                R.string.store_item_not_found,
+                Toast.LENGTH_SHORT
+            ).show()
+            (activity as? StoreActivity)?.hideItemDetail()
+            return
+        }
+        item = found
+
+        bindItem(found)
+    }
+
+    private fun setupViews(view: View) {
+        previewImage = view.findViewById(R.id.item_preview)
+        nameText = view.findViewById(R.id.item_name)
+        authorText = view.findViewById(R.id.item_author)
+        btnAction = view.findViewById(R.id.item_action_button)
+
+        installProgressContainer = view.findViewById(R.id.install_progress_container)
+        installProgressBar = view.findViewById(R.id.install_progress_bar)
+        installProgressText = view.findViewById(R.id.install_progress_text)
+
+        versionContainer = view.findViewById(R.id.item_version_container)
+        versionDivider = view.findViewById(R.id.item_version_divider)
+        versionValue = view.findViewById(R.id.item_version_value)
+
+        installedVersionContainer = view.findViewById(R.id.item_installed_version_container)
+        installedVersionValue = view.findViewById(R.id.item_installed_version_value)
+        statusNewerBadge = view.findViewById(R.id.item_status_newer)
+        installedVersionDivider = view.findViewById(R.id.item_installed_version_divider)
+
+        sizeContainer = view.findViewById(R.id.item_size_container)
+        sizeValue = view.findViewById(R.id.item_size_value)
+        sizeDivider = view.findViewById(R.id.item_size_divider)
+        dateContainer = view.findViewById(R.id.item_date_container)
+        dateValue = view.findViewById(R.id.item_date_value)
+        dateDivider = view.findViewById(R.id.item_date_divider)
+        typeContainer = view.findViewById(R.id.item_type_container)
+        typeValue = view.findViewById(R.id.item_type_value)
+        typeDivider = view.findViewById(R.id.item_type_divider)
+        minVersionContainer = view.findViewById(R.id.item_min_version_container)
+        minVersionValue = view.findViewById(R.id.item_min_version_value)
+        minVersionDivider = view.findViewById(R.id.item_min_version_divider)
+        orientationContainer = view.findViewById(R.id.item_orientation_container)
+        orientationValue = view.findViewById(R.id.item_orientation_value)
+        orientationDivider = view.findViewById(R.id.item_orientation_divider)
+
+        repoContainer = view.findViewById(R.id.item_repo_container)
+        repoButton = view.findViewById(R.id.item_repo_button)
+        telegramContainer = view.findViewById(R.id.item_telegram_container)
+        telegramButton = view.findViewById(R.id.item_telegram_button)
+
+        shareButton = view.findViewById(R.id.item_share_button)
+        deleteButton = view.findViewById(R.id.item_delete_button)
+        actionsContainer = view.findViewById(R.id.item_actions_container)
+    }
+
+    private fun bindItem(item: StoreItemModel) {
+        val context = requireContext()
+
+        bindPreview(item)
+
+        nameText.text = item.displayName
+        authorText.text = item.author ?: context.getString(R.string.author_default)
+
+        // ===== Строки метаданных с разделителями =====
+
+        // Версия (магазинная или локальная)
+        val hasVersion = !item.version.isNullOrEmpty()
+        if (hasVersion) {
+            versionValue.text = "v${item.version}"
+        }
+        setRowVisible(versionContainer, versionDivider, hasVersion)
+
+        // Установленная версия (если отличается)
+        val installedVersion = item.installedVersion
+        val remoteVersion = item.remoteInfo?.version
+        val showInstalledRow = item.isInstalled && installedVersion != null &&
+                (remoteVersion == null || remoteVersion != installedVersion)
+
+        if (showInstalledRow) {
+            installedVersionValue.text = "v$installedVersion"
+            statusNewerBadge.visibility = if (item.installedIsNewer) View.VISIBLE else View.GONE
+        }
+        setRowVisible(installedVersionContainer, installedVersionDivider, showInstalledRow)
+        if (!showInstalledRow) {
+            statusNewerBadge.visibility = View.GONE
+        }
+
+        // Размер
+        val hasSize = !item.fileSize.isNullOrEmpty()
+        if (hasSize) {
+            sizeValue.text = item.fileSize
+        }
+        setRowVisible(sizeContainer, sizeDivider, hasSize)
+
+        // Дата публикации
+        val hasDate = !item.datePublished.isNullOrEmpty()
+        if (hasDate) {
+            dateValue.text = formatDate(item.datePublished)
+        }
+        setRowVisible(dateContainer, dateDivider, hasDate)
+
+        // Тип — всегда видим
+        typeValue.text = when {
+            item.localShell?.isAsset == true -> context.getString(R.string.store_type_builtin)
+            item.localShell?.isCustom == true -> context.getString(R.string.store_type_custom)
+            else -> context.getString(R.string.store_type_catalog)
+        }
+        setRowVisible(typeContainer, typeDivider, true)
+
+        // Мин. версия Quty.Launch
+        val hasMinVersion = !item.minQutyLaunchVersion.isNullOrEmpty()
+        if (hasMinVersion) {
+            minVersionValue.text = item.minQutyLaunchVersion
+        }
+        setRowVisible(minVersionContainer, minVersionDivider, hasMinVersion)
+
+        // Ориентация
+        val hasOrientation = !item.orientation.isNullOrEmpty()
+        if (hasOrientation) {
+            orientationValue.text = when (item.orientation) {
+                "portrait" -> getString(R.string.orientation_portrait)
+                "landscape" -> getString(R.string.orientation_landscape)
+                "sensor" -> getString(R.string.orientation_auto)
+                "user" -> getString(R.string.orientation_auto)
+                else -> getString(R.string.shell_info_orientation_none)
+            }
+        }
+        setRowVisible(orientationContainer, orientationDivider, hasOrientation)
+
+        // ===== Репозиторий =====
+        if (item.repoUrl.isNullOrEmpty()) {
+            repoContainer.visibility = View.GONE
+        } else {
+            repoContainer.visibility = View.VISIBLE
+            repoButton.setOnClickListener { openUrl(item.repoUrl) }
+        }
+
+        // ===== Telegram =====
+        if (item.telegramUrl.isNullOrEmpty()) {
+            telegramContainer.visibility = View.GONE
+        } else {
+            telegramContainer.visibility = View.VISIBLE
+            telegramButton.setOnClickListener { openUrl(item.telegramUrl) }
+        }
+
+        // ===== Кнопка действия =====
+        updateActionButton(item)
+
+        // ===== Нижние действия =====
+        if (item.localShell?.isCustom == true) {
+            actionsContainer.visibility = View.VISIBLE
+
+            shareButton.visibility = if (item.canShare) View.VISIBLE else View.GONE
+            shareButton.setOnClickListener { shareItem(item) }
+
+            deleteButton.visibility = if (item.canDelete) View.VISIBLE else View.GONE
+            deleteButton.setOnClickListener { confirmDelete(item) }
+        } else {
+            actionsContainer.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Связка видимости контейнера и разделителя.
+     */
+    private fun setRowVisible(container: View, divider: View?, visible: Boolean) {
+        container.visibility = if (visible) View.VISIBLE else View.GONE
+        divider?.visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Пересчитывает состояние кнопки действия.
+     */
+    private fun updateActionButton(item: StoreItemModel) {
+        when {
+            item.isActiveSameVersion -> {
+                applyButtonStyle(isPrimary = false)
+                btnAction.text = getString(R.string.store_applied)
+                btnAction.isEnabled = false
+                btnAction.alpha = 0.7f
+                btnAction.setOnClickListener(null)
+            }
+            item.canUpdate -> {
+                applyButtonStyle(isPrimary = true)
+                btnAction.text = getString(R.string.store_update)
+                btnAction.isEnabled = true
+                btnAction.alpha = 1.0f
+                btnAction.setOnClickListener { installItem(item) }
+            }
+            item.canApply -> {
+                applyButtonStyle(isPrimary = true)
+                btnAction.text = getString(R.string.store_apply)
+                btnAction.isEnabled = true
+                btnAction.alpha = 1.0f
+                btnAction.setOnClickListener { applyItem(item) }
+            }
+            item.canInstall -> {
+                applyButtonStyle(isPrimary = true)
+                btnAction.text = getString(R.string.store_install)
+                btnAction.isEnabled = true
+                btnAction.alpha = 1.0f
+                btnAction.setOnClickListener { installItem(item) }
+            }
+            else -> {
+                applyButtonStyle(isPrimary = false)
+                btnAction.text = getString(R.string.store_applied)
+                btnAction.isEnabled = false
+                btnAction.alpha = 0.7f
+                btnAction.setOnClickListener(null)
+            }
+        }
+    }
+
+    private fun applyButtonStyle(isPrimary: Boolean) {
+        val context = requireContext()
+        if (isPrimary) {
+            btnAction.setBackgroundResource(R.drawable.bg_glass_button_primary)
+            btnAction.setTextColor(ContextCompat.getColor(context, R.color.white))
+        } else {
+            btnAction.setBackgroundResource(R.drawable.bg_glass_button_secondary)
+            btnAction.setTextColor(getThemeColor(R.attr.textPrimaryColor))
+        }
+    }
+
+    /**
+     * Установка / обновление.
+     */
+    private fun installItem(item: StoreItemModel) {
+        if (isProcessing) return
+        isProcessing = true
+
+        showInstallProgress(0)
+
+        val wasActive = configManager.getActiveShell() == item.name
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val success = storeManager.installItem(
+                item = item,
+                listener = object : StoreManager.InstallListener {
+                    override fun onProgress(percent: Int) {
+                        if (!isAdded) return
+                        showInstallProgress(percent)
+                    }
+
+                    override fun onSuccess() {
+                        if (!isAdded) return
+                        isProcessing = false
+                        hideInstallProgress()
+
+                        // Перечитываем оболочку
+                        val updatedShell = shellManager.getAvailableShells()
+                            .find { it.name == item.name }
+
+                        if (updatedShell != null) {
+                            if (wasActive) {
+                                viewLifecycleOwner.lifecycleScope.launch {
+                                    shellManager.setActiveShell(updatedShell)
+                                    (activity as? by.quty.launch.BaseActivity)
+                                        ?.markRestartRequired()
+                                    reloadAndRebind()
+                                }
+                            } else {
+                                shellManager.reloadActiveShell()
+                                (activity as? by.quty.launch.BaseActivity)
+                                    ?.markRestartRequired()
+                                reloadAndRebind()
+                            }
+                        }
+
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.store_install_success, item.displayName),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    override fun onError(message: String) {
+                        if (!isAdded) return
+                        isProcessing = false
+                        hideInstallProgress()
+                        updateActionButton(item)
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+
+            if (!success && isProcessing) {
+                isProcessing = false
+                if (isAdded) {
+                    hideInstallProgress()
+                    updateActionButton(item)
+                }
+            }
+        }
+    }
+
+    /**
+     * Применить (сделать активной).
+     */
+    private fun applyItem(item: StoreItemModel) {
+        if (isProcessing) return
+        isProcessing = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val availableShell = shellManager.getAvailableShells()
+                .find { it.name == item.name }
+
+            if (availableShell == null) {
+                isProcessing = false
+                Toast.makeText(
+                    requireContext(),
+                    R.string.store_install_error,
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@launch
+            }
+
+            shellManager.setActiveShell(availableShell)
+
+            isProcessing = false
+
+            (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
+
+            reloadAndRebind()
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.shell_applied_toast, item.displayName),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /**
+     * Пересобирает текущий item через StoreActivity.
+     *
+     * refreshItems() асинхронный — используем колбэк,
+     * чтобы получить актуальный StoreItemModel после пересборки.
+     */
+    private fun reloadAndRebind() {
+        val activity = activity as? StoreActivity ?: return
+        val currentName = item?.name ?: return
+
+        activity.refreshItems {
+            if (!isAdded) return@refreshItems
+            val updated = activity.findItemByName(currentName)
+            if (updated != null) {
+                item = updated
+                bindItem(updated)
+            }
+        }
+    }
+
+    private fun shareItem(item: StoreItemModel) {
+        val shell = item.localShell ?: return
+        try {
+            val file = File(shell.sourcePath)
+            if (!file.exists()) return
+
+            val uri = storageManager.getUri(file) ?: return
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/octet-stream"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, null))
+        } catch (_: Exception) {
+            // Игнорируем
+        }
+    }
+
+    private fun confirmDelete(item: StoreItemModel) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
+
+        val dialog = AlertDialog.Builder(
+            requireContext(),
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+
+        val titleView = dialogView.findViewById<TextView>(R.id.recovery_confirm_title)
+        val messageView = dialogView.findViewById<TextView>(R.id.recovery_confirm_message)
+        val okButton = dialogView.findViewById<Button>(R.id.recovery_confirm_ok_button)
+        val cancelButton = dialogView.findViewById<Button>(R.id.recovery_confirm_cancel_button)
+
+        titleView.setText(R.string.store_delete_title)
+        messageView.text = getString(R.string.store_delete_message, item.displayName)
+
+        okButton.setText(R.string.store_delete_action)
+        cancelButton.setText(R.string.cancel)
+
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        okButton.setOnClickListener {
+            dialog.dismiss()
+            performDelete(item)
+        }
+
+        dialog.show()
+    }
+
+    private fun performDelete(item: StoreItemModel) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val success = shellManager.deleteShellByName(item.name)
+
+            if (success) {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.store_delete_success,
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
+
+                (activity as? StoreActivity)?.hideItemDetail()
+                (activity as? StoreActivity)?.refreshItems()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.store_delete_error,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun bindPreview(item: StoreItemModel) {
+        if (!item.previewUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(item.previewUrl)
+                .placeholder(R.drawable.ic_image)
+                .error(R.drawable.ic_image)
+                .centerCrop()
+                .into(previewImage)
+            return
+        }
+
+        val base64 = item.previewBase64
+        if (base64.isNullOrEmpty()) {
+            previewImage.setImageResource(R.drawable.ic_image)
+            return
+        }
+
+        try {
+            val bytes = Base64.decode(base64, Base64.DEFAULT)
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            if (bitmap != null) {
+                previewImage.setImageBitmap(bitmap)
+            } else {
+                previewImage.setImageResource(R.drawable.ic_image)
+            }
+        } catch (_: Exception) {
+            previewImage.setImageResource(R.drawable.ic_image)
+        }
+    }
+
+    private fun showInstallProgress(percent: Int) {
+        btnAction.visibility = View.GONE
+        installProgressContainer.visibility = View.VISIBLE
+        installProgressBar.isIndeterminate = false
+        installProgressBar.progress = percent
+        installProgressText.text = getString(R.string.downloading_progress, percent)
+    }
+
+    private fun hideInstallProgress() {
+        installProgressContainer.visibility = View.GONE
+        btnAction.visibility = View.VISIBLE
+    }
+
+    private fun formatDate(isoDate: String): String {
+        if (isoDate.isBlank()) return ""
+        return try {
+            val input = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            val output = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.US)
+            val date = input.parse(isoDate) ?: return isoDate
+            output.format(date)
+        } catch (_: Exception) {
+            isoDate
+        }
+    }
+
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_shell_info_repo_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                R.string.settings_personalization_shell_info_repo_error,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\fragments\store\StoreSettingsFragment.kt
+==================================================
+
+
+// *** core/fragments/store/StoreSettingsFragment.kt *** //
+package by.quty.launch.core.fragments.store
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.managers.StoreManager
+import kotlinx.coroutines.launch
+
+/**
+ * Фрагмент «Настройки» магазина.
+ *
+ * Пока содержит:
+ * - «Очистить кэш каталога»
+ * - read-only «Источник каталога» (URL)
+ *
+ * Позже сюда добавятся настройки авто-проверки обновлений оболочек.
+ */
+class StoreSettingsFragment : Fragment() {
+
+    private lateinit var storeManager: StoreManager
+
+    private lateinit var clearCacheRow: View
+    private lateinit var sourceUrlValue: TextView
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_store_settings, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        storeManager = StoreManager(requireContext())
+
+        clearCacheRow = view.findViewById(R.id.store_clear_cache_row)
+        sourceUrlValue = view.findViewById(R.id.store_source_url_value)
+
+        // Источник каталога
+        sourceUrlValue.text = CoreConfig.STORE_URL
+
+        // Очистка кэша
+        clearCacheRow.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val success = storeManager.clearCache()
+                val message = if (success) {
+                    R.string.store_cache_cleared
+                } else {
+                    R.string.store_cache_clear_error
+                }
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
 
@@ -13282,6 +15088,486 @@ enum class StorageDirectory {
 
 
 ==================================================
+FILE: app\src\main\java\by\quty\launch\core\managers\StoreManager.kt
+==================================================
+
+
+// *** core/managers/StoreManager.kt *** //
+package by.quty.launch.core.managers
+
+import android.content.Context
+import by.quty.launch.R
+import by.quty.launch.configs.CoreConfig
+import by.quty.launch.core.model.LoggerTagModel
+import by.quty.launch.core.model.StoreItemModel
+import by.quty.launch.core.model.StoreItemTypeModel
+import by.quty.launch.core.model.StoreRemoteItemModel
+import by.quty.launch.core.utilities.AppInfoHelper
+import by.quty.launch.core.utilities.UpdateHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+
+/**
+ * Менеджер магазина Quty.Launch.
+ *
+ * Отвечает за:
+ * - загрузку каталога с сервера (store/shells.json)
+ * - кэширование каталога (StorageDirectory.CACHE)
+ * - сборку объединённой модели StoreItemModel из двух источников
+ * - установку элементов (пока только оболочки)
+ *
+ * Файл каталога на сервере называется shells.json, но внутри
+ * каждая запись имеет поле type (по умолчанию "shell"). Когда
+ * появятся другие типы ресурсов (темы, шрифты), файл можно будет
+ * переименовать в resources.json, а URL в CoreConfig — поменять.
+ */
+class StoreManager(private val context: Context) {
+
+    private val storageManager = StorageManager(context)
+    private val json = Json { ignoreUnknownKeys = true }
+
+    // ============================================================
+    // ЗАГРУЗКА КАТАЛОГА
+    // ============================================================
+
+    /**
+     * Загружает каталог с сервера.
+     * При успехе сохраняет свежий список в кэш.
+     *
+     * @return список элементов с сервера или null в случае ошибки.
+     */
+    suspend fun fetchRemoteItems(): List<StoreRemoteItemModel>? = withContext(Dispatchers.IO) {
+        try {
+            LoggerManager.info(LoggerTagModel.STORE, "STORE.fetch  start")
+
+            val connection = URL(CoreConfig.STORE_URL).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = CoreConfig.CONNECT_TIMEOUT_MS
+            connection.readTimeout = CoreConfig.READ_TIMEOUT_MS
+
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                var jsonString = connection.inputStream.bufferedReader().use { it.readText() }
+
+                // Удаляем BOM, если он есть
+                if (jsonString.startsWith("\uFEFF")) {
+                    jsonString = jsonString.substring(1)
+                }
+
+                val wrapper = json.decodeFromString<StoreShellsWrapper>(jsonString)
+
+                LoggerManager.info(
+                    LoggerTagModel.STORE,
+                    "STORE.fetch  ok  items=${wrapper.shells.size}"
+                )
+
+                // Сохраняем свежий список в кэш
+                saveToCache(wrapper.shells)
+
+                wrapper.shells
+            } else {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.fetch  error  HTTP ${connection.responseCode}"
+                )
+                null
+            }
+        } catch (e: Exception) {
+            LoggerManager.error(LoggerTagModel.STORE, "STORE.fetch  error", e)
+            null
+        }
+    }
+
+    // ============================================================
+    // КЭШ
+    // ============================================================
+
+    /**
+     * Читает кэш каталога с диска.
+     * Кэш не имеет TTL — при следующем открытии показывается сразу,
+     * пока идёт фоновая загрузка с сервера.
+     *
+     * @return список элементов из кэша или null, если кэша нет / повреждён.
+     */
+    suspend fun getCachedItems(): List<StoreRemoteItemModel>? = withContext(Dispatchers.IO) {
+        try {
+            val file = storageManager.get(StorageDirectory.CACHE, CACHE_FILE_NAME)
+            if (!file.exists() || file.length() == 0L) return@withContext null
+
+            val jsonString = file.readText()
+            if (jsonString.isBlank()) return@withContext null
+
+            val wrapper = json.decodeFromString<StoreShellsWrapper>(jsonString)
+            LoggerManager.debug(
+                LoggerTagModel.STORE,
+                "STORE.cache.read  items=${wrapper.shells.size}"
+            )
+            wrapper.shells
+        } catch (e: Exception) {
+            LoggerManager.warn(
+                LoggerTagModel.STORE,
+                "STORE.cache.read  error  ${e.message ?: e.javaClass.simpleName}",
+                e
+            )
+            null
+        }
+    }
+
+    /**
+     * Удаляет кэш каталога с диска.
+     */
+    suspend fun clearCache(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val removed = storageManager.remove(StorageDirectory.CACHE, CACHE_FILE_NAME)
+            LoggerManager.info(LoggerTagModel.STORE, "STORE.cache.clear  removed=$removed")
+            removed
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Внутренняя запись кэша на диск.
+     */
+    private suspend fun saveToCache(items: List<StoreRemoteItemModel>) {
+        withContext(Dispatchers.IO) {
+            try {
+                val wrapper = StoreShellsWrapper(items)
+                val jsonString = json.encodeToString(StoreShellsWrapper.serializer(), wrapper)
+                storageManager.set(
+                    directory = StorageDirectory.CACHE,
+                    name = CACHE_FILE_NAME,
+                    content = jsonString,
+                    overwrite = true
+                )
+                LoggerManager.debug(
+                    LoggerTagModel.STORE,
+                    "STORE.cache.save  items=${items.size}"
+                )
+            } catch (e: Exception) {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.cache.save  error  ${e.message ?: e.javaClass.simpleName}",
+                    e
+                )
+            }
+        }
+    }
+
+    // ============================================================
+    // УСТАНОВКА ЭЛЕМЕНТА
+    // ============================================================
+
+    /**
+     * Скачивает и устанавливает элемент магазина.
+     *
+     * Сейчас поддерживается только тип SHELL. Для остальных типов
+     * вернёт ошибку — добавятся по мере появления.
+     *
+     * @param item элемент для установки.
+     * @param listener слушатель прогресса.
+     * @return true при успехе.
+     */
+    suspend fun installItem(
+        item: StoreItemModel,
+        listener: InstallListener
+    ): Boolean = withContext(Dispatchers.IO) {
+        when (item.type) {
+            StoreItemTypeModel.SHELL -> installShellInternal(item, listener)
+        }
+    }
+
+    /**
+     * Установка оболочки: скачивание .qutyshell и сохранение в SHELLS.
+     */
+    private suspend fun installShellInternal(
+        item: StoreItemModel,
+        listener: InstallListener
+    ): Boolean = withContext(Dispatchers.IO) {
+        val remote = item.remoteInfo ?: run {
+            withContext(Dispatchers.Main) {
+                listener.onError(context.getString(R.string.store_install_error))
+            }
+            return@withContext false
+        }
+
+        try {
+            val fileName = "${item.name}${CoreConfig.SHELL_EXTENSION_WITH_DOT}"
+
+            LoggerManager.info(
+                LoggerTagModel.STORE,
+                "STORE.install  start  ${item.name}"
+            )
+
+            // Проверяем совместимость
+            if (!isLauncherCompatible(remote.minQutyLaunchVersion)) {
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.install  error  ${item.name}  incompatible"
+                )
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.store_incompatible))
+                }
+                return@withContext false
+            }
+
+            // Проверяем наличие свободного места
+            val fileSize = remote.fileSize.toLongOrNull() ?: (10 * 1024 * 1024)
+            if (!hasEnoughFreeSpace(fileSize)) {
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.download_not_enough_space))
+                }
+                return@withContext false
+            }
+
+            // Создаём временный файл
+            val tempFile = storageManager.createTempFile(
+                prefix = "store_${item.name}",
+                extension = "tmp"
+            )
+
+            // Скачиваем файл
+            val file = UpdateHelper.downloadFile(
+                context = context,
+                url = remote.downloadUrl,
+                listener = object : UpdateHelper.DownloadListener {
+                    override fun onProgress(percent: Int) {
+                        listener.onProgress(percent)
+                    }
+
+                    override fun onSuccess(file: File) {
+                        // Файл скачан во временный файл
+                    }
+
+                    override fun onError(message: String) {
+                        listener.onError(message)
+                    }
+                },
+                destination = UpdateHelper.Destination.CustomPath(tempFile.absolutePath),
+                connectTimeout = 15000,
+                readTimeout = 30000
+            )
+
+            if (file == null || !file.exists()) {
+                tempFile.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.store_download_error))
+                }
+                return@withContext false
+            }
+
+            // Сохраняем в хранилище
+            val success = storageManager.set(
+                directory = StorageDirectory.SHELLS,
+                name = fileName,
+                inputStream = file.inputStream(),
+                overwrite = true
+            )
+
+            // Удаляем временный файл
+            file.delete()
+
+            if (!success) {
+                LoggerManager.error(
+                    LoggerTagModel.STORE,
+                    "STORE.install  error  ${item.name}  save failed"
+                )
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.store_save_error))
+                }
+                return@withContext false
+            }
+
+            LoggerManager.info(
+                LoggerTagModel.STORE,
+                "STORE.install  ok  ${item.name}"
+            )
+
+            withContext(Dispatchers.Main) {
+                listener.onSuccess()
+            }
+            true
+
+        } catch (e: Exception) {
+            LoggerManager.error(
+                LoggerTagModel.STORE,
+                "STORE.install  error  ${item.name}  ${e.message ?: e.javaClass.simpleName}",
+                e
+            )
+            withContext(Dispatchers.Main) {
+                listener.onError(e.message ?: context.getString(R.string.store_install_error))
+            }
+            false
+        }
+    }
+
+    /**
+     * Проверяет, достаточно ли свободного места для загрузки файла.
+     */
+    private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
+        return try {
+            val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
+            val requiredWithBuffer = (requiredSpace * 1.1).toLong()
+            freeSpace >= requiredWithBuffer
+        } catch (_: Exception) {
+            true
+        }
+    }
+
+    /**
+     * Проверяет совместимость с версией Quty.Launch.
+     */
+    private fun isLauncherCompatible(minVersion: String?): Boolean {
+        if (minVersion.isNullOrEmpty()) return true
+        val currentVersion = getCurrentLauncherVersion()
+        return currentVersion.isEmpty() || UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
+    }
+
+    /**
+     * Текущая версия Quty.Launch без суффикса.
+     */
+    private fun getCurrentLauncherVersion(): String {
+        return try {
+            val (versionName, _) = AppInfoHelper.getSplitVersion(context)
+            versionName
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    // ============================================================
+    // ВНУТРЕННИЕ КЛАССЫ
+    // ============================================================
+
+    /**
+     * Обёртка для сериализации JSON с сервера.
+     */
+    @Serializable
+    data class StoreShellsWrapper(
+        val shells: List<StoreRemoteItemModel>
+    )
+
+    /**
+     * Слушатель прогресса установки.
+     */
+    interface InstallListener {
+        fun onProgress(percent: Int)
+        fun onSuccess()
+        fun onError(message: String)
+    }
+
+    companion object {
+
+        /** Имя файла кэша каталога. */
+        private const val CACHE_FILE_NAME = "store_shells.json"
+
+        /**
+         * Собирает объединённый список элементов магазина.
+         *
+         * Логика:
+         * 1. Все элементы с сервера (тип SHELL) > StoreItemModel с localShell из localShells.
+         * 2. Локальные оболочки, которых нет на сервере > StoreItemModel с remoteInfo = null.
+         * 3. Сортировка: активная > обновление > установленные > остальные, внутри по displayName.
+         *
+         * @param remote список с сервера (или из кэша).
+         * @param localShells локальные оболочки (ShellManager.getAvailableShells()).
+         * @param activeName имя активной оболочки (ConfigManager.getActiveShell()).
+         * @param activeVersion версия, реально загруженная в WebView (ConfigManager.getActiveShellVersion()).
+         */
+        fun buildItems(
+            remote: List<StoreRemoteItemModel>,
+            localShells: List<Shell>,
+            activeName: String?,
+            activeVersion: String?
+        ): List<StoreItemModel> {
+            val result = mutableListOf<StoreItemModel>()
+
+            // Индекс локальных по имени — для быстрого поиска
+            val localByName = localShells.associateBy { it.name }
+
+            // 1. Все элементы с сервера (только SHELL пока)
+            remote
+                .filter { it.type == StoreItemTypeModel.SHELL.id }
+                .forEach { r ->
+                    val local = localByName[r.name]
+
+                    result.add(
+                        StoreItemModel(
+                            name = r.name,
+                            type = StoreItemTypeModel.SHELL,
+                            displayName = r.displayName,
+                            author = r.author,
+                            version = r.version,
+                            previewUrl = r.previewUrl,
+                            previewBase64 = local?.previewBase64,
+                            fileSize = r.fileSize,
+                            datePublished = r.datePublished.ifEmpty { null },
+                            minQutyLaunchVersion = r.minQutyLaunchVersion,
+                            orientation = r.orientation,
+                            repoUrl = r.repoUrl,
+                            telegramUrl = r.telegram,
+                            isInstalled = local != null,
+                            installedVersion = local?.version,
+                            isActive = activeName != null && activeName == r.name,
+                            activeVersion = activeVersion,
+                            remoteInfo = r,
+                            localShell = local
+                        )
+                    )
+                }
+
+            // 2. Локальные, которых нет на сервере
+            localShells.forEach { local ->
+                if (remote.any { it.name == local.name && it.type == StoreItemTypeModel.SHELL.id }) {
+                    return@forEach
+                }
+
+                result.add(
+                    StoreItemModel(
+                        name = local.name,
+                        type = StoreItemTypeModel.SHELL,
+                        displayName = local.displayName ?: local.name,
+                        author = local.author,
+                        version = local.version,
+                        previewUrl = null,
+                        previewBase64 = local.previewBase64,
+                        fileSize = null,
+                        datePublished = null,
+                        minQutyLaunchVersion = local.minQutyLaunchVersion,
+                        orientation = local.orientation,
+                        repoUrl = local.repoUrl,
+                        telegramUrl = local.telegramUrl,
+                        isInstalled = true,
+                        installedVersion = local.version,
+                        isActive = activeName != null && activeName == local.name,
+                        activeVersion = activeVersion,
+                        remoteInfo = null,
+                        localShell = local
+                    )
+                )
+            }
+
+            // 3. Сортировка: активная > обновление > установленные > остальные
+            return result.sortedWith(
+                compareBy<StoreItemModel> {
+                    when {
+                        it.isActive -> 0
+                        it.updateAvailable -> 1
+                        it.isInstalled -> 2
+                        else -> 3
+                    }
+                }.thenBy { it.displayName.lowercase() }
+            )
+        }
+    }
+}
+
+
+==================================================
 FILE: app\src\main\java\by\quty\launch\core\managers\SystemUpdateManager.kt
 ==================================================
 
@@ -15430,6 +17716,272 @@ data class MenuModel(
 
 
 ==================================================
+FILE: app\src\main\java\by\quty\launch\core\model\StoreFilterModel.kt
+==================================================
+
+
+// *** core/model/StoreFilterModel.kt *** //
+package by.quty.launch.core.model
+
+import androidx.annotation.StringRes
+import by.quty.launch.R
+
+/**
+ * Фильтр списка магазина.
+ *
+ * Чипы над списком в StoreCatalogFragment. Одиночный выбор —
+ * как табы в Google Play.
+ *
+ * @property labelRes ресурс локализованного названия
+ * @property emptyRes ресурс текста пустого состояния для этого фильтра
+ * @property predicate предикат для фильтрации списка
+ */
+enum class StoreFilterModel(
+    @StringRes val labelRes: Int,
+    @StringRes val emptyRes: Int,
+    val predicate: (StoreItemModel) -> Boolean
+) {
+    ALL(
+        R.string.store_filter_all,
+        R.string.store_empty_all,
+        { true }
+    ),
+
+    INSTALLED(
+        R.string.store_filter_installed,
+        R.string.store_empty_installed,
+        { it.isInstalled }
+    ),
+
+    UPDATES(
+        R.string.store_filter_updates,
+        R.string.store_empty_updates,
+        { it.updateAvailable }
+    ),
+
+    NOT_INSTALLED(
+        R.string.store_filter_not_installed,
+        R.string.store_empty_not_installed,
+        { !it.isInstalled }
+    )
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\model\StoreItemModel.kt
+==================================================
+
+
+// *** core/model/StoreItemModel.kt *** //
+package by.quty.launch.core.model
+
+import by.quty.launch.core.managers.Shell
+import by.quty.launch.core.utilities.UpdateHelper
+
+/**
+ * Объединённая модель элемента магазина для UI.
+ *
+ * Собирается StoreManager.buildItems() из двух источников:
+ * - remoteInfo (с сервера, StoreRemoteItemModel)
+ * - localShell (локальная оболочка, Shell)
+ *
+ * Оба источника опциональны:
+ * - remoteInfo == null > элемент есть только локально (импорт, встроенная, Default)
+ * - localShell == null > элемент есть только на сервере (не установлен)
+ * - оба != null > установлен и есть в каталоге
+ *
+ * Все UI-состояния вычисляются через геттеры — единая точка правды.
+ *
+ * @property name системное имя (совпадает с Shell.name)
+ * @property type тип элемента
+ * @property displayName отображаемое имя
+ * @property author автор
+ * @property version версия магазина (если есть) или локальная
+ * @property previewUrl URL превью (только из магазина)
+ * @property previewBase64 Base64-превью (только локальное)
+ * @property fileSize размер файла
+ * @property datePublished дата публикации
+ * @property minQutyLaunchVersion минимальная версия Quty.Launch
+ * @property orientation ориентация
+ * @property repoUrl ссылка на репозиторий
+ * @property telegramUrl ссылка на Telegram
+ * @property isInstalled установлен ли локально
+ * @property installedVersion версия локального файла
+ * @property isActive назначен ли активным
+ * @property activeVersion версия, реально загруженная в WebView
+ * @property remoteInfo данные с сервера (null = только локальный)
+ * @property localShell локальная оболочка (null = только на сервере)
+ */
+data class StoreItemModel(
+    val name: String,
+    val type: StoreItemTypeModel,
+
+    val displayName: String,
+    val author: String?,
+    val version: String?,
+    val previewUrl: String?,
+    val previewBase64: String?,
+
+    val fileSize: String?,
+    val datePublished: String?,
+    val minQutyLaunchVersion: String?,
+    val orientation: String?,
+    val repoUrl: String?,
+    val telegramUrl: String?,
+
+    val isInstalled: Boolean,
+    val installedVersion: String?,
+    val isActive: Boolean,
+    val activeVersion: String?,
+
+    val remoteInfo: StoreRemoteItemModel?,
+    val localShell: Shell?
+) {
+
+    /**
+     * Есть ли обновление на сервере.
+     * true, если установлено и версия магазина новее установленной.
+     */
+    val updateAvailable: Boolean
+        get() {
+            if (!isInstalled) return false
+            val remoteVersion = remoteInfo?.version ?: return false
+            val localVersion = installedVersion ?: return false
+            return UpdateHelper.isNewerVersion(remoteVersion, localVersion)
+        }
+
+    /**
+     * Установленная версия новее магазинной.
+     * true, если установлено и локальная версия новее магазинной.
+     */
+    val installedIsNewer: Boolean
+        get() {
+            if (!isInstalled) return false
+            val remoteVersion = remoteInfo?.version ?: return false
+            val localVersion = installedVersion ?: return false
+            return UpdateHelper.isNewerVersion(localVersion, remoteVersion)
+        }
+
+    /**
+     * Активна и версия реально загруженной оболочки совпадает
+     * с установленной.
+     */
+    val isActiveSameVersion: Boolean
+        get() {
+            if (!isActive) return false
+            val effective = if (installedIsNewer) installedVersion else remoteInfo?.version
+            return activeVersion != null && activeVersion == effective
+        }
+
+    /**
+     * Элемент присутствует только локально (нет записи в каталоге).
+     */
+    val isLocalOnly: Boolean
+        get() = remoteInfo == null
+
+    /**
+     * Можно установить (есть в магазине и не установлено).
+     */
+    val canInstall: Boolean
+        get() = remoteInfo != null && !isInstalled
+
+    /**
+     * Можно обновить (есть обновление).
+     */
+    val canUpdate: Boolean
+        get() = updateAvailable
+
+    /**
+     * Можно применить (установлено, но не активно).
+     */
+    val canApply: Boolean
+        get() = isInstalled && !isActive
+
+    /**
+     * Можно удалить (кастомная, не активна).
+     */
+    val canDelete: Boolean
+        get() = localShell?.isCustom == true && !isActive
+
+    /**
+     * Можно поделиться (есть локальный файл).
+     */
+    val canShare: Boolean
+        get() = localShell != null
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\model\StoreItemTypeModel.kt.kt
+==================================================
+
+
+// *** core/model/StoreItemTypeModel.kt *** //
+package by.quty.launch.core.model
+
+/**
+ * Тип элемента магазина.
+ *
+ * Сейчас поддерживается только оболочка.
+ * Позже сюда добавятся другие типы ресурсов (темы, шрифты, виджеты и т.д.).
+ *
+ * @property id строковый идентификатор для сериализации (совпадает с полем type в store/shells.json)
+ */
+enum class StoreItemTypeModel(val id: String) {
+    SHELL("shell")
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\model\StoreRemoteItemModel.kt
+==================================================
+
+
+// *** core/model/StoreRemoteItemModel.kt *** //
+package by.quty.launch.core.model
+
+import kotlinx.serialization.Serializable
+
+/**
+ * Модель элемента магазина, получаемого с сервера.
+ *
+ * Соответствует записи в store/shells.json на сервере.
+ *
+ * @property id уникальный идентификатор
+ * @property type тип элемента (по умолчанию "shell" для обратной совместимости)
+ * @property name имя файла / системное имя (QutyAuto)
+ * @property displayName отображаемое имя
+ * @property author автор
+ * @property version версия
+ * @property previewUrl URL превью
+ * @property downloadUrl URL для скачивания
+ * @property fileSize размер файла (человеко-читаемый)
+ * @property minQutyLaunchVersion минимальная версия Quty.Launch
+ * @property orientation ориентация из манифеста
+ * @property repoUrl ссылка на репозиторий
+ * @property telegram ссылка на Telegram
+ * @property datePublished дата публикации (YYYY-MM-DD)
+ */
+@Serializable
+data class StoreRemoteItemModel(
+    val id: String,
+    val type: String = StoreItemTypeModel.SHELL.id,
+    val name: String,
+    val displayName: String,
+    val author: String,
+    val version: String,
+    val previewUrl: String,
+    val downloadUrl: String,
+    val fileSize: String,
+    val minQutyLaunchVersion: String? = null,
+    val orientation: String? = null,
+    val repoUrl: String? = null,
+    val telegram: String? = null,
+    val datePublished: String = ""
+)
+
+
+==================================================
 FILE: app\src\main\java\by\quty\launch\core\model\TerminalCommandModel.kt
 ==================================================
 
@@ -17177,6 +19729,199 @@ FILE: app\src\main\res\layout\activity_settings.xml
                     android:layout_weight="1"
                     android:padding="@dimen/spacing_sm"
                     android:text="@string/settings_fragment" />
+
+                <!-- Кнопка ЗАКРЫТЬ ФРАГМЕНТ -->
+                <LinearLayout
+                    android:id="@+id/btn_close_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_m"
+                    android:background="@drawable/bg_glass_icon_ripple"
+                    android:padding="@dimen/spacing_s"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/settings_close"
+                        android:src="@drawable/ic_close"
+                        app:tint="?attr/iconTintColor"
+                        android:clickable="false"
+                        android:focusable="false" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
+
+</LinearLayout>
+
+
+==================================================
+FILE: app\src\main\res\layout\activity_store.xml
+==================================================
+
+
+<!-- res/layout/activity_store.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) -->
+    <LinearLayout
+        android:id="@+id/menu_pane"
+        android:layout_width="340dp"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:orientation="vertical">
+
+        <!-- ШАПКА МЕНЮ С ГРАДИЕНТОМ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_m"
+            android:paddingEnd="@dimen/spacing_m"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_xs"
+            android:background="@drawable/bg_toolbar_gradient"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:elevation="4dp">
+
+            <TextView
+                style="@style/Text.Title.Large"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="@dimen/spacing_sm"
+                android:text="@string/store_title" />
+
+            <LinearLayout
+                android:id="@+id/btn_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:background="@drawable/bg_glass_icon_ripple"
+                android:padding="@dimen/spacing_s"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageButton
+                    android:layout_width="@dimen/icon_medium"
+                    android:layout_height="@dimen/icon_medium"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/settings_close"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/iconTintColor"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_menu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="@dimen/spacing_s"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ) -->
+    <FrameLayout
+        android:id="@+id/content_pane"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- ФРАГМЕНТ КОНТЕНТА -->
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                android:background="@android:color/transparent"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- ШАПКА С ГРАДИЕНТОМ -->
+            <LinearLayout
+                android:id="@+id/content_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_m"
+                android:paddingTop="@dimen/spacing_m"
+                android:paddingBottom="@dimen/spacing_xs"
+                android:background="@drawable/bg_toolbar_gradient"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <!-- Кнопка НАЗАД / МЕНЮ -->
+                <LinearLayout
+                    android:id="@+id/btn_back_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_m"
+                    android:background="@drawable/bg_glass_icon_ripple"
+                    android:padding="@dimen/spacing_s"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/btn_back_content_icon"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/back"
+                        android:src="@drawable/ic_back"
+                        app:tint="?attr/iconTintColor"
+                        android:clickable="false"
+                        android:focusable="false" />
+
+                </LinearLayout>
+
+                <!-- Название раздела -->
+                <TextView
+                    android:id="@+id/content_title"
+                    style="@style/Text.Title.Large"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="@dimen/spacing_sm"
+                    android:text="@string/store_title" />
 
                 <!-- Кнопка ЗАКРЫТЬ ФРАГМЕНТ -->
                 <LinearLayout
@@ -22913,6 +25658,1004 @@ FILE: app\src\main\res\layout\fragment_settings_updates.xml
 
 
 ==================================================
+FILE: app\src\main\res\layout\fragment_store_catalog.xml
+==================================================
+
+
+<!-- res/layout/fragment_store_catalog.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:paddingTop="@dimen/fragment_top"
+    android:orientation="vertical">
+
+    <!-- ============================================================ -->
+    <!-- ===== ЧИПЫ-ФИЛЬТРЫ ========================================= -->
+    <!-- ============================================================ -->
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingBottom="@dimen/spacing_s"
+        android:scrollbars="none"
+        tools:ignore="SpeakableTextPresentCheck">
+
+        <LinearLayout
+            android:id="@+id/store_filters_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingEnd="@dimen/spacing_l" />
+
+    </HorizontalScrollView>
+
+    <!-- ============================================================ -->
+    <!-- ===== СПИСОК / СОСТОЯНИЯ =================================== -->
+    <!-- ============================================================ -->
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Список -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_items"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/spacing_s"
+                android:paddingEnd="@dimen/spacing_s"
+                android:paddingTop="@dimen/spacing_s"
+                android:paddingBottom="@dimen/spacing_m"
+                android:scrollbars="vertical"
+                android:visibility="gone" />
+
+            <!-- Состояние загрузки -->
+            <LinearLayout
+                android:id="@+id/loading_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:indeterminate="true" />
+
+                <TextView
+                    style="@style/Text.Body.Dim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_m"
+                    android:text="@string/store_loading" />
+
+            </LinearLayout>
+
+            <!-- Состояние ошибки -->
+            <LinearLayout
+                android:id="@+id/error_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="@dimen/spacing_xl"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_xxlarge"
+                    android:layout_height="@dimen/icon_xxlarge"
+                    android:src="@drawable/ic_update_error"
+                    app:tint="?attr/textErrorColor"
+                    tools:ignore="ContentDescription" />
+
+                <TextView
+                    android:id="@+id/error_message"
+                    style="@style/Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_l"
+                    android:gravity="center"
+                    tools:text="@string/store_load_error" />
+
+                <Button
+                    android:id="@+id/btn_retry"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginTop="@dimen/spacing_l"
+                    android:text="@string/welcome_button_retry" />
+
+            </LinearLayout>
+
+            <!-- Пустое состояние -->
+            <LinearLayout
+                android:id="@+id/empty_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="@dimen/spacing_xl"
+                android:visibility="gone"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_xxlarge"
+                    android:layout_height="@dimen/icon_xxlarge"
+                    android:src="@drawable/ic_store"
+                    app:tint="?attr/textDimColor"
+                    tools:ignore="ContentDescription" />
+
+                <TextView
+                    android:id="@+id/empty_message"
+                    style="@style/Text.Body.Dim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_l"
+                    android:gravity="center"
+                    tools:text="@string/store_empty_all" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>
+
+
+==================================================
+FILE: app\src\main\res\layout\fragment_store_item_detail.xml
+==================================================
+
+
+<!-- res/layout/fragment_store_item_detail.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
+
+        <!-- Превью -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/shell_preview_height"
+            android:layout_marginTop="@dimen/spacing_l"
+            android:layout_marginBottom="@dimen/spacing_l"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="@dimen/radius_large"
+            app:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/item_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_image"
+                android:contentDescription="@string/settings_personalization_shell_preview_description" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Название + кнопка действия -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_s"
+            android:paddingEnd="@dimen/spacing_s"
+            android:paddingTop="@dimen/spacing_m"
+            android:paddingBottom="@dimen/spacing_m">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="@dimen/spacing_m">
+
+                <TextView
+                    android:id="@+id/item_name"
+                    style="@style/Text.Title.Large"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/textPrimaryColor"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    tools:text="QutyAuto" />
+
+                <TextView
+                    android:id="@+id/item_author"
+                    style="@style/Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xxs"
+                    android:textColor="?attr/textDimColor"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="QutyTeam" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/item_action_button"
+                style="@style/Button.Glass.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_button"
+                android:minWidth="120dp"
+                android:paddingStart="@dimen/spacing_m"
+                android:paddingEnd="@dimen/spacing_m"
+                android:text="@string/store_install" />
+
+        </LinearLayout>
+
+        <!-- Прогресс установки -->
+        <LinearLayout
+            android:id="@+id/install_progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginBottom="@dimen/spacing_m"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ProgressBar
+                android:id="@+id/install_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/update_progress_height"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="?attr/buttonPrimaryColor"
+                android:progressBackgroundTint="?attr/dividerColor"
+                android:background="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/install_progress_text"
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:textStyle="bold"
+                android:textColor="?attr/textPrimaryColor"
+                tools:text="45%" />
+
+        </LinearLayout>
+
+        <!-- Карточка с метаданными -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Версия -->
+            <View
+                android:id="@+id/item_version_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <LinearLayout
+                android:id="@+id/item_version_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_version" />
+
+                <TextView
+                    android:id="@+id/item_version_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="v0.0.5" />
+
+            </LinearLayout>
+
+            <!-- Установленная версия -->
+            <View
+                android:id="@+id/item_installed_version_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/item_installed_version_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_version_code"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_installed_version" />
+
+                <TextView
+                    android:id="@+id/item_status_newer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:background="@drawable/bg_status_newer"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_newer"
+                    android:textColor="@color/scheme_teal_primary"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_installed_version_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="v0.0.4" />
+
+            </LinearLayout>
+
+            <!-- Размер -->
+            <View
+                android:id="@+id/item_size_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <LinearLayout
+                android:id="@+id/item_size_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_weight"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_size" />
+
+                <TextView
+                    android:id="@+id/item_size_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="5.2 MB" />
+
+            </LinearLayout>
+
+            <!-- Дата публикации -->
+            <View
+                android:id="@+id/item_date_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <LinearLayout
+                android:id="@+id/item_date_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_calendar"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_date" />
+
+                <TextView
+                    android:id="@+id/item_date_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="20.10.2026" />
+
+            </LinearLayout>
+
+            <!-- Тип -->
+            <View
+                android:id="@+id/item_type_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor" />
+
+            <LinearLayout
+                android:id="@+id/item_type_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_type"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_type" />
+
+                <TextView
+                    android:id="@+id/item_type_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="Пользовательская" />
+
+            </LinearLayout>
+
+            <!-- Мин. версия -->
+            <View
+                android:id="@+id/item_min_version_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/item_min_version_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_min_version"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_min_version" />
+
+                <TextView
+                    android:id="@+id/item_min_version_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="0.0.150" />
+
+            </LinearLayout>
+
+            <!-- Ориентация -->
+            <View
+                android:id="@+id/item_orientation_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/spacing_l"
+                android:layout_marginEnd="@dimen/spacing_l"
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/item_orientation_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_orientation"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/Text.Body.Dim"
+                    android:text="@string/settings_personalization_shell_info_orientation" />
+
+                <TextView
+                    android:id="@+id/item_orientation_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Text.Body"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAlignment="viewEnd"
+                    tools:text="Авто" />
+
+            </LinearLayout>
+
+            <!-- Репозиторий -->
+            <LinearLayout
+                android:id="@+id/item_repo_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/spacing_l"
+                    android:layout_marginEnd="@dimen/spacing_l"
+                    android:background="?attr/dividerColor" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
+                    android:paddingTop="@dimen/spacing_s"
+                    android:paddingBottom="@dimen/spacing_s"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:src="@drawable/ic_repo"
+                        android:contentDescription="@string/empty"
+                        android:layout_marginEnd="@dimen/spacing_m" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        style="@style/Text.Body.Dim"
+                        android:text="@string/settings_personalization_shell_info_repo" />
+
+                    <Button
+                        android:id="@+id/item_repo_button"
+                        style="@style/Button.Glass.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingStart="@dimen/spacing_m"
+                        android:paddingEnd="@dimen/spacing_m"
+                        android:paddingTop="@dimen/spacing_s"
+                        android:paddingBottom="@dimen/spacing_s"
+                        android:text="@string/settings_personalization_shell_info_repo_open" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Telegram -->
+            <LinearLayout
+                android:id="@+id/item_telegram_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/spacing_l"
+                    android:layout_marginEnd="@dimen/spacing_l"
+                    android:background="?attr/dividerColor" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="@dimen/spacing_l"
+                    android:paddingEnd="@dimen/spacing_l"
+                    android:paddingTop="@dimen/spacing_s"
+                    android:paddingBottom="@dimen/spacing_s"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:src="@drawable/ic_telegram"
+                        android:contentDescription="@string/empty"
+                        android:layout_marginEnd="@dimen/spacing_m" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        style="@style/Text.Body.Dim"
+                        android:text="@string/settings_personalization_shell_info_telegram" />
+
+                    <Button
+                        android:id="@+id/item_telegram_button"
+                        style="@style/Button.Glass.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingStart="@dimen/spacing_m"
+                        android:paddingEnd="@dimen/spacing_m"
+                        android:paddingTop="@dimen/spacing_s"
+                        android:paddingBottom="@dimen/spacing_s"
+                        android:text="@string/settings_personalization_shell_info_telegram_open" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Действия (share / delete) -->
+        <LinearLayout
+            android:id="@+id/item_actions_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_l"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <Button
+                android:id="@+id/item_share_button"
+                style="@style/Button.Glass.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_button"
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_s"
+                android:minWidth="0dp"
+                android:text="@string/store_detail_share" />
+
+            <Button
+                android:id="@+id/item_delete_button"
+                style="@style/Button.Glass.Danger"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_button"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:minWidth="0dp"
+                android:text="@string/store_detail_delete" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
+
+    </LinearLayout>
+
+</ScrollView>
+
+
+==================================================
+FILE: app\src\main\res\layout\fragment_store_settings.xml
+==================================================
+
+
+<!-- res/layout/fragment_store_settings.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: ИСТОЧНИК ===================================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:text="@string/store_settings_section_source" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_repo"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_settings_source_url" />
+
+                    <TextView
+                        android:id="@+id/store_source_url_value"
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xxs"
+                        android:textColor="?attr/textDimColor"
+                        android:maxLines="3"
+                        android:ellipsize="middle"
+                        tools:text="https://raw.githubusercontent.com/.../store/shells.json" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: КЭШ ========================================= -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:paddingTop="@dimen/spacing_xl"
+            android:text="@string/store_settings_section_cache" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <LinearLayout
+                android:id="@+id/store_clear_cache_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_files_off"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_settings_clear_cache" />
+
+                    <TextView
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_settings_clear_cache_desc" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
+
+    </LinearLayout>
+
+</ScrollView>
+
+
+==================================================
 FILE: app\src\main\res\layout\item_api_method.xml
 ==================================================
 
@@ -23446,6 +27189,180 @@ FILE: app\src\main\res\layout\item_storage_clear_category.xml
 
 
 ==================================================
+FILE: app\src\main\res\layout\item_store_list.xml
+==================================================
+
+
+<!-- res/layout/item_store_list.xml -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_s"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/radius_large"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_m">
+
+        <!-- Превью (слева) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="@dimen/store_card_preview_width"
+            android:layout_height="@dimen/store_card_preview_height"
+            android:layout_marginEnd="@dimen/spacing_m"
+            app:cardBackgroundColor="?attr/backgroundInput"
+            app:cardCornerRadius="@dimen/radius_medium"
+            app:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/item_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_image"
+                android:contentDescription="@string/settings_personalization_shell_preview_description" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Текстовая колонка -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/item_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Text.Title.Medium"
+                android:textColor="?attr/textPrimaryColor"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="QutyAuto" />
+
+            <TextView
+                android:id="@+id/item_author_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xxs"
+                style="@style/Text.Body"
+                android:textSize="@dimen/text_m"
+                android:textColor="?attr/textSecondaryColor"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="QutyTeam · v0.0.5" />
+
+            <TextView
+                android:id="@+id/item_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xxs"
+                style="@style/Text.Small"
+                android:textSize="@dimen/text_m"
+                android:textColor="?attr/textDimColor"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="5.2 MB · 20.10.2026" />
+
+            <LinearLayout
+                android:id="@+id/item_status_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:orientation="horizontal"
+                android:gravity="start"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/item_status_active"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_status_active"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_active"
+                    android:textColor="@color/status_granted"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_status_update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_xs"
+                    android:background="@drawable/bg_status_update"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_update"
+                    android:textColor="@color/status_warning"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_status_installed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_status_installed"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_installed"
+                    android:textColor="?attr/textDimColor"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_status_newer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_xs"
+                    android:background="@drawable/bg_status_newer"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_newer"
+                    android:textColor="@color/scheme_teal_primary"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+
+
+==================================================
 FILE: app\src\main\res\layout\item_terminal_line.xml
 ==================================================
 
@@ -23919,6 +27836,14 @@ FILE: app\src\main\res\values\dimens.xml
     <!-- Spinner -->
     <dimen name="spinner_min_width">100dp</dimen>
 
+    <!-- ============================================================ -->
+    <!-- ===== МАГАЗИН (STORE) ====================================== -->
+    <!-- ============================================================ -->
+
+    <!-- Превью в карточке списка магазина -->
+    <dimen name="store_card_preview_width">140dp</dimen>
+    <dimen name="store_card_preview_height">100dp</dimen>
+
 </resources>
 
 
@@ -24278,6 +28203,7 @@ FILE: app\src\main\res\values\strings.xml
     <!-- Имена виртуальных приложений (GetApps) -->
     <string name="api_getapps_logger_name">Логгер</string>
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
+    <string name="api_getapps_store_name">Магазин</string>
     <string name="api_getapps_terminal_name">Терминал</string>
 
     <!-- Ошибки LaunchApp -->
@@ -24511,6 +28437,83 @@ FILE: app\src\main\res\values\strings.xml
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== МАГАЗИН (STORE) ====================================== -->
+    <!-- ============================================================ -->
+
+    <!-- Общее -->
+    <string name="store_title">Магазин</string>
+    <string name="store_menu_catalog">Каталог</string>
+    <string name="store_menu_catalog_desc">Все доступные ресурсы</string>
+    <string name="store_menu_settings">Настройки</string>
+    <string name="store_menu_settings_desc">Кэш и источник</string>
+
+    <!-- Фильтры -->
+    <string name="store_filter_all">Все</string>
+    <string name="store_filter_installed">Установленные</string>
+    <string name="store_filter_updates">Обновления</string>
+    <string name="store_filter_not_installed">Не установленные</string>
+
+    <!-- Пустые состояния -->
+    <string name="store_empty_all">В каталоге пока ничего нет</string>
+    <string name="store_empty_installed">Нет установленных ресурсов</string>
+    <string name="store_empty_updates">Все ресурсы обновлены</string>
+    <string name="store_empty_not_installed">Все ресурсы уже установлены</string>
+
+    <!-- Состояния загрузки -->
+    <string name="store_loading">Загрузка каталога…</string>
+    <string name="store_load_error">Ошибка загрузки каталога</string>
+    <string name="store_cache_stale_toast">Не удалось обновить каталог. Показан кэш.</string>
+
+    <!-- Карточка -->
+    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
+
+    <!-- Статусы -->
+    <string name="store_status_active">Активна</string>
+    <string name="store_status_update">Есть обновление</string>
+    <string name="store_status_installed">Установлено</string>
+    <string name="store_status_newer">Новее</string>
+
+    <!-- Типы (в карточке / деталях) -->
+    <string name="store_type_builtin">Встроенная</string>
+    <string name="store_type_custom">Пользовательская</string>
+    <string name="store_type_local">Только локально</string>
+    <string name="store_type_catalog">Из каталога</string>
+
+    <!-- Кнопки действий -->
+    <string name="store_install">Установить</string>
+    <string name="store_update">Обновить</string>
+    <string name="store_apply">Применить</string>
+    <string name="store_applied">Активна</string>
+
+    <!-- Детали -->
+    <string name="store_detail_share">Поделиться</string>
+    <string name="store_detail_delete">Удалить</string>
+
+    <!-- Диалог удаления -->
+    <string name="store_delete_title">Удалить ресурс?</string>
+    <string name="store_delete_message" formatted="false">Ресурс «%s» будет удалён с устройства.</string>
+    <string name="store_delete_action">Удалить</string>
+    <string name="store_delete_success">Ресурс удалён</string>
+    <string name="store_delete_error">Не удалось удалить</string>
+
+    <!-- Ошибки -->
+    <string name="store_item_not_found">Ресурс не найден</string>
+    <string name="store_install_error">Ошибка установки</string>
+    <string name="store_incompatible">Ресурс несовместим с текущей версией Quty.Launch</string>
+    <string name="store_download_error">Ошибка скачивания</string>
+    <string name="store_save_error">Ошибка сохранения</string>
+    <string name="store_install_success" formatted="false">Ресурс «%s» установлен!</string>
+
+    <!-- Настройки магазина -->
+    <string name="store_settings_section_source">Источник</string>
+    <string name="store_settings_source_url">URL каталога</string>
+    <string name="store_settings_section_cache">Кэш</string>
+    <string name="store_settings_clear_cache">Очистить кэш каталога</string>
+    <string name="store_settings_clear_cache_desc">Удалить сохранённый список ресурсов</string>
+    <string name="store_cache_cleared">Кэш каталога очищен</string>
+    <string name="store_cache_clear_error">Не удалось очистить кэш</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->
@@ -25447,6 +29450,7 @@ FILE: app\src\main\res\values-en\strings.xml
     <!-- Virtual app names (GetApps) -->
     <string name="api_getapps_logger_name">Logger</string>
     <string name="api_getapps_settings_name">Settings Quty.Launch</string>
+    <string name="api_getapps_store_name">Store</string>
     <string name="api_getapps_terminal_name">Terminal</string>
 
     <!-- LaunchApp errors -->
@@ -25680,6 +29684,83 @@ FILE: app\src\main\res\values-en\strings.xml
     <string name="dev_mode_deactivated">Developer mode deactivated</string>
     <string name="dev_mode_click_count" formatted="false">Clicks left: %d</string>
     <string name="dev_unknown_error">Unknown error</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== STORE ================================================ -->
+    <!-- ============================================================ -->
+
+    <!-- Common -->
+    <string name="store_title">Store</string>
+    <string name="store_menu_catalog">Catalog</string>
+    <string name="store_menu_catalog_desc">All available resources</string>
+    <string name="store_menu_settings">Settings</string>
+    <string name="store_menu_settings_desc">Cache and source</string>
+
+    <!-- Filters -->
+    <string name="store_filter_all">All</string>
+    <string name="store_filter_installed">Installed</string>
+    <string name="store_filter_updates">Updates</string>
+    <string name="store_filter_not_installed">Not installed</string>
+
+    <!-- Empty states -->
+    <string name="store_empty_all">Nothing in the catalog yet</string>
+    <string name="store_empty_installed">No installed resources</string>
+    <string name="store_empty_updates">All resources are up to date</string>
+    <string name="store_empty_not_installed">All resources are installed</string>
+
+    <!-- Loading states -->
+    <string name="store_loading">Loading catalog…</string>
+    <string name="store_load_error">Failed to load catalog</string>
+    <string name="store_cache_stale_toast">Failed to refresh catalog. Showing cached version.</string>
+
+    <!-- Card -->
+    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
+
+    <!-- Statuses -->
+    <string name="store_status_active">Active</string>
+    <string name="store_status_update">Update available</string>
+    <string name="store_status_installed">Installed</string>
+    <string name="store_status_newer">Newer</string>
+
+    <!-- Types (in card / details) -->
+    <string name="store_type_builtin">Built-in</string>
+    <string name="store_type_custom">Custom</string>
+    <string name="store_type_local">Local only</string>
+    <string name="store_type_catalog">From catalog</string>
+
+    <!-- Action buttons -->
+    <string name="store_install">Install</string>
+    <string name="store_update">Update</string>
+    <string name="store_apply">Apply</string>
+    <string name="store_applied">Active</string>
+
+    <!-- Details -->
+    <string name="store_detail_share">Share</string>
+    <string name="store_detail_delete">Delete</string>
+
+    <!-- Delete dialog -->
+    <string name="store_delete_title">Delete resource?</string>
+    <string name="store_delete_message" formatted="false">Resource «%s» will be removed from the device.</string>
+    <string name="store_delete_action">Delete</string>
+    <string name="store_delete_success">Resource deleted</string>
+    <string name="store_delete_error">Failed to delete</string>
+
+    <!-- Errors -->
+    <string name="store_item_not_found">Resource not found</string>
+    <string name="store_install_error">Installation error</string>
+    <string name="store_incompatible">Resource is incompatible with the current Quty.Launch version</string>
+    <string name="store_download_error">Download error</string>
+    <string name="store_save_error">Failed to save</string>
+    <string name="store_install_success" formatted="false">Resource "%s" installed!</string>
+
+    <!-- Store settings -->
+    <string name="store_settings_section_source">Source</string>
+    <string name="store_settings_source_url">Catalog URL</string>
+    <string name="store_settings_section_cache">Cache</string>
+    <string name="store_settings_clear_cache">Clear catalog cache</string>
+    <string name="store_settings_clear_cache_desc">Delete saved resource list</string>
+    <string name="store_cache_cleared">Catalog cache cleared</string>
+    <string name="store_cache_clear_error">Failed to clear cache</string>
 
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->

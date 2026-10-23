@@ -107,6 +107,9 @@ object CoreConfig {
     /** URL для проверки обновлений приложения */
     const val UPDATE_SERVER_URL = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/updates/version.json"
 
+    /** URL каталога магазина (оболочки и другие ресурсы) */
+    const val STORE_URL = "https://raw.githubusercontent.com/Sanya2104/Quty.Launch.Server/main/store/shells.json"
+
     /** Таймаут подключения к сети (мс) */
     const val CONNECT_TIMEOUT_MS = 5000
 

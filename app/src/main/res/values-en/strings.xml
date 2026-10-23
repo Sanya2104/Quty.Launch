@@ -338,6 +338,7 @@
     <!-- Virtual app names (GetApps) -->
     <string name="api_getapps_logger_name">Logger</string>
     <string name="api_getapps_settings_name">Settings Quty.Launch</string>
+    <string name="api_getapps_store_name">Store</string>
     <string name="api_getapps_terminal_name">Terminal</string>
 
     <!-- LaunchApp errors -->
@@ -571,6 +572,83 @@
     <string name="dev_mode_deactivated">Developer mode deactivated</string>
     <string name="dev_mode_click_count" formatted="false">Clicks left: %d</string>
     <string name="dev_unknown_error">Unknown error</string>
+
+    <!-- ============================================================ -->
+    <!-- ===== STORE ================================================ -->
+    <!-- ============================================================ -->
+
+    <!-- Common -->
+    <string name="store_title">Store</string>
+    <string name="store_menu_catalog">Catalog</string>
+    <string name="store_menu_catalog_desc">All available resources</string>
+    <string name="store_menu_settings">Settings</string>
+    <string name="store_menu_settings_desc">Cache and source</string>
+
+    <!-- Filters -->
+    <string name="store_filter_all">All</string>
+    <string name="store_filter_installed">Installed</string>
+    <string name="store_filter_updates">Updates</string>
+    <string name="store_filter_not_installed">Not installed</string>
+
+    <!-- Empty states -->
+    <string name="store_empty_all">Nothing in the catalog yet</string>
+    <string name="store_empty_installed">No installed resources</string>
+    <string name="store_empty_updates">All resources are up to date</string>
+    <string name="store_empty_not_installed">All resources are installed</string>
+
+    <!-- Loading states -->
+    <string name="store_loading">Loading catalog…</string>
+    <string name="store_load_error">Failed to load catalog</string>
+    <string name="store_cache_stale_toast">Failed to refresh catalog. Showing cached version.</string>
+
+    <!-- Card -->
+    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
+
+    <!-- Statuses -->
+    <string name="store_status_active">Active</string>
+    <string name="store_status_update">Update available</string>
+    <string name="store_status_installed">Installed</string>
+    <string name="store_status_newer">Newer</string>
+
+    <!-- Types (in card / details) -->
+    <string name="store_type_builtin">Built-in</string>
+    <string name="store_type_custom">Custom</string>
+    <string name="store_type_local">Local only</string>
+    <string name="store_type_catalog">From catalog</string>
+
+    <!-- Action buttons -->
+    <string name="store_install">Install</string>
+    <string name="store_update">Update</string>
+    <string name="store_apply">Apply</string>
+    <string name="store_applied">Active</string>
+
+    <!-- Details -->
+    <string name="store_detail_share">Share</string>
+    <string name="store_detail_delete">Delete</string>
+
+    <!-- Delete dialog -->
+    <string name="store_delete_title">Delete resource?</string>
+    <string name="store_delete_message" formatted="false">Resource «%s» will be removed from the device.</string>
+    <string name="store_delete_action">Delete</string>
+    <string name="store_delete_success">Resource deleted</string>
+    <string name="store_delete_error">Failed to delete</string>
+
+    <!-- Errors -->
+    <string name="store_item_not_found">Resource not found</string>
+    <string name="store_install_error">Installation error</string>
+    <string name="store_incompatible">Resource is incompatible with the current Quty.Launch version</string>
+    <string name="store_download_error">Download error</string>
+    <string name="store_save_error">Failed to save</string>
+    <string name="store_install_success" formatted="false">Resource "%s" installed!</string>
+
+    <!-- Store settings -->
+    <string name="store_settings_section_source">Source</string>
+    <string name="store_settings_source_url">Catalog URL</string>
+    <string name="store_settings_section_cache">Cache</string>
+    <string name="store_settings_clear_cache">Clear catalog cache</string>
+    <string name="store_settings_clear_cache_desc">Delete saved resource list</string>
+    <string name="store_cache_cleared">Catalog cache cleared</string>
+    <string name="store_cache_clear_error">Failed to clear cache</string>
 
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->

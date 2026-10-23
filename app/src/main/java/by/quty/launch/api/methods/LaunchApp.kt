@@ -9,6 +9,7 @@ import by.quty.launch.api.base.ApiResponse
 import by.quty.launch.api.model.LaunchAppParams
 import by.quty.launch.LoggerActivity
 import by.quty.launch.SettingsActivity
+import by.quty.launch.StoreActivity
 import by.quty.launch.TerminalActivity
 import by.quty.launch.configs.ApiConfig
 import kotlinx.serialization.builtins.serializer
@@ -37,6 +38,12 @@ class LaunchApp(
             ApiConfig.SETTINGS_PACKAGE -> {
                 // Открываем Настройки
                 val intent = Intent(context, SettingsActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+            ApiConfig.STORE_PACKAGE -> {
+                // Открываем Магазин
+                val intent = Intent(context, StoreActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
