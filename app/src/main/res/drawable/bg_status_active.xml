@@ -1,7 +1,0 @@
-<!-- res/drawable/bg_status_active.xml -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <!-- 10% opacity от status_granted (#4CAF50) -->
-    <solid android:color="#1A4CAF50" />
-    <corners android:radius="@dimen/radius_small" />
-</shape>

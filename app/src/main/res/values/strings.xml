@@ -222,6 +222,7 @@
     <string name="settings_personalization_active_shell">Активная оболочка</string>
     <string name="settings_personalization_no_shell">Активная оболочка не найдена</string>
     <string name="settings_personalization_open_store">Больше оболочек в Store</string>
+    <string name="settings_personalization_store_open_error">Магазин временно недоступен</string>
     <string name="settings_personalization_color_scheme_title">Цветовая схема</string>
 
     <!-- Анимации -->
@@ -266,12 +267,9 @@
     <!-- Превью оболочки (в карточке активной оболочки) -->
     <string name="settings_personalization_shell_preview_description">Превью оболочки</string>
 
-    <!-- Ошибка при открытии магазина из раздела Персонализация -->
-    <string name="settings_personalization_store_open_error">Ошибка загрузки магазина</string>
-
     <!-- Safe Mode -->
     <string name="safe_mode_banner_title">Безопасный режим</string>
-    <string name="safe_mode_banner_message">Активна стандартная оболочка. Выбранная вами оболочка могла сломаться. Смените её в магазине или выйдите из безопасного режима, чтобы попробовать снова.</string>
+    <string name="safe_mode_banner_message">Активна стандартная оболочка. Выбранная вами оболочка могла сломаться. Смените её или выйдите из безопасного режима, чтобы попробовать снова.</string>
     <string name="safe_mode_exit_button">Выйти из безопасного режима</string>
     <string name="safe_mode_activated_toast">Безопасный режим активирован</string>
     <string name="safe_mode_exited_toast">Безопасный режим отключён. Перезапуск…</string>
@@ -340,7 +338,6 @@
     <!-- Имена виртуальных приложений (GetApps) -->
     <string name="api_getapps_logger_name">Логгер</string>
     <string name="api_getapps_settings_name">Настройки Quty.Launch</string>
-    <string name="api_getapps_store_name">Магазин</string>
     <string name="api_getapps_terminal_name">Терминал</string>
 
     <!-- Ошибки LaunchApp -->
@@ -574,76 +571,6 @@
     <string name="dev_mode_deactivated">Режим разработчика деактивирован</string>
     <string name="dev_mode_click_count" formatted="false">Осталось нажатий: %d</string>
     <string name="dev_unknown_error">Неизвестная ошибка</string>
-
-    <!-- ============================================================ -->
-    <!-- ===== МАГАЗИН (STORE) ====================================== -->
-    <!-- ============================================================ -->
-
-    <!-- Заголовок -->
-    <string name="store_title">Магазин</string>
-
-    <!-- Меню магазина -->
-    <string name="store_menu_catalog">Магазин</string>
-    <string name="store_menu_catalog_desc">Оболочки, темы и не только</string>
-    <string name="store_menu_library">Библиотека</string>
-    <string name="store_menu_library_desc">Установленные ресурсы</string>
-    <string name="store_menu_settings">Настройки</string>
-    <string name="store_menu_settings_desc">Настройки магазина</string>
-
-    <!-- Заглушки -->
-    <string name="store_placeholder_catalog">Здесь появится каталог магазина</string>
-    <string name="store_placeholder_library">Здесь будут ваши установленные ресурсы</string>
-    <string name="store_placeholder_settings">Здесь будут настройки магазина</string>
-
-    <!-- Пустые состояния -->
-    <string name="store_empty_catalog">В каталоге пока ничего нет</string>
-    <string name="store_empty_library">Библиотека пуста</string>
-
-    <!-- Карточка каталога -->
-    <string name="store_card_author_version" formatted="false">%1$s · v%2$s</string>
-    <string name="store_card_meta" formatted="false">%1$s · %2$s</string>
-
-    <!-- Статусы карточки -->
-    <string name="store_status_active">Активна</string>
-    <string name="store_status_update">Есть обновление</string>
-    <string name="store_status_installed">Установлено</string>
-    <string name="store_status_newer">Новее</string>
-
-    <!-- Кэш каталога -->
-    <string name="store_cache_stale_toast">Не удалось обновить каталог. Показан кэш.</string>
-
-    <!-- Остальное (кнопки, состояния) -->
-    <string name="store_install">Установить</string>
-    <string name="store_update">Обновить</string>
-    <string name="store_apply">Применить</string>
-    <string name="store_applied">Активна</string>
-    <string name="store_install_hint">Для установки оболочки вернитесь к списку и нажмите «Установить» на карточке.</string>
-    <string name="store_update_hint">Для обновления оболочки вернитесь к списку и нажмите «Обновить» на карточке.</string>
-    <string name="store_loading">Загрузка каталога…</string>
-    <string name="store_load_error">Ошибка загрузки каталога</string>
-    <string name="store_installing">Установка оболочки</string>
-    <string name="store_preparing">Подготовка…</string>
-    <string name="store_progress" formatted="false">Скачивание: %d%%</string>
-    <string name="store_install_success" formatted="false">Оболочка "%s" успешно установлена!</string>
-    <string name="store_install_error">Ошибка установки</string>
-    <string name="store_already_installed">Оболочка уже установлена</string>
-    <string name="store_incompatible">Оболочка несовместима с текущей версией Quty.Launch</string>
-    <string name="store_download_error">Ошибка скачивания</string>
-    <string name="store_save_error">Ошибка сохранения оболочки</string>
-
-    <!-- Библиотека -->
-    <string name="store_library_meta" formatted="false">%1$s · %2$s</string>
-
-    <!-- Локальная оболочка (детальный экран Библиотеки) -->
-    <string name="store_library_detail_path">Путь</string>
-    <string name="store_library_detail_share">Поделиться</string>
-    <string name="store_library_detail_delete">Удалить</string>
-    <string name="store_library_detail_delete_title">Удалить оболочку?</string>
-    <string name="store_library_detail_delete_message" formatted="false">Оболочка «%s» будет удалена с устройства.</string>
-    <string name="store_library_detail_delete_success">Оболочка удалена</string>
-    <string name="store_library_detail_delete_error">Не удалось удалить</string>
-
-
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->
