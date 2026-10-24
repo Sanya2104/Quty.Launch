@@ -6,18 +6,17 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -26,9 +25,11 @@ import by.quty.launch.R
 import by.quty.launch.StoreActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.StorageDirectory
 import by.quty.launch.core.managers.StoreManager
 import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.model.StoreItemModel
+import by.quty.launch.core.utilities.PopupMenuHelper
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 import java.io.File
@@ -39,18 +40,44 @@ import java.io.File
  * Один фрагмент на все случаи. Принимает имя элемента через arguments;
  * сам элемент запрашивает из StoreActivity.findItemByName().
  *
- * Кнопка действия динамическая:
- * - «Установить» (primary) — canInstall;
- * - «Обновить» (primary) — canUpdate;
- * - «Применить» (primary) — canApply;
- * - «Активна» (secondary, disabled) — isActiveSameVersion.
+ * Бейдж «Активна» (item_action_button) отображается ТОЛЬКО когда элемент
+ * активен (isActiveSameVersion == true). Стилизован под статус «Активна»
+ * в каталоге (bg_status_active + status_granted + 13sp + medium).
+ * Клик по нему не обрабатывается — это не кнопка, а индикатор.
  *
- * Нижние действия:
- * - «Поделиться» (secondary) — canShare;
- * - «Удалить» (danger) — canDelete.
+ * Во всех остальных случаях бейдж скрыт, а действия доступны через
+ * выпадающее меню (ic_menu_dots) справа от названия:
+ *   Установить → Обновить → Применить → Поделиться → Удалить
+ * (пункт появляется только если соответствующее условие выполнено).
+ *
+ * Если элемент активен — меню содержит только Поделиться / Удалить
+ * (что доступно по флагам canShare / canDelete).
+ *
+ * Пункт «Поделиться» показывается только если файл реально существует
+ * и StorageManager может выдать на него URI (см. canShareItem()).
+ *
+ * Пункт «Удалить» показывается только если файл реально лежит в
+ * StorageDirectory.SHELLS (т.е. это пользовательская оболочка).
+ * Встроенные (asset) оболочки удалить нельзя — у них нет файла в SHELLS
+ * (см. canDeleteItem()).
+ *
+ * Разделители в карточке метаданных:
+ * - у первого видимого блока divider = GONE;
+ * - у каждого следующего видимого блока divider = VISIBLE.
+ * Это единое правило — как в dialog_shell_info.xml.
+ *
+ * Если в меню нет ни одного пункта — ic_menu_dots тоже скрыт.
  *
  * После установки / применения / удаления — markRestartRequired() на
  * StoreActivity, чтобы при выходе показался диалог перезапуска.
+ *
+ * После удаления — ждём refreshItems() через колбэк и:
+ * - если элемент остался (например, встроенная с тем же именем) —
+ *   перерисовываем деталь по актуальной модели;
+ * - если элемента нет (оболочки больше нет ни локально, ни на сервере) —
+ *   закрываем деталь.
+ * Это устраняет гонку между async refreshItems() в StoreActivity и
+ * открытием детали сразу после удаления.
  */
 class StoreItemDetailFragment : Fragment() {
 
@@ -78,7 +105,8 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var previewImage: ImageView
     private lateinit var nameText: TextView
     private lateinit var authorText: TextView
-    private lateinit var btnAction: Button
+    private lateinit var activeBadge: TextView
+    private lateinit var btnMenu: ImageButton
 
     private lateinit var installProgressContainer: LinearLayout
     private lateinit var installProgressBar: ProgressBar
@@ -164,7 +192,8 @@ class StoreItemDetailFragment : Fragment() {
         previewImage = view.findViewById(R.id.item_preview)
         nameText = view.findViewById(R.id.item_name)
         authorText = view.findViewById(R.id.item_author)
-        btnAction = view.findViewById(R.id.item_action_button)
+        activeBadge = view.findViewById(R.id.item_action_button)
+        btnMenu = view.findViewById(R.id.item_menu_button)
 
         installProgressContainer = view.findViewById(R.id.install_progress_container)
         installProgressBar = view.findViewById(R.id.install_progress_bar)
@@ -213,14 +242,13 @@ class StoreItemDetailFragment : Fragment() {
         nameText.text = item.displayName
         authorText.text = item.author ?: context.getString(R.string.author_default)
 
-        // ===== Строки метаданных с разделителями =====
+        // ===== Значения метаданных =====
 
         // Версия (магазинная или локальная)
         val hasVersion = !item.version.isNullOrEmpty()
         if (hasVersion) {
             versionValue.text = "v${item.version}"
         }
-        setRowVisible(versionContainer, versionDivider, hasVersion)
 
         // Установленная версия (если отличается)
         val installedVersion = item.installedVersion
@@ -231,9 +259,7 @@ class StoreItemDetailFragment : Fragment() {
         if (showInstalledRow) {
             installedVersionValue.text = "v$installedVersion"
             statusNewerBadge.visibility = if (item.installedIsNewer) View.VISIBLE else View.GONE
-        }
-        setRowVisible(installedVersionContainer, installedVersionDivider, showInstalledRow)
-        if (!showInstalledRow) {
+        } else {
             statusNewerBadge.visibility = View.GONE
         }
 
@@ -242,14 +268,12 @@ class StoreItemDetailFragment : Fragment() {
         if (hasSize) {
             sizeValue.text = item.fileSize
         }
-        setRowVisible(sizeContainer, sizeDivider, hasSize)
 
         // Дата публикации
         val hasDate = !item.datePublished.isNullOrEmpty()
         if (hasDate) {
             dateValue.text = formatDate(item.datePublished)
         }
-        setRowVisible(dateContainer, dateDivider, hasDate)
 
         // Тип — всегда видим
         typeValue.text = when {
@@ -257,14 +281,12 @@ class StoreItemDetailFragment : Fragment() {
             item.localShell?.isCustom == true -> context.getString(R.string.store_type_custom)
             else -> context.getString(R.string.store_type_catalog)
         }
-        setRowVisible(typeContainer, typeDivider, true)
 
         // Мин. версия Quty.Launch
         val hasMinVersion = !item.minQutyLaunchVersion.isNullOrEmpty()
         if (hasMinVersion) {
             minVersionValue.text = item.minQutyLaunchVersion
         }
-        setRowVisible(minVersionContainer, minVersionDivider, hasMinVersion)
 
         // Ориентация
         val hasOrientation = !item.orientation.isNullOrEmpty()
@@ -277,7 +299,35 @@ class StoreItemDetailFragment : Fragment() {
                 else -> getString(R.string.shell_info_orientation_none)
             }
         }
-        setRowVisible(orientationContainer, orientationDivider, hasOrientation)
+
+        // ===== Разделители + видимость блоков =====
+        //
+        // Правило одинаково для всех блоков:
+        // - у первого видимого блока divider = GONE;
+        // - у каждого следующего видимого блока divider = VISIBLE.
+        // Это устраняет «висячий» разделитель в начале карточки
+        // и корректно работает при любом наборе скрытых полей.
+        val rows = listOf(
+            Row(versionContainer, versionDivider, hasVersion),
+            Row(installedVersionContainer, installedVersionDivider, showInstalledRow),
+            Row(sizeContainer, sizeDivider, hasSize),
+            Row(dateContainer, dateDivider, hasDate),
+            Row(typeContainer, typeDivider, true),
+            Row(minVersionContainer, minVersionDivider, hasMinVersion),
+            Row(orientationContainer, orientationDivider, hasOrientation)
+        )
+
+        var firstVisible = true
+        rows.forEach { row ->
+            if (row.visible) {
+                row.container.visibility = View.VISIBLE
+                row.divider?.visibility = if (firstVisible) View.GONE else View.VISIBLE
+                firstVisible = false
+            } else {
+                row.container.visibility = View.GONE
+                row.divider?.visibility = View.GONE
+            }
+        }
 
         // ===== Репозиторий =====
         if (item.repoUrl.isNullOrEmpty()) {
@@ -295,83 +345,165 @@ class StoreItemDetailFragment : Fragment() {
             telegramButton.setOnClickListener { openUrl(item.telegramUrl) }
         }
 
-        // ===== Кнопка действия =====
-        updateActionButton(item)
+        // ===== Бейдж «Активна» + меню =====
+        updateActionUI(item)
+    }
 
-        // ===== Нижние действия =====
-        if (item.localShell?.isCustom == true) {
-            actionsContainer.visibility = View.VISIBLE
+    /**
+     * Пара «контейнер блока + разделитель ПЕРЕД ним».
+     * Используется для единой логики разделителей:
+     * у первого видимого блока divider = GONE, у остальных = VISIBLE.
+     */
+    private data class Row(
+        val container: View,
+        val divider: View?,
+        val visible: Boolean
+    )
 
-            shareButton.visibility = if (item.canShare) View.VISIBLE else View.GONE
-            shareButton.setOnClickListener { shareItem(item) }
+    /**
+     * Проверяет, можно ли реально поделиться файлом ресурса.
+     *
+     * Одного флага item.canShare (== localShell != null) недостаточно:
+     * - файла может не быть на диске (был удалён, путь битый);
+     * - StorageManager.getUri() может вернуть null (FileProvider недоступен).
+     *
+     * @return true, если файл существует и на него можно получить URI.
+     */
+    private fun canShareItem(item: StoreItemModel): Boolean {
+        if (!item.canShare) return false
 
-            deleteButton.visibility = if (item.canDelete) View.VISIBLE else View.GONE
-            deleteButton.setOnClickListener { confirmDelete(item) }
-        } else {
-            actionsContainer.visibility = View.GONE
+        val shell = item.localShell ?: return false
+        val file = File(shell.sourcePath)
+        return !(!file.exists() || !file.isFile) && storageManager.getUri(file) != null
+    }
+
+    /**
+     * Проверяет, можно ли реально удалить оболочку.
+     *
+     * Одного флага item.canDelete (== localShell.isCustom && !isActive)
+     * недостаточно — он опирается на Shell.isCustom, который не различает
+     * «кастомная поверх встроенной» и «встроенная». Из-за этого после
+     * удаления пользовательской версии поверх встроенной у встроенной
+     * всё ещё мог показываться пункт «Удалить».
+     *
+     * Надёжная проверка — по файловой системе:
+     * - активную удалять нельзя;
+     * - встроенную (isAsset) удалять нельзя — у неё нет файла в SHELLS;
+     * - файл должен существовать и лежать именно в StorageDirectory.SHELLS
+     *   (т.е. это действительно пользовательская оболочка, а не asset).
+     */
+    private fun canDeleteItem(item: StoreItemModel): Boolean {
+        if (item.isActive) return false
+
+        val shell = item.localShell ?: return false
+        if (shell.isAsset) return false
+
+        val file = File(shell.sourcePath)
+        if (!file.exists() || !file.isFile) return false
+
+        val shellsDir = storageManager.getDirectory(StorageDirectory.SHELLS)
+        return try {
+            file.canonicalFile.parentFile?.canonicalPath == shellsDir.canonicalPath
+        } catch (_: Exception) {
+            false
         }
     }
 
     /**
-     * Связка видимости контейнера и разделителя.
+     * Пересчитывает состояние бейджа «Активна» и кнопки-меню.
+     *
+     * Логика:
+     * - isActiveSameVersion == true → бейдж «Активна» (стилизован под
+     *   статус в каталоге, не кликабельный) + меню (Поделиться / Удалить);
+     * - иначе → бейдж скрыт, меню содержит действия по флагам
+     *   (Установить / Обновить / Применить / Поделиться / Удалить).
+     *
+     * Если в меню нет ни одного пункта — кнопка-меню тоже скрыта.
      */
-    private fun setRowVisible(container: View, divider: View?, visible: Boolean) {
-        container.visibility = if (visible) View.VISIBLE else View.GONE
-        divider?.visibility = if (visible) View.VISIBLE else View.GONE
+    private fun updateActionUI(item: StoreItemModel) {
+        if (isProcessing) {
+            // Пока идёт установка — прогресс уже показан, меню скрыто
+            btnMenu.visibility = View.GONE
+            return
+        }
+
+        // Бейдж виден ТОЛЬКО когда активна та же версия
+        activeBadge.visibility = if (item.isActiveSameVersion) View.VISIBLE else View.GONE
+
+        // Меню-кнопка
+        val menuItems = buildMenuItems(item)
+        if (menuItems.isEmpty()) {
+            btnMenu.visibility = View.GONE
+            btnMenu.setOnClickListener(null)
+        } else {
+            btnMenu.visibility = View.VISIBLE
+            btnMenu.setOnClickListener { showActionMenu(menuItems) }
+        }
     }
 
     /**
-     * Пересчитывает состояние кнопки действия.
+     * Собирает пункты выпадающего меню для текущего элемента.
+     *
+     * Если элемент активен (isActiveSameVersion) — только Поделиться / Удалить.
+     * Иначе — Установить / Обновить / Применить / Поделиться / Удалить
+     * (что доступно по флагам модели).
+     *
+     * Пункт «Поделиться» добавляется только если canShareItem() == true
+     * (файл существует и URI получается).
+     * Пункт «Удалить» добавляется только если canDeleteItem() == true
+     * (файл реально лежит в SHELLS и это не asset).
      */
-    private fun updateActionButton(item: StoreItemModel) {
-        when {
-            item.isActiveSameVersion -> {
-                applyButtonStyle(isPrimary = false)
-                btnAction.text = getString(R.string.store_applied)
-                btnAction.isEnabled = false
-                btnAction.alpha = 0.7f
-                btnAction.setOnClickListener(null)
+    private fun buildMenuItems(item: StoreItemModel): List<PopupMenuHelper.Item> {
+        val items = mutableListOf<PopupMenuHelper.Item>()
+
+        if (!item.isActiveSameVersion) {
+            if (item.canInstall) {
+                items.add(
+                    PopupMenuHelper.Item(text = getString(R.string.store_install)) {
+                        installItem(item)
+                    }
+                )
             }
-            item.canUpdate -> {
-                applyButtonStyle(isPrimary = true)
-                btnAction.text = getString(R.string.store_update)
-                btnAction.isEnabled = true
-                btnAction.alpha = 1.0f
-                btnAction.setOnClickListener { installItem(item) }
+            if (item.canUpdate) {
+                items.add(
+                    PopupMenuHelper.Item(text = getString(R.string.store_update)) {
+                        installItem(item)
+                    }
+                )
             }
-            item.canApply -> {
-                applyButtonStyle(isPrimary = true)
-                btnAction.text = getString(R.string.store_apply)
-                btnAction.isEnabled = true
-                btnAction.alpha = 1.0f
-                btnAction.setOnClickListener { applyItem(item) }
-            }
-            item.canInstall -> {
-                applyButtonStyle(isPrimary = true)
-                btnAction.text = getString(R.string.store_install)
-                btnAction.isEnabled = true
-                btnAction.alpha = 1.0f
-                btnAction.setOnClickListener { installItem(item) }
-            }
-            else -> {
-                applyButtonStyle(isPrimary = false)
-                btnAction.text = getString(R.string.store_applied)
-                btnAction.isEnabled = false
-                btnAction.alpha = 0.7f
-                btnAction.setOnClickListener(null)
+            if (item.canApply) {
+                items.add(
+                    PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
+                        applyItem(item)
+                    }
+                )
             }
         }
+
+        if (canShareItem(item)) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_detail_share)) {
+                    shareItem(item)
+                }
+            )
+        }
+
+        if (canDeleteItem(item)) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_detail_delete)) {
+                    confirmDelete(item)
+                }
+            )
+        }
+
+        return items
     }
 
-    private fun applyButtonStyle(isPrimary: Boolean) {
-        val context = requireContext()
-        if (isPrimary) {
-            btnAction.setBackgroundResource(R.drawable.bg_glass_button_primary)
-            btnAction.setTextColor(ContextCompat.getColor(context, R.color.white))
-        } else {
-            btnAction.setBackgroundResource(R.drawable.bg_glass_button_secondary)
-            btnAction.setTextColor(getThemeColor(R.attr.textPrimaryColor))
-        }
+    private fun showActionMenu(items: List<PopupMenuHelper.Item>) {
+        PopupMenuHelper.show(
+            anchor = btnMenu,
+            items = items
+        )
     }
 
     /**
@@ -382,7 +514,7 @@ class StoreItemDetailFragment : Fragment() {
         isProcessing = true
 
         showInstallProgress(0)
-
+        btnMenu.visibility = View.GONE
         val wasActive = configManager.getActiveShell() == item.name
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -409,6 +541,11 @@ class StoreItemDetailFragment : Fragment() {
                                     shellManager.setActiveShell(updatedShell)
                                     (activity as? by.quty.launch.BaseActivity)
                                         ?.markRestartRequired()
+
+                                    // Мгновенно обновляем бейдж/меню по локальному
+                                    // «активному» состоянию — не ждём reloadAndRebind().
+                                    applyLocalActiveState(updatedShell.version)
+
                                     reloadAndRebind()
                                 }
                             } else {
@@ -430,7 +567,7 @@ class StoreItemDetailFragment : Fragment() {
                         if (!isAdded) return
                         isProcessing = false
                         hideInstallProgress()
-                        updateActionButton(item)
+                        updateActionUI(item)
                         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
                     }
                 }
@@ -440,7 +577,7 @@ class StoreItemDetailFragment : Fragment() {
                 isProcessing = false
                 if (isAdded) {
                     hideInstallProgress()
-                    updateActionButton(item)
+                    updateActionUI(item)
                 }
             }
         }
@@ -459,6 +596,7 @@ class StoreItemDetailFragment : Fragment() {
 
             if (availableShell == null) {
                 isProcessing = false
+                updateActionUI(item)
                 Toast.makeText(
                     requireContext(),
                     R.string.store_install_error,
@@ -473,6 +611,10 @@ class StoreItemDetailFragment : Fragment() {
 
             (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
 
+            // Мгновенно обновляем бейдж/меню по локальному «активному»
+            // состоянию — бейдж появляется сразу после нажатия «Применить».
+            applyLocalActiveState(availableShell.version)
+
             reloadAndRebind()
 
             Toast.makeText(
@@ -481,6 +623,39 @@ class StoreItemDetailFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    /**
+     * Локально применяет состояние «элемент активен с версией [activeVersion]».
+     *
+     * Нужно, чтобы бейдж «Активна» появлялся мгновенно после нажатия
+     * «Применить» / успешной установки активной оболочки, не дожидаясь
+     * асинхронного reloadAndRebind() (refreshItems() идёт из StoreActivity).
+     *
+     * Пересобираем копию модели с isActive = true и activeVersion = [activeVersion].
+     * Сам reloadAndRebind() потом подтянет авторитетные данные.
+     */
+    private fun applyLocalActiveState(activeVersion: String?) {
+        val current = item ?: return
+
+        // effective-версия из isActiveSameVersion в модели:
+        //   installedIsNewer ? installedVersion : remoteInfo?.version
+        val effectiveVersion = if (current.installedIsNewer) {
+            current.installedVersion
+        } else {
+            current.remoteInfo?.version
+        }
+
+        // Берём версию, которую реально загрузили в WebView.
+        // Если её нет — пробуем effective-версию, иначе оставляем как есть.
+        val resolvedActiveVersion = activeVersion ?: effectiveVersion ?: current.activeVersion
+
+        val updated = current.copy(
+            isActive = true,
+            activeVersion = resolvedActiveVersion
+        )
+        item = updated
+        updateActionUI(updated)
     }
 
     /**
@@ -556,27 +731,62 @@ class StoreItemDetailFragment : Fragment() {
         dialog.show()
     }
 
+    /**
+     * Удаление оболочки.
+     *
+     * ВАЖНО: после удаления файла сначала дожидаемся пересборки
+     * currentItems в StoreActivity (через колбэк refreshItems), и только
+     * потом решаем, что делать с текущим экраном:
+     * - если элемент всё ещё существует (например, встроенная оболочка
+     *   с тем же именем — кастомная была поверх неё) — перерисовываем
+     *   деталь по актуальной модели;
+     * - если элемента больше нет (ни локально, ни на сервере) —
+     *   закрываем деталь.
+     *
+     * Без ожидания refreshItems() пользователь мог открыть деталь
+     * до пересборки currentItems и увидеть устаревшую модель
+     * (например, без установленной версии и без пункта «Обновить»).
+     */
     private fun performDelete(item: StoreItemModel) {
         viewLifecycleOwner.lifecycleScope.launch {
             val success = shellManager.deleteShellByName(item.name)
 
-            if (success) {
-                Toast.makeText(
-                    requireContext(),
-                    R.string.store_delete_success,
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
-
-                (activity as? StoreActivity)?.hideItemDetail()
-                (activity as? StoreActivity)?.refreshItems()
-            } else {
+            if (!success) {
                 Toast.makeText(
                     requireContext(),
                     R.string.store_delete_error,
                     Toast.LENGTH_SHORT
                 ).show()
+                return@launch
+            }
+
+            Toast.makeText(
+                requireContext(),
+                R.string.store_delete_success,
+                Toast.LENGTH_SHORT
+            ).show()
+
+            (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
+
+            val activity = activity as? StoreActivity ?: return@launch
+            val currentName = item.name
+
+            // Дожидаемся пересборки currentItems, чтобы каталог и деталь
+            // работали с актуальной моделью (без гонки).
+            activity.refreshItems {
+                if (!isAdded) return@refreshItems
+
+                val updated = activity.findItemByName(currentName)
+
+                if (updated == null) {
+                    // Оболочки больше нет — закрываем деталь.
+                    activity.hideItemDetail()
+                } else {
+                    // Оболочка осталась (например, встроенная с тем же именем) —
+                    // остаёмся на детали и перерисовываем её по актуальной модели.
+                    this@StoreItemDetailFragment.item = updated
+                    bindItem(updated)
+                }
             }
         }
     }
@@ -612,7 +822,7 @@ class StoreItemDetailFragment : Fragment() {
     }
 
     private fun showInstallProgress(percent: Int) {
-        btnAction.visibility = View.GONE
+        activeBadge.visibility = View.GONE
         installProgressContainer.visibility = View.VISIBLE
         installProgressBar.isIndeterminate = false
         installProgressBar.progress = percent
@@ -621,7 +831,8 @@ class StoreItemDetailFragment : Fragment() {
 
     private fun hideInstallProgress() {
         installProgressContainer.visibility = View.GONE
-        btnAction.visibility = View.VISIBLE
+        // Бейдж/меню видимость восстановит updateActionUI(item)
+        item?.let { updateActionUI(it) }
     }
 
     private fun formatDate(isoDate: String): String {
@@ -653,11 +864,5 @@ class StoreItemDetailFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-    }
-
-    private fun getThemeColor(attr: Int): Int {
-        val typedValue = TypedValue()
-        requireContext().theme.resolveAttribute(attr, typedValue, true)
-        return typedValue.data
     }
 }

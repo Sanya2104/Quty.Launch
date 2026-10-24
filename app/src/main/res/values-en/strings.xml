@@ -617,12 +617,11 @@
     <string name="store_type_catalog">From catalog</string>
 
     <!-- Action buttons -->
+    <string name="store_menu_more">More</string>
     <string name="store_install">Install</string>
     <string name="store_update">Update</string>
     <string name="store_apply">Apply</string>
     <string name="store_applied">Active</string>
-
-    <!-- Details -->
     <string name="store_detail_share">Share</string>
     <string name="store_detail_delete">Delete</string>
 

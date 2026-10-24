@@ -617,12 +617,11 @@
     <string name="store_type_catalog">Из каталога</string>
 
     <!-- Кнопки действий -->
+    <string name="store_menu_more">Ещё</string>
     <string name="store_install">Установить</string>
     <string name="store_update">Обновить</string>
     <string name="store_apply">Применить</string>
     <string name="store_applied">Активна</string>
-
-    <!-- Детали -->
     <string name="store_detail_share">Поделиться</string>
     <string name="store_detail_delete">Удалить</string>
 

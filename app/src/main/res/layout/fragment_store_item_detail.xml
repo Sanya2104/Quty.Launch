@@ -37,7 +37,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Название + кнопка действия -->
+        <!-- Название + автор + бейдж «Активна» (если активна) + меню -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -78,15 +78,41 @@
 
             </LinearLayout>
 
-            <Button
+            <!-- Бейдж «Активна» (стилизован под статус в каталоге).
+                 Виден ТОЛЬКО когда ресурс активен (isActiveSameVersion). -->
+
+            <!-- Кнопка-меню (ic_menu_dots). Видна, если в меню есть хотя бы один пункт. -->
+            <TextView
                 android:id="@+id/item_action_button"
-                style="@style/Button.Glass.Primary"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/height_button"
-                android:minWidth="120dp"
-                android:paddingStart="@dimen/spacing_m"
-                android:paddingEnd="@dimen/spacing_m"
-                android:text="@string/store_install" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_active"
+                android:clickable="false"
+                android:focusable="false"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:layout_marginEnd="@dimen/spacing_xs"
+                android:paddingStart="@dimen/spacing_s"
+                android:paddingTop="@dimen/spacing_xxs"
+                android:paddingEnd="@dimen/spacing_s"
+                android:paddingBottom="@dimen/spacing_xxs"
+                android:text="@string/store_applied"
+                android:textColor="@color/status_granted"
+                android:textSize="@dimen/text_l"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <ImageButton
+                android:id="@+id/item_menu_button"
+                android:layout_width="@dimen/icon_large"
+                android:layout_height="@dimen/icon_large"
+                android:layout_marginStart="@dimen/spacing_s"
+                android:src="@drawable/ic_menu_dots"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/store_menu_more"
+                android:padding="@dimen/spacing_m"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
         </LinearLayout>
 
@@ -136,14 +162,15 @@
             android:background="@drawable/bg_card_rounded"
             android:padding="@dimen/spacing_xs">
 
-            <!-- Версия -->
+            <!-- ВЕРСИЯ -->
             <View
                 android:id="@+id/item_version_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="@dimen/spacing_l"
                 android:layout_marginEnd="@dimen/spacing_l"
-                android:background="?attr/dividerColor" />
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/item_version_container"
@@ -155,6 +182,8 @@
                 android:paddingEnd="@dimen/spacing_l"
                 android:paddingTop="@dimen/spacing_l"
                 android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -183,7 +212,7 @@
 
             </LinearLayout>
 
-            <!-- Установленная версия -->
+            <!-- УСТАНОВЛЕННАЯ ВЕРСИЯ -->
             <View
                 android:id="@+id/item_installed_version_divider"
                 android:layout_width="match_parent"
@@ -251,14 +280,15 @@
 
             </LinearLayout>
 
-            <!-- Размер -->
+            <!-- РАЗМЕР -->
             <View
                 android:id="@+id/item_size_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="@dimen/spacing_l"
                 android:layout_marginEnd="@dimen/spacing_l"
-                android:background="?attr/dividerColor" />
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/item_size_container"
@@ -300,14 +330,15 @@
 
             </LinearLayout>
 
-            <!-- Дата публикации -->
+            <!-- ДАТА ПУБЛИКАЦИИ -->
             <View
                 android:id="@+id/item_date_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="@dimen/spacing_l"
                 android:layout_marginEnd="@dimen/spacing_l"
-                android:background="?attr/dividerColor" />
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/item_date_container"
@@ -349,14 +380,15 @@
 
             </LinearLayout>
 
-            <!-- Тип -->
+            <!-- ТИП -->
             <View
                 android:id="@+id/item_type_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="@dimen/spacing_l"
                 android:layout_marginEnd="@dimen/spacing_l"
-                android:background="?attr/dividerColor" />
+                android:background="?attr/dividerColor"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/item_type_container"
@@ -368,6 +400,8 @@
                 android:paddingEnd="@dimen/spacing_l"
                 android:paddingTop="@dimen/spacing_l"
                 android:paddingBottom="@dimen/spacing_l"
+                android:visibility="gone"
+                tools:visibility="visible"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -396,7 +430,7 @@
 
             </LinearLayout>
 
-            <!-- Мин. версия -->
+            <!-- МИН. ВЕРСИЯ -->
             <View
                 android:id="@+id/item_min_version_divider"
                 android:layout_width="match_parent"
@@ -446,7 +480,7 @@
 
             </LinearLayout>
 
-            <!-- Ориентация -->
+            <!-- ОРИЕНТАЦИЯ -->
             <View
                 android:id="@+id/item_orientation_divider"
                 android:layout_width="match_parent"
@@ -496,7 +530,7 @@
 
             </LinearLayout>
 
-            <!-- Репозиторий -->
+            <!-- РЕПОЗИТОРИЙ -->
             <LinearLayout
                 android:id="@+id/item_repo_container"
                 android:layout_width="match_parent"
@@ -553,7 +587,7 @@
 
             </LinearLayout>
 
-            <!-- Telegram -->
+            <!-- TELEGRAM -->
             <LinearLayout
                 android:id="@+id/item_telegram_container"
                 android:layout_width="match_parent"
@@ -612,7 +646,8 @@
 
         </LinearLayout>
 
-        <!-- Действия (share / delete) -->
+        <!-- Действия (share / delete) — оставлены для обратной совместимости с разметкой,
+             по умолчанию скрыты: их функционал теперь в выпадающем меню (ic_menu_dots). -->
         <LinearLayout
             android:id="@+id/item_actions_container"
             android:layout_width="match_parent"
@@ -623,7 +658,7 @@
             android:orientation="horizontal"
             android:baselineAligned="false"
             android:visibility="gone"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <Button
                 android:id="@+id/item_share_button"
