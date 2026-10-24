@@ -234,7 +234,6 @@
     <string name="settings_personalization_shell_info_title">Shell information</string>
     <string name="settings_personalization_shell_info_name">Name</string>
     <string name="settings_personalization_shell_info_version">Version</string>
-    <string name="settings_personalization_shell_info_installed_version">Installed version</string>
     <string name="settings_personalization_shell_info_author">Author</string>
     <string name="settings_personalization_shell_info_type">Type</string>
     <string name="settings_personalization_shell_info_size">Size</string>
@@ -639,6 +638,16 @@
     <string name="store_download_error">Download error</string>
     <string name="store_save_error">Failed to save</string>
     <string name="store_install_success" formatted="false">Resource "%s" installed!</string>
+
+    <!-- Version labels in the store item detail screen -->
+    <string name="store_version_available_label">Available version</string>
+    <string name="store_version_remote_label">Server version</string>
+
+    <!-- Status badge in the catalog: "vX.Y.Z available" -->
+    <string name="store_status_update_with_version" formatted="false">v%1$s available</string>
+
+    <!-- Badge on the "Available version" row in the store item detail screen -->
+    <string name="store_version_available_badge">NEW</string>
 
     <!-- Store settings -->
     <string name="store_settings_section_source">Source</string>

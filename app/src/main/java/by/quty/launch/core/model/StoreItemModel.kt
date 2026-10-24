@@ -12,9 +12,9 @@ import by.quty.launch.core.utilities.UpdateHelper
  * - localShell (локальная оболочка, Shell)
  *
  * Оба источника опциональны:
- * - remoteInfo == null → элемент есть только локально (импорт, встроенная, Default)
- * - localShell == null → элемент есть только на сервере (не установлен)
- * - оба != null → установлен и есть в каталоге
+ * - remoteInfo == null > элемент есть только локально (импорт, встроенная, Default)
+ * - localShell == null > элемент есть только на сервере (не установлен)
+ * - оба != null > установлен и есть в каталоге
  *
  * Все UI-состояния вычисляются через геттеры — единая точка правды.
  *
@@ -91,12 +91,29 @@ data class StoreItemModel(
     /**
      * Активна и версия реально загруженной оболочки совпадает
      * с установленной.
+     *
+     * Логика:
+     * - если не активна — false;
+     * - вычисляем «эффективную» версию (installed, если установленная
+     *   новее серверной; иначе серверная; иначе — installed);
+     * - если эффективная версия неизвестна (null) — считаем «активна»
+     *   (не знаем версию, но активна — семантически верно показать бейдж,
+     *   чтобы не получить пустой экран без единого пункта меню);
+     * - иначе сравниваем с activeVersion.
      */
     val isActiveSameVersion: Boolean
         get() {
             if (!isActive) return false
-            val effective = if (installedIsNewer) installedVersion else remoteInfo?.version
-            return activeVersion != null && activeVersion == effective
+
+            val effective = when {
+                installedIsNewer -> installedVersion
+                else -> remoteInfo?.version ?: installedVersion
+            }
+
+            // Если эффективная версия неизвестна, но элемент активен —
+            // считаем «активна» (иначе все пункты меню пропадут и юзер
+            // останется без действий вообще).
+            return effective == null || activeVersion != null && activeVersion == effective
         }
 
     /**
@@ -106,10 +123,17 @@ data class StoreItemModel(
         get() = remoteInfo == null
 
     /**
-     * Можно установить (есть в магазине и не установлено).
+     * Можно установить.
+     *
+     * true, если:
+     * - есть запись в каталоге;
+     * - И элемент либо не установлен, либо установлен, но версия
+     *   локального файла неизвестна (например, встроенная оболочка без
+     *   поля version в manifest). В этом случае «установка поверх» —
+     *   единственный способ починить оболочку с неизвестной версией.
      */
     val canInstall: Boolean
-        get() = remoteInfo != null && !isInstalled
+        get() = remoteInfo != null && (!isInstalled || installedVersion.isNullOrEmpty())
 
     /**
      * Можно обновить (есть обновление).
@@ -124,13 +148,10 @@ data class StoreItemModel(
         get() = isInstalled && !isActive
 
     /**
-     * Можно удалить (кастомная, не активна).
-     */
-    val canDelete: Boolean
-        get() = localShell?.isCustom == true && !isActive
-
-    /**
      * Можно поделиться (есть локальный файл).
+     *
+     * ВАЖНО: реальную проверку «файл существует и на него можно получить
+     * URI» делает StoreItemDetailFragment.canShareItem().
      */
     val canShare: Boolean
         get() = localShell != null

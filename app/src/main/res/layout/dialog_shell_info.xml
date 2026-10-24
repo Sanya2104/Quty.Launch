@@ -1,6 +1,7 @@
 <!-- res/layout/dialog_shell_info.xml -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingStart="@dimen/spacing_l"
@@ -309,7 +310,7 @@
 
                         </LinearLayout>
 
-                        <!-- РЕПОЗИТОРИЙ -->
+                        <!-- РЕПОЗИТОРИЙ (весь ряд кликабельный, со скруглением) -->
                         <LinearLayout
                             android:id="@+id/shell_info_repo_container"
                             android:layout_width="match_parent"
@@ -323,12 +324,17 @@
                                 android:background="?attr/dividerColor" />
 
                             <LinearLayout
+                                android:id="@+id/shell_info_repo_row"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingTop="@dimen/spacing_s"
-                                android:paddingBottom="@dimen/spacing_s">
+                                android:background="@drawable/bg_item_rounded"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m"
+                                tools:ignore="UseCompoundDrawables">
 
                                 <ImageView
                                     android:layout_width="@dimen/icon_small"
@@ -344,24 +350,17 @@
                                     style="@style/Text.Body.Dim"
                                     android:text="@string/settings_personalization_shell_info_repo" />
 
-                                <Button
-                                    android:id="@+id/shell_info_repo_button"
-                                    style="@style/Button.Glass.Primary"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:minWidth="0dp"
-                                    android:minHeight="0dp"
-                                    android:paddingStart="@dimen/spacing_m"
-                                    android:paddingEnd="@dimen/spacing_m"
-                                    android:paddingTop="@dimen/spacing_s"
-                                    android:paddingBottom="@dimen/spacing_s"
-                                    android:text="@string/settings_personalization_shell_info_repo_open" />
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_arrow_forward"
+                                    android:contentDescription="@string/empty" />
 
                             </LinearLayout>
 
                         </LinearLayout>
 
-                        <!-- TELEGRAM -->
+                        <!-- TELEGRAM (весь ряд кликабельный, со скруглением) -->
                         <LinearLayout
                             android:id="@+id/shell_info_telegram_container"
                             android:layout_width="match_parent"
@@ -375,12 +374,17 @@
                                 android:background="?attr/dividerColor" />
 
                             <LinearLayout
+                                android:id="@+id/shell_info_telegram_row"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingTop="@dimen/spacing_s"
-                                android:paddingBottom="@dimen/spacing_s">
+                                android:background="@drawable/bg_item_rounded"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m"
+                                tools:ignore="UseCompoundDrawables">
 
                                 <ImageView
                                     android:layout_width="@dimen/icon_small"
@@ -396,18 +400,11 @@
                                     style="@style/Text.Body.Dim"
                                     android:text="@string/settings_personalization_shell_info_telegram" />
 
-                                <Button
-                                    android:id="@+id/shell_info_telegram_button"
-                                    style="@style/Button.Glass.Primary"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:minWidth="0dp"
-                                    android:minHeight="0dp"
-                                    android:paddingStart="@dimen/spacing_m"
-                                    android:paddingEnd="@dimen/spacing_m"
-                                    android:paddingTop="@dimen/spacing_s"
-                                    android:paddingBottom="@dimen/spacing_s"
-                                    android:text="@string/settings_personalization_shell_info_telegram_open" />
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_arrow_forward"
+                                    android:contentDescription="@string/empty" />
 
                             </LinearLayout>
 

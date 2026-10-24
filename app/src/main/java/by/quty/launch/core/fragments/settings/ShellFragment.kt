@@ -308,28 +308,32 @@ class ShellFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.shell_info_orientation_value).text =
             mapOrientation(shell.orientation)
 
+        // ===== Репозиторий — весь ряд кликабельный =====
         val repoContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_container)
-        val repoButton = dialogView.findViewById<Button>(R.id.shell_info_repo_button)
+        val repoRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_row)
 
         if (!shell.repoUrl.isNullOrEmpty()) {
             repoContainer.visibility = View.VISIBLE
-            repoButton.setOnClickListener {
+            repoRow.setOnClickListener {
                 openUrl(shell.repoUrl)
             }
         } else {
             repoContainer.visibility = View.GONE
+            repoRow.setOnClickListener(null)
         }
 
+        // ===== Telegram — весь ряд кликабельный =====
         val telegramContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_container)
-        val telegramButton = dialogView.findViewById<Button>(R.id.shell_info_telegram_button)
+        val telegramRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_row)
 
         if (!shell.telegramUrl.isNullOrEmpty()) {
             telegramContainer.visibility = View.VISIBLE
-            telegramButton.setOnClickListener {
+            telegramRow.setOnClickListener {
                 openUrl(shell.telegramUrl)
             }
         } else {
             telegramContainer.visibility = View.GONE
+            telegramRow.setOnClickListener(null)
         }
 
         val dialog = AlertDialog.Builder(
@@ -371,9 +375,4 @@ class ShellFragment : Fragment() {
         }
     }
 
-    fun getNeedsRestart(): Boolean = needsRestart
-
-    fun setNeedsRestart(value: Boolean) {
-        needsRestart = value
-    }
 }

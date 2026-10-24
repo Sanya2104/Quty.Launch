@@ -222,8 +222,8 @@ class StoreActivity : BaseActivity() {
 
     /**
      * Иконка кнопки «Назад» в шапке контента (телефон):
-     * - корневой «Каталог» → три полоски (ic_menu);
-     * - «Настройки» или детальный экран → стрелка (ic_back).
+     * - корневой «Каталог» > три полоски (ic_menu);
+     * - «Настройки» или детальный экран > стрелка (ic_back).
      */
     private fun updateBackButtonIcon() {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -383,6 +383,8 @@ class StoreActivity : BaseActivity() {
     }
 
     fun hideItemDetail() {
+        if (isFinishing || isDestroyed) return
+
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate()
         }
@@ -401,11 +403,17 @@ class StoreActivity : BaseActivity() {
     /**
      * Пересобирает текущий список (после установки / удаления / активации).
      *
+     * ВАЖНО: перед пересборкой и перед вызовом onDone проверяем
+     * isFinishing/isDestroyed — иначе колбэк может дёрнуть UI-операции
+     * (findItemByName, hideItemDetail) уже после уничтожения активности.
+     *
      * @param onDone колбэк, вызываемый после пересборки currentItems
      *               (в основном потоке).
      */
     fun refreshItems(onDone: (() -> Unit)? = null) {
         lifecycleScope.launch {
+            if (isFinishing || isDestroyed) return@launch
+
             val cached = storeManager.getCachedItems() ?: emptyList()
             currentRemote = cached
 
@@ -415,6 +423,9 @@ class StoreActivity : BaseActivity() {
                 activeName = configManager.getActiveShell(),
                 activeVersion = configManager.getActiveShellVersion()
             )
+
+            if (isFinishing || isDestroyed) return@launch
+
             onDone?.invoke()
         }
     }

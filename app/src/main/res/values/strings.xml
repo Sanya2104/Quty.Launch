@@ -234,7 +234,6 @@
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
     <string name="settings_personalization_shell_info_version">Версия</string>
-    <string name="settings_personalization_shell_info_installed_version">Установленная версия</string>
     <string name="settings_personalization_shell_info_author">Автор</string>
     <string name="settings_personalization_shell_info_type">Тип</string>
     <string name="settings_personalization_shell_info_size">Размер</string>
@@ -639,6 +638,16 @@
     <string name="store_download_error">Ошибка скачивания</string>
     <string name="store_save_error">Ошибка сохранения</string>
     <string name="store_install_success" formatted="false">Ресурс «%s» установлен!</string>
+
+    <!-- Метки версий в детальном экране магазина -->
+    <string name="store_version_available_label">Доступна версия</string>
+    <string name="store_version_remote_label">Версия с сервера</string>
+
+    <!-- Плашка в каталоге: «Доступна vX.Y.Z» -->
+    <string name="store_status_update_with_version" formatted="false">Доступна v%1$s</string>
+
+    <!-- Бейдж на строке «Доступна версия» в детальном экране магазина -->
+    <string name="store_version_available_badge">NEW</string>
 
     <!-- Настройки магазина -->
     <string name="store_settings_section_source">Источник</string>

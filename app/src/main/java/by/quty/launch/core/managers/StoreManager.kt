@@ -189,6 +189,12 @@ class StoreManager(private val context: Context) {
 
     /**
      * Установка оболочки: скачивание .qutyshell и сохранение в SHELLS.
+     *
+     * ВАЖНО: проверяем реальный размер скачанного файла после downloadFile.
+     * remote.fileSize — человекочитаемая строка («5.2 MB»), её нельзя
+     * использовать для проверки свободного места (toLongOrNull() вернёт null,
+     * fallback 10 MB — бесполезно, если реальный файл 500 MB). Поэтому
+     * жёсткий лимит MAX_SHELL_SIZE_BYTES после скачивания.
      */
     private suspend fun installShellInternal(
         item: StoreItemModel,
@@ -221,9 +227,11 @@ class StoreManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Проверяем наличие свободного места
-            val fileSize = remote.fileSize.toLongOrNull() ?: (10 * 1024 * 1024)
-            if (!hasEnoughFreeSpace(fileSize)) {
+            // Проверяем наличие свободного места (грубая оценка по remote.fileSize,
+            // если не удалось распарсить — fallback 10 MB, всё равно мало,
+            // финальная проверка — по реальному размеру после скачивания).
+            val declaredSize = remote.fileSize.toLongOrNull() ?: (10 * 1024 * 1024)
+            if (!hasEnoughFreeSpace(declaredSize)) {
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_not_enough_space))
                 }
@@ -260,6 +268,19 @@ class StoreManager(private val context: Context) {
 
             if (file == null || !file.exists()) {
                 tempFile.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.store_download_error))
+                }
+                return@withContext false
+            }
+
+            // Жёсткий лимит на размер .qutyshell (защита от вредоносных/сломанных серверов)
+            if (file.length() > MAX_SHELL_SIZE_BYTES) {
+                file.delete()
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.install  error  ${item.name}  too large (${file.length()} bytes)"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_download_error))
                 }
@@ -326,11 +347,15 @@ class StoreManager(private val context: Context) {
 
     /**
      * Проверяет совместимость с версией Quty.Launch.
+     *
+     * ВАЖНО: если не удалось определить текущую версию (PackageManager
+     * вернул пусто) — считаем НЕсовместимым. Иначе сломанная установка
+     * молча «проглатывает» все оболочки.
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true
         val currentVersion = getCurrentLauncherVersion()
-        return currentVersion.isEmpty() || UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
+        return currentVersion.isNotEmpty() && UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
     }
 
     /**
@@ -371,13 +396,16 @@ class StoreManager(private val context: Context) {
         /** Имя файла кэша каталога. */
         private const val CACHE_FILE_NAME = "store_shells.json"
 
+        /** Жёсткий лимит размера .qutyshell (защита от вредоносных серверов). */
+        private const val MAX_SHELL_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB
+
         /**
          * Собирает объединённый список элементов магазина.
          *
          * Логика:
-         * 1. Все элементы с сервера (тип SHELL) → StoreItemModel с localShell из localShells.
-         * 2. Локальные оболочки, которых нет на сервере → StoreItemModel с remoteInfo = null.
-         * 3. Сортировка: активная → обновление → установленные → остальные, внутри по displayName.
+         * 1. Все элементы с сервера (тип SHELL) > StoreItemModel с localShell из localShells.
+         * 2. Локальные оболочки, которых нет на сервере > StoreItemModel с remoteInfo = null.
+         * 3. Сортировка: активная > обновление > установленные > остальные, внутри по displayName.
          *
          * @param remote список с сервера (или из кэша).
          * @param localShells локальные оболочки (ShellManager.getAvailableShells()).
@@ -457,7 +485,7 @@ class StoreManager(private val context: Context) {
                 )
             }
 
-            // 3. Сортировка: активная → обновление → установленные → остальные
+            // 3. Сортировка: активная > обновление > установленные > остальные
             return result.sortedWith(
                 compareBy<StoreItemModel> {
                     when {

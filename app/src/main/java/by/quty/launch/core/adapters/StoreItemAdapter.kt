@@ -25,6 +25,12 @@ import com.bumptech.glide.Glide
  * выполняются в детальном экране (StoreItemDetailFragment).
  *
  * Превью: приоритет — previewUrl (магазин), fallback — previewBase64 (локальный).
+ *
+ * Отображение версии в карточке:
+ * - не установлено → показываем версию с сервера;
+ * - установлено → показываем локальную (установленную) версию;
+ * - есть обновление → плашка «Доступна v<remote>»;
+ * - installed новее → плашка «Новее».
  */
 class StoreItemAdapter(
     private var items: List<StoreItemModel>,
@@ -102,9 +108,20 @@ class StoreItemAdapter(
             // Название
             nameText.text = item.displayName
 
-            // Автор · версия
+            // Автор · версия.
+            //
+            // Логика отображения версии в карточке:
+            // - установлено → показываем локальную (установленную) версию;
+            // - не установлено → показываем версию с сервера.
+            // Версия «с сервера» при наличии обновления / «новее»
+            // показывается отдельной плашкой снизу (см. bindStatuses).
+            val displayVersion: String? = when {
+                item.isInstalled && !item.installedVersion.isNullOrEmpty() -> item.installedVersion
+                else -> item.remoteInfo?.version ?: item.version
+            }
+
             val author = item.author ?: context.getString(R.string.author_default)
-            val version = item.version ?: context.getString(R.string.unknown)
+            val version = displayVersion ?: context.getString(R.string.unknown)
             authorVersionText.text = context.getString(
                 R.string.store_card_author_version,
                 author,
@@ -126,7 +143,7 @@ class StoreItemAdapter(
             }
             metaText.text = metaParts.joinToString(" · ")
 
-            // Клик по карточке → детали
+            // Клик по карточке > детали
             itemView.setOnClickListener {
                 onItemClick(item)
             }
@@ -172,8 +189,15 @@ class StoreItemAdapter(
 
         /**
          * Заполняет статусные плашки.
+         *
+         * - «Активна» — isActive;
+         * - «Доступна v<remote>» — updateAvailable (версия с сервера новее);
+         * - «Установлено» — isInstalled && !isActive;
+         * - «Новее» — installedIsNewer (локальная версия новее серверной).
          */
         private fun bindStatuses(item: StoreItemModel) {
+            val context = itemView.context
+
             statusActive.visibility = View.GONE
             statusUpdate.visibility = View.GONE
             statusInstalled.visibility = View.GONE
@@ -187,6 +211,13 @@ class StoreItemAdapter(
             }
 
             if (item.updateAvailable) {
+                val remote = item.remoteInfo?.version
+                if (!remote.isNullOrEmpty()) {
+                    statusUpdate.text = context.getString(
+                        R.string.store_status_update_with_version,
+                        remote
+                    )
+                }
                 statusUpdate.visibility = View.VISIBLE
                 hasAny = true
             }

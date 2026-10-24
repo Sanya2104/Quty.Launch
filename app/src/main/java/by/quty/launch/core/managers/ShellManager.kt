@@ -480,7 +480,7 @@ class ShellManager(
      * оболочки (когда имя реально изменилось). При пересоздании MainActivity
      * (например, при смене темы Light/Dark) с той же оболочкой состояние
      * активных методов сохраняется — пользователь не теряет картину
-     * «кто что вызывал» в разделе Настроек → API методы.
+     * «кто что вызывал» в разделе Настроек > API методы.
      *
      * Safe Mode: в этом режиме НЕ записываем выбор в prefs — иначе
      * при выходе из Safe Mode загрузилась бы "Default" вместо оболочки,
@@ -516,7 +516,7 @@ class ShellManager(
 
             LoggerManager.info(
                 LoggerTagModel.SHELL,
-                "SHELL.active  ${previousShellName ?: "—"} → ${shell.name}$marker"
+                "SHELL.active  ${previousShellName ?: "—"} > ${shell.name}$marker"
             )
         }
 
@@ -558,7 +558,12 @@ class ShellManager(
     }
 
     /**
-     * Распаковывает ZIP-архив оболочки
+     * Распаковывает ZIP-архив оболочки.
+     *
+     * ВАЖНО: защита от ZIP Slip. Если entry.name содержит `..` и
+     * пытается выйти за пределы outputDir, entry пропускается.
+     * Это критично для оболочек, импортированных через SAF — сервер
+     * магазина доверенный, но пользовательский импорт — нет.
      */
     private suspend fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
@@ -571,10 +576,25 @@ class ShellManager(
         }
 
         try {
+            val canonicalOutput = outputDir.canonicalFile
+
             withContext(Dispatchers.IO) {
                 ZipFile(zipFile).use { zip ->
                     zip.entries().asSequence().forEach { entry ->
-                        val outFile = File(outputDir, entry.name)
+                        val outFile = File(canonicalOutput, entry.name).canonicalFile
+
+                        // ZIP Slip защита: файл должен лежать внутри canonicalOutput
+                        val isValid = outFile.path == canonicalOutput.path ||
+                                outFile.path.startsWith(canonicalOutput.path + File.separator)
+
+                        if (!isValid) {
+                            LoggerManager.warn(
+                                LoggerTagModel.SHELL,
+                                "SHELL.unzip_skip  zip slip  ${entry.name}"
+                            )
+                            return@forEach
+                        }
+
                         if (entry.isDirectory) {
                             outFile.mkdirs()
                         } else {
@@ -625,43 +645,59 @@ class ShellManager(
     // ============================================================
 
     /**
-     * Проверяет, является ли кастомная оболочка обновлением встроенной
-     */
-    fun isBuiltInShellUpdate(shell: Shell): Boolean {
-        if (!shell.isCustom) return false
-        val builtInShells = getBuiltInShells()
-        return builtInShells.any { it.name == shell.name }
-    }
-
-    /**
-     * Удаляет кастомную оболочку по имени
+     * Удаляет кастомную оболочку по имени.
+     *
+     * Логика:
+     * - если файла .qutyshell нет — считаем «уже удалено» (true),
+     *   чтобы UI не показывал ложную ошибку при гонке;
+     * - иначе удаляем файл;
+     * - дополнительно чистим распакованную папку active/<name>
+     *   (хвост от прошлой активации);
+     * - если оболочка была активной — перечитываем конфиг
+     *   (подхватится встроенная версия или Default).
      */
     suspend fun deleteShellByName(name: String): Boolean {
         return try {
             val fileName = "$name${SHELL_EXTENSION_WITH_DOT}"
-            val deleted = storageManager.remove(
-                directory = StorageDirectory.SHELLS,
-                name = fileName
-            )
+            val file = storageManager.get(StorageDirectory.SHELLS, fileName)
+
+            // Файла нет — уже удалён (или не было). Не считаем ошибкой.
+            if (!file.exists()) {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "SHELL.delete_skip  $name  not found"
+                )
+                return true
+            }
+
+            val deleted = storageManager.remove(file)
 
             if (deleted) {
+                // Чистим распакованную папку активной оболочки с этим именем
+                try {
+                    val extractDir = File(activeShellDir, name)
+                    if (extractDir.exists()) {
+                        extractDir.deleteRecursively()
+                    }
+                } catch (_: Exception) {
+                    // Игнорируем
+                }
+
                 LoggerManager.info(
                     LoggerTagModel.SHELL,
                     "SHELL.deleted  $name"
                 )
+
+                // Если оболочка была активной — перезагружаем
+                val currentActive = getActiveShell()
+                if (currentActive?.name == name && currentActive.isCustom) {
+                    loadActiveShellFromConfig()
+                }
             } else {
                 LoggerManager.warn(
                     LoggerTagModel.SHELL,
                     "SHELL.delete_failed  $name"
                 )
-            }
-
-            // Если оболочка была активной — перезагружаем
-            if (deleted) {
-                val currentActive = getActiveShell()
-                if (currentActive?.name == name && currentActive.isCustom) {
-                    loadActiveShellFromConfig()
-                }
             }
 
             deleted
@@ -672,18 +708,6 @@ class ShellManager(
                 e
             )
             false
-        }
-    }
-
-    /**
-     * Получает URI для оболочки (для шаринга)
-     */
-    fun getShellUri(shell: Shell): android.net.Uri? {
-        val file = File(shell.sourcePath)
-        return if (file.exists()) {
-            storageManager.getUri(file)
-        } else {
-            null
         }
     }
 }
