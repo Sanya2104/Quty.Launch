@@ -108,25 +108,6 @@
                     tools:visibility="visible" />
 
                 <TextView
-                    android:id="@+id/item_status_update"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_xxs"
-                    android:layout_marginEnd="@dimen/spacing_xxs"
-                    android:background="@drawable/bg_status_update"
-                    android:paddingStart="@dimen/spacing_s"
-                    android:paddingEnd="@dimen/spacing_s"
-                    android:paddingTop="@dimen/spacing_xxs"
-                    android:paddingBottom="@dimen/spacing_xxs"
-                    android:text="@string/store_status_update"
-                    android:textColor="@color/status_warning"
-                    android:textSize="@dimen/text_s"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-                <TextView
                     android:id="@+id/item_status_installed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -139,6 +120,25 @@
                     android:paddingBottom="@dimen/spacing_xxs"
                     android:text="@string/store_status_installed"
                     android:textColor="?attr/textDimColor"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_status_update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_xxs"
+                    android:layout_marginEnd="@dimen/spacing_xxs"
+                    android:background="@drawable/bg_status_update"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_update"
+                    android:textColor="@color/status_warning"
                     android:textSize="@dimen/text_s"
                     android:fontFamily="sans-serif-medium"
                     android:maxLines="1"

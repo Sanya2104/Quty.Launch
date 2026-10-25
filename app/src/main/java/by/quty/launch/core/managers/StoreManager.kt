@@ -407,6 +407,12 @@ class StoreManager(private val context: Context) {
          * 2. Локальные оболочки, которых нет на сервере > StoreItemModel с remoteInfo = null.
          * 3. Сортировка: активная > обновление > установленные > остальные, внутри по displayName.
          *
+         * ВАЖНО: activeVersion нормализуется — пустая строка превращается
+         * в null. Иначе на устройствах, где active_shell_version ещё не
+         * записан (первый запуск после обновления приложения), модель
+         * получит activeVersion = "" и isActiveSameVersion вернёт false,
+         * что скроет бейдж «Активна» и все пункты меню (пустой экран).
+         *
          * @param remote список с сервера (или из кэша).
          * @param localShells локальные оболочки (ShellManager.getAvailableShells()).
          * @param activeName имя активной оболочки (ConfigManager.getActiveShell()).
@@ -419,6 +425,12 @@ class StoreManager(private val context: Context) {
             activeVersion: String?
         ): List<StoreItemModel> {
             val result = mutableListOf<StoreItemModel>()
+
+            // Нормализуем activeVersion: "" > null.
+            // Иначе isActiveSameVersion не сможет отличить «версия неизвестна»
+            // (null) от «версия пустая» ("") и вернёт false для активной
+            // оболочки на устройствах с пустым active_shell_version.
+            val normalizedActiveVersion = activeVersion?.takeIf { it.isNotEmpty() }
 
             // Индекс локальных по имени — для быстрого поиска
             val localByName = localShells.associateBy { it.name }
@@ -447,7 +459,7 @@ class StoreManager(private val context: Context) {
                             isInstalled = local != null,
                             installedVersion = local?.version,
                             isActive = activeName != null && activeName == r.name,
-                            activeVersion = activeVersion,
+                            activeVersion = normalizedActiveVersion,
                             remoteInfo = r,
                             localShell = local
                         )
@@ -478,7 +490,7 @@ class StoreManager(private val context: Context) {
                         isInstalled = true,
                         installedVersion = local.version,
                         isActive = activeName != null && activeName == local.name,
-                        activeVersion = activeVersion,
+                        activeVersion = normalizedActiveVersion,
                         remoteInfo = null,
                         localShell = local
                     )

@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.lang.ref.WeakReference
 
 /**
@@ -123,13 +124,47 @@ object CacheManager {
     }
 
     /**
-     * Принудительно инвалидирует кэш
-     * Вызывается при изменении списка приложений
+     * Принудительно инвалидирует кэш.
+     *
+     * Очищает in-memory кэш И УДАЛЯЕТ файл с диска.
+     *
+     * ВАЖНО: файл на диске удаляется синхронно. Иначе при холодном старте
+     * процесса (юзер свернул приложение и убил, либо вышел через крестик
+     * и согласился на перезапуск) поля isCacheDirty/memoryCache в памяти
+     * сбрасываются, getCachedApps() читает старый файл с диска и возвращает
+     * устаревший список. Пример бага: выключили «Показывать Логгер»
+     * в DeveloperFragment → prefs записаны, invalidateCache() очистил
+     * память, но файл apps_cache остался → холодный старт → Logger
+     * по-прежнему в списке приложений (файл живёт 30 минут).
+     *
+     * Удаление одного маленького файла — операция на доли миллисекунды,
+     * на UI не сказывается. Синхронность важнее скорости: если удалять
+     * в фоне, следующая getCachedApps() может успеть прочитать файл
+     * до его удаления (гонка).
+     *
+     * Вызывается из BroadcastReceiver (ACTION_PACKAGE_*) и из UI
+     * (DeveloperFragment, AboutFragment).
      */
     fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
         LoggerManager.debug(LoggerTagModel.CORE, "CACHE.invalidate")
+
+        // Удаляем файл кэша с диска.
+        val storageManager = getStorageManager()
+        if (storageManager != null) {
+            try {
+                val cacheFile = File(
+                    storageManager.getDirectory(StorageDirectory.CACHE),
+                    CACHE_FILE_NAME
+                )
+                if (cacheFile.exists()) {
+                    cacheFile.delete()
+                }
+            } catch (_: Exception) {
+                // Игнорируем ошибки удаления — приложение работает и без этого
+            }
+        }
     }
 
     /**

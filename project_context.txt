@@ -2479,6 +2479,8 @@ class StoreActivity : BaseActivity() {
     }
 
     fun hideItemDetail() {
+        if (isFinishing || isDestroyed) return
+
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate()
         }
@@ -2497,11 +2499,17 @@ class StoreActivity : BaseActivity() {
     /**
      * Пересобирает текущий список (после установки / удаления / активации).
      *
+     * ВАЖНО: перед пересборкой и перед вызовом onDone проверяем
+     * isFinishing/isDestroyed — иначе колбэк может дёрнуть UI-операции
+     * (findItemByName, hideItemDetail) уже после уничтожения активности.
+     *
      * @param onDone колбэк, вызываемый после пересборки currentItems
      *               (в основном потоке).
      */
     fun refreshItems(onDone: (() -> Unit)? = null) {
         lifecycleScope.launch {
+            if (isFinishing || isDestroyed) return@launch
+
             val cached = storeManager.getCachedItems() ?: emptyList()
             currentRemote = cached
 
@@ -2511,6 +2519,9 @@ class StoreActivity : BaseActivity() {
                 activeName = configManager.getActiveShell(),
                 activeVersion = configManager.getActiveShellVersion()
             )
+
+            if (isFinishing || isDestroyed) return@launch
+
             onDone?.invoke()
         }
     }
@@ -5734,11 +5745,21 @@ import com.bumptech.glide.Glide
  * - установлено > показываем локальную (установленную) версию;
  * - есть обновление > плашка «Доступна v<remote>»;
  * - installed новее > плашка «Новее».
+ *
+ * Дата публикации в метаданных конвертируется из ISO-формата сервера
+ * (YYYY-MM-DD) в человекочитаемый (DD.MM.YYYY) — единый формат
+ * с детальным экраном (StoreItemDetailFragment).
  */
 class StoreItemAdapter(
     private var items: List<StoreItemModel>,
     private val onItemClick: (StoreItemModel) -> Unit
 ) : RecyclerView.Adapter<StoreItemAdapter.ViewHolder>() {
+
+    // Форматтеры даты. Не SimpleDateFormat как поле класса — он не потокобезопасен,
+    // а адаптер может использоваться в разных местах. Создаём при каждом вызове
+    // formatDate() — операция дешёвая по сравнению с bind() и IO.
+    private val inputDateFormat = "yyyy-MM-dd"
+    private val outputDateFormat = "dd.MM.yyyy"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -5789,6 +5810,26 @@ class StoreItemAdapter(
         }
     }
 
+    /**
+     * Конвертирует ISO-дату (YYYY-MM-DD) в человекочитаемый формат
+     * (DD.MM.YYYY). Используется в метаданных карточки, чтобы дата
+     * выглядела одинаково с детальным экраном.
+     *
+     * Если дата пустая или парсинг не удался — возвращает исходную строку.
+     */
+    private fun formatDate(isoDate: String): String {
+        if (isoDate.isBlank()) return ""
+
+        return try {
+            val input = java.text.SimpleDateFormat(inputDateFormat, java.util.Locale.US)
+            val output = java.text.SimpleDateFormat(outputDateFormat, java.util.Locale.US)
+            val date = input.parse(isoDate) ?: return isoDate
+            output.format(date)
+        } catch (_: Exception) {
+            isoDate
+        }
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val previewImage: ImageView = itemView.findViewById(R.id.item_preview)
@@ -5831,10 +5872,12 @@ class StoreItemAdapter(
                 version
             )
 
-            // Метаданные: размер · дата, иначе тип
+            // Метаданные: размер · дата, иначе тип.
+            // Дата конвертируется из ISO (YYYY-MM-DD) в DD.MM.YYYY —
+            // единый формат с детальным экраном магазина.
             val metaParts = mutableListOf<String>()
             item.fileSize?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
-            item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
+            item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(formatDate(it)) }
 
             if (metaParts.isEmpty()) {
                 val typeText = if (item.isLocalOnly) {
@@ -9751,28 +9794,32 @@ class ShellFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.shell_info_orientation_value).text =
             mapOrientation(shell.orientation)
 
+        // ===== Репозиторий — весь ряд кликабельный =====
         val repoContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_container)
-        val repoButton = dialogView.findViewById<Button>(R.id.shell_info_repo_button)
+        val repoRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_row)
 
         if (!shell.repoUrl.isNullOrEmpty()) {
             repoContainer.visibility = View.VISIBLE
-            repoButton.setOnClickListener {
+            repoRow.setOnClickListener {
                 openUrl(shell.repoUrl)
             }
         } else {
             repoContainer.visibility = View.GONE
+            repoRow.setOnClickListener(null)
         }
 
+        // ===== Telegram — весь ряд кликабельный =====
         val telegramContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_container)
-        val telegramButton = dialogView.findViewById<Button>(R.id.shell_info_telegram_button)
+        val telegramRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_row)
 
         if (!shell.telegramUrl.isNullOrEmpty()) {
             telegramContainer.visibility = View.VISIBLE
-            telegramButton.setOnClickListener {
+            telegramRow.setOnClickListener {
                 openUrl(shell.telegramUrl)
             }
         } else {
             telegramContainer.visibility = View.GONE
+            telegramRow.setOnClickListener(null)
         }
 
         val dialog = AlertDialog.Builder(
@@ -9814,11 +9861,6 @@ class ShellFragment : Fragment() {
         }
     }
 
-    fun getNeedsRestart(): Boolean = needsRestart
-
-    fun setNeedsRestart(value: Boolean) {
-        needsRestart = value
-    }
 }
 
 
@@ -11800,13 +11842,24 @@ import java.io.File
  *   Установить > Обновить > Применить > Поделиться > Удалить
  * (пункт появляется только если соответствующее условие выполнено).
  *
+ * ВАЖНО: «Установить» и «Обновить» доступны И для активной оболочки.
+ * Это позволяет обновить активную версию поверх: installItem() сам
+ * перераспакует оболочку через shellManager.setActiveShell() и вызовет
+ * markRestartRequired() — при выходе из магазина покажется диалог
+ * перезапуска. При холодном старте (юзер убил приложение без выхода
+ * через крестик) MainActivity.onCreate подтянет свежий .qutyshell
+ * с диска — обновление применится автоматически.
+ *
+ * «Применить» — только для неактивной (активную применять некуда).
+ * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
+ *
  * Отображение версий:
  * - не установлено > «Версия» = версия с сервера;
  * - установлено без обновления > «Версия» = локальная версия;
  * - есть обновление > «Версия» = локальная, вторым блоком
- *   «Доступна версия» = версия с сервера;
+ *   «Доступна версия» = версия с сервера + бейдж NEW;
  * - локальная новее серверной > «Версия» = локальная + бейдж «Новее»,
- *   вторым блоком «Версия с сервера» = версия с сервера.
+ *   вторым блоком «Версия с сервера» = версия с сервера (без бейджа NEW).
  *
  * Пункт «Поделиться» показывается только если файл реально существует
  * и StorageManager может выдать на него URI (см. canShareItem()).
@@ -11865,6 +11918,7 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var remoteVersionContainer: LinearLayout
     private lateinit var remoteVersionDivider: View
     private lateinit var remoteVersionLabel: TextView
+    private lateinit var remoteVersionBadge: TextView
     private lateinit var remoteVersionValue: TextView
 
     private lateinit var sizeContainer: LinearLayout
@@ -11883,10 +11937,11 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var orientationValue: TextView
     private lateinit var orientationDivider: View
 
+    // ===== Репозиторий / Telegram (ряды, не кнопки) =====
     private lateinit var repoContainer: LinearLayout
-    private lateinit var repoButton: Button
+    private lateinit var repoRow: LinearLayout
     private lateinit var telegramContainer: LinearLayout
-    private lateinit var telegramButton: Button
+    private lateinit var telegramRow: LinearLayout
 
     private lateinit var shareButton: Button
     private lateinit var deleteButton: Button
@@ -11955,6 +12010,7 @@ class StoreItemDetailFragment : Fragment() {
         remoteVersionContainer = view.findViewById(R.id.item_installed_version_container)
         remoteVersionDivider = view.findViewById(R.id.item_installed_version_divider)
         remoteVersionLabel = view.findViewById(R.id.item_installed_version_label)
+        remoteVersionBadge = view.findViewById(R.id.item_installed_version_badge)
         remoteVersionValue = view.findViewById(R.id.item_installed_version_value)
 
         sizeContainer = view.findViewById(R.id.item_size_container)
@@ -11974,9 +12030,9 @@ class StoreItemDetailFragment : Fragment() {
         orientationDivider = view.findViewById(R.id.item_orientation_divider)
 
         repoContainer = view.findViewById(R.id.item_repo_container)
-        repoButton = view.findViewById(R.id.item_repo_button)
+        repoRow = view.findViewById(R.id.item_repo_row)
         telegramContainer = view.findViewById(R.id.item_telegram_container)
-        telegramButton = view.findViewById(R.id.item_telegram_button)
+        telegramRow = view.findViewById(R.id.item_telegram_row)
 
         shareButton = view.findViewById(R.id.item_share_button)
         deleteButton = view.findViewById(R.id.item_delete_button)
@@ -12024,16 +12080,29 @@ class StoreItemDetailFragment : Fragment() {
 
         if (showRemoteRow) {
             remoteVersionValue.text = "v$remoteVersion"
-            // Label динамический:
-            // - локальная новее серверной > «Версия с сервера»;
-            // - серверная новее локальной (есть обновление) > «Доступна версия».
-            remoteVersionLabel.setText(
-                if (item.installedIsNewer) {
-                    R.string.store_version_remote_label
-                } else {
-                    R.string.store_version_available_label
-                }
-            )
+
+            // Label и бейдж:
+            // - локальная новее серверной > «Версия с сервера», бейджа NEW нет
+            //   (это не «доступна», а «на сервере старая»);
+            // - серверная новее локальной (есть обновление) > «Доступна версия»
+            //   + бейдж NEW.
+            //
+            // getString(Int) возвращает String однозначно, а .text = String
+            // тоже однозначно — не бывает ошибки "Cannot infer type for T".
+            val labelText: String = if (item.installedIsNewer) {
+                getString(R.string.store_version_remote_label)
+            } else {
+                getString(R.string.store_version_available_label)
+            }
+            remoteVersionLabel.text = labelText
+
+            if (item.installedIsNewer) {
+                remoteVersionBadge.visibility = View.GONE
+            } else {
+                remoteVersionBadge.visibility = View.VISIBLE
+            }
+        } else {
+            remoteVersionBadge.visibility = View.GONE
         }
 
         // Размер
@@ -12100,20 +12169,22 @@ class StoreItemDetailFragment : Fragment() {
             }
         }
 
-        // ===== Репозиторий =====
+        // ===== Репозиторий — весь ряд кликабельный =====
         if (item.repoUrl.isNullOrEmpty()) {
             repoContainer.visibility = View.GONE
+            repoRow.setOnClickListener(null)
         } else {
             repoContainer.visibility = View.VISIBLE
-            repoButton.setOnClickListener { openUrl(item.repoUrl) }
+            repoRow.setOnClickListener { openUrl(item.repoUrl) }
         }
 
-        // ===== Telegram =====
+        // ===== Telegram — весь ряд кликабельный =====
         if (item.telegramUrl.isNullOrEmpty()) {
             telegramContainer.visibility = View.GONE
+            telegramRow.setOnClickListener(null)
         } else {
             telegramContainer.visibility = View.VISIBLE
-            telegramButton.setOnClickListener { openUrl(item.telegramUrl) }
+            telegramRow.setOnClickListener { openUrl(item.telegramUrl) }
         }
 
         // ===== Бейдж «Активна» + меню =====
@@ -12186,32 +12257,50 @@ class StoreItemDetailFragment : Fragment() {
 
     /**
      * Собирает пункты выпадающего меню для текущего элемента.
+     *
+     * «Установить» и «Обновить» доступны и для активной оболочки:
+     * installItem() корректно обрабатывает nowActive == true —
+     * перераспаковывает оболочку через shellManager.setActiveShell()
+     * и вызывает markRestartRequired(). При холодном старте
+     * MainActivity.onCreate подтянет свежий .qutyshell с диска.
+     *
+     * «Применить» — только для неактивной (активную применять некуда).
+     * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
      */
     private fun buildMenuItems(item: StoreItemModel): List<PopupMenuHelper.Item> {
         val items = mutableListOf<PopupMenuHelper.Item>()
 
-        if (!item.isActiveSameVersion) {
-            if (item.canInstall) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_install)) {
-                        installItem(item)
-                    }
-                )
-            }
-            if (item.canUpdate) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_update)) {
-                        installItem(item)
-                    }
-                )
-            }
-            if (item.canApply) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
-                        applyItem(item)
-                    }
-                )
-            }
+        // «Установить» — если не установлено ИЛИ версия локального файла
+        // неизвестна (встроенная без version в manifest). Доступно и для
+        // активной: можно переустановить поверх, если файл повреждён.
+        if (item.canInstall) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_install)) {
+                    installItem(item)
+                }
+            )
+        }
+
+        // «Обновить» — если на сервере новее установленной. Доступно и для
+        // активной: installItem() сам перераспакует оболочку и вызовет
+        // setActiveShell(updatedShell), а markRestartRequired() предложит
+        // перезапуск при выходе из магазина.
+        if (item.canUpdate) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_update)) {
+                    installItem(item)
+                }
+            )
+        }
+
+        // «Применить» — только если установлено и НЕ активно.
+        // Для активной применять нечего: она уже загружена в WebView.
+        if (!item.isActiveSameVersion && item.canApply) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
+                    applyItem(item)
+                }
+            )
         }
 
         if (canShareItem(item)) {
@@ -12249,7 +12338,6 @@ class StoreItemDetailFragment : Fragment() {
 
         showInstallProgress(0)
         btnMenu.visibility = View.GONE
-        val wasActive = configManager.getActiveShell() == item.name
 
         viewLifecycleOwner.lifecycleScope.launch {
             val success = storeManager.installItem(
@@ -12265,11 +12353,16 @@ class StoreItemDetailFragment : Fragment() {
                         isProcessing = false
                         hideInstallProgress()
 
+                        // Перечитываем оболочку
                         val updatedShell = shellManager.getAvailableShells()
                             .find { it.name == item.name }
 
+                        // Перепроверяем «активна ли» уже ПОСЛЕ установки —
+                        // между кликом и onSuccess активная могла смениться.
+                        val nowActive = configManager.getActiveShell() == item.name
+
                         if (updatedShell != null) {
-                            if (wasActive) {
+                            if (nowActive) {
                                 viewLifecycleOwner.lifecycleScope.launch {
                                     shellManager.setActiveShell(updatedShell)
                                     (activity as? by.quty.launch.BaseActivity)
@@ -12430,11 +12523,11 @@ class StoreItemDetailFragment : Fragment() {
         val okButton = dialogView.findViewById<Button>(R.id.recovery_confirm_ok_button)
         val cancelButton = dialogView.findViewById<Button>(R.id.recovery_confirm_cancel_button)
 
-        titleView.setText(R.string.store_delete_title)
+        titleView.text = getString(R.string.store_delete_title)
         messageView.text = getString(R.string.store_delete_message, item.displayName)
 
-        okButton.setText(R.string.store_delete_action)
-        cancelButton.setText(R.string.cancel)
+        okButton.text = getString(R.string.store_delete_action)
+        cancelButton.text = getString(R.string.cancel)
 
         cancelButton.setOnClickListener { dialog.dismiss() }
 
@@ -12457,10 +12550,17 @@ class StoreItemDetailFragment : Fragment() {
      *   деталь по актуальной модели;
      * - если элемента больше нет (ни локально, ни на сервере) —
      *   закрываем деталь.
+     *
+     * ВАЖНО: проверяем isAdded после suspend-вызова удаления —
+     * пользователь мог выйти, пока идёт удаление.
      */
     private fun performDelete(item: StoreItemModel) {
         viewLifecycleOwner.lifecycleScope.launch {
             val success = shellManager.deleteShellByName(item.name)
+
+            // Проверяем, что фрагмент ещё жив — иначе Toast/requireContext()
+            // упадёт, а колбэк refreshItems отработает уже ни к чему.
+            if (!isAdded) return@launch
 
             if (!success) {
                 Toast.makeText(
@@ -12666,6 +12766,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.lang.ref.WeakReference
 
 /**
@@ -12775,13 +12876,47 @@ object CacheManager {
     }
 
     /**
-     * Принудительно инвалидирует кэш
-     * Вызывается при изменении списка приложений
+     * Принудительно инвалидирует кэш.
+     *
+     * Очищает in-memory кэш И УДАЛЯЕТ файл с диска.
+     *
+     * ВАЖНО: файл на диске удаляется синхронно. Иначе при холодном старте
+     * процесса (юзер свернул приложение и убил, либо вышел через крестик
+     * и согласился на перезапуск) поля isCacheDirty/memoryCache в памяти
+     * сбрасываются, getCachedApps() читает старый файл с диска и возвращает
+     * устаревший список. Пример бага: выключили «Показывать Логгер»
+     * в DeveloperFragment > prefs записаны, invalidateCache() очистил
+     * память, но файл apps_cache остался > холодный старт > Logger
+     * по-прежнему в списке приложений (файл живёт 30 минут).
+     *
+     * Удаление одного маленького файла — операция на доли миллисекунды,
+     * на UI не сказывается. Синхронность важнее скорости: если удалять
+     * в фоне, следующая getCachedApps() может успеть прочитать файл
+     * до его удаления (гонка).
+     *
+     * Вызывается из BroadcastReceiver (ACTION_PACKAGE_*) и из UI
+     * (DeveloperFragment, AboutFragment).
      */
     fun invalidateCache() {
         memoryCache = null
         isCacheDirty = true
         LoggerManager.debug(LoggerTagModel.CORE, "CACHE.invalidate")
+
+        // Удаляем файл кэша с диска.
+        val storageManager = getStorageManager()
+        if (storageManager != null) {
+            try {
+                val cacheFile = File(
+                    storageManager.getDirectory(StorageDirectory.CACHE),
+                    CACHE_FILE_NAME
+                )
+                if (cacheFile.exists()) {
+                    cacheFile.delete()
+                }
+            } catch (_: Exception) {
+                // Игнорируем ошибки удаления — приложение работает и без этого
+            }
+        }
     }
 
     /**
@@ -14827,7 +14962,12 @@ class ShellManager(
     }
 
     /**
-     * Распаковывает ZIP-архив оболочки
+     * Распаковывает ZIP-архив оболочки.
+     *
+     * ВАЖНО: защита от ZIP Slip. Если entry.name содержит `..` и
+     * пытается выйти за пределы outputDir, entry пропускается.
+     * Это критично для оболочек, импортированных через SAF — сервер
+     * магазина доверенный, но пользовательский импорт — нет.
      */
     private suspend fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
@@ -14840,10 +14980,25 @@ class ShellManager(
         }
 
         try {
+            val canonicalOutput = outputDir.canonicalFile
+
             withContext(Dispatchers.IO) {
                 ZipFile(zipFile).use { zip ->
                     zip.entries().asSequence().forEach { entry ->
-                        val outFile = File(outputDir, entry.name)
+                        val outFile = File(canonicalOutput, entry.name).canonicalFile
+
+                        // ZIP Slip защита: файл должен лежать внутри canonicalOutput
+                        val isValid = outFile.path == canonicalOutput.path ||
+                                outFile.path.startsWith(canonicalOutput.path + File.separator)
+
+                        if (!isValid) {
+                            LoggerManager.warn(
+                                LoggerTagModel.SHELL,
+                                "SHELL.unzip_skip  zip slip  ${entry.name}"
+                            )
+                            return@forEach
+                        }
+
                         if (entry.isDirectory) {
                             outFile.mkdirs()
                         } else {
@@ -14894,43 +15049,59 @@ class ShellManager(
     // ============================================================
 
     /**
-     * Проверяет, является ли кастомная оболочка обновлением встроенной
-     */
-    fun isBuiltInShellUpdate(shell: Shell): Boolean {
-        if (!shell.isCustom) return false
-        val builtInShells = getBuiltInShells()
-        return builtInShells.any { it.name == shell.name }
-    }
-
-    /**
-     * Удаляет кастомную оболочку по имени
+     * Удаляет кастомную оболочку по имени.
+     *
+     * Логика:
+     * - если файла .qutyshell нет — считаем «уже удалено» (true),
+     *   чтобы UI не показывал ложную ошибку при гонке;
+     * - иначе удаляем файл;
+     * - дополнительно чистим распакованную папку active/<name>
+     *   (хвост от прошлой активации);
+     * - если оболочка была активной — перечитываем конфиг
+     *   (подхватится встроенная версия или Default).
      */
     suspend fun deleteShellByName(name: String): Boolean {
         return try {
             val fileName = "$name${SHELL_EXTENSION_WITH_DOT}"
-            val deleted = storageManager.remove(
-                directory = StorageDirectory.SHELLS,
-                name = fileName
-            )
+            val file = storageManager.get(StorageDirectory.SHELLS, fileName)
+
+            // Файла нет — уже удалён (или не было). Не считаем ошибкой.
+            if (!file.exists()) {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "SHELL.delete_skip  $name  not found"
+                )
+                return true
+            }
+
+            val deleted = storageManager.remove(file)
 
             if (deleted) {
+                // Чистим распакованную папку активной оболочки с этим именем
+                try {
+                    val extractDir = File(activeShellDir, name)
+                    if (extractDir.exists()) {
+                        extractDir.deleteRecursively()
+                    }
+                } catch (_: Exception) {
+                    // Игнорируем
+                }
+
                 LoggerManager.info(
                     LoggerTagModel.SHELL,
                     "SHELL.deleted  $name"
                 )
+
+                // Если оболочка была активной — перезагружаем
+                val currentActive = getActiveShell()
+                if (currentActive?.name == name && currentActive.isCustom) {
+                    loadActiveShellFromConfig()
+                }
             } else {
                 LoggerManager.warn(
                     LoggerTagModel.SHELL,
                     "SHELL.delete_failed  $name"
                 )
-            }
-
-            // Если оболочка была активной — перезагружаем
-            if (deleted) {
-                val currentActive = getActiveShell()
-                if (currentActive?.name == name && currentActive.isCustom) {
-                    loadActiveShellFromConfig()
-                }
             }
 
             deleted
@@ -14941,18 +15112,6 @@ class ShellManager(
                 e
             )
             false
-        }
-    }
-
-    /**
-     * Получает URI для оболочки (для шаринга)
-     */
-    fun getShellUri(shell: Shell): android.net.Uri? {
-        val file = File(shell.sourcePath)
-        return if (file.exists()) {
-            storageManager.getUri(file)
-        } else {
-            null
         }
     }
 }
@@ -15474,6 +15633,12 @@ class StoreManager(private val context: Context) {
 
     /**
      * Установка оболочки: скачивание .qutyshell и сохранение в SHELLS.
+     *
+     * ВАЖНО: проверяем реальный размер скачанного файла после downloadFile.
+     * remote.fileSize — человекочитаемая строка («5.2 MB»), её нельзя
+     * использовать для проверки свободного места (toLongOrNull() вернёт null,
+     * fallback 10 MB — бесполезно, если реальный файл 500 MB). Поэтому
+     * жёсткий лимит MAX_SHELL_SIZE_BYTES после скачивания.
      */
     private suspend fun installShellInternal(
         item: StoreItemModel,
@@ -15506,9 +15671,11 @@ class StoreManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Проверяем наличие свободного места
-            val fileSize = remote.fileSize.toLongOrNull() ?: (10 * 1024 * 1024)
-            if (!hasEnoughFreeSpace(fileSize)) {
+            // Проверяем наличие свободного места (грубая оценка по remote.fileSize,
+            // если не удалось распарсить — fallback 10 MB, всё равно мало,
+            // финальная проверка — по реальному размеру после скачивания).
+            val declaredSize = remote.fileSize.toLongOrNull() ?: (10 * 1024 * 1024)
+            if (!hasEnoughFreeSpace(declaredSize)) {
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_not_enough_space))
                 }
@@ -15545,6 +15712,19 @@ class StoreManager(private val context: Context) {
 
             if (file == null || !file.exists()) {
                 tempFile.delete()
+                withContext(Dispatchers.Main) {
+                    listener.onError(context.getString(R.string.store_download_error))
+                }
+                return@withContext false
+            }
+
+            // Жёсткий лимит на размер .qutyshell (защита от вредоносных/сломанных серверов)
+            if (file.length() > MAX_SHELL_SIZE_BYTES) {
+                file.delete()
+                LoggerManager.warn(
+                    LoggerTagModel.STORE,
+                    "STORE.install  error  ${item.name}  too large (${file.length()} bytes)"
+                )
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.store_download_error))
                 }
@@ -15611,11 +15791,15 @@ class StoreManager(private val context: Context) {
 
     /**
      * Проверяет совместимость с версией Quty.Launch.
+     *
+     * ВАЖНО: если не удалось определить текущую версию (PackageManager
+     * вернул пусто) — считаем НЕсовместимым. Иначе сломанная установка
+     * молча «проглатывает» все оболочки.
      */
     private fun isLauncherCompatible(minVersion: String?): Boolean {
         if (minVersion.isNullOrEmpty()) return true
         val currentVersion = getCurrentLauncherVersion()
-        return currentVersion.isEmpty() || UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
+        return currentVersion.isNotEmpty() && UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
     }
 
     /**
@@ -15656,6 +15840,9 @@ class StoreManager(private val context: Context) {
         /** Имя файла кэша каталога. */
         private const val CACHE_FILE_NAME = "store_shells.json"
 
+        /** Жёсткий лимит размера .qutyshell (защита от вредоносных серверов). */
+        private const val MAX_SHELL_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB
+
         /**
          * Собирает объединённый список элементов магазина.
          *
@@ -15663,6 +15850,12 @@ class StoreManager(private val context: Context) {
          * 1. Все элементы с сервера (тип SHELL) > StoreItemModel с localShell из localShells.
          * 2. Локальные оболочки, которых нет на сервере > StoreItemModel с remoteInfo = null.
          * 3. Сортировка: активная > обновление > установленные > остальные, внутри по displayName.
+         *
+         * ВАЖНО: activeVersion нормализуется — пустая строка превращается
+         * в null. Иначе на устройствах, где active_shell_version ещё не
+         * записан (первый запуск после обновления приложения), модель
+         * получит activeVersion = "" и isActiveSameVersion вернёт false,
+         * что скроет бейдж «Активна» и все пункты меню (пустой экран).
          *
          * @param remote список с сервера (или из кэша).
          * @param localShells локальные оболочки (ShellManager.getAvailableShells()).
@@ -15676,6 +15869,12 @@ class StoreManager(private val context: Context) {
             activeVersion: String?
         ): List<StoreItemModel> {
             val result = mutableListOf<StoreItemModel>()
+
+            // Нормализуем activeVersion: "" > null.
+            // Иначе isActiveSameVersion не сможет отличить «версия неизвестна»
+            // (null) от «версия пустая» ("") и вернёт false для активной
+            // оболочки на устройствах с пустым active_shell_version.
+            val normalizedActiveVersion = activeVersion?.takeIf { it.isNotEmpty() }
 
             // Индекс локальных по имени — для быстрого поиска
             val localByName = localShells.associateBy { it.name }
@@ -15704,7 +15903,7 @@ class StoreManager(private val context: Context) {
                             isInstalled = local != null,
                             installedVersion = local?.version,
                             isActive = activeName != null && activeName == r.name,
-                            activeVersion = activeVersion,
+                            activeVersion = normalizedActiveVersion,
                             remoteInfo = r,
                             localShell = local
                         )
@@ -15735,7 +15934,7 @@ class StoreManager(private val context: Context) {
                         isInstalled = true,
                         installedVersion = local.version,
                         isActive = activeName != null && activeName == local.name,
-                        activeVersion = activeVersion,
+                        activeVersion = normalizedActiveVersion,
                         remoteInfo = null,
                         localShell = local
                     )
@@ -18054,14 +18253,35 @@ data class StoreItemModel(
         }
 
     /**
-     * Активна и версия реально загруженной оболочки совпадает
-     * с установленной.
+     * Активна ли оболочка с текущей локальной версией.
+     *
+     * ВАЖНО: бейдж «Активна» означает «эта оболочка сейчас активна»,
+     * а НЕ «активна с последней версией с сервера». Поэтому сравнение
+     * идёт с installedVersion (локальная версия файла), а не с
+     * remoteInfo.version.
+     *
+     * Пример: оболочка активна, версия 0.0.5 локально, на сервере есть
+     * 0.0.6. updateAvailable = true, activeVersion = "0.0.5",
+     * installedVersion = "0.0.5" > isActiveSameVersion = true >
+     * бейдж «Активна» показывается. Это правильно: оболочка активна,
+     * просто есть обновление, которое юзер ещё не поставил.
+     *
+     * Крайние случаи:
+     * - installedVersion == null (встроенная без version в manifest) —
+     *   считаем «активна» (не знаем версию, но элемент активен);
+     * - activeVersion == null (нет данных в prefs, например, до первого
+     *   setActiveShell) — считаем «активна» (нечем сравнивать).
      */
     val isActiveSameVersion: Boolean
         get() {
             if (!isActive) return false
-            val effective = if (installedIsNewer) installedVersion else remoteInfo?.version
-            return activeVersion != null && activeVersion == effective
+
+            // Версия локального файла неизвестна — считаем активной,
+            // чтобы не получить пустой экран без единого пункта меню.
+            val localVersion = installedVersion ?: return true
+
+            // activeVersion ещё не записан — нет данных для сравнения.
+            return activeVersion == null || activeVersion == localVersion
         }
 
     /**
@@ -18071,10 +18291,17 @@ data class StoreItemModel(
         get() = remoteInfo == null
 
     /**
-     * Можно установить (есть в магазине и не установлено).
+     * Можно установить.
+     *
+     * true, если:
+     * - есть запись в каталоге;
+     * - И элемент либо не установлен, либо установлен, но версия
+     *   локального файла неизвестна (например, встроенная оболочка без
+     *   поля version в manifest). В этом случае «установка поверх» —
+     *   единственный способ починить оболочку с неизвестной версией.
      */
     val canInstall: Boolean
-        get() = remoteInfo != null && !isInstalled
+        get() = remoteInfo != null && (!isInstalled || installedVersion.isNullOrEmpty())
 
     /**
      * Можно обновить (есть обновление).
@@ -18089,13 +18316,10 @@ data class StoreItemModel(
         get() = isInstalled && !isActive
 
     /**
-     * Можно удалить (кастомная, не активна).
-     */
-    val canDelete: Boolean
-        get() = localShell?.isCustom == true && !isActive
-
-    /**
      * Можно поделиться (есть локальный файл).
+     *
+     * ВАЖНО: реальную проверку «файл существует и на него можно получить
+     * URI» делает StoreItemDetailFragment.canShareItem().
      */
     val canShare: Boolean
         get() = localShell != null
@@ -18468,6 +18692,18 @@ import by.quty.launch.R
  *     )
  * )
  * ```
+ *
+ * Ripple-эффект пункта: используется готовый drawable bg_item_rounded
+ * (ripple + скругление radius_medium) — тот же, что в настройках,
+ * логгере и других экранах.
+ *
+ * ВАЖНО: кастомный ripple через ?android:attr/colorControlHighlight
+ * в PopupWindow НЕ работает — атрибут темы в контексте PopupWindow
+ * резолвится в прозрачный цвет, и ripple не виден. bg_item_rounded —
+ * проверенный drawable, работает в любом контексте.
+ *
+ * Пункты разделены небольшим вертикальным отступом (spacing_xxs),
+ * чтобы скруглённые ripple'ы не слипались.
  */
 object PopupMenuHelper {
 
@@ -18569,6 +18805,13 @@ object PopupMenuHelper {
 
     /**
      * Создаёт один пункт меню.
+     *
+     * Ripple: bg_item_rounded — существующий drawable с ripple и
+     * скруглением radius_medium (тот же, что в настройках, логгере
+     * и других экранах).
+     *
+     * Между пунктами добавляется вертикальный отступ (spacing_xxs),
+     * чтобы скруглённые ripple'ы соседних пунктов не сливались.
      */
     private fun createMenuItem(
         context: Context,
@@ -18579,7 +18822,11 @@ object PopupMenuHelper {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                // Отступ между пунктами — чтобы ripple-скругления
+                // не сливались в сплошную полосу.
+                bottomMargin = resources.getDimensionPixelSize(R.dimen.spacing_xxs)
+            }
 
             text = item.text
             setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
@@ -18592,14 +18839,9 @@ object PopupMenuHelper {
             isClickable = true
             isFocusable = true
 
-            // Ripple-эффект
-            val attrs = intArrayOf(android.R.attr.selectableItemBackground)
-            val typedArray = context.obtainStyledAttributes(attrs)
-            val rippleRes = typedArray.getResourceId(0, 0)
-            typedArray.recycle()
-            if (rippleRes != 0) {
-                setBackgroundResource(rippleRes)
-            }
+            // Ripple + скругление. bg_item_rounded уже используется
+            // в других местах проекта — проверенный drawable.
+            setBackgroundResource(R.drawable.bg_item_rounded)
 
             setOnClickListener {
                 popup.dismiss()
@@ -21873,6 +22115,7 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
 <!-- res/layout/dialog_shell_info.xml -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingStart="@dimen/spacing_l"
@@ -22181,7 +22424,7 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
 
                         </LinearLayout>
 
-                        <!-- РЕПОЗИТОРИЙ -->
+                        <!-- РЕПОЗИТОРИЙ (весь ряд кликабельный, со скруглением) -->
                         <LinearLayout
                             android:id="@+id/shell_info_repo_container"
                             android:layout_width="match_parent"
@@ -22195,12 +22438,17 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
                                 android:background="?attr/dividerColor" />
 
                             <LinearLayout
+                                android:id="@+id/shell_info_repo_row"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingTop="@dimen/spacing_s"
-                                android:paddingBottom="@dimen/spacing_s">
+                                android:background="@drawable/bg_item_rounded"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m"
+                                tools:ignore="UseCompoundDrawables">
 
                                 <ImageView
                                     android:layout_width="@dimen/icon_small"
@@ -22216,24 +22464,17 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
                                     style="@style/Text.Body.Dim"
                                     android:text="@string/settings_personalization_shell_info_repo" />
 
-                                <Button
-                                    android:id="@+id/shell_info_repo_button"
-                                    style="@style/Button.Glass.Primary"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:minWidth="0dp"
-                                    android:minHeight="0dp"
-                                    android:paddingStart="@dimen/spacing_m"
-                                    android:paddingEnd="@dimen/spacing_m"
-                                    android:paddingTop="@dimen/spacing_s"
-                                    android:paddingBottom="@dimen/spacing_s"
-                                    android:text="@string/settings_personalization_shell_info_repo_open" />
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_arrow_forward"
+                                    android:contentDescription="@string/empty" />
 
                             </LinearLayout>
 
                         </LinearLayout>
 
-                        <!-- TELEGRAM -->
+                        <!-- TELEGRAM (весь ряд кликабельный, со скруглением) -->
                         <LinearLayout
                             android:id="@+id/shell_info_telegram_container"
                             android:layout_width="match_parent"
@@ -22247,12 +22488,17 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
                                 android:background="?attr/dividerColor" />
 
                             <LinearLayout
+                                android:id="@+id/shell_info_telegram_row"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingTop="@dimen/spacing_s"
-                                android:paddingBottom="@dimen/spacing_s">
+                                android:background="@drawable/bg_item_rounded"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m"
+                                tools:ignore="UseCompoundDrawables">
 
                                 <ImageView
                                     android:layout_width="@dimen/icon_small"
@@ -22268,18 +22514,11 @@ FILE: app\src\main\res\layout\dialog_shell_info.xml
                                     style="@style/Text.Body.Dim"
                                     android:text="@string/settings_personalization_shell_info_telegram" />
 
-                                <Button
-                                    android:id="@+id/shell_info_telegram_button"
-                                    style="@style/Button.Glass.Primary"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:minWidth="0dp"
-                                    android:minHeight="0dp"
-                                    android:paddingStart="@dimen/spacing_m"
-                                    android:paddingEnd="@dimen/spacing_m"
-                                    android:paddingTop="@dimen/spacing_s"
-                                    android:paddingBottom="@dimen/spacing_s"
-                                    android:text="@string/settings_personalization_shell_info_telegram_open" />
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_arrow_forward"
+                                    android:contentDescription="@string/empty" />
 
                             </LinearLayout>
 
@@ -26286,6 +26525,25 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
                     android:text="@string/store_version_available_label"
                     tools:text="@string/store_version_available_label" />
 
+                <!-- Бейдж «NEW» — только для «Доступна версия» (не для «Версия с сервера») -->
+                <TextView
+                    android:id="@+id/item_installed_version_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:background="@drawable/bg_status_update"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_version_available_badge"
+                    android:textColor="@color/status_warning"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
                 <TextView
                     android:id="@+id/item_installed_version_value"
                     android:layout_width="wrap_content"
@@ -26548,7 +26806,7 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
 
             </LinearLayout>
 
-            <!-- РЕПОЗИТОРИЙ -->
+            <!-- РЕПОЗИТОРИЙ (весь ряд кликабельный, со скруглением) -->
             <LinearLayout
                 android:id="@+id/item_repo_container"
                 android:layout_width="match_parent"
@@ -26564,14 +26822,18 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
                     android:background="?attr/dividerColor" />
 
                 <LinearLayout
+                    android:id="@+id/item_repo_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
+                    android:background="@drawable/bg_item_rounded"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:paddingStart="@dimen/spacing_l"
                     android:paddingEnd="@dimen/spacing_l"
-                    android:paddingTop="@dimen/spacing_s"
-                    android:paddingBottom="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_m"
+                    android:paddingBottom="@dimen/spacing_m"
                     tools:ignore="UseCompoundDrawables">
 
                     <ImageView
@@ -26588,24 +26850,17 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
                         style="@style/Text.Body.Dim"
                         android:text="@string/settings_personalization_shell_info_repo" />
 
-                    <Button
-                        android:id="@+id/item_repo_button"
-                        style="@style/Button.Glass.Primary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:paddingStart="@dimen/spacing_m"
-                        android:paddingEnd="@dimen/spacing_m"
-                        android:paddingTop="@dimen/spacing_s"
-                        android:paddingBottom="@dimen/spacing_s"
-                        android:text="@string/settings_personalization_shell_info_repo_open" />
+                    <ImageView
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:src="@drawable/ic_arrow_forward"
+                        android:contentDescription="@string/empty" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- TELEGRAM -->
+            <!-- TELEGRAM (весь ряд кликабельный, со скруглением) -->
             <LinearLayout
                 android:id="@+id/item_telegram_container"
                 android:layout_width="match_parent"
@@ -26621,14 +26876,18 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
                     android:background="?attr/dividerColor" />
 
                 <LinearLayout
+                    android:id="@+id/item_telegram_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
+                    android:background="@drawable/bg_item_rounded"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:paddingStart="@dimen/spacing_l"
                     android:paddingEnd="@dimen/spacing_l"
-                    android:paddingTop="@dimen/spacing_s"
-                    android:paddingBottom="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_m"
+                    android:paddingBottom="@dimen/spacing_m"
                     tools:ignore="UseCompoundDrawables">
 
                     <ImageView
@@ -26645,18 +26904,11 @@ FILE: app\src\main\res\layout\fragment_store_item_detail.xml
                         style="@style/Text.Body.Dim"
                         android:text="@string/settings_personalization_shell_info_telegram" />
 
-                    <Button
-                        android:id="@+id/item_telegram_button"
-                        style="@style/Button.Glass.Primary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:paddingStart="@dimen/spacing_m"
-                        android:paddingEnd="@dimen/spacing_m"
-                        android:paddingTop="@dimen/spacing_s"
-                        android:paddingBottom="@dimen/spacing_s"
-                        android:text="@string/settings_personalization_shell_info_telegram_open" />
+                    <ImageView
+                        android:layout_width="@dimen/icon_small"
+                        android:layout_height="@dimen/icon_small"
+                        android:src="@drawable/ic_arrow_forward"
+                        android:contentDescription="@string/empty" />
 
                 </LinearLayout>
 
@@ -27530,25 +27782,6 @@ FILE: app\src\main\res\layout\item_store_list.xml
                     tools:visibility="visible" />
 
                 <TextView
-                    android:id="@+id/item_status_update"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_xxs"
-                    android:layout_marginEnd="@dimen/spacing_xxs"
-                    android:background="@drawable/bg_status_update"
-                    android:paddingStart="@dimen/spacing_s"
-                    android:paddingEnd="@dimen/spacing_s"
-                    android:paddingTop="@dimen/spacing_xxs"
-                    android:paddingBottom="@dimen/spacing_xxs"
-                    android:text="@string/store_status_update"
-                    android:textColor="@color/status_warning"
-                    android:textSize="@dimen/text_s"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-                <TextView
                     android:id="@+id/item_status_installed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -27561,6 +27794,25 @@ FILE: app\src\main\res\layout\item_store_list.xml
                     android:paddingBottom="@dimen/spacing_xxs"
                     android:text="@string/store_status_installed"
                     android:textColor="?attr/textDimColor"
+                    android:textSize="@dimen/text_s"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/item_status_update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_xxs"
+                    android:layout_marginEnd="@dimen/spacing_xxs"
+                    android:background="@drawable/bg_status_update"
+                    android:paddingStart="@dimen/spacing_s"
+                    android:paddingEnd="@dimen/spacing_s"
+                    android:paddingTop="@dimen/spacing_xxs"
+                    android:paddingBottom="@dimen/spacing_xxs"
+                    android:text="@string/store_status_update"
+                    android:textColor="@color/status_warning"
                     android:textSize="@dimen/text_s"
                     android:fontFamily="sans-serif-medium"
                     android:maxLines="1"
@@ -28332,7 +28584,6 @@ FILE: app\src\main\res\values\strings.xml
     <string name="settings_personalization_shell_info_title">Информация об оболочке</string>
     <string name="settings_personalization_shell_info_name">Название</string>
     <string name="settings_personalization_shell_info_version">Версия</string>
-    <string name="settings_personalization_shell_info_installed_version">Установленная версия</string>
     <string name="settings_personalization_shell_info_author">Автор</string>
     <string name="settings_personalization_shell_info_type">Тип</string>
     <string name="settings_personalization_shell_info_size">Размер</string>
@@ -28744,6 +28995,9 @@ FILE: app\src\main\res\values\strings.xml
 
     <!-- Плашка в каталоге: «Доступна vX.Y.Z» -->
     <string name="store_status_update_with_version" formatted="false">Доступна v%1$s</string>
+
+    <!-- Бейдж на строке «Доступна версия» в детальном экране магазина -->
+    <string name="store_version_available_badge">NEW</string>
 
     <!-- Настройки магазина -->
     <string name="store_settings_section_source">Источник</string>
@@ -29585,7 +29839,6 @@ FILE: app\src\main\res\values-en\strings.xml
     <string name="settings_personalization_shell_info_title">Shell information</string>
     <string name="settings_personalization_shell_info_name">Name</string>
     <string name="settings_personalization_shell_info_version">Version</string>
-    <string name="settings_personalization_shell_info_installed_version">Installed version</string>
     <string name="settings_personalization_shell_info_author">Author</string>
     <string name="settings_personalization_shell_info_type">Type</string>
     <string name="settings_personalization_shell_info_size">Size</string>
@@ -29997,6 +30250,9 @@ FILE: app\src\main\res\values-en\strings.xml
 
     <!-- Status badge in the catalog: "vX.Y.Z available" -->
     <string name="store_status_update_with_version" formatted="false">v%1$s available</string>
+
+    <!-- Badge on the "Available version" row in the store item detail screen -->
+    <string name="store_version_available_badge">NEW</string>
 
     <!-- Store settings -->
     <string name="store_settings_section_source">Source</string>

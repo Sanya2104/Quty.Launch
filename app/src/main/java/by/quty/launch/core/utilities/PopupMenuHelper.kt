@@ -28,6 +28,18 @@ import by.quty.launch.R
  *     )
  * )
  * ```
+ *
+ * Ripple-эффект пункта: используется готовый drawable bg_item_rounded
+ * (ripple + скругление radius_medium) — тот же, что в настройках,
+ * логгере и других экранах.
+ *
+ * ВАЖНО: кастомный ripple через ?android:attr/colorControlHighlight
+ * в PopupWindow НЕ работает — атрибут темы в контексте PopupWindow
+ * резолвится в прозрачный цвет, и ripple не виден. bg_item_rounded —
+ * проверенный drawable, работает в любом контексте.
+ *
+ * Пункты разделены небольшим вертикальным отступом (spacing_xxs),
+ * чтобы скруглённые ripple'ы не слипались.
  */
 object PopupMenuHelper {
 
@@ -129,6 +141,13 @@ object PopupMenuHelper {
 
     /**
      * Создаёт один пункт меню.
+     *
+     * Ripple: bg_item_rounded — существующий drawable с ripple и
+     * скруглением radius_medium (тот же, что в настройках, логгере
+     * и других экранах).
+     *
+     * Между пунктами добавляется вертикальный отступ (spacing_xxs),
+     * чтобы скруглённые ripple'ы соседних пунктов не сливались.
      */
     private fun createMenuItem(
         context: Context,
@@ -139,7 +158,11 @@ object PopupMenuHelper {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                // Отступ между пунктами — чтобы ripple-скругления
+                // не сливались в сплошную полосу.
+                bottomMargin = resources.getDimensionPixelSize(R.dimen.spacing_xxs)
+            }
 
             text = item.text
             setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
@@ -152,14 +175,9 @@ object PopupMenuHelper {
             isClickable = true
             isFocusable = true
 
-            // Ripple-эффект
-            val attrs = intArrayOf(android.R.attr.selectableItemBackground)
-            val typedArray = context.obtainStyledAttributes(attrs)
-            val rippleRes = typedArray.getResourceId(0, 0)
-            typedArray.recycle()
-            if (rippleRes != 0) {
-                setBackgroundResource(rippleRes)
-            }
+            // Ripple + скругление. bg_item_rounded уже используется
+            // в других местах проекта — проверенный drawable.
+            setBackgroundResource(R.drawable.bg_item_rounded)
 
             setOnClickListener {
                 popup.dismiss()

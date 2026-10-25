@@ -50,6 +50,17 @@ import java.io.File
  *   Установить > Обновить > Применить > Поделиться > Удалить
  * (пункт появляется только если соответствующее условие выполнено).
  *
+ * ВАЖНО: «Установить» и «Обновить» доступны И для активной оболочки.
+ * Это позволяет обновить активную версию поверх: installItem() сам
+ * перераспакует оболочку через shellManager.setActiveShell() и вызовет
+ * markRestartRequired() — при выходе из магазина покажется диалог
+ * перезапуска. При холодном старте (юзер убил приложение без выхода
+ * через крестик) MainActivity.onCreate подтянет свежий .qutyshell
+ * с диска — обновление применится автоматически.
+ *
+ * «Применить» — только для неактивной (активную применять некуда).
+ * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
+ *
  * Отображение версий:
  * - не установлено > «Версия» = версия с сервера;
  * - установлено без обновления > «Версия» = локальная версия;
@@ -134,7 +145,7 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var orientationValue: TextView
     private lateinit var orientationDivider: View
 
-    // ===== Репозиторий / Telegram (теперь ряды, не кнопки) =====
+    // ===== Репозиторий / Telegram (ряды, не кнопки) =====
     private lateinit var repoContainer: LinearLayout
     private lateinit var repoRow: LinearLayout
     private lateinit var telegramContainer: LinearLayout
@@ -283,15 +294,22 @@ class StoreItemDetailFragment : Fragment() {
             //   (это не «доступна», а «на сервере старая»);
             // - серверная новее локальной (есть обновление) > «Доступна версия»
             //   + бейдж NEW.
+            //
+            // getString(Int) возвращает String однозначно, а .text = String
+            // тоже однозначно — не бывает ошибки "Cannot infer type for T".
+            val labelText: String = if (item.installedIsNewer) {
+                getString(R.string.store_version_remote_label)
+            } else {
+                getString(R.string.store_version_available_label)
+            }
+            remoteVersionLabel.text = labelText
+
             if (item.installedIsNewer) {
-                remoteVersionLabel.text = getString(R.string.store_version_remote_label)
                 remoteVersionBadge.visibility = View.GONE
             } else {
-                remoteVersionLabel.text = getString(R.string.store_version_available_label)
                 remoteVersionBadge.visibility = View.VISIBLE
             }
         } else {
-            // Второй блок скрыт — бейдж тоже
             remoteVersionBadge.visibility = View.GONE
         }
 
@@ -447,32 +465,50 @@ class StoreItemDetailFragment : Fragment() {
 
     /**
      * Собирает пункты выпадающего меню для текущего элемента.
+     *
+     * «Установить» и «Обновить» доступны и для активной оболочки:
+     * installItem() корректно обрабатывает nowActive == true —
+     * перераспаковывает оболочку через shellManager.setActiveShell()
+     * и вызывает markRestartRequired(). При холодном старте
+     * MainActivity.onCreate подтянет свежий .qutyshell с диска.
+     *
+     * «Применить» — только для неактивной (активную применять некуда).
+     * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
      */
     private fun buildMenuItems(item: StoreItemModel): List<PopupMenuHelper.Item> {
         val items = mutableListOf<PopupMenuHelper.Item>()
 
-        if (!item.isActiveSameVersion) {
-            if (item.canInstall) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_install)) {
-                        installItem(item)
-                    }
-                )
-            }
-            if (item.canUpdate) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_update)) {
-                        installItem(item)
-                    }
-                )
-            }
-            if (item.canApply) {
-                items.add(
-                    PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
-                        applyItem(item)
-                    }
-                )
-            }
+        // «Установить» — если не установлено ИЛИ версия локального файла
+        // неизвестна (встроенная без version в manifest). Доступно и для
+        // активной: можно переустановить поверх, если файл повреждён.
+        if (item.canInstall) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_install)) {
+                    installItem(item)
+                }
+            )
+        }
+
+        // «Обновить» — если на сервере новее установленной. Доступно и для
+        // активной: installItem() сам перераспакует оболочку и вызовет
+        // setActiveShell(updatedShell), а markRestartRequired() предложит
+        // перезапуск при выходе из магазина.
+        if (item.canUpdate) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_update)) {
+                    installItem(item)
+                }
+            )
+        }
+
+        // «Применить» — только если установлено и НЕ активно.
+        // Для активной применять нечего: она уже загружена в WebView.
+        if (!item.isActiveSameVersion && item.canApply) {
+            items.add(
+                PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
+                    applyItem(item)
+                }
+            )
         }
 
         if (canShareItem(item)) {
@@ -695,11 +731,11 @@ class StoreItemDetailFragment : Fragment() {
         val okButton = dialogView.findViewById<Button>(R.id.recovery_confirm_ok_button)
         val cancelButton = dialogView.findViewById<Button>(R.id.recovery_confirm_cancel_button)
 
-        titleView.setText(R.string.store_delete_title)
+        titleView.text = getString(R.string.store_delete_title)
         messageView.text = getString(R.string.store_delete_message, item.displayName)
 
-        okButton.setText(R.string.store_delete_action)
-        cancelButton.setText(R.string.cancel)
+        okButton.text = getString(R.string.store_delete_action)
+        cancelButton.text = getString(R.string.cancel)
 
         cancelButton.setOnClickListener { dialog.dismiss() }
 

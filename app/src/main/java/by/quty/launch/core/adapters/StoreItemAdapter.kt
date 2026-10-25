@@ -27,15 +27,25 @@ import com.bumptech.glide.Glide
  * Превью: приоритет — previewUrl (магазин), fallback — previewBase64 (локальный).
  *
  * Отображение версии в карточке:
- * - не установлено → показываем версию с сервера;
- * - установлено → показываем локальную (установленную) версию;
- * - есть обновление → плашка «Доступна v<remote>»;
- * - installed новее → плашка «Новее».
+ * - не установлено > показываем версию с сервера;
+ * - установлено > показываем локальную (установленную) версию;
+ * - есть обновление > плашка «Доступна v<remote>»;
+ * - installed новее > плашка «Новее».
+ *
+ * Дата публикации в метаданных конвертируется из ISO-формата сервера
+ * (YYYY-MM-DD) в человекочитаемый (DD.MM.YYYY) — единый формат
+ * с детальным экраном (StoreItemDetailFragment).
  */
 class StoreItemAdapter(
     private var items: List<StoreItemModel>,
     private val onItemClick: (StoreItemModel) -> Unit
 ) : RecyclerView.Adapter<StoreItemAdapter.ViewHolder>() {
+
+    // Форматтеры даты. Не SimpleDateFormat как поле класса — он не потокобезопасен,
+    // а адаптер может использоваться в разных местах. Создаём при каждом вызове
+    // formatDate() — операция дешёвая по сравнению с bind() и IO.
+    private val inputDateFormat = "yyyy-MM-dd"
+    private val outputDateFormat = "dd.MM.yyyy"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -86,6 +96,26 @@ class StoreItemAdapter(
         }
     }
 
+    /**
+     * Конвертирует ISO-дату (YYYY-MM-DD) в человекочитаемый формат
+     * (DD.MM.YYYY). Используется в метаданных карточки, чтобы дата
+     * выглядела одинаково с детальным экраном.
+     *
+     * Если дата пустая или парсинг не удался — возвращает исходную строку.
+     */
+    private fun formatDate(isoDate: String): String {
+        if (isoDate.isBlank()) return ""
+
+        return try {
+            val input = java.text.SimpleDateFormat(inputDateFormat, java.util.Locale.US)
+            val output = java.text.SimpleDateFormat(outputDateFormat, java.util.Locale.US)
+            val date = input.parse(isoDate) ?: return isoDate
+            output.format(date)
+        } catch (_: Exception) {
+            isoDate
+        }
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val previewImage: ImageView = itemView.findViewById(R.id.item_preview)
@@ -111,8 +141,8 @@ class StoreItemAdapter(
             // Автор · версия.
             //
             // Логика отображения версии в карточке:
-            // - установлено → показываем локальную (установленную) версию;
-            // - не установлено → показываем версию с сервера.
+            // - установлено > показываем локальную (установленную) версию;
+            // - не установлено > показываем версию с сервера.
             // Версия «с сервера» при наличии обновления / «новее»
             // показывается отдельной плашкой снизу (см. bindStatuses).
             val displayVersion: String? = when {
@@ -128,10 +158,12 @@ class StoreItemAdapter(
                 version
             )
 
-            // Метаданные: размер · дата, иначе тип
+            // Метаданные: размер · дата, иначе тип.
+            // Дата конвертируется из ISO (YYYY-MM-DD) в DD.MM.YYYY —
+            // единый формат с детальным экраном магазина.
             val metaParts = mutableListOf<String>()
             item.fileSize?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
-            item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
+            item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(formatDate(it)) }
 
             if (metaParts.isEmpty()) {
                 val typeText = if (item.isLocalOnly) {
