@@ -101,6 +101,8 @@ class JsBridge(
         }
     }
 
+    /**
+     * Формирует JSON строку ответа с ошибкой.
      */
     private fun buildErrorJson(message: String): String {
         return try {
@@ -111,6 +113,9 @@ class JsBridge(
         } catch (_: Exception) {
             // На случай, если что-то совсем странное — безопасный fallback.
             """{"success":false,"error":"Unknown error"}"""
+        }
+    }
+
     /**
      * Отправляет результат выполнения в JavaScript.
      *
