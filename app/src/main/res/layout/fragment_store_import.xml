@@ -1,0 +1,226 @@
+<!-- res/layout/fragment_store_import.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: ИМПОРТ ИЗ ФАЙЛА ============================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:text="@string/store_import_section_title" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Кнопка выбора файла -->
+            <LinearLayout
+                android:id="@+id/import_select_file_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_folder"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_import_select_file" />
+
+                    <TextView
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_import_select_file_desc" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== БЛОК СОСТОЯНИЯ ====================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/import_state_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                tools:ignore="UseCompoundDrawables">
+
+                <FrameLayout
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:background="@drawable/bg_icon_surface"
+                    android:layout_marginEnd="@dimen/spacing_l">
+
+                    <ImageView
+                        android:id="@+id/import_state_icon"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_folder"
+                        android:contentDescription="@string/empty" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/import_state_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Text.Title.Small"
+                        android:textColor="?attr/textPrimaryColor"
+                        tools:text="@string/store_import_checking_title" />
+
+                    <TextView
+                        android:id="@+id/import_state_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xxs"
+                        style="@style/Text.Small"
+                        android:textColor="?attr/textDimColor"
+                        android:visibility="gone"
+                        tools:text="QutyAuto"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Прогресс (indeterminate) -->
+            <LinearLayout
+                android:id="@+id/import_state_progress_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ProgressBar
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:indeterminate="true"
+                    android:indeterminateTint="?attr/buttonPrimaryColor"
+                    android:background="@android:color/transparent" />
+
+            </LinearLayout>
+
+            <!-- Кнопки -->
+            <LinearLayout
+                android:id="@+id/import_state_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <Button
+                    android:id="@+id/import_state_btn_secondary"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:minWidth="0dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <Button
+                    android:id="@+id/import_state_btn_primary"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    android:minWidth="0dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
+
+    </LinearLayout>
+
+</ScrollView>

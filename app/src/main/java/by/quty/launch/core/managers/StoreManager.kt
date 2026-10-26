@@ -194,7 +194,11 @@ class StoreManager(private val context: Context) {
      * remote.fileSize — человекочитаемая строка («5.2 MB»), её нельзя
      * использовать для проверки свободного места (toLongOrNull() вернёт null,
      * fallback 10 MB — бесполезно, если реальный файл 500 MB). Поэтому
-     * жёсткий лимит MAX_SHELL_SIZE_BYTES после скачивания.
+     * жёсткий лимит CoreConfig.MAX_SHELL_SIZE_BYTES после скачивания.
+     *
+     * ВАЖНО: константа MAX_SHELL_SIZE_BYTES перенесена в CoreConfig —
+     * теперь её использует и ShellManager.importShell() (импорт оболочки
+     * из файловой системы).
      */
     private suspend fun installShellInternal(
         item: StoreItemModel,
@@ -275,7 +279,7 @@ class StoreManager(private val context: Context) {
             }
 
             // Жёсткий лимит на размер .qutyshell (защита от вредоносных/сломанных серверов)
-            if (file.length() > MAX_SHELL_SIZE_BYTES) {
+            if (file.length() > CoreConfig.MAX_SHELL_SIZE_BYTES) {
                 file.delete()
                 LoggerManager.warn(
                     LoggerTagModel.STORE,
@@ -395,9 +399,6 @@ class StoreManager(private val context: Context) {
 
         /** Имя файла кэша каталога. */
         private const val CACHE_FILE_NAME = "store_shells.json"
-
-        /** Жёсткий лимит размера .qutyshell (защита от вредоносных серверов). */
-        private const val MAX_SHELL_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB
 
         /**
          * Собирает объединённый список элементов магазина.

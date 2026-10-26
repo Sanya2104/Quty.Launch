@@ -4,6 +4,8 @@ package by.quty.launch.core.managers
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
@@ -71,6 +73,47 @@ data class ShellManifest(
      */
     val apiMethods: List<String> = emptyList()
 )
+
+/**
+ * Результат импорта оболочки из файловой системы.
+ *
+ * Sealed-иерархия вместо строк — фрагмент сам локализует через
+ * getString(...), как в RecoveryManager.ImportReadResult.
+ */
+sealed class ShellImportResult {
+    data class Success(val shell: Shell) : ShellImportResult()
+
+    sealed class Failure : ShellImportResult() {
+        /** Расширение файла не входит в CoreConfig.SHELL_EXTENSIONS. */
+        object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать displayName из ContentResolver. */
+        object CannotReadFileName : Failure()
+
+        /** Файл больше CoreConfig.MAX_SHELL_SIZE_BYTES. */
+        object FileTooLarge : Failure()
+
+        /** Не удалось открыть файл как ZIP (битый / не ZIP). */
+        object InvalidArchive : Failure()
+
+        /** В ZIP нет manifest.json. */
+        object ManifestMissing : Failure()
+
+        /** manifest.json есть, но не парсится / нет поля name. */
+        object ManifestInvalid : Failure()
+
+        /**
+         * Оболочка с таким именем уже установлена.
+         * Возвращается ДО копирования файла в SHELLS — фрагмент
+         * должен спросить подтверждение и повторить вызов
+         * с overwrite = true.
+         */
+        data class AlreadyExists(val name: String) : Failure()
+
+        /** Ошибка ввода-вывода при копировании/сохранении. */
+        data class IoError(val message: String?) : Failure()
+    }
+}
 
 class ShellManager(
     private val context: Context,
@@ -520,10 +563,15 @@ class ShellManager(
             )
         }
 
-        // Сохраняем принудительную ориентацию
-        withContext(Dispatchers.Main) {
-            saveForcedOrientation()
-        }
+        // Сохраняем принудительную ориентацию.
+        //
+        // ВАЖНО (баг-фикс): раньше вызов был обёрнут в withContext(Dispatchers.Main),
+        // хотя saveForcedOrientation() делает SharedPreferences.edit{} — это IO.
+        // SharedPreferences.apply() асинхронный, но чтение + запись самой мапы
+        // (edit {} выполняет commit в памяти) — не бесплатно, и на Main этого
+        // делать не нужно. Метод уже выполняется на Dispatchers.IO (см. заголовок),
+        // поэтому просто убираем Main-обёртку.
+        saveForcedOrientation()
 
         // Очищаем директорию активной оболочки
         clearActiveDir()
@@ -544,6 +592,19 @@ class ShellManager(
 
     /**
      * Очищает директорию активной оболочки.
+     *
+     * ВАЖНО (баг-фикс): раньше вызывался `storageManager.remove(activeDir)`,
+     * но `StorageManager.remove(File)` использует `File.delete()`, а
+     * `File.delete()` на НЕПУСТОЙ директории возвращает false и НИЧЕГО
+     * не удаляет. В результате содержимое `active/` не очищалось, и при
+     * следующей распаковке старой оболочки могли «перемешиваться» файлы
+     * от старой и новой версий.
+     *
+     * Теперь используем `File.deleteRecursively()` — рекурсивное удаление
+     * содержимого и самой директории, затем `mkdirs()` создаёт пустую.
+     *
+     * Всё выполняется в IO-контексте (вызывается из setActiveShell,
+     * который уже на Dispatchers.IO).
      */
     private suspend fun clearActiveDir() {
         withContext(Dispatchers.IO) {
@@ -719,4 +780,186 @@ class ShellManager(
             false
         }
     }
+
+    // ============================================================
+    // ИМПОРТ ОБОЛОЧКИ ИЗ ФАЙЛОВОЙ СИСТЕМЫ
+    // ============================================================
+
+    /**
+     * Импортирует оболочку из выбранного пользователем URI (SAF).
+     *
+     * Шаги:
+     * 1. Читаем displayName из ContentResolver (для проверки расширения
+     *    и для логов). Если не удалось — CannotReadFileName.
+     * 2. Проверяем расширение по CoreConfig.SHELL_EXTENSIONS.
+     * 3. Копируем InputStream во временный файл в StorageDirectory.TEMP.
+     * 4. Проверяем размер (CoreConfig.MAX_SHELL_SIZE_BYTES).
+     * 5. Открываем как ZipFile, читаем manifest.json (readManifestFromZip).
+     * 6. Проверяем, что оболочка с таким именем не установлена.
+     *    Если установлена и overwrite == false — AlreadyExists.
+     * 7. Копируем файл в StorageDirectory.SHELLS под именем
+     *    "<manifest.name><SHELL_EXTENSION_WITH_DOT>".
+     * 8. Возвращаем Success(Shell) — свежий Shell, собранный из manifest
+     *    и файла на диске.
+     *
+     * ВАЖНО: оболочка НЕ активируется — импорт ≠ активация.
+     * Юзер сам выберет её в каталоге и нажмёт «Применить».
+     *
+     * @param uri URI файла, выбранного в SAF.
+     * @param overwrite true — перезаписать, если оболочка уже установлена.
+     */
+    suspend fun importShell(uri: Uri, overwrite: Boolean = false): ShellImportResult =
+        withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
+
+            // 1. displayName — для расширения и логов
+            val displayName = try {
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (index >= 0) cursor.getString(index) else null
+                        } else {
+                            null
+                        }
+                    }
+            } catch (_: Exception) {
+                null
+            } ?: return@withContext ShellImportResult.Failure.CannotReadFileName
+
+            // 2. Расширение
+            val extension = displayName.substringAfterLast('.', "").lowercase()
+            if (extension !in SHELL_EXTENSIONS) {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  unsupported extension  $displayName"
+                )
+                return@withContext ShellImportResult.Failure.UnsupportedExtension
+            }
+
+            // 3. Копируем во временный файл
+            val tempFile = storageManager.createTempFile(
+                prefix = "import_${displayName.substringBeforeLast('.')}",
+                extension = "tmp"
+            )
+
+            try {
+                resolver.openInputStream(uri)?.use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: run {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  cannot open input stream  $displayName"
+                    )
+                    return@withContext ShellImportResult.Failure.IoError(null)
+                }
+            } catch (e: Exception) {
+                tempFile.delete()
+                LoggerManager.error(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  io error on copy  ${e.message ?: e.javaClass.simpleName}",
+                    e
+                )
+                return@withContext ShellImportResult.Failure.IoError(e.message)
+            }
+
+            try {
+                // 4. Размер
+                if (tempFile.length() > CoreConfig.MAX_SHELL_SIZE_BYTES) {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  too large  $displayName  ${tempFile.length()} bytes"
+                    )
+                    return@withContext ShellImportResult.Failure.FileTooLarge
+                }
+
+                // 5. ZIP + manifest
+                val manifest = try {
+                    ZipFile(tempFile).use { zip ->
+                        val entry = zip.getEntry("manifest.json")
+                            ?: return@withContext ShellImportResult.Failure.ManifestMissing
+                        zip.getInputStream(entry).bufferedReader().use {
+                            json.decodeFromString<ShellManifest>(it.readText())
+                        }
+                    }
+                } catch (_: java.util.zip.ZipException) {
+                    return@withContext ShellImportResult.Failure.InvalidArchive
+                } catch (_: Exception) {
+                    return@withContext ShellImportResult.Failure.ManifestInvalid
+                }
+
+                if (manifest.name.isBlank()) {
+                    return@withContext ShellImportResult.Failure.ManifestInvalid
+                }
+
+                // 6. Проверка на существующую оболочку
+                val targetName = manifest.name
+                val targetFile = storageManager.get(
+                    StorageDirectory.SHELLS,
+                    "$targetName$SHELL_EXTENSION_WITH_DOT"
+                )
+
+                if (targetFile.exists() && !overwrite) {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  already exists  $targetName"
+                    )
+                    return@withContext ShellImportResult.Failure.AlreadyExists(targetName)
+                }
+
+                // 7. Копируем в SHELLS
+                val saved = storageManager.set(
+                    directory = StorageDirectory.SHELLS,
+                    name = "$targetName$SHELL_EXTENSION_WITH_DOT",
+                    inputStream = tempFile.inputStream(),
+                    overwrite = true
+                )
+
+                if (!saved) {
+                    LoggerManager.error(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  save failed  $targetName"
+                    )
+                    return@withContext ShellImportResult.Failure.IoError(null)
+                }
+
+                // 8. Собираем Shell для возврата
+                val previewBase64 = loadPreviewFromZip(targetFile, manifest.preview)
+                val imported = Shell(
+                    name = targetName,
+                    isDefault = false,
+                    sourcePath = targetFile.absolutePath,
+                    isAsset = false,
+                    displayName = manifest.name,
+                    isCustom = true,
+                    version = manifest.version,
+                    author = manifest.author,
+                    previewBase64 = previewBase64,
+                    orientation = manifest.orientation,
+                    repoUrl = manifest.repoUrl,
+                    telegramUrl = manifest.telegram,
+                    minQutyLaunchVersion = manifest.minQutyLaunchVersion,
+                    apiMethods = manifest.apiMethods
+                )
+
+                // Если активная оболочка была с тем же именем — перечитываем
+                // из диска, чтобы версия/превью подхватились.
+                if (activeShell?.name == targetName) {
+                    reloadActiveShell()
+                }
+
+                LoggerManager.info(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  ok  $targetName  v${manifest.version}"
+                )
+
+                ShellImportResult.Success(imported)
+
+            } finally {
+                // Чистим временный файл в любом случае
+                tempFile.delete()
+            }
+        }
 }

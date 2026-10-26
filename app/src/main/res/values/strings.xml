@@ -582,6 +582,8 @@
     <string name="store_menu_catalog_desc">Все доступные ресурсы</string>
     <string name="store_menu_settings">Настройки</string>
     <string name="store_menu_settings_desc">Кэш и источник</string>
+    <string name="store_menu_import">Импорт</string>
+    <string name="store_menu_import_desc">Установить оболочку из файла</string>
 
     <!-- Фильтры -->
     <string name="store_filter_all">Все</string>
@@ -657,6 +659,27 @@
     <string name="store_settings_clear_cache_desc">Удалить сохранённый список ресурсов</string>
     <string name="store_cache_cleared">Кэш каталога очищен</string>
     <string name="store_cache_clear_error">Не удалось очистить кэш</string>
+
+    <!-- МАГАЗИН — ИМПОРТ ОБОЛОЧКИ -->
+    <string name="store_import_section_title">Импорт оболочки</string>
+    <string name="store_import_select_file">Выбрать файл</string>
+    <string name="store_import_select_file_desc">Поддерживаются .qutyshell, .qsp, .qutyshellpack</string>
+    <string name="store_import_checking_title">Проверка файла…</string>
+    <string name="store_import_success_title">Оболочка импортирована</string>
+    <string name="store_import_error_title">Ошибка импорта</string>
+    <string name="store_import_retry">Повторить</string>
+    <string name="store_import_apply_hint">Открыть в каталоге</string>
+    <string name="store_import_overwrite_title">Оболочка уже установлена</string>
+    <string name="store_import_overwrite_message" formatted="false">Оболочка «%s» уже установлена. Заменить файл?</string>
+    <string name="store_import_overwrite_confirm">Заменить</string>
+    <string name="store_import_error_extension">Неподдерживаемое расширение файла</string>
+    <string name="store_import_error_too_large">Файл слишком большой</string>
+    <string name="store_import_error_invalid_archive">Файл повреждён или не является архивом оболочки</string>
+    <string name="store_import_error_manifest_missing">В архиве отсутствует manifest.json</string>
+    <string name="store_import_error_manifest_invalid">manifest.json недействителен</string>
+    <string name="store_import_error_io" formatted="false">Ошибка ввода-вывода: %s</string>
+    <string name="store_import_error_unknown">Неизвестная ошибка</string>
+    <string name="store_import_error_open_picker" formatted="false">Не удалось открыть файловый менеджер: %s</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->

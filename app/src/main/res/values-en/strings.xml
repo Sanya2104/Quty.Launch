@@ -582,6 +582,8 @@
     <string name="store_menu_catalog_desc">All available resources</string>
     <string name="store_menu_settings">Settings</string>
     <string name="store_menu_settings_desc">Cache and source</string>
+    <string name="store_menu_import">Import</string>
+    <string name="store_menu_import_desc">Install a shell from a file</string>
 
     <!-- Filters -->
     <string name="store_filter_all">All</string>
@@ -657,6 +659,27 @@
     <string name="store_settings_clear_cache_desc">Delete saved resource list</string>
     <string name="store_cache_cleared">Catalog cache cleared</string>
     <string name="store_cache_clear_error">Failed to clear cache</string>
+
+    <!-- STORE — SHELL IMPORT -->
+    <string name="store_import_section_title">Shell import</string>
+    <string name="store_import_select_file">Choose file</string>
+    <string name="store_import_select_file_desc">Supported: .qutyshell, .qsp, .qutyshellpack</string>
+    <string name="store_import_checking_title">Checking file…</string>
+    <string name="store_import_success_title">Shell imported</string>
+    <string name="store_import_error_title">Import error</string>
+    <string name="store_import_retry">Retry</string>
+    <string name="store_import_apply_hint">Open in catalog</string>
+    <string name="store_import_overwrite_title">Shell already installed</string>
+    <string name="store_import_overwrite_message" formatted="false">Shell «%s» is already installed. Replace the file?</string>
+    <string name="store_import_overwrite_confirm">Replace</string>
+    <string name="store_import_error_extension">Unsupported file extension</string>
+    <string name="store_import_error_too_large">File is too large</string>
+    <string name="store_import_error_invalid_archive">File is corrupted or not a shell archive</string>
+    <string name="store_import_error_manifest_missing">Archive has no manifest.json</string>
+    <string name="store_import_error_manifest_invalid">manifest.json is invalid</string>
+    <string name="store_import_error_io" formatted="false">I/O error: %s</string>
+    <string name="store_import_error_unknown">Unknown error</string>
+    <string name="store_import_error_open_picker" formatted="false">Failed to open file manager: %s</string>
 
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->

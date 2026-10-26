@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.store.StoreCatalogFragment
+import by.quty.launch.core.fragments.store.StoreImportFragment
 import by.quty.launch.core.fragments.store.StoreItemDetailFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
 import by.quty.launch.core.managers.ShellManager
@@ -31,12 +32,14 @@ import kotlinx.coroutines.launch
  * Меню:
  * - Каталог (StoreCatalogFragment, id=1)
  * - Настройки (StoreSettingsFragment, id=2)
+ * - Импорт (StoreImportFragment, id=3)
  *
  * Детальный экран элемента (StoreItemDetailFragment) открывается
  * через addToBackStack поверх текущего контента.
  *
  * При выходе: если было выполнено действие (установка / обновление /
- * применение / удаление) — показывается диалог перезапуска (BaseActivity).
+ * применение / удаление / импорт) — показывается диалог перезапуска
+ * (BaseActivity).
  */
 class StoreActivity : BaseActivity() {
 
@@ -223,7 +226,7 @@ class StoreActivity : BaseActivity() {
     /**
      * Иконка кнопки «Назад» в шапке контента (телефон):
      * - корневой «Каталог» > три полоски (ic_menu);
-     * - «Настройки» или детальный экран > стрелка (ic_back).
+     * - «Настройки» / «Импорт» / детальный экран > стрелка (ic_back).
      */
     private fun updateBackButtonIcon() {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -311,6 +314,15 @@ class StoreActivity : BaseActivity() {
                 R.string.store_menu_settings_desc,
                 StoreSettingsFragment::class.java,
                 R.color.scheme_cyan_primary,
+                true
+            ),
+            MenuModel(
+                3,
+                R.drawable.ic_folder,
+                R.string.store_menu_import,
+                R.string.store_menu_import_desc,
+                StoreImportFragment::class.java,
+                R.color.scheme_blue_primary,
                 true
             )
         )
@@ -401,7 +413,8 @@ class StoreActivity : BaseActivity() {
     }
 
     /**
-     * Пересобирает текущий список (после установки / удаления / активации).
+     * Пересобирает текущий список (после установки / удаления / активации /
+     * импорта).
      *
      * ВАЖНО: перед пересборкой и перед вызовом onDone проверяем
      * isFinishing/isDestroyed — иначе колбэк может дёрнуть UI-операции
