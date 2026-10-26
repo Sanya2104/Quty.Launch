@@ -543,16 +543,25 @@ class ShellManager(
     // ============================================================
 
     /**
-     * Очищает директорию активной оболочки
+     * Очищает директорию активной оболочки.
      */
     private suspend fun clearActiveDir() {
-        if (activeShellDir.exists()) {
-            // Удаляем содержимое директории через StorageManager
-            // Получаем File объект и удаляем его
-            val activeDir = storageManager.get("shells/active")
-            if (activeDir.exists()) {
-                storageManager.remove(activeDir)
-                activeShellDir.mkdirs()
+        withContext(Dispatchers.IO) {
+            try {
+                if (activeShellDir.exists()) {
+                    // Рекурсивно удаляем содержимое и саму директорию.
+                    // File.deleteRecursively() возвращает true, если всё
+                    // удалилось (или уже не было), false — если что-то
+                    // не удалилось (занято, нет прав и т.п.).
+                    activeShellDir.deleteRecursively()
+                }
+                // Создаём заново — пустую.
+                if (!activeShellDir.exists()) {
+                    activeShellDir.mkdirs()
+                }
+            } catch (_: Exception) {
+                // Не роняем setActiveShell из-за проблем с очисткой —
+                // хуже будет, если оболочка вообще не установится.
             }
         }
     }

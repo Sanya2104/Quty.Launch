@@ -12,9 +12,11 @@ import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.logger.LoggerFilesFragment
 import by.quty.launch.core.fragments.logger.LoggerFragment
 import by.quty.launch.core.fragments.logger.LoggerSettingsFragment
+import by.quty.launch.core.processes.AppScope
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.databinding.ActivityLoggerBinding
+import kotlinx.coroutines.launch
 
 /**
  * Активность логгера Quty.Launch.
@@ -357,7 +359,10 @@ class LoggerActivity : BaseActivity() {
      */
     override fun onDestroy() {
         if (LoggerManager.isAutoSaveEnabled() && LoggerManager.size() > 0) {
-            LoggerManager.writeToFileBlocking(this)
+            val appContext = applicationContext
+            AppScope.scope.launch {
+                LoggerManager.writeToFile(appContext)
+            }
         }
 
         super.onDestroy()

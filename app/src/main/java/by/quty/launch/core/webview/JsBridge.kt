@@ -83,24 +83,34 @@ class JsBridge(
                     LoggerTagModel.JSBRIDGE,
                     "JSBRIDGE.timeout  $method  ${timeoutMs}ms"
                 )
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout_error)}"}"""
+                val error = buildErrorJson(context.getString(R.string.js_bridge_timeout_error))
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
                 // Отмена выполнения
                 LoggerManager.warn(LoggerTagModel.JSBRIDGE, "JSBRIDGE.cancelled  $method")
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled_error)}"}"""
+                val error = buildErrorJson(context.getString(R.string.js_bridge_cancelled_error))
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {
                 // Любая другая ошибка
                 LoggerManager.error(LoggerTagModel.JSBRIDGE, "JSBRIDGE.error  $method", e)
-                val error = """{"success": false, "error": "${e.message}"}"""
+                val error = buildErrorJson(e.message ?: "Unknown error")
                 sendResultToJs(callbackId, error, e)
             }
         }
     }
 
+     */
+    private fun buildErrorJson(message: String): String {
+        return try {
+            JSONObject().apply {
+                put("success", false)
+                put("error", message)
+            }.toString()
+        } catch (_: Exception) {
+            // На случай, если что-то совсем странное — безопасный fallback.
+            """{"success":false,"error":"Unknown error"}"""
     /**
      * Отправляет результат выполнения в JavaScript.
      *

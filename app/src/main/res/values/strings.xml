@@ -737,6 +737,7 @@
     <string name="terminal_set_unknown_key" formatted="false">Неизвестный параметр: %s</string>
     <string name="terminal_set_invalid_value" formatted="false">Неверное значение: %s. Допустимо: %s</string>
     <string name="terminal_set_ok_restart">OK. Изменение применится после перезапуска приложения.</string>
+    <string name="terminal_set_strict_requires_fullscreen">Сначала включите полноэкранный режим (set fullscreen "on")</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Перезапуск…</string>
     <string name="terminal_reset_onboarding_ok">OK. Онбординг сброшен. Перезапуск…</string>

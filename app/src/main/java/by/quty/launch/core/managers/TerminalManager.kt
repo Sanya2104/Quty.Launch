@@ -26,9 +26,8 @@ import kotlinx.serialization.json.longOrNull
 /**
  * Менеджер терминала Quty.Launch.
  *
- * Терминал — внутренняя консоль ядра. Он НЕ запускает системные процессы
- * (никаких Runtime.exec() или ProcessBuilder), а работает только с состоянием
- * самого Quty.Launch через существующие менеджеры.
+ * Терминал — внутренняя консоль ядра. Он НЕ запускает системные процессы,
+ * работает только с состоянием самого Quty.Launch через существующие менеджеры.
  *
  * Синтаксис команд:
  * - простые: help, version, status, clear, exit
@@ -51,19 +50,18 @@ object TerminalManager {
      */
     private const val STATUS_PAD_WIDTH = 13
 
+    /**
+     * Префикс сообщения об ошибке. TerminalActivity различает ERROR/OUTPUT
+     * по `result.startsWith("!")`.
+     */
+    private const val ERROR_PREFIX = "!"
+
     // ============================================================
     // КОНСТАНТЫ
     // ============================================================
 
-    private const val KEY_THEME_MODE = "theme_mode"
-    private const val KEY_LANGUAGE = "app_language"
-    private const val KEY_ORIENTATION = "orientation"
-    private const val KEY_FULLSCREEN = "fullscreen"
-    private const val KEY_STRICT_MODE = "strict_mode"
-    private const val KEY_COLOR_SCHEME = "color_scheme"
     private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
     private const val KEY_FORCE_SHOW_ONBOARDING = "force_show_onboarding"
-    private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
 
     private const val PREFS_LAUNCHER = "launcher_prefs"
     private const val PREFS_DEVELOPER = "developer_prefs"
@@ -365,20 +363,25 @@ object TerminalManager {
 
     /**
      * Выполняет команду по имени.
+     *
+     * ВАЖНО: все ошибки возвращаются с префиксом "!" — TerminalActivity
+     * различает ERROR/OUTPUT именно по этому префиксу.
      */
     suspend fun execute(context: Context, parsed: ParsedCommand): String {
         val commands = getCommands(context)
         val command = commands.find { it.name == parsed.name }
-            ?: return context.getString(R.string.terminal_error_unknown_command, parsed.name)
+            ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, parsed.name))
 
         if (command.requireDevMode && !isDevModeEnabled(context)) {
-            return context.getString(R.string.terminal_error_devmode_required)
+            return errorMessage(context.getString(R.string.terminal_error_devmode_required))
         }
 
         return try {
             command.handler(parsed.args)
         } catch (e: Exception) {
-            context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            errorMessage(
+                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            )
         }
     }
 
@@ -387,6 +390,15 @@ object TerminalManager {
      */
     fun isWriteCommand(context: Context, name: String): Boolean {
         return getCommands(context).find { it.name == name }?.isWrite == true
+    }
+
+    /**
+     * Формирует сообщение об ошибке с префиксом "!".
+     * TerminalActivity удалит префикс при выводе, но использует его
+     * для определения типа строки (ERROR / OUTPUT).
+     */
+    private fun errorMessage(message: String): String {
+        return "$ERROR_PREFIX $message"
     }
 
     // ============================================================
@@ -399,7 +411,7 @@ object TerminalManager {
         if (args.isNotEmpty()) {
             val targetName = args.first()
             val target = commands.find { it.name == targetName }
-                ?: return context.getString(R.string.terminal_error_unknown_command, targetName)
+                ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, targetName))
 
             val description = context.getString(target.descriptionRes)
             return context.getString(R.string.terminal_help_command, target.name, description)
@@ -550,7 +562,7 @@ object TerminalManager {
             val isActive = shell.name == activeName
             val displayName = shell.displayName ?: shell.name
             val version = shell.version ?: "?"
-            val marker = if (isActive) "●" else "○"
+            val marker = if (isActive) "?" else "0"
             val suffix = buildString {
                 if (isActive) append(" $markerActive")
                 if (shell.isCustom) {
@@ -807,9 +819,9 @@ object TerminalManager {
         val densityString = String.format(java.util.Locale.US, "%.2f", density)
 
         return buildString {
-            appendLine(pad("Resolution:") + "$widthPx × $heightPx px")
+            appendLine(pad("Resolution:") + "$widthPx ? $heightPx px")
             appendLine(pad("Density:") + "$densityString ($dpi dpi)")
-            append(pad("DP size:") + "$widthDp × $heightDp dp")
+            append(pad("DP size:") + "$widthDp ? $heightDp dp")
         }
     }
 
@@ -849,8 +861,8 @@ object TerminalManager {
         val shellManager = ShellManager(context, configManager)
         val declared = shellManager.getActiveShell()?.apiMethods?.toSet() ?: emptySet()
 
-        val markerCalled = "●"
-        val markerIdle = "○"
+        val markerCalled = "?"
+        val markerIdle = "0"
         val tagDeclared = context.getString(R.string.terminal_api_list_declared)
         val tagCalled = context.getString(R.string.terminal_api_list_called)
 
@@ -881,7 +893,7 @@ object TerminalManager {
 
     private suspend fun apiCallHandler(context: Context, args: List<String>): String {
         if (args.isEmpty()) {
-            return "! " + context.getString(R.string.terminal_api_call_usage)
+            return errorMessage(context.getString(R.string.terminal_api_call_usage))
         }
 
         val methodName = args[0]
@@ -933,71 +945,109 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: WRITE
     // ============================================================
 
+    /**
+     * Обработчик `set <key> <value>`.
+     */
     private fun setHandler(
         context: Context,
         args: List<String>
     ): String {
         if (args.size < 2) {
-            return "! " + context.getString(R.string.terminal_set_usage)
+            return errorMessage(context.getString(R.string.terminal_set_usage))
         }
 
         val key = args[0]
         val value = args[1]
-        val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
+
+        // Локальный ConfigManager — единая точка правды для prefs.
+        // Логирование изменений (CONFIG.*) делает сам ConfigManager.
+        val configManager = ConfigManager(context)
 
         return when (key) {
             "theme" -> {
                 if (value !in listOf("light", "dark", "system")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
+                    )
                 }
-                prefs.edit { putString(KEY_THEME_MODE, value) }
+                configManager.setThemeMode(value)
+                configManager.applyTheme()
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  theme=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "lang" -> {
                 if (value !in listOf("ru", "en")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
+                    )
                 }
-                prefs.edit { putString(KEY_LANGUAGE, value) }
+                configManager.setLanguage(value)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  lang=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "orientation" -> {
                 if (value !in listOf("sensor", "portrait", "landscape")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
+                    )
                 }
-                prefs.edit { putString(KEY_ORIENTATION, value) }
+                configManager.setOrientation(value)
+                // Гарантируем перезапуск — иначе на части устройств
+                // (особенно Android 12+) смена ориентации не применится
+                // к уже запущенной MainActivity.
+                configManager.setRestartForOrientationFlag()
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  orientation=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "fullscreen" -> {
                 val bool = parseOnOff(value)
-                    ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
-                prefs.edit { putBoolean(KEY_FULLSCREEN, bool) }
+                    ?: return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "on, off")
+                    )
+                configManager.setFullscreenEnabled(bool)
+                // Если выключаем полноэкранный — strict теряет смысл,
+                // снимаем его, чтобы не осталось противоречивого состояния
+                // (isStrictModeEnabled вернёт false, но prefs остались бы true).
+                if (!bool && configManager.isStrictModeEnabled()) {
+                    configManager.setStrictModeEnabled(false)
+                }
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  fullscreen=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "strict" -> {
                 val bool = parseOnOff(value)
-                    ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
-                prefs.edit { putBoolean(KEY_STRICT_MODE, bool) }
+                    ?: return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "on, off")
+                    )
+                // Контракт ConfigManager: strict имеет смысл только при
+                // включённом fullscreen. Иначе — явная ошибка, чтобы юзер
+                // не получил «молчаливое» состояние, где strict=true,
+                // а isStrictModeEnabled()=false.
+                if (bool && !configManager.isFullscreenEnabled()) {
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_strict_requires_fullscreen)
+                    )
+                }
+                configManager.setStrictModeEnabled(bool)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  strict=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "color" -> {
                 val validIds = ColorSchemeModel.getAllSchemes().map { it.id }
                 if (value !in validIds) {
-                    return context.getString(
-                        R.string.terminal_set_invalid_value,
-                        value,
-                        validIds.joinToString(", ")
+                    return errorMessage(
+                        context.getString(
+                            R.string.terminal_set_invalid_value,
+                            value,
+                            validIds.joinToString(", ")
+                        )
                     )
                 }
-                prefs.edit { putString(KEY_COLOR_SCHEME, value) }
+                configManager.setColorScheme(value)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  color=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
-            else -> context.getString(R.string.terminal_set_unknown_key, key)
+            else -> errorMessage(context.getString(R.string.terminal_set_unknown_key, key))
         }
     }
 
@@ -1025,7 +1075,9 @@ object TerminalManager {
 
                 context.getString(R.string.terminal_clear_ok)
             } catch (e: Exception) {
-                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                errorMessage(
+                    context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                )
             }
         }
 
@@ -1055,13 +1107,20 @@ object TerminalManager {
             context.getString(R.string.terminal_restart_ok)
         }
 
+    /**
+     * Перезапуск приложения.
+     */
     private fun restartApp(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
-        prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
-
         val intent = Intent(context, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        context.startActivity(intent)
+
+        val baseActivity = context as? by.quty.launch.BaseActivity
+        if (baseActivity != null) {
+            baseActivity.startActivityAnimated(intent)
+            baseActivity.finishAnimated()
+        } else {
+            context.startActivity(intent)
+        }
     }
 
     // ============================================================

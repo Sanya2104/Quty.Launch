@@ -31,11 +31,11 @@ import java.util.Locale
  *
  * Содержит:
  * - Секция "Восстановление настроек":
- *   • Сделать backup настроек → создание .qutyconfig через SAF (CreateDocument)
- *   - Восстановить настройки → импорт из .qutyconfig через SAF (OpenDocument)
+ *   • Сделать backup настроек > создание .qutyconfig через SAF (CreateDocument)
+ *   - Восстановить настройки > импорт из .qutyconfig через SAF (OpenDocument)
  *
  * - Секция "Полный сброс настроек":
- *   • Полный сброс настроек → очистка prefs + всех папок StorageManager
+ *   • Полный сброс настроек > очистка prefs + всех папок StorageManager
  *                                + cacheDir + WebView кэша
  *
  * ВАЖНО: backup сохраняется в выбранное пользователем место (Downloads,
@@ -557,16 +557,19 @@ class RecoveryFragment : Fragment() {
 
         dialogView.findViewById<android.widget.Button>(R.id.btn_restart).setOnClickListener {
             dialog.dismiss()
-            (activity as? SettingsActivity)?.let { activity ->
-                // Закрываем настройки, чтобы SettingsActivity при закрытии
-                // не показал свой диалог повторно
-                activity.finishAffinity()
 
-                // Перезапуск
-                val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                startActivity(intent)
-            }
+            val activity = activity as? SettingsActivity ?: return@setOnClickListener
+
+            val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+            // Сначала стартуем новый интент — иначе finishAffinity() может
+            // убить процесс раньше, чем интент будет доставлен.
+            activity.startActivityAnimated(intent)
+
+            // Закрываем настройки, чтобы SettingsActivity при закрытии
+            // не показал свой диалог повторно.
+            activity.finishAffinity()
         }
 
         dialog.show()

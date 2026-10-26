@@ -737,6 +737,7 @@
     <string name="terminal_set_unknown_key" formatted="false">Unknown parameter: %s</string>
     <string name="terminal_set_invalid_value" formatted="false">Invalid value: %s. Allowed: %s</string>
     <string name="terminal_set_ok_restart">OK. The change will be applied after restart.</string>
+    <string name="terminal_set_strict_requires_fullscreen">Enable fullscreen mode first (set fullscreen "on")</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Restarting…</string>
     <string name="terminal_reset_onboarding_ok">OK. Onboarding reset. Restarting…</string>

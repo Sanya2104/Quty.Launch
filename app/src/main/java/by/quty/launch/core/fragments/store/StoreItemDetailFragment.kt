@@ -197,6 +197,30 @@ class StoreItemDetailFragment : Fragment() {
         bindItem(found)
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (isProcessing) return
+        if (!isAdded || view == null) return
+
+        val activity = activity as? StoreActivity ?: return
+        val currentName = item?.name ?: itemName
+        val fresh = activity.findItemByName(currentName)
+
+        if (fresh == null) {
+            // Элемент исчез (удалён извне) — закрываем деталь.
+            activity.hideItemDetail()
+            return
+        }
+
+        // Перерисовываем только если модель реально изменилась —
+        // чтобы не дёргать Glide / не сбрасывать скролл зря.
+        if (fresh != item) {
+            item = fresh
+            bindItem(fresh)
+        }
+    }
+
     private fun setupViews(view: View) {
         previewImage = view.findViewById(R.id.item_preview)
         nameText = view.findViewById(R.id.item_name)
