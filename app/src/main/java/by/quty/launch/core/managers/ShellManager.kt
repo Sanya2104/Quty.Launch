@@ -75,6 +75,40 @@ data class ShellManifest(
 )
 
 /**
+ * Результат предпросмотра файла оболочки (без копирования в SHELLS).
+ *
+ * Фрагмент показывает диалог с описанием и кнопками «Отмена» / «Продолжить».
+ */
+sealed class ShellPreviewResult {
+    data class Success(
+        /** Имя оболочки из manifest.json. */
+        val name: String,
+        /** Отображаемое имя (совпадает с name; оставлено для UI). */
+        val displayName: String,
+        /** Версия из manifest.json. */
+        val version: String?,
+        /** Автор из manifest.json. */
+        val author: String?,
+        /** Ориентация из manifest.json. */
+        val orientation: String?,
+        /** Размер файла в байтах. */
+        val sizeBytes: Long,
+        /** Уже установлена оболочка с таким же именем. */
+        val alreadyExists: Boolean
+    ) : ShellPreviewResult()
+
+    sealed class Failure : ShellPreviewResult() {
+        object UnsupportedExtension : Failure()
+        object CannotReadFileName : Failure()
+        object FileTooLarge : Failure()
+        object InvalidArchive : Failure()
+        object ManifestMissing : Failure()
+        object ManifestInvalid : Failure()
+        data class IoError(val message: String?) : Failure()
+    }
+}
+
+/**
  * Результат импорта оболочки из файловой системы.
  *
  * Sealed-иерархия вместо строк — фрагмент сам локализует через
@@ -455,8 +489,8 @@ class ShellManager(
      *
      * ВАЖНО: если активен Safe Mode — принудительно возвращаем
      * встроенную оболочку "Default", игнорируя пользовательский выбор
-     * из prefs. Выбор пользователя НЕ сбрасывается — как только
-     * Safe Mode будет выключен, загрузится его оболочка.
+     * из prefs. Выбор пользователя при этом НЕ сбрасывается — как
+     * только Safe Mode будет выключен, загрузится его оболочка.
      */
     fun getShellToActivate(): Shell {
         val shells = getAvailableShells()
@@ -525,9 +559,17 @@ class ShellManager(
      * активных методов сохраняется — пользователь не теряет картину
      * «кто что вызывал» в разделе Настроек > API методы.
      *
-     * Safe Mode: в этом режиме НЕ записываем выбор в prefs — иначе
-     * при выходе из Safe Mode загрузилась бы "Default" вместо оболочки,
-     * которую юзер выбрал до входа в Safe Mode.
+     * SAFE MODE (баг-фикс): раньше в Safe Mode запись в prefs ПРОПУСКАЛАСЬ,
+     * чтобы «не затереть выбор пользователя». Но это ломало UX: пользователь
+     * в магазине применял оболочку в Safe Mode, UI писал «применено,
+     * требуется перезагрузка», а после рестарта загружалась Default —
+     * потому что prefs не обновились. Смысл Safe Mode — дать возможность
+     * выбрать/применить оболочку при сломанной текущей. Поэтому теперь:
+     * - prefs (active_shell, active_shell_version) пишутся ВСЕГДА;
+     * - загрузка в WebView по-прежнему идёт через getShellToActivate(),
+     *   который в Safe Mode принудительно отдаёт Default.
+     * После выхода из Safe Mode пользователь увидит именно ту оболочку,
+     * которую применил в Safe Mode.
      *
      * active_shell_version: пишется сюда же — это «версия, реально
      * загруженная в WebView». Используется магазином, чтобы отличить
@@ -538,13 +580,12 @@ class ShellManager(
         // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
-        // ВАЖНО: если активен Safe Mode — не перезаписываем активную
-        // оболочку в prefs. Иначе при выходе из Safe Mode вместо
-        // пользовательской оболочки (например, QutyAuto) загрузится Default.
-        if (!configManager.isSafeModeActive()) {
-            configManager.setActiveShell(shell.name)
-            configManager.setActiveShellVersion(shell.version ?: "")
-        }
+        // Пишем выбор пользователя в prefs ВСЕГДА, включая Safe Mode.
+        // В Safe Mode это не активирует оболочку в WebView (см.
+        // getShellToActivate() — там принудительный Default), но
+        // сохранит выбор на момент выхода из Safe Mode.
+        configManager.setActiveShell(shell.name)
+        configManager.setActiveShellVersion(shell.version ?: "")
 
         // Обновляем в памяти
         activeShell = shell
@@ -782,31 +823,108 @@ class ShellManager(
     }
 
     // ============================================================
+    // ПРЕДПРОСМОТР ФАЙЛА ОБОЛОЧКИ (БЕЗ КОПИРОВАНИЯ)
+    // ============================================================
+
+    /**
+     * Читает файл оболочки по URI и возвращает его описание
+     */
+    suspend fun previewShell(uri: Uri): ShellPreviewResult = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+
+        // 1. displayName
+        val displayName = try {
+            resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (index >= 0) cursor.getString(index) else null
+                    } else {
+                        null
+                    }
+                }
+        } catch (_: Exception) {
+            null
+        } ?: return@withContext ShellPreviewResult.Failure.CannotReadFileName
+
+        // 2. Расширение
+        val extension = displayName.substringAfterLast('.', "").lowercase()
+        if (extension !in SHELL_EXTENSIONS) {
+            return@withContext ShellPreviewResult.Failure.UnsupportedExtension
+        }
+
+        // 3. Копируем во временный файл (только для чтения — не в SHELLS)
+        val tempFile = storageManager.createTempFile(
+            prefix = "preview_${displayName.substringBeforeLast('.')}",
+            extension = "tmp"
+        )
+
+        try {
+            resolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            } ?: run {
+                return@withContext ShellPreviewResult.Failure.IoError(null)
+            }
+        } catch (e: Exception) {
+            tempFile.delete()
+            return@withContext ShellPreviewResult.Failure.IoError(e.message)
+        }
+
+        try {
+            // 4. Размер
+            val sizeBytes = tempFile.length()
+            if (sizeBytes > CoreConfig.MAX_SHELL_SIZE_BYTES) {
+                return@withContext ShellPreviewResult.Failure.FileTooLarge
+            }
+
+            // 5. ZIP + manifest
+            val manifest = try {
+                ZipFile(tempFile).use { zip ->
+                    val entry = zip.getEntry("manifest.json")
+                        ?: return@withContext ShellPreviewResult.Failure.ManifestMissing
+                    zip.getInputStream(entry).bufferedReader().use {
+                        json.decodeFromString<ShellManifest>(it.readText())
+                    }
+                }
+            } catch (_: java.util.zip.ZipException) {
+                return@withContext ShellPreviewResult.Failure.InvalidArchive
+            } catch (_: Exception) {
+                return@withContext ShellPreviewResult.Failure.ManifestInvalid
+            }
+
+            if (manifest.name.isBlank()) {
+                return@withContext ShellPreviewResult.Failure.ManifestInvalid
+            }
+
+            // 6. Проверка на существующую оболочку (только флаг, не ошибка)
+            val targetFile = storageManager.get(
+                StorageDirectory.SHELLS,
+                "${manifest.name}$SHELL_EXTENSION_WITH_DOT"
+            )
+            val alreadyExists = targetFile.exists()
+
+            ShellPreviewResult.Success(
+                name = manifest.name,
+                displayName = manifest.name,
+                version = manifest.version,
+                author = manifest.author,
+                orientation = manifest.orientation,
+                sizeBytes = sizeBytes,
+                alreadyExists = alreadyExists
+            )
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    // ============================================================
     // ИМПОРТ ОБОЛОЧКИ ИЗ ФАЙЛОВОЙ СИСТЕМЫ
     // ============================================================
 
     /**
      * Импортирует оболочку из выбранного пользователем URI (SAF).
-     *
-     * Шаги:
-     * 1. Читаем displayName из ContentResolver (для проверки расширения
-     *    и для логов). Если не удалось — CannotReadFileName.
-     * 2. Проверяем расширение по CoreConfig.SHELL_EXTENSIONS.
-     * 3. Копируем InputStream во временный файл в StorageDirectory.TEMP.
-     * 4. Проверяем размер (CoreConfig.MAX_SHELL_SIZE_BYTES).
-     * 5. Открываем как ZipFile, читаем manifest.json (readManifestFromZip).
-     * 6. Проверяем, что оболочка с таким именем не установлена.
-     *    Если установлена и overwrite == false — AlreadyExists.
-     * 7. Копируем файл в StorageDirectory.SHELLS под именем
-     *    "<manifest.name><SHELL_EXTENSION_WITH_DOT>".
-     * 8. Возвращаем Success(Shell) — свежий Shell, собранный из manifest
-     *    и файла на диске.
-     *
-     * ВАЖНО: оболочка НЕ активируется — импорт ≠ активация.
-     * Юзер сам выберет её в каталоге и нажмёт «Применить».
-     *
-     * @param uri URI файла, выбранного в SAF.
-     * @param overwrite true — перезаписать, если оболочка уже установлена.
      */
     suspend fun importShell(uri: Uri, overwrite: Boolean = false): ShellImportResult =
         withContext(Dispatchers.IO) {

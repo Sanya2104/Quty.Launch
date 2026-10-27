@@ -23,27 +23,13 @@ import by.quty.launch.StoreActivity
 import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellImportResult
 import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.ShellPreviewResult
 import kotlinx.coroutines.launch
 
 /**
  * Фрагмент «Импорт» магазина.
  *
  * Импорт оболочки из файловой системы через SAF (OpenDocument).
- *
- * Состояния блока результата (по аналогии с UpdateFragment):
- * - idle — скрыт;
- * - checking — «Проверка файла…», indeterminate progress;
- * - success — зелёная иконка, имя оболочки, кнопка «Применить»;
- * - error — красная иконка, текст ошибки, кнопка «Повторить».
- *
- * Перезапись при совпадении имени: ShellManager.importShell(uri) возвращает
- * ShellImportResult.Failure.AlreadyExists(name) без изменения файлов.
- * Фрагмент показывает диалог подтверждения (dialog_recovery_confirm)
- * и при согласии повторяет вызов с overwrite = true.
- *
- * Активация НЕ выполняется автоматически — юзер должен сам применить
- * оболочку в каталоге. Это позволяет импортировать несколько оболочек
- * и выбрать нужную.
  */
 class StoreImportFragment : Fragment() {
 
@@ -67,7 +53,7 @@ class StoreImportFragment : Fragment() {
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri == null) return@registerForActivityResult
-        importShell(uri, overwrite = false)
+        previewAndConfirm(uri)
     }
 
     override fun onCreateView(
@@ -111,11 +97,6 @@ class StoreImportFragment : Fragment() {
 
     /**
      * Открывает системный файловый пикер.
-     *
-     * MIME — "* / *" (без пробела): оболочки .qutyshell / .qsp /
-     * .qutyshellpack не зарегистрированы в системе как отдельный MIME,
-     * поэтому фильтр по типу отсечёт валидные файлы. Расширение
-     * проверяется внутри ShellManager.importShell().
      */
     private fun launchPicker() {
         try {
@@ -125,6 +106,125 @@ class StoreImportFragment : Fragment() {
                 getString(R.string.store_import_error_open_picker, e.message ?: getString(R.string.unknown))
             )
         }
+    }
+
+    // ============================================================
+    // ПРЕДПРОСМОТР + ДИАЛОГ
+    // ============================================================
+
+    private fun previewAndConfirm(uri: Uri) {
+        showChecking()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = shellManager.previewShell(uri)
+
+            if (!isAdded) return@launch
+
+            when (result) {
+                is ShellPreviewResult.Success -> {
+                    hideState()
+                    showPreviewDialog(uri, result)
+                }
+                is ShellPreviewResult.Failure.UnsupportedExtension -> {
+                    showError(getString(R.string.store_import_error_extension))
+                }
+                is ShellPreviewResult.Failure.CannotReadFileName -> {
+                    showError(getString(R.string.store_import_error_unknown))
+                }
+                is ShellPreviewResult.Failure.FileTooLarge -> {
+                    showError(getString(R.string.store_import_error_too_large))
+                }
+                is ShellPreviewResult.Failure.InvalidArchive -> {
+                    showError(getString(R.string.store_import_error_invalid_archive))
+                }
+                is ShellPreviewResult.Failure.ManifestMissing -> {
+                    showError(getString(R.string.store_import_error_manifest_missing))
+                }
+                is ShellPreviewResult.Failure.ManifestInvalid -> {
+                    showError(getString(R.string.store_import_error_manifest_invalid))
+                }
+                is ShellPreviewResult.Failure.IoError -> {
+                    showError(
+                        getString(
+                            R.string.store_import_error_io,
+                            result.message ?: getString(R.string.unknown)
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    /** Диалог предпросмотра */
+    private fun showPreviewDialog(uri: Uri, preview: ShellPreviewResult.Success) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_shell_import_preview, null)
+
+        val dialog = AlertDialog.Builder(
+            requireContext(),
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+
+        val nameView: TextView = dialogView.findViewById(R.id.import_preview_name)
+        val warningView: TextView = dialogView.findViewById(R.id.import_preview_warning)
+        val versionValue: TextView = dialogView.findViewById(R.id.import_preview_version_value)
+        val authorValue: TextView = dialogView.findViewById(R.id.import_preview_author_value)
+        val sizeValue: TextView = dialogView.findViewById(R.id.import_preview_size_value)
+        val orientationValue: TextView = dialogView.findViewById(R.id.import_preview_orientation_value)
+        val orientationContainer: LinearLayout = dialogView.findViewById(R.id.import_preview_orientation_container)
+
+        val cancelButton: Button = dialogView.findViewById(R.id.import_preview_cancel_button)
+        val okButton: Button = dialogView.findViewById(R.id.import_preview_ok_button)
+
+        nameView.text = preview.displayName
+
+        // Плашка «оболочка уже установлена»
+        if (preview.alreadyExists) {
+            warningView.isVisible = true
+            warningView.setText(R.string.store_import_preview_already_exists)
+        } else {
+            warningView.isVisible = false
+        }
+
+        versionValue.text = preview.version?.takeIf { it.isNotEmpty() }
+            ?: getString(R.string.unknown)
+        authorValue.text = preview.author?.takeIf { it.isNotEmpty() }
+            ?: getString(R.string.author_default)
+        sizeValue.text = formatSize(preview.sizeBytes)
+
+        val orientationText = when (preview.orientation) {
+            "portrait" -> getString(R.string.orientation_portrait)
+            "landscape" -> getString(R.string.orientation_landscape)
+            "sensor" -> getString(R.string.orientation_auto)
+            "user" -> getString(R.string.orientation_auto)
+            else -> null
+        }
+        if (orientationText.isNullOrEmpty()) {
+            orientationContainer.isVisible = false
+        } else {
+            orientationContainer.isVisible = true
+            orientationValue.text = orientationText
+        }
+
+        // «Продолжить» в стиле Danger при перезаписи, иначе Primary
+        if (preview.alreadyExists) {
+            okButton.setText(R.string.store_import_overwrite_confirm)
+        } else {
+            okButton.setText(R.string.store_import_continue)
+        }
+
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        okButton.setOnClickListener {
+            dialog.dismiss()
+            importShell(uri, overwrite = preview.alreadyExists)
+        }
+
+        dialog.show()
     }
 
     // ============================================================
@@ -146,6 +246,9 @@ class StoreImportFragment : Fragment() {
                     showSuccess(result.shell.displayName ?: result.shell.name)
                 }
                 is ShellImportResult.Failure.AlreadyExists -> {
+                    // Гонка: между previewShell и importShell кто-то успел
+                    // создать файл с тем же именем. Показываем ещё раз
+                    // диалог подтверждения — простым confirm'ом.
                     showAlreadyExistsDialog(uri, result.name)
                 }
                 is ShellImportResult.Failure.UnsupportedExtension -> {
@@ -179,7 +282,7 @@ class StoreImportFragment : Fragment() {
     }
 
     // ============================================================
-    // ДИАЛОГ ПЕРЕЗАПИСИ
+    // ДИАЛОГ ПЕРЕЗАПИСИ (гонка)
     // ============================================================
 
     private fun showAlreadyExistsDialog(uri: Uri, name: String) {
@@ -207,8 +310,6 @@ class StoreImportFragment : Fragment() {
 
         cancelButton.setOnClickListener {
             dialog.dismiss()
-            // Ничего не делаем — файл уже сохранён, если пользователь
-            // передумал, пусть решает в каталоге. State-блок сбрасываем.
             hideState()
         }
 
@@ -297,8 +398,6 @@ class StoreImportFragment : Fragment() {
         stateBtnSecondary.setText(R.string.close)
         stateBtnSecondary.setOnClickListener { hideState() }
 
-        // Текст ошибки — Toast, потому что в state-блоке нет отдельного
-        // TextView для описания (используем subtitle только для success).
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
@@ -306,5 +405,15 @@ class StoreImportFragment : Fragment() {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
+    }
+
+    private fun formatSize(bytes: Long): String {
+        val locale = java.util.Locale.US
+        return when {
+            bytes >= 1024L * 1024 * 1024 -> String.format(locale, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+            bytes >= 1024L * 1024 -> String.format(locale, "%.2f MB", bytes / (1024.0 * 1024.0))
+            bytes >= 1024 -> String.format(locale, "%.2f KB", bytes / 1024.0)
+            else -> "$bytes B"
+        }
     }
 }

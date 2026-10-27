@@ -1,0 +1,312 @@
+<!-- res/layout/dialog_shell_import_preview.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/spacing_l"
+    android:paddingEnd="@dimen/spacing_l"
+    android:paddingTop="@dimen/spacing_xl"
+    android:paddingBottom="@dimen/spacing_xl">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_dialog"
+            android:elevation="16dp"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHeight_percent="0.9"
+            app:layout_constraintHeight_max="700dp">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_xlarge"
+                        android:layout_height="@dimen/icon_xlarge"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_folder"
+                        android:background="@drawable/bg_icon_dialog"
+                        android:padding="@dimen/spacing_l"
+                        android:contentDescription="@string/empty" />
+
+                    <TextView
+                        style="@style/Text.Title.Medium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_l"
+                        android:gravity="center"
+                        android:text="@string/store_import_preview_title" />
+
+                    <TextView
+                        android:id="@+id/import_preview_name"
+                        style="@style/Text.Title.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        tools:text="QutyAuto" />
+
+                    <!-- Плашка «уже установлена» (по умолчанию скрыта) -->
+                    <TextView
+                        android:id="@+id/import_preview_warning"
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_m"
+                        android:background="@drawable/bg_orientation_lock_hint"
+                        android:gravity="center"
+                        android:padding="@dimen/spacing_m"
+                        android:textColor="@color/status_warning"
+                        android:visibility="gone"
+                        tools:text="@string/store_import_preview_already_exists"
+                        tools:visibility="visible" />
+
+                    <!-- Метаданные -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_l"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_rounded"
+                        android:padding="@dimen/spacing_xs">
+
+                        <!-- Версия -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_version"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_version" />
+
+                            <TextView
+                                android:id="@+id/import_preview_version_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="0.0.5" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="@dimen/spacing_m"
+                            android:layout_marginEnd="@dimen/spacing_m"
+                            android:background="?attr/dividerColor" />
+
+                        <!-- Автор -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_author"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_author" />
+
+                            <TextView
+                                android:id="@+id/import_preview_author_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="QutyTeam" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="@dimen/spacing_m"
+                            android:layout_marginEnd="@dimen/spacing_m"
+                            android:background="?attr/dividerColor" />
+
+                        <!-- Размер -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_weight"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_size" />
+
+                            <TextView
+                                android:id="@+id/import_preview_size_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="5.2 MB" />
+
+                        </LinearLayout>
+
+                        <!-- Ориентация (скрывается, если не задана) -->
+                        <LinearLayout
+                            android:id="@+id/import_preview_orientation_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginStart="@dimen/spacing_m"
+                                android:layout_marginEnd="@dimen/spacing_m"
+                                android:background="?attr/dividerColor" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingStart="@dimen/spacing_m"
+                                android:paddingEnd="@dimen/spacing_m"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m">
+
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_orientation"
+                                    android:contentDescription="@string/empty"
+                                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                                <TextView
+                                    style="@style/Text.Body.Dim"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/settings_personalization_shell_info_orientation" />
+
+                                <TextView
+                                    android:id="@+id/import_preview_orientation_value"
+                                    style="@style/Text.Body"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:textAlignment="viewEnd"
+                                    tools:text="@string/orientation_auto" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </ScrollView>
+
+            <!-- Кнопки -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/import_preview_cancel_button"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/cancel" />
+
+                <Button
+                    android:id="@+id/import_preview_ok_button"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/store_import_continue" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

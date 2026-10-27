@@ -681,6 +681,11 @@
     <string name="store_import_error_unknown">Неизвестная ошибка</string>
     <string name="store_import_error_open_picker" formatted="false">Не удалось открыть файловый менеджер: %s</string>
 
+    <!-- МАГАЗИН — ПРЕДПРОСМОТР ИМПОРТА -->
+    <string name="store_import_preview_title">Проверить оболочку</string>
+    <string name="store_import_continue">Продолжить</string>
+    <string name="store_import_preview_already_exists">Оболочка с таким именем уже установлена. Файл будет заменён.</string>
+
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->
     <!-- ============================================================ -->

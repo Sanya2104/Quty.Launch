@@ -681,6 +681,11 @@
     <string name="store_import_error_unknown">Unknown error</string>
     <string name="store_import_error_open_picker" formatted="false">Failed to open file manager: %s</string>
 
+    <!-- STORE — IMPORT PREVIEW -->
+    <string name="store_import_preview_title">Check shell</string>
+    <string name="store_import_continue">Continue</string>
+    <string name="store_import_preview_already_exists">A shell with this name is already installed. The file will be replaced.</string>
+
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->
     <!-- ============================================================ -->

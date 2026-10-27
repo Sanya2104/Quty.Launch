@@ -734,9 +734,11 @@ import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.logger.LoggerFilesFragment
 import by.quty.launch.core.fragments.logger.LoggerFragment
 import by.quty.launch.core.fragments.logger.LoggerSettingsFragment
+import by.quty.launch.core.processes.AppScope
 import by.quty.launch.core.managers.LoggerManager
 import by.quty.launch.core.model.MenuModel
 import by.quty.launch.databinding.ActivityLoggerBinding
+import kotlinx.coroutines.launch
 
 /**
  * Активность логгера Quty.Launch.
@@ -1079,7 +1081,10 @@ class LoggerActivity : BaseActivity() {
      */
     override fun onDestroy() {
         if (LoggerManager.isAutoSaveEnabled() && LoggerManager.size() > 0) {
-            LoggerManager.writeToFileBlocking(this)
+            val appContext = applicationContext
+            AppScope.scope.launch {
+                LoggerManager.writeToFile(appContext)
+            }
         }
 
         super.onDestroy()
@@ -2107,6 +2112,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.quty.launch.core.adapters.SettingsMenuAdapter
 import by.quty.launch.core.fragments.store.StoreCatalogFragment
+import by.quty.launch.core.fragments.store.StoreImportFragment
 import by.quty.launch.core.fragments.store.StoreItemDetailFragment
 import by.quty.launch.core.fragments.store.StoreSettingsFragment
 import by.quty.launch.core.managers.ShellManager
@@ -2127,12 +2133,14 @@ import kotlinx.coroutines.launch
  * Меню:
  * - Каталог (StoreCatalogFragment, id=1)
  * - Настройки (StoreSettingsFragment, id=2)
+ * - Импорт (StoreImportFragment, id=3)
  *
  * Детальный экран элемента (StoreItemDetailFragment) открывается
  * через addToBackStack поверх текущего контента.
  *
  * При выходе: если было выполнено действие (установка / обновление /
- * применение / удаление) — показывается диалог перезапуска (BaseActivity).
+ * применение / удаление / импорт) — показывается диалог перезапуска
+ * (BaseActivity).
  */
 class StoreActivity : BaseActivity() {
 
@@ -2319,7 +2327,7 @@ class StoreActivity : BaseActivity() {
     /**
      * Иконка кнопки «Назад» в шапке контента (телефон):
      * - корневой «Каталог» > три полоски (ic_menu);
-     * - «Настройки» или детальный экран > стрелка (ic_back).
+     * - «Настройки» / «Импорт» / детальный экран > стрелка (ic_back).
      */
     private fun updateBackButtonIcon() {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -2407,6 +2415,15 @@ class StoreActivity : BaseActivity() {
                 R.string.store_menu_settings_desc,
                 StoreSettingsFragment::class.java,
                 R.color.scheme_cyan_primary,
+                true
+            ),
+            MenuModel(
+                3,
+                R.drawable.ic_folder,
+                R.string.store_menu_import,
+                R.string.store_menu_import_desc,
+                StoreImportFragment::class.java,
+                R.color.scheme_blue_primary,
                 true
             )
         )
@@ -2497,7 +2514,8 @@ class StoreActivity : BaseActivity() {
     }
 
     /**
-     * Пересобирает текущий список (после установки / удаления / активации).
+     * Пересобирает текущий список (после установки / удаления / активации /
+     * импорта).
      *
      * ВАЖНО: перед пересборкой и перед вызовом onDone проверяем
      * isFinishing/isDestroyed — иначе колбэк может дёрнуть UI-операции
@@ -5017,6 +5035,9 @@ object CoreConfig {
 
     /** Поддерживаемые расширения оболочек (без точки) */
     val SHELL_EXTENSIONS = listOf("qutyshell", "qsp", "qutyshellpack")
+
+    /** Жёсткий лимит размера файла оболочки (байт) */
+    const val MAX_SHELL_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB
 
     // ============================================================
     // ===== WEBVIEW ==============================================
@@ -9453,16 +9474,19 @@ class RecoveryFragment : Fragment() {
 
         dialogView.findViewById<android.widget.Button>(R.id.btn_restart).setOnClickListener {
             dialog.dismiss()
-            (activity as? SettingsActivity)?.let { activity ->
-                // Закрываем настройки, чтобы SettingsActivity при закрытии
-                // не показал свой диалог повторно
-                activity.finishAffinity()
 
-                // Перезапуск
-                val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                startActivity(intent)
-            }
+            val activity = activity as? SettingsActivity ?: return@setOnClickListener
+
+            val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+            // Сначала стартуем новый интент — иначе finishAffinity() может
+            // убить процесс раньше, чем интент будет доставлен.
+            activity.startActivityAnimated(intent)
+
+            // Закрываем настройки, чтобы SettingsActivity при закрытии
+            // не показал свой диалог повторно.
+            activity.finishAffinity()
         }
 
         dialog.show()
@@ -11786,6 +11810,432 @@ class StoreCatalogFragment : Fragment() {
 
 
 ==================================================
+FILE: app\src\main\java\by\quty\launch\core\fragments\store\StoreImportFragment.kt
+==================================================
+
+
+// *** core/fragments/store/StoreImportFragment.kt *** //
+package by.quty.launch.core.fragments.store
+
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import by.quty.launch.R
+import by.quty.launch.StoreActivity
+import by.quty.launch.core.managers.ConfigManager
+import by.quty.launch.core.managers.ShellImportResult
+import by.quty.launch.core.managers.ShellManager
+import by.quty.launch.core.managers.ShellPreviewResult
+import kotlinx.coroutines.launch
+
+/**
+ * Фрагмент «Импорт» магазина.
+ *
+ * Импорт оболочки из файловой системы через SAF (OpenDocument).
+ */
+class StoreImportFragment : Fragment() {
+
+    private lateinit var shellManager: ShellManager
+    private lateinit var configManager: ConfigManager
+
+    // ===== UI =====
+    private lateinit var selectFileRow: View
+
+    private lateinit var stateContainer: LinearLayout
+    private lateinit var stateIcon: ImageView
+    private lateinit var stateTitle: TextView
+    private lateinit var stateSubtitle: TextView
+    private lateinit var stateProgressContainer: LinearLayout
+    private lateinit var stateActions: LinearLayout
+    private lateinit var stateBtnPrimary: Button
+    private lateinit var stateBtnSecondary: Button
+
+    // ===== ActivityResult для SAF =====
+    private val openDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+        previewAndConfirm(uri)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_store_import, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        configManager = (activity as? by.quty.launch.BaseActivity)?.configManager
+            ?: ConfigManager(requireContext())
+        shellManager = ShellManager(requireContext(), configManager)
+
+        initViews(view)
+
+        selectFileRow.setOnClickListener { launchPicker() }
+
+        hideState()
+    }
+
+    private fun initViews(view: View) {
+        selectFileRow = view.findViewById(R.id.import_select_file_row)
+
+        stateContainer = view.findViewById(R.id.import_state_container)
+        stateIcon = view.findViewById(R.id.import_state_icon)
+        stateTitle = view.findViewById(R.id.import_state_title)
+        stateSubtitle = view.findViewById(R.id.import_state_subtitle)
+        stateProgressContainer = view.findViewById(R.id.import_state_progress_container)
+        stateActions = view.findViewById(R.id.import_state_actions)
+        stateBtnPrimary = view.findViewById(R.id.import_state_btn_primary)
+        stateBtnSecondary = view.findViewById(R.id.import_state_btn_secondary)
+    }
+
+    // ============================================================
+    // SAF
+    // ============================================================
+
+    /**
+     * Открывает системный файловый пикер.
+     */
+    private fun launchPicker() {
+        try {
+            openDocumentLauncher.launch(arrayOf("*/*"))
+        } catch (e: Exception) {
+            showError(
+                getString(R.string.store_import_error_open_picker, e.message ?: getString(R.string.unknown))
+            )
+        }
+    }
+
+    // ============================================================
+    // ПРЕДПРОСМОТР + ДИАЛОГ
+    // ============================================================
+
+    private fun previewAndConfirm(uri: Uri) {
+        showChecking()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = shellManager.previewShell(uri)
+
+            if (!isAdded) return@launch
+
+            when (result) {
+                is ShellPreviewResult.Success -> {
+                    hideState()
+                    showPreviewDialog(uri, result)
+                }
+                is ShellPreviewResult.Failure.UnsupportedExtension -> {
+                    showError(getString(R.string.store_import_error_extension))
+                }
+                is ShellPreviewResult.Failure.CannotReadFileName -> {
+                    showError(getString(R.string.store_import_error_unknown))
+                }
+                is ShellPreviewResult.Failure.FileTooLarge -> {
+                    showError(getString(R.string.store_import_error_too_large))
+                }
+                is ShellPreviewResult.Failure.InvalidArchive -> {
+                    showError(getString(R.string.store_import_error_invalid_archive))
+                }
+                is ShellPreviewResult.Failure.ManifestMissing -> {
+                    showError(getString(R.string.store_import_error_manifest_missing))
+                }
+                is ShellPreviewResult.Failure.ManifestInvalid -> {
+                    showError(getString(R.string.store_import_error_manifest_invalid))
+                }
+                is ShellPreviewResult.Failure.IoError -> {
+                    showError(
+                        getString(
+                            R.string.store_import_error_io,
+                            result.message ?: getString(R.string.unknown)
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    /** Диалог предпросмотра */
+    private fun showPreviewDialog(uri: Uri, preview: ShellPreviewResult.Success) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_shell_import_preview, null)
+
+        val dialog = AlertDialog.Builder(
+            requireContext(),
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+
+        val nameView: TextView = dialogView.findViewById(R.id.import_preview_name)
+        val warningView: TextView = dialogView.findViewById(R.id.import_preview_warning)
+        val versionValue: TextView = dialogView.findViewById(R.id.import_preview_version_value)
+        val authorValue: TextView = dialogView.findViewById(R.id.import_preview_author_value)
+        val sizeValue: TextView = dialogView.findViewById(R.id.import_preview_size_value)
+        val orientationValue: TextView = dialogView.findViewById(R.id.import_preview_orientation_value)
+        val orientationContainer: LinearLayout = dialogView.findViewById(R.id.import_preview_orientation_container)
+
+        val cancelButton: Button = dialogView.findViewById(R.id.import_preview_cancel_button)
+        val okButton: Button = dialogView.findViewById(R.id.import_preview_ok_button)
+
+        nameView.text = preview.displayName
+
+        // Плашка «оболочка уже установлена»
+        if (preview.alreadyExists) {
+            warningView.isVisible = true
+            warningView.setText(R.string.store_import_preview_already_exists)
+        } else {
+            warningView.isVisible = false
+        }
+
+        versionValue.text = preview.version?.takeIf { it.isNotEmpty() }
+            ?: getString(R.string.unknown)
+        authorValue.text = preview.author?.takeIf { it.isNotEmpty() }
+            ?: getString(R.string.author_default)
+        sizeValue.text = formatSize(preview.sizeBytes)
+
+        val orientationText = when (preview.orientation) {
+            "portrait" -> getString(R.string.orientation_portrait)
+            "landscape" -> getString(R.string.orientation_landscape)
+            "sensor" -> getString(R.string.orientation_auto)
+            "user" -> getString(R.string.orientation_auto)
+            else -> null
+        }
+        if (orientationText.isNullOrEmpty()) {
+            orientationContainer.isVisible = false
+        } else {
+            orientationContainer.isVisible = true
+            orientationValue.text = orientationText
+        }
+
+        // «Продолжить» в стиле Danger при перезаписи, иначе Primary
+        if (preview.alreadyExists) {
+            okButton.setText(R.string.store_import_overwrite_confirm)
+        } else {
+            okButton.setText(R.string.store_import_continue)
+        }
+
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        okButton.setOnClickListener {
+            dialog.dismiss()
+            importShell(uri, overwrite = preview.alreadyExists)
+        }
+
+        dialog.show()
+    }
+
+    // ============================================================
+    // ИМПОРТ
+    // ============================================================
+
+    private fun importShell(uri: Uri, overwrite: Boolean) {
+        showChecking()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = shellManager.importShell(uri, overwrite)
+
+            if (!isAdded) return@launch
+
+            when (result) {
+                is ShellImportResult.Success -> {
+                    (activity as? StoreActivity)?.refreshItems()
+                    (activity as? by.quty.launch.BaseActivity)?.markRestartRequired()
+                    showSuccess(result.shell.displayName ?: result.shell.name)
+                }
+                is ShellImportResult.Failure.AlreadyExists -> {
+                    // Гонка: между previewShell и importShell кто-то успел
+                    // создать файл с тем же именем. Показываем ещё раз
+                    // диалог подтверждения — простым confirm'ом.
+                    showAlreadyExistsDialog(uri, result.name)
+                }
+                is ShellImportResult.Failure.UnsupportedExtension -> {
+                    showError(getString(R.string.store_import_error_extension))
+                }
+                is ShellImportResult.Failure.CannotReadFileName -> {
+                    showError(getString(R.string.store_import_error_unknown))
+                }
+                is ShellImportResult.Failure.FileTooLarge -> {
+                    showError(getString(R.string.store_import_error_too_large))
+                }
+                is ShellImportResult.Failure.InvalidArchive -> {
+                    showError(getString(R.string.store_import_error_invalid_archive))
+                }
+                is ShellImportResult.Failure.ManifestMissing -> {
+                    showError(getString(R.string.store_import_error_manifest_missing))
+                }
+                is ShellImportResult.Failure.ManifestInvalid -> {
+                    showError(getString(R.string.store_import_error_manifest_invalid))
+                }
+                is ShellImportResult.Failure.IoError -> {
+                    showError(
+                        getString(
+                            R.string.store_import_error_io,
+                            result.message ?: getString(R.string.unknown)
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // ДИАЛОГ ПЕРЕЗАПИСИ (гонка)
+    // ============================================================
+
+    private fun showAlreadyExistsDialog(uri: Uri, name: String) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
+
+        val dialog = AlertDialog.Builder(
+            requireContext(),
+            R.style.Theme_QutyLaunch_AlertDialog_Transparent
+        )
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+
+        val titleView = dialogView.findViewById<TextView>(R.id.recovery_confirm_title)
+        val messageView = dialogView.findViewById<TextView>(R.id.recovery_confirm_message)
+        val okButton = dialogView.findViewById<Button>(R.id.recovery_confirm_ok_button)
+        val cancelButton = dialogView.findViewById<Button>(R.id.recovery_confirm_cancel_button)
+
+        titleView.setText(R.string.store_import_overwrite_title)
+        messageView.text = getString(R.string.store_import_overwrite_message, name)
+        okButton.setText(R.string.store_import_overwrite_confirm)
+        cancelButton.setText(R.string.cancel)
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+            hideState()
+        }
+
+        okButton.setOnClickListener {
+            dialog.dismiss()
+            importShell(uri, overwrite = true)
+        }
+
+        dialog.show()
+    }
+
+    // ============================================================
+    // СОСТОЯНИЯ
+    // ============================================================
+
+    private fun hideState() {
+        stateContainer.isVisible = false
+        stateProgressContainer.isVisible = false
+        stateActions.isVisible = false
+        stateBtnPrimary.isVisible = false
+        stateBtnSecondary.isVisible = false
+        stateBtnPrimary.setOnClickListener(null)
+        stateBtnSecondary.setOnClickListener(null)
+        stateSubtitle.isVisible = false
+    }
+
+    private fun showChecking() {
+        stateContainer.isVisible = true
+        stateIcon.setImageResource(R.drawable.ic_update_server_checking)
+        stateIcon.imageTintList = null
+        stateTitle.setTextColor(getThemeColor(R.attr.textPrimaryColor))
+        stateTitle.setText(R.string.store_import_checking_title)
+        stateSubtitle.isVisible = false
+        stateProgressContainer.isVisible = true
+        stateActions.isVisible = false
+        stateBtnPrimary.isVisible = false
+        stateBtnSecondary.isVisible = false
+    }
+
+    private fun showSuccess(displayName: String) {
+        stateContainer.isVisible = true
+        stateIcon.setImageResource(R.drawable.ic_update_check)
+        stateIcon.imageTintList = null
+        stateTitle.setTextColor(getThemeColor(R.attr.textPrimaryColor))
+        stateTitle.setText(R.string.store_import_success_title)
+        stateSubtitle.isVisible = true
+        stateSubtitle.text = displayName
+        stateProgressContainer.isVisible = false
+        stateActions.isVisible = true
+        stateBtnPrimary.isVisible = true
+        stateBtnPrimary.setText(R.string.store_import_apply_hint)
+        stateBtnPrimary.setOnClickListener {
+            (activity as? StoreActivity)?.let { store ->
+                val found = store.findItemByName(displayName)
+                if (found != null) {
+                    store.showItemDetail(found)
+                } else {
+                    // refreshItems() мог ещё не закончиться — подождём
+                    store.refreshItems {
+                        val again = store.findItemByName(displayName)
+                        if (again != null) store.showItemDetail(again)
+                    }
+                }
+            }
+        }
+        stateBtnSecondary.isVisible = true
+        stateBtnSecondary.setText(R.string.close)
+        stateBtnSecondary.setOnClickListener { hideState() }
+    }
+
+    private fun showError(message: String) {
+        stateContainer.isVisible = true
+        stateIcon.setImageResource(R.drawable.ic_update_error)
+        stateIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(requireContext(), R.color.text_error)
+        )
+        stateTitle.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_error))
+        stateTitle.setText(R.string.store_import_error_title)
+        stateSubtitle.isVisible = false
+        stateProgressContainer.isVisible = false
+        stateActions.isVisible = true
+        stateBtnPrimary.isVisible = true
+        stateBtnPrimary.setText(R.string.store_import_retry)
+        stateBtnPrimary.setOnClickListener { launchPicker() }
+        stateBtnSecondary.isVisible = true
+        stateBtnSecondary.setText(R.string.close)
+        stateBtnSecondary.setOnClickListener { hideState() }
+
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = android.util.TypedValue()
+        requireContext().theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+
+    private fun formatSize(bytes: Long): String {
+        val locale = java.util.Locale.US
+        return when {
+            bytes >= 1024L * 1024 * 1024 -> String.format(locale, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+            bytes >= 1024L * 1024 -> String.format(locale, "%.2f MB", bytes / (1024.0 * 1024.0))
+            bytes >= 1024 -> String.format(locale, "%.2f KB", bytes / 1024.0)
+            else -> "$bytes B"
+        }
+    }
+}
+
+
+==================================================
 FILE: app\src\main\java\by\quty\launch\core\fragments\store\StoreItemDetailFragment.kt
 ==================================================
 
@@ -11987,6 +12437,30 @@ class StoreItemDetailFragment : Fragment() {
         item = found
 
         bindItem(found)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (isProcessing) return
+        if (!isAdded || view == null) return
+
+        val activity = activity as? StoreActivity ?: return
+        val currentName = item?.name ?: itemName
+        val fresh = activity.findItemByName(currentName)
+
+        if (fresh == null) {
+            // Элемент исчез (удалён извне) — закрываем деталь.
+            activity.hideItemDetail()
+            return
+        }
+
+        // Перерисовываем только если модель реально изменилась —
+        // чтобы не дёргать Glide / не сбрасывать скролл зря.
+        if (fresh != item) {
+            item = fresh
+            bindItem(fresh)
+        }
     }
 
     private fun setupViews(view: View) {
@@ -14408,6 +14882,8 @@ package by.quty.launch.core.managers
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.widget.Toast
 import androidx.core.content.edit
@@ -14475,6 +14951,81 @@ data class ShellManifest(
      */
     val apiMethods: List<String> = emptyList()
 )
+
+/**
+ * Результат предпросмотра файла оболочки (без копирования в SHELLS).
+ *
+ * Фрагмент показывает диалог с описанием и кнопками «Отмена» / «Продолжить».
+ */
+sealed class ShellPreviewResult {
+    data class Success(
+        /** Имя оболочки из manifest.json. */
+        val name: String,
+        /** Отображаемое имя (совпадает с name; оставлено для UI). */
+        val displayName: String,
+        /** Версия из manifest.json. */
+        val version: String?,
+        /** Автор из manifest.json. */
+        val author: String?,
+        /** Ориентация из manifest.json. */
+        val orientation: String?,
+        /** Размер файла в байтах. */
+        val sizeBytes: Long,
+        /** Уже установлена оболочка с таким же именем. */
+        val alreadyExists: Boolean
+    ) : ShellPreviewResult()
+
+    sealed class Failure : ShellPreviewResult() {
+        object UnsupportedExtension : Failure()
+        object CannotReadFileName : Failure()
+        object FileTooLarge : Failure()
+        object InvalidArchive : Failure()
+        object ManifestMissing : Failure()
+        object ManifestInvalid : Failure()
+        data class IoError(val message: String?) : Failure()
+    }
+}
+
+/**
+ * Результат импорта оболочки из файловой системы.
+ *
+ * Sealed-иерархия вместо строк — фрагмент сам локализует через
+ * getString(...), как в RecoveryManager.ImportReadResult.
+ */
+sealed class ShellImportResult {
+    data class Success(val shell: Shell) : ShellImportResult()
+
+    sealed class Failure : ShellImportResult() {
+        /** Расширение файла не входит в CoreConfig.SHELL_EXTENSIONS. */
+        object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать displayName из ContentResolver. */
+        object CannotReadFileName : Failure()
+
+        /** Файл больше CoreConfig.MAX_SHELL_SIZE_BYTES. */
+        object FileTooLarge : Failure()
+
+        /** Не удалось открыть файл как ZIP (битый / не ZIP). */
+        object InvalidArchive : Failure()
+
+        /** В ZIP нет manifest.json. */
+        object ManifestMissing : Failure()
+
+        /** manifest.json есть, но не парсится / нет поля name. */
+        object ManifestInvalid : Failure()
+
+        /**
+         * Оболочка с таким именем уже установлена.
+         * Возвращается ДО копирования файла в SHELLS — фрагмент
+         * должен спросить подтверждение и повторить вызов
+         * с overwrite = true.
+         */
+        data class AlreadyExists(val name: String) : Failure()
+
+        /** Ошибка ввода-вывода при копировании/сохранении. */
+        data class IoError(val message: String?) : Failure()
+    }
+}
 
 class ShellManager(
     private val context: Context,
@@ -14816,8 +15367,8 @@ class ShellManager(
      *
      * ВАЖНО: если активен Safe Mode — принудительно возвращаем
      * встроенную оболочку "Default", игнорируя пользовательский выбор
-     * из prefs. Выбор пользователя НЕ сбрасывается — как только
-     * Safe Mode будет выключен, загрузится его оболочка.
+     * из prefs. Выбор пользователя при этом НЕ сбрасывается — как
+     * только Safe Mode будет выключен, загрузится его оболочка.
      */
     fun getShellToActivate(): Shell {
         val shells = getAvailableShells()
@@ -14886,9 +15437,17 @@ class ShellManager(
      * активных методов сохраняется — пользователь не теряет картину
      * «кто что вызывал» в разделе Настроек > API методы.
      *
-     * Safe Mode: в этом режиме НЕ записываем выбор в prefs — иначе
-     * при выходе из Safe Mode загрузилась бы "Default" вместо оболочки,
-     * которую юзер выбрал до входа в Safe Mode.
+     * SAFE MODE (баг-фикс): раньше в Safe Mode запись в prefs ПРОПУСКАЛАСЬ,
+     * чтобы «не затереть выбор пользователя». Но это ломало UX: пользователь
+     * в магазине применял оболочку в Safe Mode, UI писал «применено,
+     * требуется перезагрузка», а после рестарта загружалась Default —
+     * потому что prefs не обновились. Смысл Safe Mode — дать возможность
+     * выбрать/применить оболочку при сломанной текущей. Поэтому теперь:
+     * - prefs (active_shell, active_shell_version) пишутся ВСЕГДА;
+     * - загрузка в WebView по-прежнему идёт через getShellToActivate(),
+     *   который в Safe Mode принудительно отдаёт Default.
+     * После выхода из Safe Mode пользователь увидит именно ту оболочку,
+     * которую применил в Safe Mode.
      *
      * active_shell_version: пишется сюда же — это «версия, реально
      * загруженная в WebView». Используется магазином, чтобы отличить
@@ -14899,13 +15458,12 @@ class ShellManager(
         // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
-        // ВАЖНО: если активен Safe Mode — не перезаписываем активную
-        // оболочку в prefs. Иначе при выходе из Safe Mode вместо
-        // пользовательской оболочки (например, QutyAuto) загрузится Default.
-        if (!configManager.isSafeModeActive()) {
-            configManager.setActiveShell(shell.name)
-            configManager.setActiveShellVersion(shell.version ?: "")
-        }
+        // Пишем выбор пользователя в prefs ВСЕГДА, включая Safe Mode.
+        // В Safe Mode это не активирует оболочку в WebView (см.
+        // getShellToActivate() — там принудительный Default), но
+        // сохранит выбор на момент выхода из Safe Mode.
+        configManager.setActiveShell(shell.name)
+        configManager.setActiveShellVersion(shell.version ?: "")
 
         // Обновляем в памяти
         activeShell = shell
@@ -14924,10 +15482,15 @@ class ShellManager(
             )
         }
 
-        // Сохраняем принудительную ориентацию
-        withContext(Dispatchers.Main) {
-            saveForcedOrientation()
-        }
+        // Сохраняем принудительную ориентацию.
+        //
+        // ВАЖНО (баг-фикс): раньше вызов был обёрнут в withContext(Dispatchers.Main),
+        // хотя saveForcedOrientation() делает SharedPreferences.edit{} — это IO.
+        // SharedPreferences.apply() асинхронный, но чтение + запись самой мапы
+        // (edit {} выполняет commit в памяти) — не бесплатно, и на Main этого
+        // делать не нужно. Метод уже выполняется на Dispatchers.IO (см. заголовок),
+        // поэтому просто убираем Main-обёртку.
+        saveForcedOrientation()
 
         // Очищаем директорию активной оболочки
         clearActiveDir()
@@ -14947,16 +15510,38 @@ class ShellManager(
     // ============================================================
 
     /**
-     * Очищает директорию активной оболочки
+     * Очищает директорию активной оболочки.
+     *
+     * ВАЖНО (баг-фикс): раньше вызывался `storageManager.remove(activeDir)`,
+     * но `StorageManager.remove(File)` использует `File.delete()`, а
+     * `File.delete()` на НЕПУСТОЙ директории возвращает false и НИЧЕГО
+     * не удаляет. В результате содержимое `active/` не очищалось, и при
+     * следующей распаковке старой оболочки могли «перемешиваться» файлы
+     * от старой и новой версий.
+     *
+     * Теперь используем `File.deleteRecursively()` — рекурсивное удаление
+     * содержимого и самой директории, затем `mkdirs()` создаёт пустую.
+     *
+     * Всё выполняется в IO-контексте (вызывается из setActiveShell,
+     * который уже на Dispatchers.IO).
      */
     private suspend fun clearActiveDir() {
-        if (activeShellDir.exists()) {
-            // Удаляем содержимое директории через StorageManager
-            // Получаем File объект и удаляем его
-            val activeDir = storageManager.get("shells/active")
-            if (activeDir.exists()) {
-                storageManager.remove(activeDir)
-                activeShellDir.mkdirs()
+        withContext(Dispatchers.IO) {
+            try {
+                if (activeShellDir.exists()) {
+                    // Рекурсивно удаляем содержимое и саму директорию.
+                    // File.deleteRecursively() возвращает true, если всё
+                    // удалилось (или уже не было), false — если что-то
+                    // не удалилось (занято, нет прав и т.п.).
+                    activeShellDir.deleteRecursively()
+                }
+                // Создаём заново — пустую.
+                if (!activeShellDir.exists()) {
+                    activeShellDir.mkdirs()
+                }
+            } catch (_: Exception) {
+                // Не роняем setActiveShell из-за проблем с очисткой —
+                // хуже будет, если оболочка вообще не установится.
             }
         }
     }
@@ -15114,6 +15699,265 @@ class ShellManager(
             false
         }
     }
+
+    // ============================================================
+    // ПРЕДПРОСМОТР ФАЙЛА ОБОЛОЧКИ (БЕЗ КОПИРОВАНИЯ)
+    // ============================================================
+
+    /**
+     * Читает файл оболочки по URI и возвращает его описание
+     */
+    suspend fun previewShell(uri: Uri): ShellPreviewResult = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+
+        // 1. displayName
+        val displayName = try {
+            resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (index >= 0) cursor.getString(index) else null
+                    } else {
+                        null
+                    }
+                }
+        } catch (_: Exception) {
+            null
+        } ?: return@withContext ShellPreviewResult.Failure.CannotReadFileName
+
+        // 2. Расширение
+        val extension = displayName.substringAfterLast('.', "").lowercase()
+        if (extension !in SHELL_EXTENSIONS) {
+            return@withContext ShellPreviewResult.Failure.UnsupportedExtension
+        }
+
+        // 3. Копируем во временный файл (только для чтения — не в SHELLS)
+        val tempFile = storageManager.createTempFile(
+            prefix = "preview_${displayName.substringBeforeLast('.')}",
+            extension = "tmp"
+        )
+
+        try {
+            resolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            } ?: run {
+                return@withContext ShellPreviewResult.Failure.IoError(null)
+            }
+        } catch (e: Exception) {
+            tempFile.delete()
+            return@withContext ShellPreviewResult.Failure.IoError(e.message)
+        }
+
+        try {
+            // 4. Размер
+            val sizeBytes = tempFile.length()
+            if (sizeBytes > CoreConfig.MAX_SHELL_SIZE_BYTES) {
+                return@withContext ShellPreviewResult.Failure.FileTooLarge
+            }
+
+            // 5. ZIP + manifest
+            val manifest = try {
+                ZipFile(tempFile).use { zip ->
+                    val entry = zip.getEntry("manifest.json")
+                        ?: return@withContext ShellPreviewResult.Failure.ManifestMissing
+                    zip.getInputStream(entry).bufferedReader().use {
+                        json.decodeFromString<ShellManifest>(it.readText())
+                    }
+                }
+            } catch (_: java.util.zip.ZipException) {
+                return@withContext ShellPreviewResult.Failure.InvalidArchive
+            } catch (_: Exception) {
+                return@withContext ShellPreviewResult.Failure.ManifestInvalid
+            }
+
+            if (manifest.name.isBlank()) {
+                return@withContext ShellPreviewResult.Failure.ManifestInvalid
+            }
+
+            // 6. Проверка на существующую оболочку (только флаг, не ошибка)
+            val targetFile = storageManager.get(
+                StorageDirectory.SHELLS,
+                "${manifest.name}$SHELL_EXTENSION_WITH_DOT"
+            )
+            val alreadyExists = targetFile.exists()
+
+            ShellPreviewResult.Success(
+                name = manifest.name,
+                displayName = manifest.name,
+                version = manifest.version,
+                author = manifest.author,
+                orientation = manifest.orientation,
+                sizeBytes = sizeBytes,
+                alreadyExists = alreadyExists
+            )
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    // ============================================================
+    // ИМПОРТ ОБОЛОЧКИ ИЗ ФАЙЛОВОЙ СИСТЕМЫ
+    // ============================================================
+
+    /**
+     * Импортирует оболочку из выбранного пользователем URI (SAF).
+     */
+    suspend fun importShell(uri: Uri, overwrite: Boolean = false): ShellImportResult =
+        withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
+
+            // 1. displayName — для расширения и логов
+            val displayName = try {
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (index >= 0) cursor.getString(index) else null
+                        } else {
+                            null
+                        }
+                    }
+            } catch (_: Exception) {
+                null
+            } ?: return@withContext ShellImportResult.Failure.CannotReadFileName
+
+            // 2. Расширение
+            val extension = displayName.substringAfterLast('.', "").lowercase()
+            if (extension !in SHELL_EXTENSIONS) {
+                LoggerManager.warn(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  unsupported extension  $displayName"
+                )
+                return@withContext ShellImportResult.Failure.UnsupportedExtension
+            }
+
+            // 3. Копируем во временный файл
+            val tempFile = storageManager.createTempFile(
+                prefix = "import_${displayName.substringBeforeLast('.')}",
+                extension = "tmp"
+            )
+
+            try {
+                resolver.openInputStream(uri)?.use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: run {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  cannot open input stream  $displayName"
+                    )
+                    return@withContext ShellImportResult.Failure.IoError(null)
+                }
+            } catch (e: Exception) {
+                tempFile.delete()
+                LoggerManager.error(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  io error on copy  ${e.message ?: e.javaClass.simpleName}",
+                    e
+                )
+                return@withContext ShellImportResult.Failure.IoError(e.message)
+            }
+
+            try {
+                // 4. Размер
+                if (tempFile.length() > CoreConfig.MAX_SHELL_SIZE_BYTES) {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  too large  $displayName  ${tempFile.length()} bytes"
+                    )
+                    return@withContext ShellImportResult.Failure.FileTooLarge
+                }
+
+                // 5. ZIP + manifest
+                val manifest = try {
+                    ZipFile(tempFile).use { zip ->
+                        val entry = zip.getEntry("manifest.json")
+                            ?: return@withContext ShellImportResult.Failure.ManifestMissing
+                        zip.getInputStream(entry).bufferedReader().use {
+                            json.decodeFromString<ShellManifest>(it.readText())
+                        }
+                    }
+                } catch (_: java.util.zip.ZipException) {
+                    return@withContext ShellImportResult.Failure.InvalidArchive
+                } catch (_: Exception) {
+                    return@withContext ShellImportResult.Failure.ManifestInvalid
+                }
+
+                if (manifest.name.isBlank()) {
+                    return@withContext ShellImportResult.Failure.ManifestInvalid
+                }
+
+                // 6. Проверка на существующую оболочку
+                val targetName = manifest.name
+                val targetFile = storageManager.get(
+                    StorageDirectory.SHELLS,
+                    "$targetName$SHELL_EXTENSION_WITH_DOT"
+                )
+
+                if (targetFile.exists() && !overwrite) {
+                    LoggerManager.warn(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  already exists  $targetName"
+                    )
+                    return@withContext ShellImportResult.Failure.AlreadyExists(targetName)
+                }
+
+                // 7. Копируем в SHELLS
+                val saved = storageManager.set(
+                    directory = StorageDirectory.SHELLS,
+                    name = "$targetName$SHELL_EXTENSION_WITH_DOT",
+                    inputStream = tempFile.inputStream(),
+                    overwrite = true
+                )
+
+                if (!saved) {
+                    LoggerManager.error(
+                        LoggerTagModel.SHELL,
+                        "SHELL.import  save failed  $targetName"
+                    )
+                    return@withContext ShellImportResult.Failure.IoError(null)
+                }
+
+                // 8. Собираем Shell для возврата
+                val previewBase64 = loadPreviewFromZip(targetFile, manifest.preview)
+                val imported = Shell(
+                    name = targetName,
+                    isDefault = false,
+                    sourcePath = targetFile.absolutePath,
+                    isAsset = false,
+                    displayName = manifest.name,
+                    isCustom = true,
+                    version = manifest.version,
+                    author = manifest.author,
+                    previewBase64 = previewBase64,
+                    orientation = manifest.orientation,
+                    repoUrl = manifest.repoUrl,
+                    telegramUrl = manifest.telegram,
+                    minQutyLaunchVersion = manifest.minQutyLaunchVersion,
+                    apiMethods = manifest.apiMethods
+                )
+
+                // Если активная оболочка была с тем же именем — перечитываем
+                // из диска, чтобы версия/превью подхватились.
+                if (activeShell?.name == targetName) {
+                    reloadActiveShell()
+                }
+
+                LoggerManager.info(
+                    LoggerTagModel.SHELL,
+                    "SHELL.import  ok  $targetName  v${manifest.version}"
+                )
+
+                ShellImportResult.Success(imported)
+
+            } finally {
+                // Чистим временный файл в любом случае
+                tempFile.delete()
+            }
+        }
 }
 
 
@@ -15638,7 +16482,11 @@ class StoreManager(private val context: Context) {
      * remote.fileSize — человекочитаемая строка («5.2 MB»), её нельзя
      * использовать для проверки свободного места (toLongOrNull() вернёт null,
      * fallback 10 MB — бесполезно, если реальный файл 500 MB). Поэтому
-     * жёсткий лимит MAX_SHELL_SIZE_BYTES после скачивания.
+     * жёсткий лимит CoreConfig.MAX_SHELL_SIZE_BYTES после скачивания.
+     *
+     * ВАЖНО: константа MAX_SHELL_SIZE_BYTES перенесена в CoreConfig —
+     * теперь её использует и ShellManager.importShell() (импорт оболочки
+     * из файловой системы).
      */
     private suspend fun installShellInternal(
         item: StoreItemModel,
@@ -15719,7 +16567,7 @@ class StoreManager(private val context: Context) {
             }
 
             // Жёсткий лимит на размер .qutyshell (защита от вредоносных/сломанных серверов)
-            if (file.length() > MAX_SHELL_SIZE_BYTES) {
+            if (file.length() > CoreConfig.MAX_SHELL_SIZE_BYTES) {
                 file.delete()
                 LoggerManager.warn(
                     LoggerTagModel.STORE,
@@ -15839,9 +16687,6 @@ class StoreManager(private val context: Context) {
 
         /** Имя файла кэша каталога. */
         private const val CACHE_FILE_NAME = "store_shells.json"
-
-        /** Жёсткий лимит размера .qutyshell (защита от вредоносных серверов). */
-        private const val MAX_SHELL_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB
 
         /**
          * Собирает объединённый список элементов магазина.
@@ -16757,9 +17602,8 @@ import kotlinx.serialization.json.longOrNull
 /**
  * Менеджер терминала Quty.Launch.
  *
- * Терминал — внутренняя консоль ядра. Он НЕ запускает системные процессы
- * (никаких Runtime.exec() или ProcessBuilder), а работает только с состоянием
- * самого Quty.Launch через существующие менеджеры.
+ * Терминал — внутренняя консоль ядра. Он НЕ запускает системные процессы,
+ * работает только с состоянием самого Quty.Launch через существующие менеджеры.
  *
  * Синтаксис команд:
  * - простые: help, version, status, clear, exit
@@ -16782,19 +17626,18 @@ object TerminalManager {
      */
     private const val STATUS_PAD_WIDTH = 13
 
+    /**
+     * Префикс сообщения об ошибке. TerminalActivity различает ERROR/OUTPUT
+     * по `result.startsWith("!")`.
+     */
+    private const val ERROR_PREFIX = "!"
+
     // ============================================================
     // КОНСТАНТЫ
     // ============================================================
 
-    private const val KEY_THEME_MODE = "theme_mode"
-    private const val KEY_LANGUAGE = "app_language"
-    private const val KEY_ORIENTATION = "orientation"
-    private const val KEY_FULLSCREEN = "fullscreen"
-    private const val KEY_STRICT_MODE = "strict_mode"
-    private const val KEY_COLOR_SCHEME = "color_scheme"
     private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
     private const val KEY_FORCE_SHOW_ONBOARDING = "force_show_onboarding"
-    private const val KEY_NEED_RESTART_FOR_ORIENTATION = "need_restart_for_orientation"
 
     private const val PREFS_LAUNCHER = "launcher_prefs"
     private const val PREFS_DEVELOPER = "developer_prefs"
@@ -17096,20 +17939,25 @@ object TerminalManager {
 
     /**
      * Выполняет команду по имени.
+     *
+     * ВАЖНО: все ошибки возвращаются с префиксом "!" — TerminalActivity
+     * различает ERROR/OUTPUT именно по этому префиксу.
      */
     suspend fun execute(context: Context, parsed: ParsedCommand): String {
         val commands = getCommands(context)
         val command = commands.find { it.name == parsed.name }
-            ?: return context.getString(R.string.terminal_error_unknown_command, parsed.name)
+            ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, parsed.name))
 
         if (command.requireDevMode && !isDevModeEnabled(context)) {
-            return context.getString(R.string.terminal_error_devmode_required)
+            return errorMessage(context.getString(R.string.terminal_error_devmode_required))
         }
 
         return try {
             command.handler(parsed.args)
         } catch (e: Exception) {
-            context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            errorMessage(
+                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            )
         }
     }
 
@@ -17118,6 +17966,15 @@ object TerminalManager {
      */
     fun isWriteCommand(context: Context, name: String): Boolean {
         return getCommands(context).find { it.name == name }?.isWrite == true
+    }
+
+    /**
+     * Формирует сообщение об ошибке с префиксом "!".
+     * TerminalActivity удалит префикс при выводе, но использует его
+     * для определения типа строки (ERROR / OUTPUT).
+     */
+    private fun errorMessage(message: String): String {
+        return "$ERROR_PREFIX $message"
     }
 
     // ============================================================
@@ -17130,7 +17987,7 @@ object TerminalManager {
         if (args.isNotEmpty()) {
             val targetName = args.first()
             val target = commands.find { it.name == targetName }
-                ?: return context.getString(R.string.terminal_error_unknown_command, targetName)
+                ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, targetName))
 
             val description = context.getString(target.descriptionRes)
             return context.getString(R.string.terminal_help_command, target.name, description)
@@ -17612,7 +18469,7 @@ object TerminalManager {
 
     private suspend fun apiCallHandler(context: Context, args: List<String>): String {
         if (args.isEmpty()) {
-            return "! " + context.getString(R.string.terminal_api_call_usage)
+            return errorMessage(context.getString(R.string.terminal_api_call_usage))
         }
 
         val methodName = args[0]
@@ -17664,71 +18521,109 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: WRITE
     // ============================================================
 
+    /**
+     * Обработчик `set <key> <value>`.
+     */
     private fun setHandler(
         context: Context,
         args: List<String>
     ): String {
         if (args.size < 2) {
-            return "! " + context.getString(R.string.terminal_set_usage)
+            return errorMessage(context.getString(R.string.terminal_set_usage))
         }
 
         val key = args[0]
         val value = args[1]
-        val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
+
+        // Локальный ConfigManager — единая точка правды для prefs.
+        // Логирование изменений (CONFIG.*) делает сам ConfigManager.
+        val configManager = ConfigManager(context)
 
         return when (key) {
             "theme" -> {
                 if (value !in listOf("light", "dark", "system")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "light, dark, system")
+                    )
                 }
-                prefs.edit { putString(KEY_THEME_MODE, value) }
+                configManager.setThemeMode(value)
+                configManager.applyTheme()
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  theme=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "lang" -> {
                 if (value !in listOf("ru", "en")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "ru, en")
+                    )
                 }
-                prefs.edit { putString(KEY_LANGUAGE, value) }
+                configManager.setLanguage(value)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  lang=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "orientation" -> {
                 if (value !in listOf("sensor", "portrait", "landscape")) {
-                    return context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "sensor, portrait, landscape")
+                    )
                 }
-                prefs.edit { putString(KEY_ORIENTATION, value) }
+                configManager.setOrientation(value)
+                // Гарантируем перезапуск — иначе на части устройств
+                // (особенно Android 12+) смена ориентации не применится
+                // к уже запущенной MainActivity.
+                configManager.setRestartForOrientationFlag()
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  orientation=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "fullscreen" -> {
                 val bool = parseOnOff(value)
-                    ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
-                prefs.edit { putBoolean(KEY_FULLSCREEN, bool) }
+                    ?: return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "on, off")
+                    )
+                configManager.setFullscreenEnabled(bool)
+                // Если выключаем полноэкранный — strict теряет смысл,
+                // снимаем его, чтобы не осталось противоречивого состояния
+                // (isStrictModeEnabled вернёт false, но prefs остались бы true).
+                if (!bool && configManager.isStrictModeEnabled()) {
+                    configManager.setStrictModeEnabled(false)
+                }
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  fullscreen=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "strict" -> {
                 val bool = parseOnOff(value)
-                    ?: return context.getString(R.string.terminal_set_invalid_value, value, "on, off")
-                prefs.edit { putBoolean(KEY_STRICT_MODE, bool) }
+                    ?: return errorMessage(
+                        context.getString(R.string.terminal_set_invalid_value, value, "on, off")
+                    )
+                // Контракт ConfigManager: strict имеет смысл только при
+                // включённом fullscreen. Иначе — явная ошибка, чтобы юзер
+                // не получил «молчаливое» состояние, где strict=true,
+                // а isStrictModeEnabled()=false.
+                if (bool && !configManager.isFullscreenEnabled()) {
+                    return errorMessage(
+                        context.getString(R.string.terminal_set_strict_requires_fullscreen)
+                    )
+                }
+                configManager.setStrictModeEnabled(bool)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  strict=$bool")
                 context.getString(R.string.terminal_set_ok_restart)
             }
             "color" -> {
                 val validIds = ColorSchemeModel.getAllSchemes().map { it.id }
                 if (value !in validIds) {
-                    return context.getString(
-                        R.string.terminal_set_invalid_value,
-                        value,
-                        validIds.joinToString(", ")
+                    return errorMessage(
+                        context.getString(
+                            R.string.terminal_set_invalid_value,
+                            value,
+                            validIds.joinToString(", ")
+                        )
                     )
                 }
-                prefs.edit { putString(KEY_COLOR_SCHEME, value) }
+                configManager.setColorScheme(value)
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  color=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
-            else -> context.getString(R.string.terminal_set_unknown_key, key)
+            else -> errorMessage(context.getString(R.string.terminal_set_unknown_key, key))
         }
     }
 
@@ -17756,7 +18651,9 @@ object TerminalManager {
 
                 context.getString(R.string.terminal_clear_ok)
             } catch (e: Exception) {
-                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                errorMessage(
+                    context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                )
             }
         }
 
@@ -17786,13 +18683,20 @@ object TerminalManager {
             context.getString(R.string.terminal_restart_ok)
         }
 
+    /**
+     * Перезапуск приложения.
+     */
     private fun restartApp(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_LAUNCHER, Context.MODE_PRIVATE)
-        prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
-
         val intent = Intent(context, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        context.startActivity(intent)
+
+        val baseActivity = context as? by.quty.launch.BaseActivity
+        if (baseActivity != null) {
+            baseActivity.startActivityAnimated(intent)
+            baseActivity.finishAnimated()
+        } else {
+            context.startActivity(intent)
+        }
     }
 
     // ============================================================
@@ -18461,6 +19365,54 @@ data class TerminalLineModel(
         OUTPUT,
         ERROR
     }
+}
+
+
+==================================================
+FILE: app\src\main\java\by\quty\launch\core\processes\AppScope.kt
+==================================================
+
+
+// *** core/processes/AppScope.kt *** //
+package by.quty.launch.core.processes
+
+import by.quty.launch.core.managers.LoggerManager
+import by.quty.launch.core.model.LoggerTagModel
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+
+/**
+ * Application-level scope для фоновых задач, которые должны пережить
+ * жизненный цикл Activity/Fragment.
+ * Этот scope живёт столько же, сколько процесс приложения
+ *
+ * Не использовать для задач, привязанных к UI (обновление View,
+ * Toast, навигация) — для них есть `lifecycleScope` / `viewLifecycleOwner`.
+ */
+object AppScope {
+
+    /**
+     * Обработчик исключений. Логирует и не даёт приложению упасть.
+     * `_` вместо `context` — контекст не нужен, только исключение.
+     */
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        LoggerManager.error(
+            LoggerTagModel.CORE,
+            "AppScope  uncaught exception",
+            throwable
+        )
+    }
+
+    /**
+     * Сам scope. `@Volatile` не нужен: `object` инициализируется
+     * один раз при первом обращении, все поля `val` безопасно
+     * публикуются через статическую инициализацию.
+     */
+    val scope: CoroutineScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO + exceptionHandler
+    )
 }
 
 
@@ -19242,21 +20194,36 @@ class JsBridge(
                     LoggerTagModel.JSBRIDGE,
                     "JSBRIDGE.timeout  $method  ${timeoutMs}ms"
                 )
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_timeout_error)}"}"""
+                val error = buildErrorJson(context.getString(R.string.js_bridge_timeout_error))
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
                 // Отмена выполнения
                 LoggerManager.warn(LoggerTagModel.JSBRIDGE, "JSBRIDGE.cancelled  $method")
-                val error = """{"success": false, "error": "${context.getString(R.string.js_bridge_cancelled_error)}"}"""
+                val error = buildErrorJson(context.getString(R.string.js_bridge_cancelled_error))
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {
                 // Любая другая ошибка
                 LoggerManager.error(LoggerTagModel.JSBRIDGE, "JSBRIDGE.error  $method", e)
-                val error = """{"success": false, "error": "${e.message}"}"""
+                val error = buildErrorJson(e.message ?: "Unknown error")
                 sendResultToJs(callbackId, error, e)
             }
+        }
+    }
+
+    /**
+     * Формирует JSON строку ответа с ошибкой.
+     */
+    private fun buildErrorJson(message: String): String {
+        return try {
+            JSONObject().apply {
+                put("success", false)
+                put("error", message)
+            }.toString()
+        } catch (_: Exception) {
+            // На случай, если что-то совсем странное — безопасный fallback.
+            """{"success":false,"error":"Unknown error"}"""
         }
     }
 
@@ -22097,6 +23064,325 @@ FILE: app\src\main\res\layout\dialog_restart.xml
                     android:layout_marginStart="@dimen/spacing_s"
                     android:layout_weight="1"
                     android:text="@string/dialog_restart" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>
+
+
+==================================================
+FILE: app\src\main\res\layout\dialog_shell_import_preview.xml
+==================================================
+
+
+<!-- res/layout/dialog_shell_import_preview.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/spacing_l"
+    android:paddingEnd="@dimen/spacing_l"
+    android:paddingTop="@dimen/spacing_xl"
+    android:paddingBottom="@dimen/spacing_xl">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_dialog"
+            android:elevation="16dp"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_l"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHeight_percent="0.9"
+            app:layout_constraintHeight_max="700dp">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_xlarge"
+                        android:layout_height="@dimen/icon_xlarge"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_folder"
+                        android:background="@drawable/bg_icon_dialog"
+                        android:padding="@dimen/spacing_l"
+                        android:contentDescription="@string/empty" />
+
+                    <TextView
+                        style="@style/Text.Title.Medium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_l"
+                        android:gravity="center"
+                        android:text="@string/store_import_preview_title" />
+
+                    <TextView
+                        android:id="@+id/import_preview_name"
+                        style="@style/Text.Title.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        tools:text="QutyAuto" />
+
+                    <!-- Плашка «уже установлена» (по умолчанию скрыта) -->
+                    <TextView
+                        android:id="@+id/import_preview_warning"
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_m"
+                        android:background="@drawable/bg_orientation_lock_hint"
+                        android:gravity="center"
+                        android:padding="@dimen/spacing_m"
+                        android:textColor="@color/status_warning"
+                        android:visibility="gone"
+                        tools:text="@string/store_import_preview_already_exists"
+                        tools:visibility="visible" />
+
+                    <!-- Метаданные -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_l"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_rounded"
+                        android:padding="@dimen/spacing_xs">
+
+                        <!-- Версия -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_version"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_version" />
+
+                            <TextView
+                                android:id="@+id/import_preview_version_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="0.0.5" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="@dimen/spacing_m"
+                            android:layout_marginEnd="@dimen/spacing_m"
+                            android:background="?attr/dividerColor" />
+
+                        <!-- Автор -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_author"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_author" />
+
+                            <TextView
+                                android:id="@+id/import_preview_author_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="QutyTeam" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="@dimen/spacing_m"
+                            android:layout_marginEnd="@dimen/spacing_m"
+                            android:background="?attr/dividerColor" />
+
+                        <!-- Размер -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="@dimen/spacing_m"
+                            android:paddingEnd="@dimen/spacing_m"
+                            android:paddingTop="@dimen/spacing_m"
+                            android:paddingBottom="@dimen/spacing_m">
+
+                            <ImageView
+                                android:layout_width="@dimen/icon_small"
+                                android:layout_height="@dimen/icon_small"
+                                android:src="@drawable/ic_weight"
+                                android:contentDescription="@string/empty"
+                                android:layout_marginEnd="@dimen/spacing_m" />
+
+                            <TextView
+                                style="@style/Text.Body.Dim"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/settings_personalization_shell_info_size" />
+
+                            <TextView
+                                android:id="@+id/import_preview_size_value"
+                                style="@style/Text.Body"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textAlignment="viewEnd"
+                                tools:text="5.2 MB" />
+
+                        </LinearLayout>
+
+                        <!-- Ориентация (скрывается, если не задана) -->
+                        <LinearLayout
+                            android:id="@+id/import_preview_orientation_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginStart="@dimen/spacing_m"
+                                android:layout_marginEnd="@dimen/spacing_m"
+                                android:background="?attr/dividerColor" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingStart="@dimen/spacing_m"
+                                android:paddingEnd="@dimen/spacing_m"
+                                android:paddingTop="@dimen/spacing_m"
+                                android:paddingBottom="@dimen/spacing_m">
+
+                                <ImageView
+                                    android:layout_width="@dimen/icon_small"
+                                    android:layout_height="@dimen/icon_small"
+                                    android:src="@drawable/ic_orientation"
+                                    android:contentDescription="@string/empty"
+                                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                                <TextView
+                                    style="@style/Text.Body.Dim"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/settings_personalization_shell_info_orientation" />
+
+                                <TextView
+                                    android:id="@+id/import_preview_orientation_value"
+                                    style="@style/Text.Body"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:textAlignment="viewEnd"
+                                    tools:text="@string/orientation_auto" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </ScrollView>
+
+            <!-- Кнопки -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/import_preview_cancel_button"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginEnd="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/cancel" />
+
+                <Button
+                    android:id="@+id/import_preview_ok_button"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    android:layout_weight="1"
+                    android:text="@string/store_import_continue" />
 
             </LinearLayout>
 
@@ -26250,6 +27536,239 @@ FILE: app\src\main\res\layout\fragment_store_catalog.xml
 
 
 ==================================================
+FILE: app\src\main\res\layout\fragment_store_import.xml
+==================================================
+
+
+<!-- res/layout/fragment_store_import.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_padding_horizontal"
+    android:paddingEnd="@dimen/screen_padding_horizontal"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/fragment_top"
+        android:orientation="vertical">
+
+        <!-- ============================================================ -->
+        <!-- ===== СЕКЦИЯ: ИМПОРТ ИЗ ФАЙЛА ============================== -->
+        <!-- ============================================================ -->
+
+        <TextView
+            style="@style/Text.Title.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_l"
+            android:text="@string/store_import_section_title" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_xs">
+
+            <!-- Кнопка выбора файла -->
+            <LinearLayout
+                android:id="@+id/import_select_file_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_item_rounded"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/spacing_l"
+                android:paddingEnd="@dimen/spacing_l"
+                android:paddingTop="@dimen/spacing_l"
+                android:paddingBottom="@dimen/spacing_l"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_folder"
+                    android:contentDescription="@string/empty"
+                    android:layout_marginEnd="@dimen/spacing_m" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Text.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_import_select_file" />
+
+                    <TextView
+                        style="@style/Text.Small"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/store_import_select_file_desc" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="@dimen/icon_small"
+                    android:layout_height="@dimen/icon_small"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:contentDescription="@string/empty" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ===== БЛОК СОСТОЯНИЯ ====================================== -->
+        <!-- ============================================================ -->
+
+        <LinearLayout
+            android:id="@+id/import_state_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_marginEnd="@dimen/spacing_s"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_rounded"
+            android:padding="@dimen/spacing_l"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                tools:ignore="UseCompoundDrawables">
+
+                <FrameLayout
+                    android:layout_width="@dimen/icon_large"
+                    android:layout_height="@dimen/icon_large"
+                    android:background="@drawable/bg_icon_surface"
+                    android:layout_marginEnd="@dimen/spacing_l">
+
+                    <ImageView
+                        android:id="@+id/import_state_icon"
+                        android:layout_width="@dimen/icon_medium"
+                        android:layout_height="@dimen/icon_medium"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_folder"
+                        android:contentDescription="@string/empty" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/import_state_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Text.Title.Small"
+                        android:textColor="?attr/textPrimaryColor"
+                        tools:text="@string/store_import_checking_title" />
+
+                    <TextView
+                        android:id="@+id/import_state_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xxs"
+                        style="@style/Text.Small"
+                        android:textColor="?attr/textDimColor"
+                        android:visibility="gone"
+                        tools:text="QutyAuto"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Прогресс (indeterminate) -->
+            <LinearLayout
+                android:id="@+id/import_state_progress_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_m"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ProgressBar
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:indeterminate="true"
+                    android:indeterminateTint="?attr/buttonPrimaryColor"
+                    android:background="@android:color/transparent" />
+
+            </LinearLayout>
+
+            <!-- Кнопки -->
+            <LinearLayout
+                android:id="@+id/import_state_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_l"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <Button
+                    android:id="@+id/import_state_btn_secondary"
+                    style="@style/Button.Glass.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:minWidth="0dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <Button
+                    android:id="@+id/import_state_btn_primary"
+                    style="@style/Button.Glass.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/spacing_s"
+                    android:minWidth="0dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Отступ снизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_xxl" />
+
+    </LinearLayout>
+
+</ScrollView>
+
+
+==================================================
 FILE: app\src\main\res\layout\fragment_store_item_detail.xml
 ==================================================
 
@@ -28932,6 +30451,8 @@ FILE: app\src\main\res\values\strings.xml
     <string name="store_menu_catalog_desc">Все доступные ресурсы</string>
     <string name="store_menu_settings">Настройки</string>
     <string name="store_menu_settings_desc">Кэш и источник</string>
+    <string name="store_menu_import">Импорт</string>
+    <string name="store_menu_import_desc">Установить оболочку из файла</string>
 
     <!-- Фильтры -->
     <string name="store_filter_all">Все</string>
@@ -29007,6 +30528,32 @@ FILE: app\src\main\res\values\strings.xml
     <string name="store_settings_clear_cache_desc">Удалить сохранённый список ресурсов</string>
     <string name="store_cache_cleared">Кэш каталога очищен</string>
     <string name="store_cache_clear_error">Не удалось очистить кэш</string>
+
+    <!-- МАГАЗИН — ИМПОРТ ОБОЛОЧКИ -->
+    <string name="store_import_section_title">Импорт оболочки</string>
+    <string name="store_import_select_file">Выбрать файл</string>
+    <string name="store_import_select_file_desc">Поддерживаются .qutyshell, .qsp, .qutyshellpack</string>
+    <string name="store_import_checking_title">Проверка файла…</string>
+    <string name="store_import_success_title">Оболочка импортирована</string>
+    <string name="store_import_error_title">Ошибка импорта</string>
+    <string name="store_import_retry">Повторить</string>
+    <string name="store_import_apply_hint">Открыть в каталоге</string>
+    <string name="store_import_overwrite_title">Оболочка уже установлена</string>
+    <string name="store_import_overwrite_message" formatted="false">Оболочка «%s» уже установлена. Заменить файл?</string>
+    <string name="store_import_overwrite_confirm">Заменить</string>
+    <string name="store_import_error_extension">Неподдерживаемое расширение файла</string>
+    <string name="store_import_error_too_large">Файл слишком большой</string>
+    <string name="store_import_error_invalid_archive">Файл повреждён или не является архивом оболочки</string>
+    <string name="store_import_error_manifest_missing">В архиве отсутствует manifest.json</string>
+    <string name="store_import_error_manifest_invalid">manifest.json недействителен</string>
+    <string name="store_import_error_io" formatted="false">Ошибка ввода-вывода: %s</string>
+    <string name="store_import_error_unknown">Неизвестная ошибка</string>
+    <string name="store_import_error_open_picker" formatted="false">Не удалось открыть файловый менеджер: %s</string>
+
+    <!-- МАГАЗИН — ПРЕДПРОСМОТР ИМПОРТА -->
+    <string name="store_import_preview_title">Проверить оболочку</string>
+    <string name="store_import_continue">Продолжить</string>
+    <string name="store_import_preview_already_exists">Оболочка с таким именем уже установлена. Файл будет заменён.</string>
 
     <!-- ============================================================ -->
     <!-- ===== ТЕРМИНАЛ ============================================= -->
@@ -29087,6 +30634,7 @@ FILE: app\src\main\res\values\strings.xml
     <string name="terminal_set_unknown_key" formatted="false">Неизвестный параметр: %s</string>
     <string name="terminal_set_invalid_value" formatted="false">Неверное значение: %s. Допустимо: %s</string>
     <string name="terminal_set_ok_restart">OK. Изменение применится после перезапуска приложения.</string>
+    <string name="terminal_set_strict_requires_fullscreen">Сначала включите полноэкранный режим (set fullscreen "on")</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Перезапуск…</string>
     <string name="terminal_reset_onboarding_ok">OK. Онбординг сброшен. Перезапуск…</string>
@@ -30187,6 +31735,8 @@ FILE: app\src\main\res\values-en\strings.xml
     <string name="store_menu_catalog_desc">All available resources</string>
     <string name="store_menu_settings">Settings</string>
     <string name="store_menu_settings_desc">Cache and source</string>
+    <string name="store_menu_import">Import</string>
+    <string name="store_menu_import_desc">Install a shell from a file</string>
 
     <!-- Filters -->
     <string name="store_filter_all">All</string>
@@ -30262,6 +31812,32 @@ FILE: app\src\main\res\values-en\strings.xml
     <string name="store_settings_clear_cache_desc">Delete saved resource list</string>
     <string name="store_cache_cleared">Catalog cache cleared</string>
     <string name="store_cache_clear_error">Failed to clear cache</string>
+
+    <!-- STORE — SHELL IMPORT -->
+    <string name="store_import_section_title">Shell import</string>
+    <string name="store_import_select_file">Choose file</string>
+    <string name="store_import_select_file_desc">Supported: .qutyshell, .qsp, .qutyshellpack</string>
+    <string name="store_import_checking_title">Checking file…</string>
+    <string name="store_import_success_title">Shell imported</string>
+    <string name="store_import_error_title">Import error</string>
+    <string name="store_import_retry">Retry</string>
+    <string name="store_import_apply_hint">Open in catalog</string>
+    <string name="store_import_overwrite_title">Shell already installed</string>
+    <string name="store_import_overwrite_message" formatted="false">Shell «%s» is already installed. Replace the file?</string>
+    <string name="store_import_overwrite_confirm">Replace</string>
+    <string name="store_import_error_extension">Unsupported file extension</string>
+    <string name="store_import_error_too_large">File is too large</string>
+    <string name="store_import_error_invalid_archive">File is corrupted or not a shell archive</string>
+    <string name="store_import_error_manifest_missing">Archive has no manifest.json</string>
+    <string name="store_import_error_manifest_invalid">manifest.json is invalid</string>
+    <string name="store_import_error_io" formatted="false">I/O error: %s</string>
+    <string name="store_import_error_unknown">Unknown error</string>
+    <string name="store_import_error_open_picker" formatted="false">Failed to open file manager: %s</string>
+
+    <!-- STORE — IMPORT PREVIEW -->
+    <string name="store_import_preview_title">Check shell</string>
+    <string name="store_import_continue">Continue</string>
+    <string name="store_import_preview_already_exists">A shell with this name is already installed. The file will be replaced.</string>
 
     <!-- ============================================================ -->
     <!-- ===== TERMINAL ============================================= -->
@@ -30342,6 +31918,7 @@ FILE: app\src\main\res\values-en\strings.xml
     <string name="terminal_set_unknown_key" formatted="false">Unknown parameter: %s</string>
     <string name="terminal_set_invalid_value" formatted="false">Invalid value: %s. Allowed: %s</string>
     <string name="terminal_set_ok_restart">OK. The change will be applied after restart.</string>
+    <string name="terminal_set_strict_requires_fullscreen">Enable fullscreen mode first (set fullscreen "on")</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Restarting…</string>
     <string name="terminal_reset_onboarding_ok">OK. Onboarding reset. Restarting…</string>
