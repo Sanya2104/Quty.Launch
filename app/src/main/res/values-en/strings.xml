@@ -719,9 +719,13 @@
     <string name="terminal_cmd_lang_desc">Current language</string>
     <string name="terminal_cmd_orientation_desc">Current orientation</string>
     <string name="terminal_cmd_devmode_desc">DevMode status</string>
+    <string name="terminal_cmd_time_desc">Current time, uptime, timezone</string>
+    <string name="terminal_cmd_updates_desc">Check for updates and show result</string>
 
     <!-- Command descriptions (part 2, write) -->
-    <string name="terminal_cmd_set_desc">Change a parameter (set theme "dark")</string>
+    <string name="terminal_cmd_set_desc">Change a parameter (theme, lang, orientation, fullscreen, strict, color, shell)</string>
+    <string name="terminal_cmd_shell_apply_desc">Apply shell by name</string>
+    <string name="terminal_cmd_safemode_desc">Show/toggle Safe Mode</string>
     <string name="terminal_cmd_reload_shell_desc">Reload active shell</string>
     <string name="terminal_cmd_clear_webview_desc">Clear WebView cache</string>
     <string name="terminal_cmd_clear_cache_desc">Clear app cache</string>
@@ -740,6 +744,7 @@
     <string name="terminal_cmd_memory_desc">Java heap usage</string>
     <string name="terminal_cmd_webview_desc">WebView information</string>
     <string name="terminal_cmd_screen_desc">Screen resolution and density</string>
+    <string name="terminal_cmd_bench_desc">Measure API method execution time</string>
 
     <!-- history -->
     <string name="terminal_cmd_history_desc">Show command history</string>
@@ -766,6 +771,16 @@
     <string name="terminal_set_invalid_value" formatted="false">Invalid value: %s. Allowed: %s</string>
     <string name="terminal_set_ok_restart">OK. The change will be applied after restart.</string>
     <string name="terminal_set_strict_requires_fullscreen">Enable fullscreen mode first (set fullscreen "on")</string>
+    <string name="terminal_set_shell_not_found" formatted="false">Shell not found: %s</string>
+    <string name="terminal_bench_usage">Usage: bench &lt;method&gt; [params] [iterations]</string>
+    <string name="terminal_updates_available">Update available</string>
+    <string name="terminal_updates_uptodate">You have the latest version</string>
+    <string name="terminal_updates_error" formatted="false">Check failed: %s</string>
+    <string name="terminal_shell_apply_usage">Usage: shell.apply &lt;name&gt;</string>
+    <string name="terminal_shell_apply_ok" formatted="false">OK. Shell "%s" applied. Restart required.</string>
+    <string name="terminal_safemode_status" formatted="false">Safe Mode: %s</string>
+    <string name="terminal_safemode_already" formatted="false">Safe Mode is already %s</string>
+    <string name="terminal_safemode_changed" formatted="false">OK. Safe Mode: %s. Restart required.</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Restarting…</string>
     <string name="terminal_reset_onboarding_ok">OK. Onboarding reset. Restarting…</string>

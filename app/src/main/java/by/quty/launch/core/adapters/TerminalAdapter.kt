@@ -1,6 +1,11 @@
 // *** core/adapters/TerminalAdapter.kt *** //
 package by.quty.launch.core.adapters
 
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.TypefaceSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +14,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import by.quty.launch.R
 import by.quty.launch.core.model.TerminalLineModel
+import by.quty.launch.core.model.TerminalSegmentModel
 
 /**
  * Строка терминала: INPUT «> », ERROR «! », OUTPUT без префикса.
+ * OUTPUT/ERROR с segments — рендерятся через Spannable (имя — акцентом, описание — dim).
  */
 class TerminalAdapter(
     private val lines: List<TerminalLineModel>
@@ -47,16 +54,77 @@ class TerminalAdapter(
                     textView.setTextColor(getThemeColor(context, R.attr.buttonPrimaryColor))
                 }
                 TerminalLineModel.LineType.OUTPUT -> {
-                    textView.text = line.text
-                    textView.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+                    if (line.segments.isNotEmpty()) {
+                        textView.text = buildSpannable(line.text, line.segments)
+                        textView.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+                    } else {
+                        textView.text = line.text
+                        textView.setTextColor(getThemeColor(context, R.attr.textPrimaryColor))
+                    }
                 }
                 TerminalLineModel.LineType.ERROR -> {
-                    textView.text = "! ${line.text}"
-                    textView.setTextColor(
-                        ContextCompat.getColor(context, R.color.text_error)
-                    )
+                    if (line.segments.isNotEmpty()) {
+                        textView.text = buildSpannable(line.text, line.segments)
+                        textView.setTextColor(ContextCompat.getColor(context, R.color.text_error))
+                    } else {
+                        textView.text = "! ${line.text}"
+                        textView.setTextColor(
+                            ContextCompat.getColor(context, R.color.text_error)
+                        )
+                    }
                 }
             }
+        }
+
+        /** Собирает Spannable по списку сегментов. */
+        private fun buildSpannable(
+            text: String,
+            segments: List<TerminalSegmentModel>
+        ): CharSequence {
+            val builder = SpannableStringBuilder(text)
+
+            segments.forEach { segment ->
+                if (segment.start < 0 || segment.end > text.length || segment.start >= segment.end) {
+                    return@forEach
+                }
+
+                when (segment.kind) {
+                    TerminalSegmentModel.Kind.COMMAND_NAME -> {
+                        builder.setSpan(
+                            ForegroundColorSpan(
+                                getThemeColor(itemView.context, R.attr.buttonPrimaryColor)
+                            ),
+                            segment.start,
+                            segment.end,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                        builder.setSpan(
+                            StyleSpan(android.graphics.Typeface.BOLD),
+                            segment.start,
+                            segment.end,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                        builder.setSpan(
+                            TypefaceSpan("monospace"),
+                            segment.start,
+                            segment.end,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
+                    TerminalSegmentModel.Kind.DESCRIPTION -> {
+                        builder.setSpan(
+                            ForegroundColorSpan(
+                                getThemeColor(itemView.context, R.attr.textDimColor)
+                            ),
+                            segment.start,
+                            segment.end,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
+                }
+            }
+
+            return builder
         }
 
         /** Резолвит цвет темы по атрибуту. */

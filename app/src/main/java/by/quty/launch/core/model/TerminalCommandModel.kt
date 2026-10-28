@@ -9,5 +9,5 @@ data class TerminalCommandModel(
     @StringRes val descriptionRes: Int,
     val requireDevMode: Boolean = false,
     val isWrite: Boolean = false,
-    val handler: suspend (args: List<String>) -> String
+    val handler: suspend (args: List<String>) -> TerminalExecutionResult
 )

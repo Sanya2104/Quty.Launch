@@ -15,6 +15,8 @@ import by.quty.launch.configs.CoreConfig
 import by.quty.launch.core.model.ColorSchemeModel
 import by.quty.launch.core.model.LoggerTagModel
 import by.quty.launch.core.model.TerminalCommandModel
+import by.quty.launch.core.model.TerminalExecutionResult
+import by.quty.launch.core.model.TerminalSegmentModel
 import by.quty.launch.core.utilities.AppInfoHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,28 +71,28 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_version_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { versionHandler(context) }
+                handler = { TerminalExecutionResult(versionHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "status",
                 descriptionRes = R.string.terminal_cmd_status_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { statusHandler(context, configManager) }
+                handler = { TerminalExecutionResult(statusHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "clear",
                 descriptionRes = R.string.terminal_cmd_clear_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { "" }
+                handler = { TerminalExecutionResult("") }
             ),
             TerminalCommandModel(
                 name = "exit",
                 descriptionRes = R.string.terminal_cmd_exit_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { "" }
+                handler = { TerminalExecutionResult("") }
             ),
 
             // ===== Информация о ядре =====
@@ -99,63 +101,79 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_about_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { aboutHandler(context) }
+                handler = { TerminalExecutionResult(aboutHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "device",
                 descriptionRes = R.string.terminal_cmd_device_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { deviceHandler(context) }
+                handler = { TerminalExecutionResult(deviceHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "shell.info",
                 descriptionRes = R.string.terminal_cmd_shell_info_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { shellInfoHandler(context, configManager) }
+                handler = { TerminalExecutionResult(shellInfoHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "shell.list",
                 descriptionRes = R.string.terminal_cmd_shell_list_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { shellListHandler(context, configManager) }
+                handler = { TerminalExecutionResult(shellListHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "theme",
                 descriptionRes = R.string.terminal_cmd_theme_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { themeHandler(context, configManager) }
+                handler = { TerminalExecutionResult(themeHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "lang",
                 descriptionRes = R.string.terminal_cmd_lang_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { langHandler(configManager) }
+                handler = { TerminalExecutionResult(langHandler(configManager)) }
             ),
             TerminalCommandModel(
                 name = "orientation",
                 descriptionRes = R.string.terminal_cmd_orientation_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { orientationHandler(context, configManager) }
+                handler = { TerminalExecutionResult(orientationHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "devmode",
                 descriptionRes = R.string.terminal_cmd_devmode_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { devModeHandler(context) }
+                handler = { TerminalExecutionResult(devModeHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "storage",
                 descriptionRes = R.string.terminal_cmd_storage_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { storageHandler(context) }
+                handler = { TerminalExecutionResult(storageHandler(context)) }
+            ),
+
+            // ===== Время и обновления =====
+            TerminalCommandModel(
+                name = "time",
+                descriptionRes = R.string.terminal_cmd_time_desc,
+                requireDevMode = false,
+                isWrite = false,
+                handler = { TerminalExecutionResult(timeHandler()) }
+            ),
+            TerminalCommandModel(
+                name = "updates",
+                descriptionRes = R.string.terminal_cmd_updates_desc,
+                requireDevMode = false,
+                isWrite = false,
+                handler = { TerminalExecutionResult(updatesHandler(context)) }
             ),
 
             // ===== Диагностика =====
@@ -164,28 +182,35 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_doctor_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { doctorHandler(context, configManager) }
+                handler = { TerminalExecutionResult(doctorHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "memory",
                 descriptionRes = R.string.terminal_cmd_memory_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { memoryHandler() }
+                handler = { TerminalExecutionResult(memoryHandler()) }
             ),
             TerminalCommandModel(
                 name = "webview",
                 descriptionRes = R.string.terminal_cmd_webview_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { webViewHandler(context) }
+                handler = { TerminalExecutionResult(webViewHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "screen",
                 descriptionRes = R.string.terminal_cmd_screen_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { screenHandler(context) }
+                handler = { TerminalExecutionResult(screenHandler(context)) }
+            ),
+            TerminalCommandModel(
+                name = "bench",
+                descriptionRes = R.string.terminal_cmd_bench_desc,
+                requireDevMode = true,
+                isWrite = false,
+                handler = { TerminalExecutionResult(benchHandler(context, it)) }
             ),
 
             // ===== API =====
@@ -194,14 +219,14 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_api_list_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { apiListHandler(context, configManager) }
+                handler = { TerminalExecutionResult(apiListHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "api.call",
                 descriptionRes = R.string.terminal_cmd_api_call_desc,
                 requireDevMode = true,
                 isWrite = false,
-                handler = { apiCallHandler(context, it) }
+                handler = { TerminalExecutionResult(apiCallHandler(context, it)) }
             ),
 
             // ===== Служебные для тестов =====
@@ -210,7 +235,7 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_echo_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { echoHandler(it) }
+                handler = { TerminalExecutionResult(echoHandler(it)) }
             ),
 
             // ===== История =====
@@ -219,14 +244,14 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_history_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { historyHandler(context, it) }
+                handler = { TerminalExecutionResult(historyHandler(context, it)) }
             ),
             TerminalCommandModel(
                 name = "history.clear",
                 descriptionRes = R.string.terminal_cmd_history_clear_desc,
                 requireDevMode = false,
                 isWrite = false,
-                handler = { historyClearHandler(context) }
+                handler = { TerminalExecutionResult(historyClearHandler(context)) }
             ),
 
             // ===== Управление состоянием (write, DevMode) =====
@@ -235,42 +260,56 @@ object TerminalManager {
                 descriptionRes = R.string.terminal_cmd_set_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { setHandler(context, it) }
+                handler = { TerminalExecutionResult(setHandler(context, it)) }
+            ),
+            TerminalCommandModel(
+                name = "shell.apply",
+                descriptionRes = R.string.terminal_cmd_shell_apply_desc,
+                requireDevMode = true,
+                isWrite = true,
+                handler = { TerminalExecutionResult(shellApplyHandler(context, configManager, it)) }
+            ),
+            TerminalCommandModel(
+                name = "safemode",
+                descriptionRes = R.string.terminal_cmd_safemode_desc,
+                requireDevMode = true,
+                isWrite = true,
+                handler = { TerminalExecutionResult(safeModeHandler(context, configManager, it)) }
             ),
             TerminalCommandModel(
                 name = "reload.shell",
                 descriptionRes = R.string.terminal_cmd_reload_shell_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { reloadShellHandler(context, configManager) }
+                handler = { TerminalExecutionResult(reloadShellHandler(context, configManager)) }
             ),
             TerminalCommandModel(
                 name = "clear.webview",
                 descriptionRes = R.string.terminal_cmd_clear_webview_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { clearWebViewHandler(context) }
+                handler = { TerminalExecutionResult(clearWebViewHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "clear.cache",
                 descriptionRes = R.string.terminal_cmd_clear_cache_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { clearCacheHandler() }
+                handler = { TerminalExecutionResult(clearCacheHandler()) }
             ),
             TerminalCommandModel(
                 name = "reset.onboarding",
                 descriptionRes = R.string.terminal_cmd_reset_onboarding_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { resetOnboardingHandler(context) }
+                handler = { TerminalExecutionResult(resetOnboardingHandler(context)) }
             ),
             TerminalCommandModel(
                 name = "restart",
                 descriptionRes = R.string.terminal_cmd_restart_desc,
                 requireDevMode = true,
                 isWrite = true,
-                handler = { restartHandler(context) }
+                handler = { TerminalExecutionResult(restartHandler(context)) }
             )
         )
     }
@@ -317,20 +356,26 @@ object TerminalManager {
     }
 
     /** Выполняет команду. Все ошибки возвращаются с префиксом "!". */
-    suspend fun execute(context: Context, parsed: ParsedCommand): String {
+    suspend fun execute(context: Context, parsed: ParsedCommand): TerminalExecutionResult {
         val commands = getCommands(context)
         val command = commands.find { it.name == parsed.name }
-            ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, parsed.name))
+            ?: return TerminalExecutionResult(
+                errorMessage(context.getString(R.string.terminal_error_unknown_command, parsed.name))
+            )
 
         if (command.requireDevMode && !isDevModeEnabled(context)) {
-            return errorMessage(context.getString(R.string.terminal_error_devmode_required))
+            return TerminalExecutionResult(
+                errorMessage(context.getString(R.string.terminal_error_devmode_required))
+            )
         }
 
         return try {
             command.handler(parsed.args)
         } catch (e: Exception) {
-            errorMessage(
-                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            TerminalExecutionResult(
+                errorMessage(
+                    context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                )
             )
         }
     }
@@ -349,32 +394,70 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: СПРАВКА И ИНФО
     // ============================================================
 
-    /** Справка: список команд или по одной. */
-    private fun helpHandler(context: Context, args: List<String>): String {
+    /** Справка: список команд с сегментами (имя — акцентом, описание — dim). */
+    private fun helpHandler(context: Context, args: List<String>): TerminalExecutionResult {
         val commands = getCommands(context)
 
         if (args.isNotEmpty()) {
             val targetName = args.first()
             val target = commands.find { it.name == targetName }
-                ?: return errorMessage(context.getString(R.string.terminal_error_unknown_command, targetName))
+                ?: return TerminalExecutionResult(
+                    errorMessage(context.getString(R.string.terminal_error_unknown_command, targetName))
+                )
 
             val description = context.getString(target.descriptionRes)
-            return context.getString(R.string.terminal_help_command, target.name, description)
+            val text = context.getString(R.string.terminal_help_command, target.name, description)
+
+            // Сегмент: имя команды в начале строки.
+            val nameEnd = target.name.length
+            val segments = listOf(
+                TerminalSegmentModel(0, nameEnd, TerminalSegmentModel.Kind.COMMAND_NAME)
+            )
+
+            return TerminalExecutionResult(text, segments)
         }
 
         val sb = StringBuilder()
         sb.appendLine(context.getString(R.string.terminal_help_header))
         sb.appendLine()
 
-        val nameWidth = commands.maxOf { it.name.length }.coerceAtLeast(6) + 2
+        // Команды — в алфавитном порядке.
+        val sortedCommands = commands.sortedBy { it.name }
+        val nameWidth = sortedCommands.maxOf { it.name.length }.coerceAtLeast(6) + 2
+        val segments = mutableListOf<TerminalSegmentModel>()
 
-        commands.forEach { cmd ->
-            val name = cmd.name.padEnd(nameWidth, ' ')
+        sortedCommands.forEach { cmd ->
+            val nameText = cmd.name.padEnd(nameWidth, ' ')
             val description = context.getString(cmd.descriptionRes)
-            sb.appendLine("  $name$description")
+
+            val lineStart = sb.length
+            sb.append("  ")
+            sb.append(nameText)
+            sb.append(description)
+            sb.append('\n')
+
+            // Сегмент имени: от начала имени до конца padded-имени.
+            val nameStart = lineStart + 2
+            val nameEnd = nameStart + nameText.length
+            segments.add(
+                TerminalSegmentModel(nameStart, nameEnd, TerminalSegmentModel.Kind.COMMAND_NAME)
+            )
+
+            // Сегмент описания.
+            val descStart = nameEnd
+            val descEnd = descStart + description.length
+            if (description.isNotEmpty()) {
+                segments.add(
+                    TerminalSegmentModel(descStart, descEnd, TerminalSegmentModel.Kind.DESCRIPTION)
+                )
+            }
         }
 
-        return sb.toString().trimEnd()
+        // Убираем последний перенос строки для trimEnd-эквивалента.
+        val text = sb.toString().trimEnd()
+        val validSegments = segments.filter { it.end <= text.length }
+
+        return TerminalExecutionResult(text, validSegments)
     }
 
     /** about: версия, автор, ссылки. */
@@ -584,6 +667,126 @@ object TerminalManager {
             appendLine(pad("Shells:") + storageManager.formatSize(shellsSize))
             appendLine(context.getString(R.string.terminal_storage_divider))
             append(pad("Total:") + storageManager.formatSize(total))
+        }
+    }
+
+    /** time: текущее время, uptime, timezone. */
+    private fun timeHandler(): String {
+        val now = java.text.SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss",
+            java.util.Locale.US
+        ).format(java.util.Date())
+
+        val uptimeMs = android.os.SystemClock.elapsedRealtime()
+        val uptimeSec = uptimeMs / 1000
+        val days = uptimeSec / 86400
+        val hours = (uptimeSec % 86400) / 3600
+        val minutes = (uptimeSec % 3600) / 60
+        val seconds = uptimeSec % 60
+
+        val uptimeFormatted = buildString {
+            if (days > 0) append("${days}d ")
+            append("${hours}h ${minutes}m ${seconds}s")
+        }
+
+        val timezone = java.util.TimeZone.getDefault()
+        val tzString = "${timezone.id} (${timezone.getDisplayName(false, java.util.TimeZone.SHORT)})"
+
+        return buildString {
+            appendLine(pad("Time:") + now)
+            appendLine(pad("Uptime:") + uptimeFormatted)
+            append(pad("Timezone:") + tzString)
+        }
+    }
+
+    /** updates: форсированная проверка обновлений с выводом результата. */
+    private suspend fun updatesHandler(context: Context): String = withContext(Dispatchers.IO) {
+        try {
+            val updateManager = SystemUpdateManager(context)
+            val result = updateManager.checkForUpdates()
+            updateManager.setCachedUpdate(result)
+
+            when {
+                result.error != null -> {
+                    return@withContext errorMessage(
+                        context.getString(R.string.terminal_updates_error, result.error)
+                    )
+                }
+                result.hasUpdate && result.versionInfo != null -> {
+                    val info = result.versionInfo
+                    val critical = if (info.isCritical) {
+                        " " + context.getString(R.string.critical_tag)
+                    } else ""
+                    val none = context.getString(R.string.terminal_value_none)
+
+                    return@withContext buildString {
+                        appendLine(
+                            pad("Status:") +
+                                    context.getString(R.string.terminal_updates_available)
+                        )
+                        appendLine(pad("Version:") + info.version + critical)
+                        appendLine(pad("Code:") + info.versionCode.toString())
+                        appendLine(pad("Release:") + info.releaseDate.ifEmpty { none })
+                        appendLine(pad("Size:") + info.size.ifEmpty { none })
+                        append(pad("Changelog:") + info.changelog.ifEmpty { none })
+                    }
+                }
+                else -> {
+                    return@withContext context.getString(R.string.terminal_updates_uptodate)
+                }
+            }
+        } catch (e: Exception) {
+            errorMessage(
+                context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+            )
+        }
+    }
+
+    /** bench: замер времени выполнения API-метода N раз (по умолчанию 5). */
+    private suspend fun benchHandler(context: Context, args: List<String>): String {
+        if (args.isEmpty()) {
+            return errorMessage(context.getString(R.string.terminal_bench_usage))
+        }
+
+        val methodName = args[0]
+        val params = args.getOrNull(1)
+        val iterations = args.getOrNull(2)?.toIntOrNull()?.coerceIn(1, 100) ?: 5
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val times = mutableListOf<Long>()
+
+                // Warm-up: 1 прогон не учитываем, чтобы JIT прогрел.
+                ApiRouter.execute(methodName, params)
+
+                repeat(iterations) {
+                    val start = System.nanoTime()
+                    ApiRouter.execute(methodName, params)
+                    val elapsed = (System.nanoTime() - start) / 1_000_000
+                    times.add(elapsed)
+                }
+
+                val min = times.minOrNull() ?: 0
+                val max = times.maxOrNull() ?: 0
+                val avg = times.average().toLong()
+
+                LoggerManager.info(
+                    LoggerTagModel.TERMINAL,
+                    "TERMINAL.bench  $methodName  n=$iterations  min=${min}ms  avg=${avg}ms  max=${max}ms"
+                )
+
+                return@withContext buildString {
+                    appendLine(pad("Method:") + methodName)
+                    appendLine(pad("Runs:") + iterations.toString())
+                    appendLine(pad("Min:") + "${min}ms")
+                    appendLine(pad("Avg:") + "${avg}ms")
+                    append(pad("Max:") + "${max}ms")
+                }
+            } catch (e: Exception) {
+                errorMessage(
+                    context.getString(R.string.terminal_error_execution, e.message ?: "Unknown error")
+                )
+            }
         }
     }
 
@@ -912,7 +1115,7 @@ object TerminalManager {
     // ============================================================
 
     /** `set <key> <value>`. Все изменения идут через ConfigManager. */
-    private fun setHandler(
+    private suspend fun setHandler(
         context: Context,
         args: List<String>
     ): String {
@@ -1001,8 +1204,98 @@ object TerminalManager {
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  color=$value")
                 context.getString(R.string.terminal_set_ok_restart)
             }
+            "shell" -> {
+                val shellManager = ShellManager(context, configManager)
+                val shell = shellManager.getAvailableShells().find { it.name == value }
+                    ?: return errorMessage(
+                        context.getString(R.string.terminal_set_shell_not_found, value)
+                    )
+
+                shellManager.setActiveShell(shell)
+
+                LoggerManager.info(
+                    LoggerTagModel.TERMINAL,
+                    "TERMINAL.set  shell=$value"
+                )
+                context.getString(R.string.terminal_set_ok_restart)
+            }
             else -> errorMessage(context.getString(R.string.terminal_set_unknown_key, key))
         }
+    }
+
+    /** shell.apply: применяет оболочку по имени (write, DevMode). */
+    private suspend fun shellApplyHandler(
+        context: Context,
+        configManager: ConfigManager,
+        args: List<String>
+    ): String {
+        if (args.isEmpty()) {
+            return errorMessage(context.getString(R.string.terminal_shell_apply_usage))
+        }
+
+        val name = args[0]
+        val shellManager = ShellManager(context, configManager)
+        val shell = shellManager.getAvailableShells().find { it.name == name }
+            ?: return errorMessage(
+                context.getString(R.string.terminal_set_shell_not_found, name)
+            )
+
+        shellManager.setActiveShell(shell)
+
+        LoggerManager.info(
+            LoggerTagModel.TERMINAL,
+            "TERMINAL.shell.apply  $name"
+        )
+
+        val displayName = shell.displayName ?: shell.name
+        return context.getString(R.string.terminal_shell_apply_ok, displayName)
+    }
+
+    /** safemode: без аргументов — статус; on/off — переключение. */
+    private fun safeModeHandler(
+        context: Context,
+        configManager: ConfigManager,
+        args: List<String>
+    ): String {
+        val active = configManager.isSafeModeActive()
+
+        if (args.isEmpty()) {
+            return context.getString(
+                R.string.terminal_safemode_status,
+                if (active) "on" else "off"
+            )
+        }
+
+        val target = when (args[0].lowercase()) {
+            "on", "true" -> true
+            "off", "false" -> false
+            else -> return errorMessage(
+                context.getString(
+                    R.string.terminal_set_invalid_value,
+                    args[0],
+                    "on, off"
+                )
+            )
+        }
+
+        if (target == active) {
+            return context.getString(
+                R.string.terminal_safemode_already,
+                if (target) "on" else "off"
+            )
+        }
+
+        configManager.setSafeModeActive(target)
+
+        LoggerManager.info(
+            LoggerTagModel.TERMINAL,
+            "TERMINAL.safemode  $target"
+        )
+
+        return context.getString(
+            R.string.terminal_safemode_changed,
+            if (target) "on" else "off"
+        )
     }
 
     /** reload.shell: перезагружает активную оболочку. */

@@ -719,9 +719,13 @@
     <string name="terminal_cmd_lang_desc">Текущий язык</string>
     <string name="terminal_cmd_orientation_desc">Текущая ориентация</string>
     <string name="terminal_cmd_devmode_desc">Статус DevMode</string>
+    <string name="terminal_cmd_time_desc">Текущее время, uptime, timezone</string>
+    <string name="terminal_cmd_updates_desc">Проверить обновления и показать результат</string>
 
     <!-- Описания команд (порция 2, write) -->
-    <string name="terminal_cmd_set_desc">Изменить параметр (set theme "dark")</string>
+    <string name="terminal_cmd_set_desc">Изменить параметр (theme, lang, orientation, fullscreen, strict, color, shell)</string>
+    <string name="terminal_cmd_shell_apply_desc">Применить оболочку по имени</string>
+    <string name="terminal_cmd_safemode_desc">Показать/переключить Safe Mode</string>
     <string name="terminal_cmd_reload_shell_desc">Перезагрузить активную оболочку</string>
     <string name="terminal_cmd_clear_webview_desc">Очистить кэш WebView</string>
     <string name="terminal_cmd_clear_cache_desc">Очистить кэш приложений</string>
@@ -740,6 +744,7 @@
     <string name="terminal_cmd_memory_desc">Использование Java heap</string>
     <string name="terminal_cmd_webview_desc">Информация о WebView</string>
     <string name="terminal_cmd_screen_desc">Разрешение и плотность экрана</string>
+    <string name="terminal_cmd_bench_desc">Замерить время API-метода</string>
 
     <!-- history -->
     <string name="terminal_cmd_history_desc">Показать историю команд</string>
@@ -766,6 +771,16 @@
     <string name="terminal_set_invalid_value" formatted="false">Неверное значение: %s. Допустимо: %s</string>
     <string name="terminal_set_ok_restart">OK. Изменение применится после перезапуска приложения.</string>
     <string name="terminal_set_strict_requires_fullscreen">Сначала включите полноэкранный режим (set fullscreen "on")</string>
+    <string name="terminal_set_shell_not_found" formatted="false">Оболочка не найдена: %s</string>
+    <string name="terminal_bench_usage">Использование: bench &lt;method&gt; [params] [iterations]</string>
+    <string name="terminal_updates_available">Доступно обновление</string>
+    <string name="terminal_updates_uptodate">У вас последняя версия</string>
+    <string name="terminal_updates_error" formatted="false">Ошибка проверки: %s</string>
+    <string name="terminal_shell_apply_usage">Использование: shell.apply &lt;name&gt;</string>
+    <string name="terminal_shell_apply_ok" formatted="false">OK. Оболочка «%s» применена. Требуется перезапуск.</string>
+    <string name="terminal_safemode_status" formatted="false">Safe Mode: %s</string>
+    <string name="terminal_safemode_already" formatted="false">Safe Mode уже %s</string>
+    <string name="terminal_safemode_changed" formatted="false">OK. Safe Mode: %s. Требуется перезапуск.</string>
     <string name="terminal_clear_ok">OK</string>
     <string name="terminal_restart_ok">OK. Перезапуск…</string>
     <string name="terminal_reset_onboarding_ok">OK. Онбординг сброшен. Перезапуск…</string>

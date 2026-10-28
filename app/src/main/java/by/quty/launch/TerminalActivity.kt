@@ -18,6 +18,7 @@ import by.quty.launch.core.adapters.TerminalAdapter
 import by.quty.launch.core.managers.TerminalHistoryManager
 import by.quty.launch.core.managers.TerminalManager
 import by.quty.launch.core.model.TerminalLineModel
+import by.quty.launch.core.model.TerminalSegmentModel
 import kotlinx.coroutines.launch
 
 /**
@@ -141,7 +142,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
-    /** Шаг вверх по истории (новее → старее). */
+    /** Шаг вверх по истории (новее > старее). */
     private fun navigateHistoryUp(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty()) return
@@ -160,7 +161,7 @@ class TerminalActivity : BaseActivity() {
         editText.setSelection(command.length)
     }
 
-    /** Шаг вниз по истории (старее → новее, затем черновик). */
+    /** Шаг вниз по истории (старее > новее, затем черновик). */
     private fun navigateHistoryDown(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty() || historyIndex == -1) return
@@ -235,12 +236,12 @@ class TerminalActivity : BaseActivity() {
             val result = TerminalManager.execute(this@TerminalActivity, parsed)
             isExecuting = false
 
-            if (result.isNotEmpty()) {
-                val isError = result.startsWith("!")
+            if (result.text.isNotEmpty()) {
+                val isError = result.text.startsWith("!")
                 if (isError) {
-                    addError(result.removePrefix("!").trim())
+                    addError(result.text.removePrefix("!").trim(), result.segments)
                 } else {
-                    addOutput(result)
+                    addOutput(result.text, result.segments)
 
                     if (TerminalManager.isWriteCommand(this@TerminalActivity, parsed.name)) {
                         markRestartRequired()
@@ -273,15 +274,21 @@ class TerminalActivity : BaseActivity() {
         notifyAndScroll()
     }
 
-    /** Добавляет в лог строку вывода. */
-    private fun addOutput(text: String) {
-        lines.add(TerminalLineModel(TerminalLineModel.LineType.OUTPUT, text))
+    /** Добавляет в лог строку вывода (с опциональными сегментами). */
+    private fun addOutput(
+        text: String,
+        segments: List<TerminalSegmentModel> = emptyList()
+    ) {
+        lines.add(TerminalLineModel(TerminalLineModel.LineType.OUTPUT, text, segments))
         notifyAndScroll()
     }
 
-    /** Добавляет в лог строку ошибки. */
-    private fun addError(text: String) {
-        lines.add(TerminalLineModel(TerminalLineModel.LineType.ERROR, text))
+    /** Добавляет в лог строку ошибки (с опциональными сегментами). */
+    private fun addError(
+        text: String,
+        segments: List<TerminalSegmentModel> = emptyList()
+    ) {
+        lines.add(TerminalLineModel(TerminalLineModel.LineType.ERROR, text, segments))
         notifyAndScroll()
     }
 
