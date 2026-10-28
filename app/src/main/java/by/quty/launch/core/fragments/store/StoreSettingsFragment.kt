@@ -24,6 +24,7 @@ class StoreSettingsFragment : Fragment() {
     private lateinit var clearCacheRow: View
     private lateinit var sourceUrlValue: TextView
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,6 +33,7 @@ class StoreSettingsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_settings, container, false)
     }
 
+    /** Находит view, показывает URL источника и вешает очистку кэша. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

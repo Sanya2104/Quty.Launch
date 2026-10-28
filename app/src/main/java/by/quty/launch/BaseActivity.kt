@@ -66,6 +66,7 @@ abstract class BaseActivity : AppCompatActivity() {
         super.attachBaseContext(localizedContext)
     }
 
+    /** Применяет тему/схему, создаёт ConfigManager, редиректит на онбординг при необходимости. */
     override fun onCreate(savedInstanceState: Bundle?) {
         applyThemeFromPrefs()
         applyColorSchemeFromPrefs()
@@ -86,11 +87,13 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Сохраняет флаг необходимости перезапуска между пересозданиями. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("base_needs_restart", needsRestart)
     }
 
+    /** Восстанавливает флаг необходимости перезапуска. */
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         needsRestart = savedInstanceState.getBoolean("base_needs_restart", false)
@@ -134,12 +137,14 @@ abstract class BaseActivity : AppCompatActivity() {
     // ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ
     // ============================================================
 
+    /** Помечает, что для применения настроек нужен перезапуск. */
     fun markRestartRequired() {
         if (!needsRestart) {
             needsRestart = true
         }
     }
 
+    /** Возвращает флаг необходимости перезапуска. */
     fun getNeedsRestart(): Boolean {
         return needsRestart
     }
@@ -228,6 +233,7 @@ abstract class BaseActivity : AppCompatActivity() {
         applyTransitionIfNeeded()
     }
 
+    /** Отключает анимацию перехода, если анимации выключены. */
     @Suppress("DEPRECATION")
     private fun applyTransitionIfNeeded() {
         if (!::_configManager.isInitialized) return
@@ -257,6 +263,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Immersive для Android 11+ через WindowInsetsController. */
     @SuppressLint("WrongConstant")
     private fun enableImmersiveModeModern(window: android.view.Window, strictMode: Boolean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
@@ -287,6 +294,7 @@ abstract class BaseActivity : AppCompatActivity() {
         window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
     }
 
+    /** Вешает listener, заново скрывающий бары в strict mode (Android 11+). */
     @SuppressLint("WrongConstant")
     private fun setupStrictModeListenerModern(window: android.view.Window, insetsController: WindowInsetsController) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
@@ -311,6 +319,7 @@ abstract class BaseActivity : AppCompatActivity() {
         isListenerAttached = true
     }
 
+    /** Снимает listener strict mode (Android 11+). */
     private fun removeStrictModeListenerModern(window: android.view.Window) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -321,6 +330,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Immersive для Android 10 и ниже через systemUiVisibility. */
     @Suppress("DEPRECATION")
     private fun enableImmersiveModeLegacy(window: android.view.Window, strictMode: Boolean) {
         val decorView = window.decorView
@@ -346,6 +356,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Вешает listener strict mode для legacy. */
     @Suppress("DEPRECATION")
     private fun setupStrictModeListenerLegacy(decorView: View) {
         removeStrictModeListenerLegacy(decorView)
@@ -368,11 +379,13 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Снимает listener strict mode (legacy). */
     @Suppress("DEPRECATION")
     private fun removeStrictModeListenerLegacy(decorView: View) {
         decorView.setOnSystemUiVisibilityChangeListener(null)
     }
 
+    /** Заново применяет immersive при получении фокуса. */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -406,6 +419,7 @@ abstract class BaseActivity : AppCompatActivity() {
         requestedOrientation = targetOrientation
     }
 
+    /** Переприменяет immersive при смене конфигурации. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -417,6 +431,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Снимает listener strict mode при уничтожении активности. */
     override fun onDestroy() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window?.let { removeStrictModeListenerModern(it) }

@@ -20,6 +20,7 @@ import by.quty.launch.R
  */
 object PopupMenuHelper {
 
+    /** Пункт меню. */
     data class Item(
         val text: String,
         val onClick: () -> Unit
@@ -92,6 +93,7 @@ object PopupMenuHelper {
         return popup
     }
 
+    /** Создаёт один пункт меню. */
     private fun createMenuItem(
         context: Context,
         item: Item,
@@ -125,6 +127,7 @@ object PopupMenuHelper {
         }
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)

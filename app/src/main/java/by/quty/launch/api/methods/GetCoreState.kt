@@ -31,8 +31,10 @@ class GetCoreState(
     override val iconRes: Int
         get() = R.drawable.ic_api_getcorestate
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Собирает полную модель состояния ядра и сериализует её. */
     override suspend fun executeInternal(params: Unit?): String {
         val themeMode = normalizeThemeMode(configManager.getThemeMode())
 
@@ -95,6 +97,7 @@ class GetCoreState(
         )
     }
 
+    /** Приводит режим темы к одному из light/dark/system. */
     private fun normalizeThemeMode(mode: String): String {
         return when (mode) {
             "light", "dark", "system" -> mode
@@ -102,6 +105,7 @@ class GetCoreState(
         }
     }
 
+    /** Возвращает фактическую тему (dark/light) с учётом системной. */
     private fun resolveTheme(themeMode: String): String {
         return when (themeMode) {
             "dark" -> "dark"
@@ -115,6 +119,7 @@ class GetCoreState(
         }
     }
 
+    /** Возвращает BCP-47 локаль по коду языка. */
     private fun resolveLocale(language: String): String {
         return when (language) {
             "ru" -> "ru-RU"

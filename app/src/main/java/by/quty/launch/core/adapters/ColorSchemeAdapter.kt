@@ -24,12 +24,14 @@ class ColorSchemeAdapter(
     private var schemes: List<ColorSchemeModel> = ColorSchemeModel.getAllSchemes()
     private var selectedSchemeId: String = ColorSchemeModel.getDefaultScheme().id
 
+    /** Создаёт ViewHolder из item_color_scheme.xml. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_color_scheme, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит квадратик схемы с обработчиком выбора. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val scheme = schemes[position]
         val isSelected = scheme.id == selectedSchemeId
@@ -50,6 +52,7 @@ class ColorSchemeAdapter(
         }
     }
 
+    /** Возвращает количество элементов (схем). */
     override fun getItemCount(): Int = schemes.size
 
     /** Устанавливает выбранную схему и обновляет два затронутых элемента. */
@@ -68,10 +71,12 @@ class ColorSchemeAdapter(
         }
     }
 
+    /** ViewHolder одного квадратика схемы. */
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val colorView: ImageView = itemView.findViewById(R.id.color_preview)
         private val selectedIndicator: View = itemView.findViewById(R.id.selected_indicator)
 
+        /** Рисует цвет и рамку выбранной схемы. */
         fun bind(scheme: ColorSchemeModel, isSelected: Boolean, onClick: () -> Unit) {
             val context = itemView.context
 
@@ -107,6 +112,7 @@ class ColorSchemeAdapter(
             itemView.setOnClickListener { onClick() }
         }
 
+        /** Резолвит цвет темы по атрибуту. */
         private fun getThemeColor(context: Context, attr: Int): Int {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)

@@ -39,6 +39,7 @@ class LoggerActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран, меню, восстанавливает состояние, применяет режим. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -76,6 +77,7 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -83,6 +85,7 @@ class LoggerActivity : BaseActivity() {
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает режим при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -108,11 +111,13 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -198,11 +203,13 @@ class LoggerActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(iconRes)
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -212,6 +219,7 @@ class LoggerActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener { finish() }
         binding.btnCloseContent.setOnClickListener { finish() }
@@ -220,6 +228,7 @@ class LoggerActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик системной кнопки «Назад». */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -237,6 +246,7 @@ class LoggerActivity : BaseActivity() {
         )
     }
 
+    /** Строит список пунктов меню логгера. */
     private fun buildMenuItems(): List<MenuModel> {
         val items = mutableListOf<MenuModel>()
 
@@ -279,6 +289,7 @@ class LoggerActivity : BaseActivity() {
         return items
     }
 
+    /** Показывает фрагмент выбранного пункта. */
     private fun showItem(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -306,6 +317,7 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -330,6 +342,7 @@ class LoggerActivity : BaseActivity() {
         super.onDestroy()
     }
 
+    /** При возврате в активность заново применяет ориентацию и immersive. */
     override fun onResume() {
         super.onResume()
 

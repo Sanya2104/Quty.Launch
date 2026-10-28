@@ -92,6 +92,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -100,6 +101,7 @@ class UpdateFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_updates, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -118,6 +120,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews(view: View) {
         checkUpdateButton = view.findViewById(R.id.check_update_button)
         installFromFileButton = view.findViewById(R.id.install_from_file_button)
@@ -153,6 +156,7 @@ class UpdateFragment : Fragment() {
     // АВТО-ПРОВЕРКА
     // ============================================================
 
+    /** Настраивает секцию авто-проверки обновлений. */
     private fun setupAutoCheckSection() {
         autoCheckSwitch.isChecked = updateManager.isAutoCheckEnabled()
         updateIntervalVisibility(autoCheckSwitch.isChecked)
@@ -207,6 +211,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Показывает/скрывает Spinner интервала. */
     private fun updateIntervalVisibility(visible: Boolean) {
         autoCheckIntervalContainer.isVisible = visible
         autoCheckIntervalDivider.isVisible = visible
@@ -216,6 +221,7 @@ class UpdateFragment : Fragment() {
     // ХЕЛПЕРЫ БЛОКОВ
     // ============================================================
 
+    /** Скрывает блок онлайн-обновления. */
     private fun hideUpdateState() {
         updateStateContainer.isVisible = false
         updateStateSubtitle.isVisible = false
@@ -230,6 +236,7 @@ class UpdateFragment : Fragment() {
         updateStateBtnSecondary.setOnClickListener(null)
     }
 
+    /** Скрывает блок локальной установки. */
     private fun hideInstallState() {
         installStateContainer.isVisible = false
         installStateSubtitle.isVisible = false
@@ -242,6 +249,7 @@ class UpdateFragment : Fragment() {
         installStateBtnSecondary.setOnClickListener(null)
     }
 
+    /** Устанавливает кнопки и их действия в блоке онлайн-обновления. */
     private fun setUpdateActions(
         primaryText: String? = null,
         primaryAction: (() -> Unit)? = null,
@@ -269,6 +277,7 @@ class UpdateFragment : Fragment() {
         updateStateActions.isVisible = updateStateBtnPrimary.isVisible || updateStateBtnSecondary.isVisible
     }
 
+    /** Устанавливает кнопки и их действия в блоке локальной установки. */
     private fun setInstallActions(
         primaryText: String? = null,
         primaryAction: (() -> Unit)? = null,
@@ -296,6 +305,7 @@ class UpdateFragment : Fragment() {
         installStateActions.isVisible = installStateBtnPrimary.isVisible || installStateBtnSecondary.isVisible
     }
 
+    /** Устанавливает подзаголовок онлайн-блока (скрывает, если пусто). */
     private fun setUpdateSubtitle(text: String?) {
         if (text.isNullOrEmpty()) {
             updateStateSubtitle.isVisible = false
@@ -305,6 +315,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Устанавливает подзаголовок блока локальной установки. */
     private fun setInstallSubtitle(text: String?) {
         if (text.isNullOrEmpty()) {
             installStateSubtitle.isVisible = false
@@ -314,11 +325,13 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Сбрасывает цвета онлайн-блока к дефолтным. */
     private fun resetUpdateStateColors() {
         updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         updateStateIcon.imageTintList = null
     }
 
+    /** Сбрасывает цвета блока локальной установки к дефолтным. */
     private fun resetInstallStateColors() {
         installStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         installStateIcon.imageTintList = null
@@ -328,12 +341,14 @@ class UpdateFragment : Fragment() {
     // ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Вешает клик на кнопку проверки обновлений. */
     private fun setupUpdateCheck() {
         checkUpdateButton.setOnClickListener {
             checkForUpdates()
         }
     }
 
+    /** Запускает проверку обновлений и переключает состояния блока. */
     private fun checkForUpdates() {
         hideInstallState()
 
@@ -356,6 +371,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Маппит технический текст ошибки в локализованный. */
     private fun resolveErrorMessage(error: String): String {
         return when {
             error.contains("UnknownHostException") ||
@@ -376,6 +392,7 @@ class UpdateFragment : Fragment() {
     // СОСТОЯНИЯ ОНЛАЙН
     // ============================================================
 
+    /** Показывает состояние «проверка обновлений». */
     private fun showUpdateStateChecking() {
         updateStateContainer.isVisible = true
 
@@ -393,6 +410,7 @@ class UpdateFragment : Fragment() {
         setUpdateActions()
     }
 
+    /** Показывает состояние «доступно обновление». */
     private fun showUpdateStateAvailable(versionInfo: VersionInfo) {
         updateStateContainer.isVisible = true
 
@@ -441,6 +459,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «идёт скачивание». */
     private fun showUpdateStateDownloading(versionInfo: VersionInfo? = null) {
         updateStateContainer.isVisible = true
 
@@ -472,6 +491,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «скачивание завершено». */
     private fun showUpdateStateDownloadComplete(filePath: String, uri: Uri) {
         updateStateContainer.isVisible = true
 
@@ -511,6 +531,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «установлена последняя версия». */
     private fun showUpdateStateUpToDate() {
         updateStateContainer.isVisible = true
 
@@ -535,6 +556,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «ошибка проверки». */
     private fun showUpdateStateError(message: String) {
         updateStateContainer.isVisible = true
 
@@ -567,6 +589,7 @@ class UpdateFragment : Fragment() {
     // СКАЧИВАНИЕ
     // ============================================================
 
+    /** Скачивает APK без установки. */
     private fun downloadApkOnly(versionInfo: VersionInfo) {
         showUpdateStateDownloading(versionInfo)
 
@@ -593,6 +616,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Скачивает APK и предлагает установить сразу. */
     private fun downloadAndInstall(versionInfo: VersionInfo) {
         showUpdateStateDownloading(versionInfo)
 
@@ -646,12 +670,14 @@ class UpdateFragment : Fragment() {
     // ЛОКАЛЬНАЯ УСТАНОВКА APK
     // ============================================================
 
+    /** Вешает клик на кнопку «Локальное обновление». */
     private fun setupInstallFromFile() {
         installFromFileButton.setOnClickListener {
             selectApkFile()
         }
     }
 
+    /** Открывает SAF для выбора APK. */
     private fun selectApkFile() {
         hideUpdateState()
 
@@ -668,6 +694,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Fallback для выбора APK (ACTION_GET_CONTENT). */
     private fun selectApkAlternative() {
         try {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -682,6 +709,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Показывает состояние «проверка локального APK». */
     private fun showInstallStateChecking() {
         installStateContainer.isVisible = true
 
@@ -695,6 +723,7 @@ class UpdateFragment : Fragment() {
         setInstallActions()
     }
 
+    /** Показывает состояние «локальный APK готов к установке». */
     private fun showInstallStateReady(uri: Uri, version: String) {
         installStateContainer.isVisible = true
 
@@ -720,6 +749,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает ошибку локальной установки. */
     private fun showInstallStateError(message: String) {
         installStateContainer.isVisible = true
 
@@ -742,6 +772,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Проверяет, что APK — наш, и показывает диалог установки. */
     private fun validateAndInstallApk(uri: Uri) {
         lifecycleScope.launch {
             try {
@@ -766,6 +797,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Возвращает PackageInfo из APK по URI. */
     private fun getPackageInfoFromUri(uri: Uri): PackageInfo? {
         return try {
             val pm = requireContext().packageManager
@@ -786,6 +818,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Конвертирует content:// URI в File (через DATA или копию в cache). */
     private fun getFileFromUri(uri: Uri): File? {
         return try {
             val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
@@ -821,6 +854,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Запускает установку APK через системный интент. */
     private fun installApk(uri: Uri) {
         try {
             requireContext().contentResolver.takePersistableUriPermission(
@@ -844,6 +878,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getColorFromAttr(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)

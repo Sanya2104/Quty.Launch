@@ -30,6 +30,7 @@ class LoggerSettingsFragment : Fragment() {
 
     private var isSpinnerInitializing = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -38,6 +39,7 @@ class LoggerSettingsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_logger_settings, container, false)
     }
 
+    /** Находит view и настраивает все секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -58,6 +60,7 @@ class LoggerSettingsFragment : Fragment() {
     // SWITCH: ЛОГИРОВАНИЕ
     // ============================================================
 
+    /** Настраивает switch «Включить логирование». */
     private fun setupEnabledSwitch() {
         enabledSwitch.isChecked = LoggerManager.isEnabled()
 
@@ -77,6 +80,7 @@ class LoggerSettingsFragment : Fragment() {
     // SWITCH: АВТОСОХРАНЕНИЕ
     // ============================================================
 
+    /** Настраивает switch «Автосохранение в файл». */
     private fun setupAutoSaveSwitch() {
         autoSaveSwitch.isChecked = LoggerManager.isAutoSaveEnabled()
 
@@ -96,6 +100,7 @@ class LoggerSettingsFragment : Fragment() {
     // SPINNER: ЛИМИТ DETAILS
     // ============================================================
 
+    /** Настраивает Spinner лимита длины details. */
     private fun setupDetailsLimitSpinner() {
         val adapter = ArrayAdapter(
             requireContext(),
@@ -140,6 +145,7 @@ class LoggerSettingsFragment : Fragment() {
     // СОХРАНИТЬ ТЕКУЩИЙ ЛОГ
     // ============================================================
 
+    /** Настраивает кнопку «Сохранить текущий лог». */
     private fun setupSaveRow() {
         saveRow.setOnClickListener {
             if (LoggerManager.size() == 0) {
@@ -174,6 +180,7 @@ class LoggerSettingsFragment : Fragment() {
     // УДАЛИТЬ ВСЕ ФАЙЛЫ
     // ============================================================
 
+    /** Настраивает кнопку «Удалить все файлы логов». */
     private fun setupDeleteFilesRow() {
         deleteFilesRow.setOnClickListener {
             val files = LoggerManager.listLogFiles(requireContext())

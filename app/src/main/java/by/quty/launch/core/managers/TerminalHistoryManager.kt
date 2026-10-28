@@ -14,9 +14,6 @@ import androidx.core.content.edit
  * Дубликаты подряд не сохраняются (как в bash): если пользователь
  * ввёл ту же команду второй раз подряд — она не добавляется в историю,
  * но в лог терминала выводится.
- *
- * Object, а не class — как PermissionManager. Состояние живёт в prefs,
- * не в памяти. Все методы — безопасные (не бросают исключений).
  */
 object TerminalHistoryManager {
 
@@ -36,9 +33,6 @@ object TerminalHistoryManager {
      * - если команда совпадает с последней сохранённой — не дублируем;
      * - иначе сдвигаем всё на 1 позицию вниз и пишем на позицию 0;
      * - если история достигла MAX_HISTORY — самый старый элемент вытесняется.
-     *
-     * @param context контекст приложения
-     * @param command введённая пользователем строка (до парсинга)
      */
     fun add(context: Context, command: String) {
         val trimmed = command.trim()
@@ -51,7 +45,7 @@ object TerminalHistoryManager {
             val lastCommand = prefs.getString(KEY_PREFIX + "0", null)
             if (lastCommand == trimmed) return
 
-            // Сдвигаем всё вниз: 48 → 49, 47 → 48, ..., 0 → 1
+            // Сдвигаем всё вниз: 48 > 49, 47 > 48, ..., 0 > 1
             prefs.edit {
                 for (i in MAX_HISTORY - 2 downTo 0) {
                     val current = prefs.getString(KEY_PREFIX + i, null)
@@ -100,7 +94,7 @@ object TerminalHistoryManager {
     /**
      * Возвращает историю в порядке «самая новая — первой».
      *
-     * Используется для навигации стрелкой ↑ в EditText:
+     * Используется для навигации стрелкой ^ в EditText:
      * первое нажатие даёт самую свежую команду.
      */
     fun getReversed(context: Context): List<String> {

@@ -14,6 +14,7 @@ import by.quty.launch.core.model.LoggerTagModel
  */
 class Core(context: Context) {
 
+    /** Инициализирует логгер, API-методы и менеджер кэша. */
     init {
         LoggerManager.init(context)
         ApiInitializer.init(context)

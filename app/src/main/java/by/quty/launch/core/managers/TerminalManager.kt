@@ -349,6 +349,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: СПРАВКА И ИНФО
     // ============================================================
 
+    /** Справка: список команд или по одной. */
     private fun helpHandler(context: Context, args: List<String>): String {
         val commands = getCommands(context)
 
@@ -376,6 +377,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** about: версия, автор, ссылки. */
     private fun aboutHandler(context: Context): String {
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(context)
         val fullVersion = if (suffix.isNotEmpty()) "$versionName $suffix" else versionName
@@ -390,6 +392,7 @@ object TerminalManager {
         }
     }
 
+    /** version: versionName + versionCode + канал. */
     private fun versionHandler(context: Context): String {
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(context)
         val versionCode = AppInfoHelper.getVersionCode(context)
@@ -405,6 +408,7 @@ object TerminalManager {
         }
     }
 
+    /** status: сводка состояния ядра. */
     private fun statusHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shell = shellManager.getActiveShell()
@@ -443,6 +447,7 @@ object TerminalManager {
         }
     }
 
+    /** device: модель/производитель/Android/SDK. */
     private fun deviceHandler(context: Context): String {
         val model = Build.MODEL.ifEmpty { context.getString(R.string.unknown) }
         val manufacturer = Build.MANUFACTURER.ifEmpty { context.getString(R.string.unknown) }
@@ -457,6 +462,7 @@ object TerminalManager {
         }
     }
 
+    /** shell.info: подробности активной оболочки. */
     private fun shellInfoHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shell = shellManager.getActiveShell()
@@ -486,6 +492,7 @@ object TerminalManager {
         }
     }
 
+    /** shell.list: список доступных оболочек. */
     private fun shellListHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shells = shellManager.getAvailableShells()
@@ -520,6 +527,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** theme: фактическая тема + режим. */
     private fun themeHandler(context: Context, configManager: ConfigManager): String {
         val mode = configManager.getThemeMode()
         val actual = if (mode == "system") {
@@ -530,10 +538,12 @@ object TerminalManager {
         return "$actual (mode: $mode)"
     }
 
+    /** lang: текущий язык. */
     private fun langHandler(configManager: ConfigManager): String {
         return configManager.getLanguage()
     }
 
+    /** orientation: пользовательская + forced (если задана оболочкой). */
     private fun orientationHandler(context: Context, configManager: ConfigManager): String {
         val userOrientation = configManager.getOrientation()
         val shellManager = ShellManager(context, configManager)
@@ -546,10 +556,12 @@ object TerminalManager {
         }
     }
 
+    /** devmode: on/off. */
     private fun devModeHandler(context: Context): String {
         return if (isDevModeEnabled(context)) "on" else "off"
     }
 
+    /** storage: занятое место по категориям. */
     private fun storageHandler(context: Context): String {
         val storageManager = StorageManager(context)
 
@@ -579,6 +591,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: ДИАГНОСТИКА
     // ============================================================
 
+    /** doctor: диагностика состояния ядра. */
     private fun doctorHandler(context: Context, configManager: ConfigManager): String {
         val ok = context.getString(R.string.terminal_doctor_ok)
         val warn = context.getString(R.string.terminal_doctor_warn)
@@ -709,6 +722,7 @@ object TerminalManager {
         return sb.toString()
     }
 
+    /** memory: использование Java heap. */
     private fun memoryHandler(): String {
         val runtime = Runtime.getRuntime()
 
@@ -725,6 +739,7 @@ object TerminalManager {
         }
     }
 
+    /** webview: информация о текущем WebView. */
     private fun webViewHandler(context: Context): String {
         val packageInfo = try {
             WebViewCompat.getCurrentWebViewPackage(context)
@@ -749,6 +764,7 @@ object TerminalManager {
         }
     }
 
+    /** screen: разрешение и плотность экрана. */
     private fun screenHandler(context: Context): String {
         val metrics: DisplayMetrics = context.resources.displayMetrics
 
@@ -796,6 +812,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: API
     // ============================================================
 
+    /** api.list: список API-методов с маркерами. */
     private fun apiListHandler(context: Context, configManager: ConfigManager): String {
         val methods = ApiRouter.getRegisteredMethods()
         if (methods.isEmpty()) {
@@ -836,6 +853,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** api.call: прямой вызов API-метода. */
     private suspend fun apiCallHandler(context: Context, args: List<String>): String {
         if (args.isEmpty()) {
             return errorMessage(context.getString(R.string.terminal_api_call_usage))
@@ -849,6 +867,7 @@ object TerminalManager {
         }
     }
 
+    /** echo: повторяет аргументы. */
     private fun echoHandler(args: List<String>): String {
         return args.joinToString(" ")
     }
@@ -857,6 +876,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: ИСТОРИЯ
     // ============================================================
 
+    /** history: показывает историю команд (опционально N последних). */
     private fun historyHandler(context: Context, args: List<String>): String {
         val full = TerminalHistoryManager.getAll(context)
 
@@ -881,6 +901,7 @@ object TerminalManager {
         }.trimEnd()
     }
 
+    /** history.clear: очищает историю команд. */
     private fun historyClearHandler(context: Context): String {
         TerminalHistoryManager.clear(context)
         return context.getString(R.string.terminal_history_cleared)
@@ -984,6 +1005,7 @@ object TerminalManager {
         }
     }
 
+    /** reload.shell: перезагружает активную оболочку. */
     private suspend fun reloadShellHandler(
         context: Context,
         configManager: ConfigManager
@@ -994,6 +1016,7 @@ object TerminalManager {
         context.getString(R.string.terminal_set_ok_restart)
     }
 
+    /** clear.webview: очищает кэш WebView. */
     private suspend fun clearWebViewHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             try {
@@ -1014,12 +1037,14 @@ object TerminalManager {
             }
         }
 
+    /** clear.cache: очищает кэш приложений. */
     private suspend fun clearCacheHandler(): String = withContext(Dispatchers.IO) {
         CacheManager.clearCache()
         LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.clear.cache")
         "OK"
     }
 
+    /** reset.onboarding: сбрасывает онбординг и перезапускает приложение. */
     private suspend fun resetOnboardingHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             LoggerManager.warn(LoggerTagModel.TERMINAL, "TERMINAL.reset.onboarding")
@@ -1033,6 +1058,7 @@ object TerminalManager {
             context.getString(R.string.terminal_reset_onboarding_ok)
         }
 
+    /** restart: перезапускает приложение. */
     private suspend fun restartHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.restart")
@@ -1058,6 +1084,7 @@ object TerminalManager {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Парсит on/off/true/false в Boolean. */
     private fun parseOnOff(value: String): Boolean? {
         return when (value.lowercase()) {
             "on", "true" -> true
@@ -1066,10 +1093,12 @@ object TerminalManager {
         }
     }
 
+    /** Дополняет строку пробелами до ширины колонки. */
     private fun pad(text: String): String {
         return text.padEnd(STATUS_PAD_WIDTH, ' ')
     }
 
+    /** Форматирует байты в B/KB/MB/GB. */
     private fun formatBytes(bytes: Long): String {
         val locale = java.util.Locale.US
         return when {
@@ -1084,6 +1113,7 @@ object TerminalManager {
     // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
     // ============================================================
 
+    /** Распарсенная команда: имя + аргументы. */
     data class ParsedCommand(
         val name: String,
         val args: List<String>

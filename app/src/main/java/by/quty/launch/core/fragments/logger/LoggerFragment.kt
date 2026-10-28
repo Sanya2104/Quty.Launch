@@ -59,11 +59,12 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
 
     private lateinit var adapter: LoggerAdapter
 
-    /** Новые (индекс 0) → старые. */
+    /** Новые (индекс 0) > старые. */
     private val entries = mutableListOf<LoggerEntryModel>()
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -72,6 +73,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         return inflater.inflate(R.layout.fragment_logger, container, false)
     }
 
+    /** Инициализирует view и подсистемы логгера. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -92,17 +94,20 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         syncWithBuffer()
     }
 
+    /** При старте синхронизирует буфер и подписывается на новые записи. */
     override fun onStart() {
         super.onStart()
         syncWithBuffer()
         LoggerManager.subscribe(this)
     }
 
+    /** При остановке отписывается от логгера. */
     override fun onStop() {
         super.onStop()
         LoggerManager.unsubscribe(this)
     }
 
+    /** Настраивает RecyclerView и адаптер логов. */
     private fun setupRecycler() {
         adapter = LoggerAdapter(
             entries = entries,
@@ -119,6 +124,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ДЕЙСТВИЯ
     // ============================================================
 
+    /** Вешает клики на кнопки фильтра/сохранения/очистки/копирования. */
     private fun setupActions() {
         btnFilter.setOnClickListener { showFilterDialog() }
         btnSave.setOnClickListener { saveCurrentLog() }
@@ -292,6 +298,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         dialog.show()
     }
 
+    /** Применяет фильтр, обновляя список записей и счётчик. */
     @SuppressLint("NotifyDataSetChanged")
     private fun applyFilter() {
         val snapshot = LoggerManager.getFilteredEntries(requireContext())
@@ -308,6 +315,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // СОХРАНЕНИЕ / ОЧИСТКА / КОПИРОВАНИЕ
     // ============================================================
 
+    /** Сохраняет текущий буфер в файл и показывает Toast. */
     private fun saveCurrentLog() {
         if (LoggerManager.size() == 0) {
             Toast.makeText(
@@ -336,6 +344,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Очищает лог в буфере и списке. */
     private fun clearLog() {
         if (entries.isEmpty()) {
             Toast.makeText(
@@ -349,6 +358,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         LoggerManager.clear()
     }
 
+    /** Копирует все видимые записи в буфер обмена. */
     private fun copyAllToClipboard() {
         if (entries.isEmpty()) {
             Toast.makeText(
@@ -373,6 +383,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         ).show()
     }
 
+    /** Форматирует все записи в единый текст для clipboard. */
     private fun formatAllEntries(): String {
         return buildString {
             entries.forEach { entry ->
@@ -397,6 +408,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ДИАЛОГ DETAILS
     // ============================================================
 
+    /** Показывает диалог с details записи и кнопкой копирования. */
     private fun showDetailsDialog(entry: LoggerEntryModel) {
         val details = entry.details ?: return
 
@@ -450,6 +462,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // СИНХРОНИЗАЦИЯ
     // ============================================================
 
+    /** Синхронизирует UI с буфером логгера. */
     @SuppressLint("NotifyDataSetChanged")
     private fun syncWithBuffer() {
         if (!isAdded) return
@@ -476,10 +489,12 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         scrollToTop()
     }
 
+    /** Обновляет счётчик записей. */
     private fun updateCounter() {
         counterView.text = getString(R.string.logger_counter_format, entries.size, 500)
     }
 
+    /** Переключает пустое состояние списка. */
     private fun updateEmptyState() {
         if (entries.isEmpty()) {
             emptyText.visibility = View.VISIBLE
@@ -490,6 +505,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Прокручивает список к первой записи. */
     private fun scrollToTop() {
         recyclerLog.post {
             if (entries.isNotEmpty()) {
@@ -502,6 +518,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // LoggerManager.LoggerListener
     // ============================================================
 
+    /** Добавляет новую запись в UI, если она проходит фильтр. */
     override fun onEntryAdded(entry: LoggerEntryModel) {
         lifecycleScope.launch(Dispatchers.Main) {
             if (!isAdded || view == null) return@launch
@@ -520,6 +537,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Очищает UI при очистке буфера. */
     override fun onCleared() {
         lifecycleScope.launch(Dispatchers.Main) {
             if (!isAdded || view == null) return@launch
@@ -534,12 +552,14 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(context: Context, attr: Int): Int {
         val typedValue = android.util.TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Возвращает цвет полоски для уровня. */
     private fun getLevelColor(context: Context, level: LoggerLevelModel): Int {
         return when (level) {
             LoggerLevelModel.DEBUG ->

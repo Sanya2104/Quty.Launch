@@ -42,6 +42,7 @@ class TerminalActivity : BaseActivity() {
     private var historyIndex = -1
     private var historyDraft: String = ""
 
+    /** Инициализирует экран терминала и все подсистемы. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_terminal)
@@ -63,6 +64,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews() {
         rootView = findViewById(R.id.terminal_root)
         cardView = findViewById(R.id.terminal_card)
@@ -88,6 +90,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает RecyclerView лога терминала. */
     private fun setupLog() {
         adapter = TerminalAdapter(lines)
         recyclerLog.layoutManager = LinearLayoutManager(this).apply {
@@ -96,6 +99,7 @@ class TerminalActivity : BaseActivity() {
         recyclerLog.adapter = adapter
     }
 
+    /** Вешает слушатели на кнопки и IME. */
     private fun setupInput() {
         btnSend.setOnClickListener { submitInput() }
         btnClose.setOnClickListener { checkAndClose() }
@@ -137,6 +141,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Шаг вверх по истории (новее → старее). */
     private fun navigateHistoryUp(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty()) return
@@ -155,6 +160,7 @@ class TerminalActivity : BaseActivity() {
         editText.setSelection(command.length)
     }
 
+    /** Шаг вниз по истории (старее → новее, затем черновик). */
     private fun navigateHistoryDown(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty() || historyIndex == -1) return
@@ -172,11 +178,13 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Сбрасывает навигацию по истории. */
     private fun resetHistoryNavigation() {
         historyIndex = -1
         historyDraft = ""
     }
 
+    /** Настраивает обработчик «Назад» — он закрывает терминал. */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -192,6 +200,7 @@ class TerminalActivity : BaseActivity() {
     // ВВОД И ВЫПОЛНЕНИЕ
     // ============================================================
 
+    /** Парсит ввод, вызывает команду, пишет результат в лог. */
     private fun submitInput() {
         if (isExecuting) return
 
@@ -245,6 +254,7 @@ class TerminalActivity : BaseActivity() {
     // ЗАКРЫТИЕ
     // ============================================================
 
+    /** Показывает диалог перезапуска, если были write-команды; иначе закрывает. */
     private fun checkAndClose() {
         if (getNeedsRestart()) {
             showRestartDialog()
@@ -257,21 +267,25 @@ class TerminalActivity : BaseActivity() {
     // ЛОГ
     // ============================================================
 
+    /** Добавляет в лог строку ввода. */
     private fun addInput(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.INPUT, text))
         notifyAndScroll()
     }
 
+    /** Добавляет в лог строку вывода. */
     private fun addOutput(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.OUTPUT, text))
         notifyAndScroll()
     }
 
+    /** Добавляет в лог строку ошибки. */
     private fun addError(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.ERROR, text))
         notifyAndScroll()
     }
 
+    /** Очищает лог терминала. */
     private fun clearLog() {
         val sizeBefore = lines.size
         if (sizeBefore == 0) return
@@ -280,6 +294,7 @@ class TerminalActivity : BaseActivity() {
         adapter.notifyItemRangeRemoved(0, sizeBefore)
     }
 
+    /** Уведомляет адаптер о новой строке и прокручивает вниз. */
     private fun notifyAndScroll() {
         adapter.notifyItemInserted(lines.size - 1)
         recyclerLog.post {

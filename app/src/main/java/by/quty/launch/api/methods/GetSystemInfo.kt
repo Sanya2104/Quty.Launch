@@ -17,8 +17,10 @@ class GetSystemInfo : BaseApiMethod<Unit>() {
     override val iconRes: Int
         get() = R.drawable.ic_api_getsysteminfo
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Возвращает модель устройства и версию Android. */
     override suspend fun executeInternal(params: Unit?): String {
         val info = SystemInfo(
             device = android.os.Build.MODEL,

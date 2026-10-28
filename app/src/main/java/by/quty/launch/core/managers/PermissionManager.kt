@@ -27,32 +27,19 @@ object PermissionManager {
         return REQUIRED_PERMISSIONS
     }
 
-    /**
-     * Проверяет, предоставлены ли все обязательные разрешения
-     * @param context контекст приложения
-     * @return true если все разрешения предоставлены
-     */
+    /** Проверяет, предоставлены ли все обязательные разрешения */
     fun hasAllRequiredPermissions(context: Context): Boolean {
         return REQUIRED_PERMISSIONS.all { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 
-    /**
-     * Проверяет, предоставлено ли конкретное разрешение
-     * @param context контекст приложения
-     * @param permission разрешение для проверки
-     * @return true если разрешение предоставлено
-     */
+    /** Проверяет, предоставлено ли конкретное разрешение */
     fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Возвращает список отсутствующих обязательных разрешений
-     * @param context контекст приложения
-     * @return список разрешений, которые ещё не предоставлены
-     */
+    /** Возвращает список отсутствующих обязательных разрешений */
     fun getMissingRequiredPermissions(context: Context): List<String> {
         return REQUIRED_PERMISSIONS.filter { permission ->
             ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED

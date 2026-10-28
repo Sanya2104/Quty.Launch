@@ -24,16 +24,19 @@ class StoreItemAdapter(
     private val inputDateFormat = "yyyy-MM-dd"
     private val outputDateFormat = "dd.MM.yyyy"
 
+    /** Создаёт ViewHolder карточки магазина. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_store_list, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит карточку. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position])
     }
 
+    /** Возвращает количество элементов. */
     override fun getItemCount(): Int = items.size
 
     /** Точечные уведомления: changed — если состав/порядок тот же, иначе remove+insert. */
@@ -60,7 +63,7 @@ class StoreItemAdapter(
         }
     }
 
-    /** ISO YYYY-MM-DD → DD.MM.YYYY. */
+    /** ISO YYYY-MM-DD > DD.MM.YYYY. */
     private fun formatDate(isoDate: String): String {
         if (isoDate.isBlank()) return ""
 
@@ -74,6 +77,7 @@ class StoreItemAdapter(
         }
     }
 
+    /** ViewHolder одной карточки каталога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val previewImage: ImageView = itemView.findViewById(R.id.item_preview)
@@ -87,6 +91,7 @@ class StoreItemAdapter(
         private val statusInstalled: TextView = itemView.findViewById(R.id.item_status_installed)
         private val statusNewer: TextView = itemView.findViewById(R.id.item_status_newer)
 
+        /** Заполняет карточку: превью, имя, версия, метаданные, статусы. */
         fun bind(item: StoreItemModel) {
             val context = itemView.context
 

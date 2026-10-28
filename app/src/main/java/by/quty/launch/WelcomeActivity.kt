@@ -39,7 +39,7 @@ class WelcomeActivity : BaseActivity() {
     private lateinit var btnSettings: Button
     private lateinit var permissionsContainer: LinearLayout
 
-    /** permission → TextView статуса. */
+    /** permission > TextView статуса. */
     private val permissionStatusViews = mutableMapOf<String, TextView>()
 
     private var isRequestingPermissions = false
@@ -52,6 +52,7 @@ class WelcomeActivity : BaseActivity() {
         handlePermissionResults(results)
     }
 
+    /** Инициализирует UI, версию, список разрешений; при готовности — сразу на Main. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_welcome)
@@ -72,6 +73,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews() {
         progressBar = findViewById(R.id.progress_bar)
         progressText = findViewById(R.id.progress_text)
@@ -83,6 +85,7 @@ class WelcomeActivity : BaseActivity() {
         permissionsContainer = findViewById(R.id.permissions_container)
     }
 
+    /** Показывает текущую версию приложения. */
     private fun setupVersionInfo() {
         val versionTextView = findViewById<TextView>(R.id.tv_version)
         try {
@@ -103,6 +106,7 @@ class WelcomeActivity : BaseActivity() {
     // СПИСОК РАЗРЕШЕНИЙ
     // ============================================================
 
+    /** Строит список строк разрешений с иконками и статусами. */
     private fun setupPermissionsUI() {
         permissionsContainer.removeAllViews()
         permissionStatusViews.clear()
@@ -182,6 +186,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Вешает клики на кнопки запроса/повтора/настроек. */
     private fun setupListeners() {
         btnGrant.setOnClickListener {
             requestAllPermissions()
@@ -197,6 +202,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Запрашивает недостающие обязательные разрешения. */
     private fun requestAllPermissions() {
         if (isRequestingPermissions) return
         isRequestingPermissions = true
@@ -212,6 +218,7 @@ class WelcomeActivity : BaseActivity() {
         permissionLauncher.launch(missingPermissions.toTypedArray())
     }
 
+    /** Обрабатывает результат запроса разрешений из launcher-а. */
     private fun handlePermissionResults(results: Map<String, Boolean>) {
         isRequestingPermissions = false
 
@@ -239,6 +246,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Устаревший колбэк — оставлен для совместимости. */
     @Suppress("DEPRECATION")
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -275,6 +283,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Проверяет, выдан ли grantResult-код. */
     private fun Int.isGranted(): Boolean {
         return this == PackageManager.PERMISSION_GRANTED
     }
@@ -338,6 +347,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Показывает блок ошибки о непредоставленных разрешениях. */
     private fun showPermissionDeniedError() {
         errorContainer.visibility = LinearLayout.VISIBLE
         errorContainer.post {
@@ -345,6 +355,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Открывает системные настройки приложения. */
     private fun openAppSettings() {
         try {
             val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -356,6 +367,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Завершает онбординг: пишет флаг и переходит в MainActivity. */
     private fun finishAndGoToMain() {
         if (isFinishingActivity) return
         isFinishingActivity = true
@@ -378,6 +390,7 @@ class WelcomeActivity : BaseActivity() {
         finishAnimated()
     }
 
+    /** При возврате обновляет статусы и при готовности — сразу на Main (если не форс). */
     override fun onResume() {
         super.onResume()
 
@@ -397,12 +410,14 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Резолвит цвет из темы по атрибуту. */
     private fun getColorFromAttribute(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Описание одного разрешения для UI. */
     data class PermissionItem(
         val permission: String,
         val iconRes: Int,

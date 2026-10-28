@@ -5,7 +5,7 @@ FILE: app\src\main\AndroidManifest.xml
 ==================================================
 
 
-<?xml version="1.0" encoding="utf-8"?>
+<!-- AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -219,6 +219,7 @@ abstract class BaseActivity : AppCompatActivity() {
         super.attachBaseContext(localizedContext)
     }
 
+    /** Применяет тему/схему, создаёт ConfigManager, редиректит на онбординг при необходимости. */
     override fun onCreate(savedInstanceState: Bundle?) {
         applyThemeFromPrefs()
         applyColorSchemeFromPrefs()
@@ -239,11 +240,13 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Сохраняет флаг необходимости перезапуска между пересозданиями. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("base_needs_restart", needsRestart)
     }
 
+    /** Восстанавливает флаг необходимости перезапуска. */
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         needsRestart = savedInstanceState.getBoolean("base_needs_restart", false)
@@ -287,12 +290,14 @@ abstract class BaseActivity : AppCompatActivity() {
     // ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ
     // ============================================================
 
+    /** Помечает, что для применения настроек нужен перезапуск. */
     fun markRestartRequired() {
         if (!needsRestart) {
             needsRestart = true
         }
     }
 
+    /** Возвращает флаг необходимости перезапуска. */
     fun getNeedsRestart(): Boolean {
         return needsRestart
     }
@@ -381,6 +386,7 @@ abstract class BaseActivity : AppCompatActivity() {
         applyTransitionIfNeeded()
     }
 
+    /** Отключает анимацию перехода, если анимации выключены. */
     @Suppress("DEPRECATION")
     private fun applyTransitionIfNeeded() {
         if (!::_configManager.isInitialized) return
@@ -410,6 +416,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Immersive для Android 11+ через WindowInsetsController. */
     @SuppressLint("WrongConstant")
     private fun enableImmersiveModeModern(window: android.view.Window, strictMode: Boolean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
@@ -440,6 +447,7 @@ abstract class BaseActivity : AppCompatActivity() {
         window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
     }
 
+    /** Вешает listener, заново скрывающий бары в strict mode (Android 11+). */
     @SuppressLint("WrongConstant")
     private fun setupStrictModeListenerModern(window: android.view.Window, insetsController: WindowInsetsController) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
@@ -464,6 +472,7 @@ abstract class BaseActivity : AppCompatActivity() {
         isListenerAttached = true
     }
 
+    /** Снимает listener strict mode (Android 11+). */
     private fun removeStrictModeListenerModern(window: android.view.Window) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -474,6 +483,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Immersive для Android 10 и ниже через systemUiVisibility. */
     @Suppress("DEPRECATION")
     private fun enableImmersiveModeLegacy(window: android.view.Window, strictMode: Boolean) {
         val decorView = window.decorView
@@ -499,6 +509,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Вешает listener strict mode для legacy. */
     @Suppress("DEPRECATION")
     private fun setupStrictModeListenerLegacy(decorView: View) {
         removeStrictModeListenerLegacy(decorView)
@@ -521,11 +532,13 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Снимает listener strict mode (legacy). */
     @Suppress("DEPRECATION")
     private fun removeStrictModeListenerLegacy(decorView: View) {
         decorView.setOnSystemUiVisibilityChangeListener(null)
     }
 
+    /** Заново применяет immersive при получении фокуса. */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -559,6 +572,7 @@ abstract class BaseActivity : AppCompatActivity() {
         requestedOrientation = targetOrientation
     }
 
+    /** Переприменяет immersive при смене конфигурации. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -570,6 +584,7 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    /** Снимает listener strict mode при уничтожении активности. */
     override fun onDestroy() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window?.let { removeStrictModeListenerModern(it) }
@@ -628,6 +643,7 @@ class LoggerActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран, меню, восстанавливает состояние, применяет режим. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -665,6 +681,7 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -672,6 +689,7 @@ class LoggerActivity : BaseActivity() {
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает режим при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -697,11 +715,13 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -787,11 +807,13 @@ class LoggerActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(iconRes)
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -801,6 +823,7 @@ class LoggerActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener { finish() }
         binding.btnCloseContent.setOnClickListener { finish() }
@@ -809,6 +832,7 @@ class LoggerActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик системной кнопки «Назад». */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -826,6 +850,7 @@ class LoggerActivity : BaseActivity() {
         )
     }
 
+    /** Строит список пунктов меню логгера. */
     private fun buildMenuItems(): List<MenuModel> {
         val items = mutableListOf<MenuModel>()
 
@@ -868,6 +893,7 @@ class LoggerActivity : BaseActivity() {
         return items
     }
 
+    /** Показывает фрагмент выбранного пункта. */
     private fun showItem(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -895,6 +921,7 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -919,6 +946,7 @@ class LoggerActivity : BaseActivity() {
         super.onDestroy()
     }
 
+    /** При возврате в активность заново применяет ориентацию и immersive. */
     override fun onResume() {
         super.onResume()
 
@@ -997,6 +1025,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** Инициализирует ядро, WebView, JsBridge, оболочку и авто-проверку обновлений. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -1115,11 +1144,13 @@ class MainActivity : BaseActivity() {
         finishAnimated()
     }
 
+    /** Снимает колбэки и сбрасывает состояние удержания Volume Down. */
     private fun clearSafeModeState() {
         handler.removeCallbacks(safeModeRunnable)
         isVolumeDownHeld = false
     }
 
+    /** Чистит состояние Safe Mode при уничтожении. */
     override fun onDestroy() {
         clearSafeModeState()
         super.onDestroy()
@@ -1129,6 +1160,7 @@ class MainActivity : BaseActivity() {
     // ОСТАЛЬНАЯ ЛОГИКА
     // ============================================================
 
+    /** Логирует новый интент (например, повторный запуск лаунчера). */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         LoggerManager.debug(
@@ -1159,6 +1191,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** При возврате применяет ориентацию, язык, анимации, immersive и авто-проверку. */
     override fun onResume() {
         super.onResume()
 
@@ -1199,6 +1232,7 @@ class MainActivity : BaseActivity() {
         maybeRunAutoUpdateCheck()
     }
 
+    /** Уведомляет оболочку о смене конфигурации. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -1211,6 +1245,7 @@ class MainActivity : BaseActivity() {
     // ФОНОВАЯ АВТО-ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Запускает фоновую авто-проверку обновлений, если пришло время. */
     private fun maybeRunAutoUpdateCheck() {
         if (!::updateManager.isInitialized) return
         if (isAutoCheckRunning) return
@@ -1306,6 +1341,7 @@ class SettingsActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран настроек, меню и восстанавливает состояние. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -1350,6 +1386,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -1357,6 +1394,7 @@ class SettingsActivity : BaseActivity() {
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает UI при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -1382,11 +1420,13 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -1460,11 +1500,13 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню настроек. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -1474,6 +1516,7 @@ class SettingsActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад с учётом диалога перезапуска. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener {
             checkAndShowRestartDialog()
@@ -1488,6 +1531,7 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик системной кнопки «Назад». */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -1676,6 +1720,7 @@ class SettingsActivity : BaseActivity() {
         recreate()
     }
 
+    /** Показывает фрагмент выбранного пункта меню. */
     private fun showItem(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -1703,6 +1748,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -1715,6 +1761,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** При возврате обновляет ориентацию, маркер обновления и immersive. */
     override fun onResume() {
         super.onResume()
 
@@ -1737,6 +1784,7 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Хук уничтожения активности. */
     override fun onDestroy() {
         super.onDestroy()
     }
@@ -1800,6 +1848,7 @@ class StoreActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран магазина, меню, восстанавливает состояние, загружает каталог. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -1847,12 +1896,14 @@ class StoreActivity : BaseActivity() {
         refreshItems()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает UI при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -1878,11 +1929,13 @@ class StoreActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -1970,6 +2023,7 @@ class StoreActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(iconRes)
     }
 
+    /** Возвращает заголовок: имя элемента при детальном экране, иначе заголовок пункта меню. */
     private fun getCurrentTitle(): String {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
         if (currentFragment is StoreItemDetailFragment) {
@@ -1981,6 +2035,7 @@ class StoreActivity : BaseActivity() {
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню магазина. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -1989,6 +2044,7 @@ class StoreActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад с учётом диалога перезапуска. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener { checkAndShowRestartDialog() }
         binding.btnCloseContent.setOnClickListener { checkAndShowRestartDialog() }
@@ -1997,6 +2053,7 @@ class StoreActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик «Назад»: backStack > деталь, затем меню, затем выход. */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -2022,6 +2079,7 @@ class StoreActivity : BaseActivity() {
         )
     }
 
+    /** Строит список пунктов меню магазина. */
     private fun buildMenuItems(): List<MenuModel> {
         return listOf(
             MenuModel(
@@ -2054,11 +2112,13 @@ class StoreActivity : BaseActivity() {
         )
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Показывает фрагмент выбранного пункта меню. */
     private fun showItem(item: MenuModel) {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate()
@@ -2090,6 +2150,7 @@ class StoreActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -2106,6 +2167,7 @@ class StoreActivity : BaseActivity() {
     // ДЕТАЛЬНЫЙ ЭКРАН
     // ============================================================
 
+    /** Открывает детальный экран элемента через addToBackStack. */
     fun showItemDetail(item: StoreItemModel) {
         val fragment = StoreItemDetailFragment.newInstance(item.name)
 
@@ -2120,6 +2182,7 @@ class StoreActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
     }
 
+    /** Закрывает детальный экран и возвращается к меню. */
     fun hideItemDetail() {
         if (isFinishing || isDestroyed) return
 
@@ -2134,6 +2197,7 @@ class StoreActivity : BaseActivity() {
     // ДАННЫЕ ДЛЯ ДЕТАЛЬНОГО ФРАГМЕНТА
     // ============================================================
 
+    /** Ищет элемент каталога по имени. */
     fun findItemByName(name: String): StoreItemModel? {
         return currentItems.find { it.name == name }
     }
@@ -2159,6 +2223,7 @@ class StoreActivity : BaseActivity() {
         }
     }
 
+    /** При возврате обновляет ориентацию, каталог и immersive. */
     override fun onResume() {
         super.onResume()
 
@@ -2223,6 +2288,7 @@ class TerminalActivity : BaseActivity() {
     private var historyIndex = -1
     private var historyDraft: String = ""
 
+    /** Инициализирует экран терминала и все подсистемы. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_terminal)
@@ -2244,6 +2310,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews() {
         rootView = findViewById(R.id.terminal_root)
         cardView = findViewById(R.id.terminal_card)
@@ -2269,6 +2336,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает RecyclerView лога терминала. */
     private fun setupLog() {
         adapter = TerminalAdapter(lines)
         recyclerLog.layoutManager = LinearLayoutManager(this).apply {
@@ -2277,6 +2345,7 @@ class TerminalActivity : BaseActivity() {
         recyclerLog.adapter = adapter
     }
 
+    /** Вешает слушатели на кнопки и IME. */
     private fun setupInput() {
         btnSend.setOnClickListener { submitInput() }
         btnClose.setOnClickListener { checkAndClose() }
@@ -2318,6 +2387,7 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Шаг вверх по истории (новее > старее). */
     private fun navigateHistoryUp(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty()) return
@@ -2336,6 +2406,7 @@ class TerminalActivity : BaseActivity() {
         editText.setSelection(command.length)
     }
 
+    /** Шаг вниз по истории (старее > новее, затем черновик). */
     private fun navigateHistoryDown(editText: EditText) {
         val history = TerminalHistoryManager.getReversed(this)
         if (history.isEmpty() || historyIndex == -1) return
@@ -2353,11 +2424,13 @@ class TerminalActivity : BaseActivity() {
         }
     }
 
+    /** Сбрасывает навигацию по истории. */
     private fun resetHistoryNavigation() {
         historyIndex = -1
         historyDraft = ""
     }
 
+    /** Настраивает обработчик «Назад» — он закрывает терминал. */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -2373,6 +2446,7 @@ class TerminalActivity : BaseActivity() {
     // ВВОД И ВЫПОЛНЕНИЕ
     // ============================================================
 
+    /** Парсит ввод, вызывает команду, пишет результат в лог. */
     private fun submitInput() {
         if (isExecuting) return
 
@@ -2426,6 +2500,7 @@ class TerminalActivity : BaseActivity() {
     // ЗАКРЫТИЕ
     // ============================================================
 
+    /** Показывает диалог перезапуска, если были write-команды; иначе закрывает. */
     private fun checkAndClose() {
         if (getNeedsRestart()) {
             showRestartDialog()
@@ -2438,21 +2513,25 @@ class TerminalActivity : BaseActivity() {
     // ЛОГ
     // ============================================================
 
+    /** Добавляет в лог строку ввода. */
     private fun addInput(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.INPUT, text))
         notifyAndScroll()
     }
 
+    /** Добавляет в лог строку вывода. */
     private fun addOutput(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.OUTPUT, text))
         notifyAndScroll()
     }
 
+    /** Добавляет в лог строку ошибки. */
     private fun addError(text: String) {
         lines.add(TerminalLineModel(TerminalLineModel.LineType.ERROR, text))
         notifyAndScroll()
     }
 
+    /** Очищает лог терминала. */
     private fun clearLog() {
         val sizeBefore = lines.size
         if (sizeBefore == 0) return
@@ -2461,6 +2540,7 @@ class TerminalActivity : BaseActivity() {
         adapter.notifyItemRangeRemoved(0, sizeBefore)
     }
 
+    /** Уведомляет адаптер о новой строке и прокручивает вниз. */
     private fun notifyAndScroll() {
         adapter.notifyItemInserted(lines.size - 1)
         recyclerLog.post {
@@ -2529,6 +2609,7 @@ class WelcomeActivity : BaseActivity() {
         handlePermissionResults(results)
     }
 
+    /** Инициализирует UI, версию, список разрешений; при готовности — сразу на Main. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_welcome)
@@ -2549,6 +2630,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews() {
         progressBar = findViewById(R.id.progress_bar)
         progressText = findViewById(R.id.progress_text)
@@ -2560,6 +2642,7 @@ class WelcomeActivity : BaseActivity() {
         permissionsContainer = findViewById(R.id.permissions_container)
     }
 
+    /** Показывает текущую версию приложения. */
     private fun setupVersionInfo() {
         val versionTextView = findViewById<TextView>(R.id.tv_version)
         try {
@@ -2580,6 +2663,7 @@ class WelcomeActivity : BaseActivity() {
     // СПИСОК РАЗРЕШЕНИЙ
     // ============================================================
 
+    /** Строит список строк разрешений с иконками и статусами. */
     private fun setupPermissionsUI() {
         permissionsContainer.removeAllViews()
         permissionStatusViews.clear()
@@ -2659,6 +2743,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Вешает клики на кнопки запроса/повтора/настроек. */
     private fun setupListeners() {
         btnGrant.setOnClickListener {
             requestAllPermissions()
@@ -2674,6 +2759,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Запрашивает недостающие обязательные разрешения. */
     private fun requestAllPermissions() {
         if (isRequestingPermissions) return
         isRequestingPermissions = true
@@ -2689,6 +2775,7 @@ class WelcomeActivity : BaseActivity() {
         permissionLauncher.launch(missingPermissions.toTypedArray())
     }
 
+    /** Обрабатывает результат запроса разрешений из launcher-а. */
     private fun handlePermissionResults(results: Map<String, Boolean>) {
         isRequestingPermissions = false
 
@@ -2716,6 +2803,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Устаревший колбэк — оставлен для совместимости. */
     @Suppress("DEPRECATION")
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -2752,6 +2840,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Проверяет, выдан ли grantResult-код. */
     private fun Int.isGranted(): Boolean {
         return this == PackageManager.PERMISSION_GRANTED
     }
@@ -2815,6 +2904,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Показывает блок ошибки о непредоставленных разрешениях. */
     private fun showPermissionDeniedError() {
         errorContainer.visibility = LinearLayout.VISIBLE
         errorContainer.post {
@@ -2822,6 +2912,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Открывает системные настройки приложения. */
     private fun openAppSettings() {
         try {
             val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -2833,6 +2924,7 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Завершает онбординг: пишет флаг и переходит в MainActivity. */
     private fun finishAndGoToMain() {
         if (isFinishingActivity) return
         isFinishingActivity = true
@@ -2855,6 +2947,7 @@ class WelcomeActivity : BaseActivity() {
         finishAnimated()
     }
 
+    /** При возврате обновляет статусы и при готовности — сразу на Main (если не форс). */
     override fun onResume() {
         super.onResume()
 
@@ -2874,12 +2967,14 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
+    /** Резолвит цвет из темы по атрибуту. */
     private fun getColorFromAttribute(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Описание одного разрешения для UI. */
     data class PermissionItem(
         val permission: String,
         val iconRes: Int,
@@ -2912,6 +3007,7 @@ import by.quty.launch.core.managers.ShellManager
  */
 object ApiInitializer {
 
+    /** Создаёт менеджеры и регистрирует все API-методы в роутере. */
     fun init(context: Context) {
         val appContext = context.applicationContext
         val configManager = ConfigManager(appContext)
@@ -2999,7 +3095,10 @@ abstract class BaseApiMethod<P> {
         }
     }
 
+    /** Реализация самого метода. */
     protected abstract suspend fun executeInternal(params: P?): String
+
+    /** Парсит строку params в P. */
     protected abstract fun parseParams(jsonString: String): P
 }
 
@@ -3045,8 +3144,10 @@ class GetApps(
     override val iconRes: Int
         get() = R.drawable.ic_api_getapps
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Возвращает кэш или свежий список приложений с бейджами обновлений. */
     override suspend fun executeInternal(params: Unit?): String {
         val cachedApps = CacheManager.getCachedApps()
         if (cachedApps != null) {
@@ -3097,6 +3198,7 @@ class GetApps(
         }
     }
 
+    /** Собирает реальные и виртуальные приложения с иконками в Base64. */
     @SuppressLint("QueryPermissionsNeeded")
     private suspend fun loadFreshApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val packageManager = context.packageManager
@@ -3245,8 +3347,10 @@ class GetCoreState(
     override val iconRes: Int
         get() = R.drawable.ic_api_getcorestate
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Собирает полную модель состояния ядра и сериализует её. */
     override suspend fun executeInternal(params: Unit?): String {
         val themeMode = normalizeThemeMode(configManager.getThemeMode())
 
@@ -3309,6 +3413,7 @@ class GetCoreState(
         )
     }
 
+    /** Приводит режим темы к одному из light/dark/system. */
     private fun normalizeThemeMode(mode: String): String {
         return when (mode) {
             "light", "dark", "system" -> mode
@@ -3316,6 +3421,7 @@ class GetCoreState(
         }
     }
 
+    /** Возвращает фактическую тему (dark/light) с учётом системной. */
     private fun resolveTheme(themeMode: String): String {
         return when (themeMode) {
             "dark" -> "dark"
@@ -3329,6 +3435,7 @@ class GetCoreState(
         }
     }
 
+    /** Возвращает BCP-47 локаль по коду языка. */
     private fun resolveLocale(language: String): String {
         return when (language) {
             "ru" -> "ru-RU"
@@ -3408,8 +3515,10 @@ class GetStatusBar(
         "/sys/class/power_supply/battery/temp"
     )
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Собирает все данные статус-бара и сериализует в ответ. */
     override suspend fun executeInternal(params: Unit?): String = withContext(Dispatchers.IO) {
         val status = StatusBarInfo(
             cpuTemp = getAverageCpuTemp(),
@@ -3494,6 +3603,7 @@ class GetStatusBar(
         }
     }
 
+    /** Форматирует температуру в «NN°C». */
     private fun formatCpuTemp(temp: Float): String {
         return String.format(Locale.US, "%.0f°C", temp)
     }
@@ -3567,6 +3677,7 @@ class GetStatusBar(
         }
     }
 
+    /** Форматирует скорость в MB/s, KB/s или B/s. */
     private fun formatSpeed(bytesPerSecond: Double): String {
         return when {
             bytesPerSecond >= 1024 * 1024 -> {
@@ -3585,6 +3696,7 @@ class GetStatusBar(
 
     // ==================== ГРОМКОСТЬ ====================
 
+    /** Возвращает громкость музыки в процентах. */
     private fun getVolume(): String? {
         return try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -3604,6 +3716,7 @@ class GetStatusBar(
 
     // ==================== GSM СИГНАЛ ====================
 
+    /** Возвращает уровень GSM-сигнала (0–4). */
     @Suppress("DEPRECATION")
     private fun getGsmSignal(): Int? {
         return try {
@@ -3618,6 +3731,7 @@ class GetStatusBar(
         }
     }
 
+    /** Возвращает тип сети: 2G/3G/4G/5G/H+ или null. */
     @Suppress("DEPRECATION")
     private fun getGsmNetworkType(): String? {
         return try {
@@ -3659,6 +3773,7 @@ class GetStatusBar(
 
     // ==================== Wi-Fi ====================
 
+    /** Возвращает уровень Wi-Fi (0–4) по RSSI. */
     @Suppress("DEPRECATION")
     private fun getWifiSignalLevel(): Int? {
         return try {
@@ -3690,6 +3805,7 @@ class GetStatusBar(
 
     // ==================== Bluetooth ====================
 
+    /** true, если Bluetooth включён. */
     @Suppress("DEPRECATION")
     private fun isBluetoothEnabled(): Boolean {
         return try {
@@ -3700,6 +3816,7 @@ class GetStatusBar(
         }
     }
 
+    /** true, если активная сеть — Wi-Fi. */
     private fun isWifiEnabled(): Boolean {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -3715,6 +3832,7 @@ class GetStatusBar(
         }
     }
 
+    /** true, если GPS-провайдер включён. */
     private fun isGpsEnabled(): Boolean {
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -3726,6 +3844,7 @@ class GetStatusBar(
 
     // ==================== USB ====================
 
+    /** true, если подключено USB-устройство. */
     private fun isUsbConnected(): Boolean {
         return try {
             val usbManager = context.getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
@@ -3761,8 +3880,10 @@ class GetSystemInfo : BaseApiMethod<Unit>() {
     override val iconRes: Int
         get() = R.drawable.ic_api_getsysteminfo
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Возвращает модель устройства и версию Android. */
     override suspend fun executeInternal(params: Unit?): String {
         val info = SystemInfo(
             device = android.os.Build.MODEL,
@@ -3811,10 +3932,12 @@ class LaunchApp(
     override val iconRes: Int
         get() = R.drawable.ic_api_launchapp
 
+    /** Парсит JSON в LaunchAppParams. */
     override fun parseParams(jsonString: String): LaunchAppParams {
         return json.decodeFromString(jsonString)
     }
 
+    /** Открывает соответствующую активность по пакету. */
     override suspend fun executeInternal(params: LaunchAppParams?): String {
         val packageName = params?.packageName
             ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_package_required))
@@ -3913,6 +4036,7 @@ data class CoreStateInfo(
     val app: CoreAppInfo
 )
 
+/** Информация о цветовой схеме. */
 @Serializable
 data class ColorSchemeInfo(
     val id: String,
@@ -3920,6 +4044,7 @@ data class ColorSchemeInfo(
     val accent: String
 )
 
+/** Информация об активной оболочке. */
 @Serializable
 data class ShellInfo(
     val name: String,
@@ -3929,6 +4054,7 @@ data class ShellInfo(
     val orientation: String?
 )
 
+/** Информация о приложении (версия). */
 @Serializable
 data class CoreAppInfo(
     val version: String,
@@ -4027,6 +4153,7 @@ object ApiRouter {
 
     private const val PARAMS_LOG_MAX_LENGTH = 120
 
+    /** Регистрирует метод по его имени. */
     fun register(method: BaseApiMethod<*>) {
         methods[method.name] = method
     }
@@ -4085,18 +4212,22 @@ object ApiRouter {
         }
     }
 
+    /** Возвращает список зарегистрированных методов. */
     fun getRegisteredMethods(): List<BaseApiMethod<*>> {
         return methods.values.toList()
     }
 
+    /** Помечает метод как вызванный за сессию. */
     fun markMethodActive(name: String) {
         activeMethods.add(name)
     }
 
+    /** Возвращает набор вызванных за сессию методов. */
     fun getActiveMethods(): Set<String> {
         return activeMethods.toSet()
     }
 
+    /** Очищает набор вызванных методов. */
     fun clearActiveMethods() {
         activeMethods.clear()
     }
@@ -4421,6 +4552,7 @@ import by.quty.launch.core.model.LoggerTagModel
  */
 class Core(context: Context) {
 
+    /** Инициализирует логгер, API-методы и менеджер кэша. */
     init {
         LoggerManager.init(context)
         ApiInitializer.init(context)
@@ -4469,12 +4601,14 @@ class ColorSchemeAdapter(
     private var schemes: List<ColorSchemeModel> = ColorSchemeModel.getAllSchemes()
     private var selectedSchemeId: String = ColorSchemeModel.getDefaultScheme().id
 
+    /** Создаёт ViewHolder из item_color_scheme.xml. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_color_scheme, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит квадратик схемы с обработчиком выбора. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val scheme = schemes[position]
         val isSelected = scheme.id == selectedSchemeId
@@ -4495,6 +4629,7 @@ class ColorSchemeAdapter(
         }
     }
 
+    /** Возвращает количество элементов (схем). */
     override fun getItemCount(): Int = schemes.size
 
     /** Устанавливает выбранную схему и обновляет два затронутых элемента. */
@@ -4513,10 +4648,12 @@ class ColorSchemeAdapter(
         }
     }
 
+    /** ViewHolder одного квадратика схемы. */
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val colorView: ImageView = itemView.findViewById(R.id.color_preview)
         private val selectedIndicator: View = itemView.findViewById(R.id.selected_indicator)
 
+        /** Рисует цвет и рамку выбранной схемы. */
         fun bind(scheme: ColorSchemeModel, isSelected: Boolean, onClick: () -> Unit) {
             val context = itemView.context
 
@@ -4552,6 +4689,7 @@ class ColorSchemeAdapter(
             itemView.setOnClickListener { onClick() }
         }
 
+        /** Резолвит цвет темы по атрибуту. */
         private fun getThemeColor(context: Context, attr: Int): Int {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)
@@ -4595,16 +4733,19 @@ class LoggerAdapter(
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
+    /** Создаёт ViewHolder строки лога. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logger_entry, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит одну запись. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(entries[position])
     }
 
+    /** Возвращает количество записей. */
     override fun getItemCount(): Int = entries.size
 
     /** Добавляет запись в начало (новые сверху). */
@@ -4613,6 +4754,7 @@ class LoggerAdapter(
         notifyItemInserted(0)
     }
 
+    /** Полностью заменяет список записей. */
     @SuppressLint("NotifyDataSetChanged")
     fun submitEntries(newEntries: List<LoggerEntryModel>) {
         entries.clear()
@@ -4620,6 +4762,7 @@ class LoggerAdapter(
         notifyDataSetChanged()
     }
 
+    /** Очищает все записи. */
     fun clearAll() {
         val sizeBefore = entries.size
         if (sizeBefore == 0) return
@@ -4628,6 +4771,7 @@ class LoggerAdapter(
         notifyItemRangeRemoved(0, sizeBefore)
     }
 
+    /** ViewHolder одной записи лога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val levelBar: View = itemView.findViewById(R.id.logger_level_bar)
@@ -4635,6 +4779,7 @@ class LoggerAdapter(
         private val tagView: TextView = itemView.findViewById(R.id.logger_tag)
         private val messageView: TextView = itemView.findViewById(R.id.logger_message)
 
+        /** Красит полоску уровня, заполняет поля, вешает тап по details. */
         fun bind(entry: LoggerEntryModel) {
             val context = itemView.context
 
@@ -4667,6 +4812,7 @@ class LoggerAdapter(
             }
         }
 
+        /** Возвращает цвет полоски для уровня. */
         private fun getLevelColor(context: android.content.Context, level: LoggerLevelModel): Int {
             return when (level) {
                 LoggerLevelModel.DEBUG ->
@@ -4712,24 +4858,29 @@ class LoggerFileAdapter(
     private val onMenuClick: (File, View) -> Unit
 ) : RecyclerView.Adapter<LoggerFileAdapter.ViewHolder>() {
 
+    /** Создаёт ViewHolder файла лога. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logger_file, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит один файл. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(files[position])
     }
 
+    /** Возвращает количество файлов. */
     override fun getItemCount(): Int = files.size
 
+    /** ViewHolder одного файла лога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val nameView: TextView = itemView.findViewById(R.id.logger_file_name)
         private val metaView: TextView = itemView.findViewById(R.id.logger_file_meta)
         private val menuButton: ImageButton = itemView.findViewById(R.id.logger_file_menu)
 
+        /** Заполняет имя/мету и вешает клики. */
         fun bind(file: File) {
             nameView.text = file.name
             metaView.text = formatMeta(file)
@@ -4751,6 +4902,7 @@ class LoggerFileAdapter(
             return "$time · $size"
         }
 
+        /** Форматирует размер файла в B/KB/MB/GB. */
         private fun formatSize(bytes: Long): String {
             val locale = Locale.US
             return when {
@@ -4799,11 +4951,13 @@ class SettingsMenuAdapter(
 
     private var selectedItemId: Int = -1
 
+    /** Возвращает тип view (обычный пункт или спейсер). */
     override fun getItemViewType(position: Int): Int {
         val item = items[position]
         return if (item.id < 0) VIEW_TYPE_SPACER else VIEW_TYPE_ITEM
     }
 
+    /** Создаёт ViewHolder пункта меню или спейсера. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             VIEW_TYPE_SPACER -> {
@@ -4825,6 +4979,7 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** Биндит пункт меню или спейсер. */
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = items[position]
         when (holder) {
@@ -4837,8 +4992,10 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** Возвращает количество элементов. */
     override fun getItemCount(): Int = items.size
 
+    /** Обновляет выбранный пункт и перерисовывает два затронутых view. */
     fun setSelectedItem(itemId: Int) {
         val oldPosition = items.indexOfFirst { it.id == selectedItemId }
         selectedItemId = itemId
@@ -4852,10 +5009,12 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** ViewHolder обычного пункта меню. */
     class ItemViewHolder(
         private val binding: ItemSettingsMenuBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        /** Заполняет иконку/заголовок/описание, маркер и выделение. */
         fun bind(
             item: MenuModel,
             isSelected: Boolean,
@@ -4919,6 +5078,7 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** ViewHolder пустого спейсера. */
     class SpacerViewHolder(view: View) : RecyclerView.ViewHolder(view)
 }
 
@@ -4954,16 +5114,19 @@ class StoreItemAdapter(
     private val inputDateFormat = "yyyy-MM-dd"
     private val outputDateFormat = "dd.MM.yyyy"
 
+    /** Создаёт ViewHolder карточки магазина. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_store_list, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит карточку. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position])
     }
 
+    /** Возвращает количество элементов. */
     override fun getItemCount(): Int = items.size
 
     /** Точечные уведомления: changed — если состав/порядок тот же, иначе remove+insert. */
@@ -5004,6 +5167,7 @@ class StoreItemAdapter(
         }
     }
 
+    /** ViewHolder одной карточки каталога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val previewImage: ImageView = itemView.findViewById(R.id.item_preview)
@@ -5017,6 +5181,7 @@ class StoreItemAdapter(
         private val statusInstalled: TextView = itemView.findViewById(R.id.item_status_installed)
         private val statusNewer: TextView = itemView.findViewById(R.id.item_status_newer)
 
+        /** Заполняет карточку: превью, имя, версия, метаданные, статусы. */
         fun bind(item: StoreItemModel) {
             val context = itemView.context
 
@@ -5161,22 +5326,27 @@ class TerminalAdapter(
     private val lines: List<TerminalLineModel>
 ) : RecyclerView.Adapter<TerminalAdapter.ViewHolder>() {
 
+    /** Создаёт ViewHolder строки терминала. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_terminal_line, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит строку. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(lines[position])
     }
 
+    /** Возвращает количество строк. */
     override fun getItemCount(): Int = lines.size
 
+    /** ViewHolder одной строки терминала. */
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val textView: TextView = itemView.findViewById(R.id.terminal_line_text)
 
+        /** Красит и подписывает строку в зависимости от типа. */
         fun bind(line: TerminalLineModel) {
             val context = itemView.context
 
@@ -5198,6 +5368,7 @@ class TerminalAdapter(
             }
         }
 
+        /** Резолвит цвет темы по атрибуту. */
         private fun getThemeColor(context: android.content.Context, attr: Int): Int {
             val typedValue = android.util.TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)
@@ -5250,6 +5421,7 @@ class LoggerFilesFragment : Fragment() {
 
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.US)
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -5258,6 +5430,7 @@ class LoggerFilesFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_logger_files, container, false)
     }
 
+    /** Находит view-элементы после создания view. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -5265,6 +5438,7 @@ class LoggerFilesFragment : Fragment() {
         emptyText = view.findViewById(R.id.logger_files_empty)
     }
 
+    /** Обновляет список файлов при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
         refreshFiles()
@@ -5274,6 +5448,7 @@ class LoggerFilesFragment : Fragment() {
     // СПИСОК ФАЙЛОВ
     // ============================================================
 
+    /** Асинхронно читает список лог-файлов и рендерит его. */
     private fun refreshFiles() {
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
@@ -5283,6 +5458,7 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Отрисовывает список файлов или пустое состояние. */
     private fun renderFiles(files: List<File>) {
         container.removeAllViews()
 
@@ -5319,12 +5495,14 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Форматирует метаданные файла: "HH:mm · size". */
     private fun formatMeta(file: File): String {
         val time = timeFormat.format(Date(file.lastModified()))
         val size = formatSize(file.length())
         return "$time · $size"
     }
 
+    /** Форматирует размер файла в B/KB/MB/GB. */
     private fun formatSize(bytes: Long): String {
         val locale = Locale.US
         return when {
@@ -5339,6 +5517,7 @@ class LoggerFilesFragment : Fragment() {
     // ПРЕВЬЮ ФАЙЛА
     // ============================================================
 
+    /** Показывает диалог с содержимым лог-файла и кнопкой копирования. */
     private fun showFileContent(file: File) {
         lifecycleScope.launch {
             val content = withContext(Dispatchers.IO) {
@@ -5401,6 +5580,7 @@ class LoggerFilesFragment : Fragment() {
     // МЕНЮ ФАЙЛА
     // ============================================================
 
+    /** Показывает popup-меню для файла (поделиться/удалить). */
     private fun showFileMenu(file: File, anchor: View) {
         PopupMenuHelper.show(
             anchor = anchor,
@@ -5419,6 +5599,7 @@ class LoggerFilesFragment : Fragment() {
         )
     }
 
+    /** Отправляет файл через системный share-диалог. */
     private fun shareFile(file: File) {
         try {
             val storageManager = StorageManager(requireContext())
@@ -5434,6 +5615,7 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Удаляет лог-файл и обновляет список. */
     private fun deleteFile(file: File) {
         lifecycleScope.launch {
             val success = LoggerManager.deleteLogFile(requireContext(), file.name)
@@ -5522,6 +5704,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -5530,6 +5713,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         return inflater.inflate(R.layout.fragment_logger, container, false)
     }
 
+    /** Инициализирует view и подсистемы логгера. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -5550,17 +5734,20 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         syncWithBuffer()
     }
 
+    /** При старте синхронизирует буфер и подписывается на новые записи. */
     override fun onStart() {
         super.onStart()
         syncWithBuffer()
         LoggerManager.subscribe(this)
     }
 
+    /** При остановке отписывается от логгера. */
     override fun onStop() {
         super.onStop()
         LoggerManager.unsubscribe(this)
     }
 
+    /** Настраивает RecyclerView и адаптер логов. */
     private fun setupRecycler() {
         adapter = LoggerAdapter(
             entries = entries,
@@ -5577,6 +5764,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ДЕЙСТВИЯ
     // ============================================================
 
+    /** Вешает клики на кнопки фильтра/сохранения/очистки/копирования. */
     private fun setupActions() {
         btnFilter.setOnClickListener { showFilterDialog() }
         btnSave.setOnClickListener { saveCurrentLog() }
@@ -5750,6 +5938,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         dialog.show()
     }
 
+    /** Применяет фильтр, обновляя список записей и счётчик. */
     @SuppressLint("NotifyDataSetChanged")
     private fun applyFilter() {
         val snapshot = LoggerManager.getFilteredEntries(requireContext())
@@ -5766,6 +5955,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // СОХРАНЕНИЕ / ОЧИСТКА / КОПИРОВАНИЕ
     // ============================================================
 
+    /** Сохраняет текущий буфер в файл и показывает Toast. */
     private fun saveCurrentLog() {
         if (LoggerManager.size() == 0) {
             Toast.makeText(
@@ -5794,6 +5984,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Очищает лог в буфере и списке. */
     private fun clearLog() {
         if (entries.isEmpty()) {
             Toast.makeText(
@@ -5807,6 +5998,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         LoggerManager.clear()
     }
 
+    /** Копирует все видимые записи в буфер обмена. */
     private fun copyAllToClipboard() {
         if (entries.isEmpty()) {
             Toast.makeText(
@@ -5831,6 +6023,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         ).show()
     }
 
+    /** Форматирует все записи в единый текст для clipboard. */
     private fun formatAllEntries(): String {
         return buildString {
             entries.forEach { entry ->
@@ -5855,6 +6048,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ДИАЛОГ DETAILS
     // ============================================================
 
+    /** Показывает диалог с details записи и кнопкой копирования. */
     private fun showDetailsDialog(entry: LoggerEntryModel) {
         val details = entry.details ?: return
 
@@ -5908,6 +6102,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // СИНХРОНИЗАЦИЯ
     // ============================================================
 
+    /** Синхронизирует UI с буфером логгера. */
     @SuppressLint("NotifyDataSetChanged")
     private fun syncWithBuffer() {
         if (!isAdded) return
@@ -5934,10 +6129,12 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         scrollToTop()
     }
 
+    /** Обновляет счётчик записей. */
     private fun updateCounter() {
         counterView.text = getString(R.string.logger_counter_format, entries.size, 500)
     }
 
+    /** Переключает пустое состояние списка. */
     private fun updateEmptyState() {
         if (entries.isEmpty()) {
             emptyText.visibility = View.VISIBLE
@@ -5948,6 +6145,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Прокручивает список к первой записи. */
     private fun scrollToTop() {
         recyclerLog.post {
             if (entries.isNotEmpty()) {
@@ -5960,6 +6158,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // LoggerManager.LoggerListener
     // ============================================================
 
+    /** Добавляет новую запись в UI, если она проходит фильтр. */
     override fun onEntryAdded(entry: LoggerEntryModel) {
         lifecycleScope.launch(Dispatchers.Main) {
             if (!isAdded || view == null) return@launch
@@ -5978,6 +6177,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         }
     }
 
+    /** Очищает UI при очистке буфера. */
     override fun onCleared() {
         lifecycleScope.launch(Dispatchers.Main) {
             if (!isAdded || view == null) return@launch
@@ -5992,12 +6192,14 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(context: Context, attr: Int): Int {
         val typedValue = android.util.TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Возвращает цвет полоски для уровня. */
     private fun getLevelColor(context: Context, level: LoggerLevelModel): Int {
         return when (level) {
             LoggerLevelModel.DEBUG ->
@@ -6050,6 +6252,7 @@ class LoggerSettingsFragment : Fragment() {
 
     private var isSpinnerInitializing = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -6058,6 +6261,7 @@ class LoggerSettingsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_logger_settings, container, false)
     }
 
+    /** Находит view и настраивает все секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -6078,6 +6282,7 @@ class LoggerSettingsFragment : Fragment() {
     // SWITCH: ЛОГИРОВАНИЕ
     // ============================================================
 
+    /** Настраивает switch «Включить логирование». */
     private fun setupEnabledSwitch() {
         enabledSwitch.isChecked = LoggerManager.isEnabled()
 
@@ -6097,6 +6302,7 @@ class LoggerSettingsFragment : Fragment() {
     // SWITCH: АВТОСОХРАНЕНИЕ
     // ============================================================
 
+    /** Настраивает switch «Автосохранение в файл». */
     private fun setupAutoSaveSwitch() {
         autoSaveSwitch.isChecked = LoggerManager.isAutoSaveEnabled()
 
@@ -6116,6 +6322,7 @@ class LoggerSettingsFragment : Fragment() {
     // SPINNER: ЛИМИТ DETAILS
     // ============================================================
 
+    /** Настраивает Spinner лимита длины details. */
     private fun setupDetailsLimitSpinner() {
         val adapter = ArrayAdapter(
             requireContext(),
@@ -6160,6 +6367,7 @@ class LoggerSettingsFragment : Fragment() {
     // СОХРАНИТЬ ТЕКУЩИЙ ЛОГ
     // ============================================================
 
+    /** Настраивает кнопку «Сохранить текущий лог». */
     private fun setupSaveRow() {
         saveRow.setOnClickListener {
             if (LoggerManager.size() == 0) {
@@ -6194,6 +6402,7 @@ class LoggerSettingsFragment : Fragment() {
     // УДАЛИТЬ ВСЕ ФАЙЛЫ
     // ============================================================
 
+    /** Настраивает кнопку «Удалить все файлы логов». */
     private fun setupDeleteFilesRow() {
         deleteFilesRow.setOnClickListener {
             val files = LoggerManager.listLogFiles(requireContext())
@@ -6278,6 +6487,7 @@ class AboutFragment : Fragment() {
 
     private var progressToast: Toast? = null
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -6286,6 +6496,7 @@ class AboutFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_about, container, false)
     }
 
+    /** Находит view и настраивает все секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -6311,6 +6522,7 @@ class AboutFragment : Fragment() {
         setupContacts()
     }
 
+    /** Отменяет progress-toast при уничтожении view. */
     override fun onDestroyView() {
         super.onDestroyView()
 
@@ -6322,6 +6534,7 @@ class AboutFragment : Fragment() {
     // БЛОК «ПРИЛОЖЕНИЕ»
     // ============================================================
 
+    /** Заполняет versionName/versionCode/канал и вешает обработчик кликов. */
     private fun setupVersionInfo() {
         val versionCode = AppInfoHelper.getVersionCode(requireContext())
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(requireContext())
@@ -6382,6 +6595,7 @@ class AboutFragment : Fragment() {
     // БЛОК «УСТРОЙСТВО»
     // ============================================================
 
+    /** Заполняет модель/версию Android/SDK/производителя. */
     private fun setupDeviceInfo() {
         deviceModelText.text = Build.MODEL.ifEmpty { getString(R.string.unknown) }
         deviceAndroidText.text = Build.VERSION.RELEASE.ifEmpty { getString(R.string.unknown) }
@@ -6393,6 +6607,7 @@ class AboutFragment : Fragment() {
     // БЛОК «КОНТАКТЫ»
     // ============================================================
 
+    /** Вешает клики на строки Telegram и GitHub. */
     private fun setupContacts() {
         contactTelegramRow.setOnClickListener {
             openUrl(CoreConfig.CONTACT_TELEGRAM_URL)
@@ -6403,6 +6618,7 @@ class AboutFragment : Fragment() {
         }
     }
 
+    /** Открывает ссылку во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -6449,6 +6665,7 @@ class AboutFragment : Fragment() {
         }
     }
 
+    /** Показывает toast «Осталось нажатий: N». */
     private fun showProgressToast(remaining: Int) {
         progressToast?.cancel()
         progressToast = Toast.makeText(
@@ -6529,6 +6746,7 @@ class ApiMethodsFragment : Fragment() {
     private lateinit var otherContainer: LinearLayout
     private lateinit var emptyText: TextView
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -6537,6 +6755,7 @@ class ApiMethodsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_api_methods, container, false)
     }
 
+    /** Находит view, получает менеджеры и строит список. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -6562,6 +6781,7 @@ class ApiMethodsFragment : Fragment() {
         rebuild()
     }
 
+    /** Перестраивает список при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
         rebuild()
@@ -6571,6 +6791,7 @@ class ApiMethodsFragment : Fragment() {
     // ПОСТРОЕНИЕ СПИСКА
     // ============================================================
 
+    /** Строит секции «используется оболочкой» и «остальные». */
     private fun rebuild() {
         activeContainer.removeAllViews()
         otherContainer.removeAllViews()
@@ -6726,6 +6947,7 @@ class ApiMethodsFragment : Fragment() {
         return view
     }
 
+    /** Создаёт горизонтальный разделитель. */
     private fun createDivider(): View {
         val height = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -6750,6 +6972,7 @@ class ApiMethodsFragment : Fragment() {
     // ДИАЛОГ-ЛЕГЕНДА
     // ============================================================
 
+    /** Показывает диалог-легенду цветов галочек. */
     private fun showLegendDialog() {
         val dialogView = layoutInflater.inflate(
             R.layout.dialog_api_methods_legend,
@@ -6781,6 +7004,7 @@ class ApiMethodsFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
@@ -6857,6 +7081,7 @@ class DeveloperFragment : Fragment() {
         requireContext().getSharedPreferences(PREFS_DEVELOPER, Context.MODE_PRIVATE)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -6865,6 +7090,7 @@ class DeveloperFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_developer, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -6896,6 +7122,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 1: ОБОЛОЧКА
     // ============================================================
 
+    /** Настраивает секцию «Оболочка»: manifest и reload. */
     private fun setupShellSection() {
         shellManifestRow.setOnClickListener {
             showShellManifestDialog()
@@ -7028,6 +7255,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
+    /** Инвалидирует кэш и помечает restart при смене видимости. */
     private fun onAppVisibilityChanged() {
         CacheManager.invalidateCache()
         (activity as? SettingsActivity)?.markRestartRequired()
@@ -7037,6 +7265,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 3: ДАННЫЕ
     // ============================================================
 
+    /** Настраивает секцию «Управление данными». */
     private fun setupDataSection() {
         clearWebViewCacheRow.setOnClickListener {
             clearWebViewCache()
@@ -7075,6 +7304,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог подтверждения сброса онбординга. */
     private fun showResetOnboardingDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_confirm, null)
 
@@ -7122,6 +7352,7 @@ class DeveloperFragment : Fragment() {
         showRestartAfterResetDialog()
     }
 
+    /** Диалог перезапуска после сброса онбординга. */
     private fun showRestartAfterResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 
@@ -7160,6 +7391,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 4: ИНСТРУМЕНТЫ
     // ============================================================
 
+    /** Настраивает инструменты: таймер обновлений и рестарт. */
     private fun setupToolsSection() {
         resetUpdateTimerRow.setOnClickListener {
             resetUpdateTimer()
@@ -7182,6 +7414,7 @@ class DeveloperFragment : Fragment() {
         ).show()
     }
 
+    /** Показывает диалог подтверждения перезапуска приложения. */
     private fun showRestartAppDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 
@@ -7292,6 +7525,7 @@ class GeneralFragment : Fragment() {
     private var isUpdating = false
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -7300,6 +7534,7 @@ class GeneralFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_general, container, false)
     }
 
+    /** Находит view, настраивает секции и обновляет состояние. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -7341,6 +7576,7 @@ class GeneralFragment : Fragment() {
         refreshSettings()
     }
 
+    /** Обновляет настройки и состояние home screen при возврате. */
     override fun onResume() {
         super.onResume()
 
@@ -7357,6 +7593,7 @@ class GeneralFragment : Fragment() {
     // ДОМАШНИЙ ЭКРАН
     // ============================================================
 
+    /** Вешает клик на строку «Домашний экран» и обновляет статус. */
     private fun setupHomeScreenRow() {
         updateHomeScreenState()
 
@@ -7424,6 +7661,7 @@ class GeneralFragment : Fragment() {
     // ТЕМА
     // ============================================================
 
+    /** Настраивает выбор темы (light/dark/system). */
     private fun setupThemeSelector() {
         val mode = configManager.getThemeMode()
         selectTheme(mode)
@@ -7447,6 +7685,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранную карточку темы. */
     private fun selectTheme(mode: String) {
         themeLightCard.setBackgroundResource(R.drawable.bg_theme_card)
         themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -7459,6 +7698,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Сохраняет режим темы и применяет его. */
     private fun applyTheme(mode: String) {
         if (isUpdating) return
 
@@ -7481,6 +7721,7 @@ class GeneralFragment : Fragment() {
     // ОРИЕНТАЦИЯ
     // ============================================================
 
+    /** Настраивает выбор ориентации. */
     private fun setupOrientationSelector() {
         val orientation = configManager.getOrientation()
         selectOrientation(orientation)
@@ -7513,6 +7754,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранную карточку ориентации. */
     private fun selectOrientation(orientation: String) {
         orientationAutoCard.setBackgroundResource(R.drawable.bg_theme_card)
         orientationPortraitCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -7525,6 +7767,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Блокирует/разблокирует выбор ориентации в зависимости от forced оболочки. */
     private fun updateOrientationLockState() {
         isUpdating = true
 
@@ -7539,6 +7782,7 @@ class GeneralFragment : Fragment() {
         isUpdating = false
     }
 
+    /** Блокирует карточки ориентации и показывает подсказку. */
     private fun lockOrientationSelector(forcedOrientation: String) {
         val hintText = when (forcedOrientation) {
             "portrait" -> getString(R.string.orientation_lock_hint_portrait)
@@ -7563,6 +7807,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Разблокирует карточки ориентации и скрывает подсказку. */
     private fun unlockOrientationSelector() {
         orientationLockHint.visibility = View.GONE
 
@@ -7581,6 +7826,7 @@ class GeneralFragment : Fragment() {
     // FULLSCREEN / STRICT
     // ============================================================
 
+    /** Настраивает switch fullscreen. */
     private fun setupFullscreenSelector() {
         fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
 
@@ -7604,6 +7850,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Настраивает switch strict mode. */
     private fun setupStrictModeSelector() {
         strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
@@ -7626,6 +7873,7 @@ class GeneralFragment : Fragment() {
     // ЯЗЫК
     // ============================================================
 
+    /** Настраивает выбор языка. */
     private fun setupLanguageSelector() {
         val current = configManager.getLanguage()
         selectLanguage(current)
@@ -7645,6 +7893,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранный язык. */
     private fun selectLanguage(language: String) {
         languageRussianCard.setBackgroundResource(R.drawable.bg_theme_card)
         languageEnglishCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -7655,6 +7904,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Применяет язык и пересоздаёт SettingsActivity. */
     private fun applyLanguage(language: String) {
         if (isUpdating) return
 
@@ -7675,17 +7925,20 @@ class GeneralFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Помечает, что для применения нужен рестарт. */
     private fun markRestartRequired() {
         needsRestart = true
         (activity as? SettingsActivity)?.markRestartRequired()
     }
 
+    /** Включает/выключает switch strict в зависимости от fullscreen. */
     private fun updateStrictModeState() {
         val fullscreenEnabled = fullscreenSwitch.isChecked
         strictModeSwitch.isEnabled = fullscreenEnabled
         strictModeSwitch.alpha = if (fullscreenEnabled) 1.0f else 0.5f
     }
 
+    /** Перечитывает все настройки и обновляет UI. */
     fun refreshSettings() {
         isUpdating = true
 
@@ -7705,6 +7958,7 @@ class GeneralFragment : Fragment() {
         isUpdating = false
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getColorFromAttribute(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
@@ -7778,6 +8032,7 @@ class RecoveryFragment : Fragment() {
         writeExportToUri(uri)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -7786,6 +8041,7 @@ class RecoveryFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_recovery, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -7810,6 +8066,7 @@ class RecoveryFragment : Fragment() {
     // BACKUP / RESTORE
     // ============================================================
 
+    /** Настраивает секцию «Восстановление»: backup и restore. */
     private fun setupRecoverySection() {
         backupRow.setOnClickListener {
             if (isProcessing) return@setOnClickListener
@@ -7886,6 +8143,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Открывает SAF для выбора .qutyconfig. */
     private fun openFilePicker() {
         try {
             openDocumentLauncher.launch(arrayOf("*/*"))
@@ -7898,6 +8156,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Копирует выбранный файл во временный и переходит к валидации. */
     private fun handleImportUri(uri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = readPickedFile(uri)) {
@@ -7937,6 +8196,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Читает файл, проверяет формат и показывает диалог импорта. */
     private suspend fun validateAndShowImportDialog(filePath: String) {
         when (val readResult = recoveryManager.readConfig(filePath)) {
             is RecoveryManager.ImportReadResult.Failure -> {
@@ -7991,6 +8251,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог о несовпадении версии формата. */
     private fun showVersionMismatchDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -8037,6 +8298,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Показывает диалог подтверждения импорта. */
     private fun showImportConfirmDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -8077,6 +8339,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Применяет импорт и показывает диалог перезапуска. */
     private fun performImport(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -8109,6 +8372,7 @@ class RecoveryFragment : Fragment() {
     // ПОЛНЫЙ СБРОС
     // ============================================================
 
+    /** Настраивает секцию «Полный сброс». */
     private fun setupResetSection() {
         fullResetRow.setOnClickListener {
             if (isProcessing) return@setOnClickListener
@@ -8116,6 +8380,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог подтверждения полного сброса. */
     private fun showFullResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -8152,6 +8417,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Выполняет полный сброс и показывает диалог перезапуска. */
     private fun performFullReset() {
         isProcessing = true
 
@@ -8176,6 +8442,7 @@ class RecoveryFragment : Fragment() {
     // ДИАЛОГ ПЕРЕЗАПУСКА
     // ============================================================
 
+    /** Показывает диалог перезапуска после импорта/сброса. */
     private fun showRestartDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
 
@@ -8213,8 +8480,12 @@ class RecoveryFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ ТИПЫ
     // ============================================================
 
+    /** Результат копирования выбранного файла. */
     private sealed class ReadPickedFileResult {
+        /** Успешное копирование, путь к temp-файлу. */
         data class Success(val filePath: String) : ReadPickedFileResult()
+
+        /** Ошибка копирования. */
         data class Error(val message: String) : ReadPickedFileResult()
     }
 }
@@ -8284,6 +8555,7 @@ class ShellFragment : Fragment() {
 
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -8292,6 +8564,7 @@ class ShellFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_shell, container, false)
     }
 
+    /** Находит view, настраивает все секции и обновляет активную оболочку. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -8329,6 +8602,7 @@ class ShellFragment : Fragment() {
         refreshActiveShell()
     }
 
+    /** Обновляет активную оболочку, анимации и Safe Mode при возврате. */
     override fun onResume() {
         super.onResume()
 
@@ -8381,6 +8655,7 @@ class ShellFragment : Fragment() {
     // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
+    /** Обновляет карточку активной оболочки. */
     private fun refreshActiveShell() {
         val shell = shellManager.getActiveShell()
 
@@ -8404,6 +8679,7 @@ class ShellFragment : Fragment() {
         loadPreview(shell.previewBase64)
     }
 
+    /** Загружает превью оболочки из Base64 (или placeholder). */
     private fun loadPreview(base64: String?) {
         if (base64.isNullOrEmpty()) {
             shellPreview.setImageResource(R.drawable.ic_image)
@@ -8423,6 +8699,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Настраивает RecyclerView цветовых схем. */
     private fun setupColorSchemeSelector(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.color_scheme_list)
 
@@ -8442,6 +8719,7 @@ class ShellFragment : Fragment() {
         colorSchemeAdapter.setSelectedScheme(currentSchemeId)
     }
 
+    /** Применяет цветовую схему и пересоздаёт SettingsActivity. */
     private fun applyColorScheme(scheme: ColorSchemeModel) {
         configManager.setColorScheme(scheme.id)
 
@@ -8458,6 +8736,7 @@ class ShellFragment : Fragment() {
         (activity as? SettingsActivity)?.recreate()
     }
 
+    /** Настраивает switch анимаций с учётом системного флага. */
     private fun setupAnimationsSection() {
         val systemEnabled = configManager.isSystemAnimationEnabled()
         val userEnabled = configManager.isAnimationsEnabled()
@@ -8481,6 +8760,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Открывает экран магазина. */
     private fun openStore() {
         try {
             val intent = Intent(requireContext(), StoreActivity::class.java)
@@ -8567,6 +8847,7 @@ class ShellFragment : Fragment() {
         dialog.show()
     }
 
+    /** Маппит технический код ориентации в локализованную строку. */
     private fun mapOrientation(orientation: String?): String {
         return when (orientation) {
             "portrait" -> getString(R.string.orientation_portrait)
@@ -8577,6 +8858,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Открывает URL во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -8655,6 +8937,7 @@ class StorageFragment : Fragment() {
 
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -8663,6 +8946,7 @@ class StorageFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_storage, container, false)
     }
 
+    /** Находит view и настраивает очистку. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -8687,6 +8971,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Обновляет размеры при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
 
@@ -8701,6 +8986,7 @@ class StorageFragment : Fragment() {
     // РАЗМЕРЫ
     // ============================================================
 
+    /** Пересчитывает размеры категорий и перерисовывает UI. */
     private fun refreshSizes() {
         viewLifecycleOwner.lifecycleScope.launch {
             val sizes = withContext(Dispatchers.IO) {
@@ -8727,6 +9013,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Собирает список категорий с их размерами. */
     private fun buildCategoriesWithSizes(): List<StorageCategoryItem> {
         val cacheAppSize = requireContext().cacheDir.walkTopDown()
             .filter { it.isFile }
@@ -8784,6 +9071,7 @@ class StorageFragment : Fragment() {
     // ПОЛОСА-ИНДИКАТОР
     // ============================================================
 
+    /** Перестраивает сегментированную полосу занятого места. */
     private fun rebuildBar() {
         barContainer.removeAllViews()
 
@@ -8817,6 +9105,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранный сегмент и приглушает остальные. */
     private fun applyBarSelection(selectedId: String?) {
         for (i in 0 until barContainer.childCount) {
             val segment = barContainer.getChildAt(i)
@@ -8872,6 +9161,7 @@ class StorageFragment : Fragment() {
     // СПИСОК КАТЕГОРИЙ
     // ============================================================
 
+    /** Перестраивает список категорий с разделителями. */
     private fun rebuildCategoryList() {
         categoriesContainer.removeAllViews()
 
@@ -8903,6 +9193,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Создаёт строку одной категории. */
     private fun createCategoryRow(category: StorageCategoryItem): View {
         val view = layoutInflater.inflate(
             R.layout.item_storage_category,
@@ -8935,6 +9226,7 @@ class StorageFragment : Fragment() {
     // ВЫБОР КАТЕГОРИИ
     // ============================================================
 
+    /** Переключает выбор категории. */
     private fun onCategoryClicked(category: StorageCategoryItem) {
         if (isClearing) return
 
@@ -8950,6 +9242,7 @@ class StorageFragment : Fragment() {
         applyListSelection(category.id)
     }
 
+    /** Подсвечивает выбранную строку списка категорий. */
     private fun applyListSelection(selectedId: String?) {
         for (i in 0 until categoriesContainer.childCount) {
             val row = categoriesContainer.getChildAt(i)
@@ -8967,6 +9260,7 @@ class StorageFragment : Fragment() {
     // МАССОВАЯ ОЧИСТКА
     // ============================================================
 
+    /** Показывает диалог выбора категорий для очистки. */
     private fun showMassClearDialog() {
         if (isClearing) return
 
@@ -9049,6 +9343,7 @@ class StorageFragment : Fragment() {
         dialog.show()
     }
 
+    /** Очищает выбранные категории и обновляет размеры. */
     private fun clearSelectedCategories(ids: Set<String>) {
         if (isClearing) return
         isClearing = true
@@ -9100,6 +9395,7 @@ class StorageFragment : Fragment() {
     // ПУСТОЕ СОСТОЯНИЕ
     // ============================================================
 
+    /** Переключает пустое состояние полосы. */
     private fun updateEmptyState() {
         val totalSize = categories.sumOf { it.size }
         if (totalSize <= 0) {
@@ -9115,12 +9411,14 @@ class StorageFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Модель категории памяти. */
     data class StorageCategoryItem(
         val id: String,
         val titleRes: Int,
@@ -9232,6 +9530,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -9240,6 +9539,7 @@ class UpdateFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_updates, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -9258,6 +9558,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Находит все view по id. */
     private fun initViews(view: View) {
         checkUpdateButton = view.findViewById(R.id.check_update_button)
         installFromFileButton = view.findViewById(R.id.install_from_file_button)
@@ -9293,6 +9594,7 @@ class UpdateFragment : Fragment() {
     // АВТО-ПРОВЕРКА
     // ============================================================
 
+    /** Настраивает секцию авто-проверки обновлений. */
     private fun setupAutoCheckSection() {
         autoCheckSwitch.isChecked = updateManager.isAutoCheckEnabled()
         updateIntervalVisibility(autoCheckSwitch.isChecked)
@@ -9347,6 +9649,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Показывает/скрывает Spinner интервала. */
     private fun updateIntervalVisibility(visible: Boolean) {
         autoCheckIntervalContainer.isVisible = visible
         autoCheckIntervalDivider.isVisible = visible
@@ -9356,6 +9659,7 @@ class UpdateFragment : Fragment() {
     // ХЕЛПЕРЫ БЛОКОВ
     // ============================================================
 
+    /** Скрывает блок онлайн-обновления. */
     private fun hideUpdateState() {
         updateStateContainer.isVisible = false
         updateStateSubtitle.isVisible = false
@@ -9370,6 +9674,7 @@ class UpdateFragment : Fragment() {
         updateStateBtnSecondary.setOnClickListener(null)
     }
 
+    /** Скрывает блок локальной установки. */
     private fun hideInstallState() {
         installStateContainer.isVisible = false
         installStateSubtitle.isVisible = false
@@ -9382,6 +9687,7 @@ class UpdateFragment : Fragment() {
         installStateBtnSecondary.setOnClickListener(null)
     }
 
+    /** Устанавливает кнопки и их действия в блоке онлайн-обновления. */
     private fun setUpdateActions(
         primaryText: String? = null,
         primaryAction: (() -> Unit)? = null,
@@ -9409,6 +9715,7 @@ class UpdateFragment : Fragment() {
         updateStateActions.isVisible = updateStateBtnPrimary.isVisible || updateStateBtnSecondary.isVisible
     }
 
+    /** Устанавливает кнопки и их действия в блоке локальной установки. */
     private fun setInstallActions(
         primaryText: String? = null,
         primaryAction: (() -> Unit)? = null,
@@ -9436,6 +9743,7 @@ class UpdateFragment : Fragment() {
         installStateActions.isVisible = installStateBtnPrimary.isVisible || installStateBtnSecondary.isVisible
     }
 
+    /** Устанавливает подзаголовок онлайн-блока (скрывает, если пусто). */
     private fun setUpdateSubtitle(text: String?) {
         if (text.isNullOrEmpty()) {
             updateStateSubtitle.isVisible = false
@@ -9445,6 +9753,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Устанавливает подзаголовок блока локальной установки. */
     private fun setInstallSubtitle(text: String?) {
         if (text.isNullOrEmpty()) {
             installStateSubtitle.isVisible = false
@@ -9454,11 +9763,13 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Сбрасывает цвета онлайн-блока к дефолтным. */
     private fun resetUpdateStateColors() {
         updateStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         updateStateIcon.imageTintList = null
     }
 
+    /** Сбрасывает цвета блока локальной установки к дефолтным. */
     private fun resetInstallStateColors() {
         installStateTitle.setTextColor(getColorFromAttr(R.attr.textPrimaryColor))
         installStateIcon.imageTintList = null
@@ -9468,12 +9779,14 @@ class UpdateFragment : Fragment() {
     // ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Вешает клик на кнопку проверки обновлений. */
     private fun setupUpdateCheck() {
         checkUpdateButton.setOnClickListener {
             checkForUpdates()
         }
     }
 
+    /** Запускает проверку обновлений и переключает состояния блока. */
     private fun checkForUpdates() {
         hideInstallState()
 
@@ -9496,6 +9809,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Маппит технический текст ошибки в локализованный. */
     private fun resolveErrorMessage(error: String): String {
         return when {
             error.contains("UnknownHostException") ||
@@ -9516,6 +9830,7 @@ class UpdateFragment : Fragment() {
     // СОСТОЯНИЯ ОНЛАЙН
     // ============================================================
 
+    /** Показывает состояние «проверка обновлений». */
     private fun showUpdateStateChecking() {
         updateStateContainer.isVisible = true
 
@@ -9533,6 +9848,7 @@ class UpdateFragment : Fragment() {
         setUpdateActions()
     }
 
+    /** Показывает состояние «доступно обновление». */
     private fun showUpdateStateAvailable(versionInfo: VersionInfo) {
         updateStateContainer.isVisible = true
 
@@ -9581,6 +9897,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «идёт скачивание». */
     private fun showUpdateStateDownloading(versionInfo: VersionInfo? = null) {
         updateStateContainer.isVisible = true
 
@@ -9612,6 +9929,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «скачивание завершено». */
     private fun showUpdateStateDownloadComplete(filePath: String, uri: Uri) {
         updateStateContainer.isVisible = true
 
@@ -9651,6 +9969,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «установлена последняя версия». */
     private fun showUpdateStateUpToDate() {
         updateStateContainer.isVisible = true
 
@@ -9675,6 +9994,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает состояние «ошибка проверки». */
     private fun showUpdateStateError(message: String) {
         updateStateContainer.isVisible = true
 
@@ -9707,6 +10027,7 @@ class UpdateFragment : Fragment() {
     // СКАЧИВАНИЕ
     // ============================================================
 
+    /** Скачивает APK без установки. */
     private fun downloadApkOnly(versionInfo: VersionInfo) {
         showUpdateStateDownloading(versionInfo)
 
@@ -9733,6 +10054,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Скачивает APK и предлагает установить сразу. */
     private fun downloadAndInstall(versionInfo: VersionInfo) {
         showUpdateStateDownloading(versionInfo)
 
@@ -9786,12 +10108,14 @@ class UpdateFragment : Fragment() {
     // ЛОКАЛЬНАЯ УСТАНОВКА APK
     // ============================================================
 
+    /** Вешает клик на кнопку «Локальное обновление». */
     private fun setupInstallFromFile() {
         installFromFileButton.setOnClickListener {
             selectApkFile()
         }
     }
 
+    /** Открывает SAF для выбора APK. */
     private fun selectApkFile() {
         hideUpdateState()
 
@@ -9808,6 +10132,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Fallback для выбора APK (ACTION_GET_CONTENT). */
     private fun selectApkAlternative() {
         try {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -9822,6 +10147,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Показывает состояние «проверка локального APK». */
     private fun showInstallStateChecking() {
         installStateContainer.isVisible = true
 
@@ -9835,6 +10161,7 @@ class UpdateFragment : Fragment() {
         setInstallActions()
     }
 
+    /** Показывает состояние «локальный APK готов к установке». */
     private fun showInstallStateReady(uri: Uri, version: String) {
         installStateContainer.isVisible = true
 
@@ -9860,6 +10187,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Показывает ошибку локальной установки. */
     private fun showInstallStateError(message: String) {
         installStateContainer.isVisible = true
 
@@ -9882,6 +10210,7 @@ class UpdateFragment : Fragment() {
         )
     }
 
+    /** Проверяет, что APK — наш, и показывает диалог установки. */
     private fun validateAndInstallApk(uri: Uri) {
         lifecycleScope.launch {
             try {
@@ -9906,6 +10235,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Возвращает PackageInfo из APK по URI. */
     private fun getPackageInfoFromUri(uri: Uri): PackageInfo? {
         return try {
             val pm = requireContext().packageManager
@@ -9926,6 +10256,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Конвертирует content:// URI в File (через DATA или копию в cache). */
     private fun getFileFromUri(uri: Uri): File? {
         return try {
             val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
@@ -9961,6 +10292,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Запускает установку APK через системный интент. */
     private fun installApk(uri: Uri) {
         try {
             requireContext().contentResolver.takePersistableUriPermission(
@@ -9984,6 +10316,7 @@ class UpdateFragment : Fragment() {
         }
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getColorFromAttr(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
@@ -10056,6 +10389,7 @@ class StoreCatalogFragment : Fragment() {
     private var isLoading = false
     private var isCacheShown = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -10064,6 +10398,7 @@ class StoreCatalogFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_catalog, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и запускает загрузку каталога. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -10092,6 +10427,7 @@ class StoreCatalogFragment : Fragment() {
         loadInitial()
     }
 
+    /** При возврате перерисовывает каталог из локальных данных. */
     override fun onResume() {
         super.onResume()
         if (isCacheShown) {
@@ -10103,6 +10439,7 @@ class StoreCatalogFragment : Fragment() {
     // НАСТРОЙКА UI
     // ============================================================
 
+    /** Настраивает swipe-to-refresh. */
     private fun setupSwipeRefresh() {
         val accentColor = getThemeColor(R.attr.buttonPrimaryColor)
         swipeRefresh.setColorSchemeColors(accentColor)
@@ -10116,6 +10453,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Настраивает RecyclerView каталога и обработчик кликов. */
     private fun setupRecyclerView() {
         adapter = StoreItemAdapter(emptyList()) { item ->
             (activity as? StoreActivity)?.showItemDetail(item)
@@ -10124,6 +10462,7 @@ class StoreCatalogFragment : Fragment() {
         recyclerView.adapter = adapter
     }
 
+    /** Вешает клик на кнопку «Повторить». */
     private fun setupButtons() {
         btnRetry.setOnClickListener {
             loadInitial()
@@ -10166,6 +10505,7 @@ class StoreCatalogFragment : Fragment() {
         updateChipStyles()
     }
 
+    /** Подсвечивает выбранный чип. */
     private fun updateChipStyles() {
         for (i in 0 until filtersContainer.childCount) {
             val chip = filtersContainer.getChildAt(i) as? TextView ?: continue
@@ -10185,6 +10525,7 @@ class StoreCatalogFragment : Fragment() {
     // ЗАГРУЗКА: КЭШ + СЕРВЕР
     // ============================================================
 
+    /** Первичная загрузка: сначала кэш, затем сервер. */
     private fun loadInitial() {
         if (isLoading) return
 
@@ -10205,6 +10546,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Перечитывает каталог из кэша и рендерит. */
     private fun rebuildFromLocal() {
         viewLifecycleOwner.lifecycleScope.launch {
             val cached = storeManager.getCachedItems() ?: emptyList()
@@ -10212,6 +10554,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Собирает StoreItemModel из remote + локальных shell'ов. */
     private fun rebuildFromData(remote: List<StoreRemoteItemModel>) {
         val localShells = shellManager.getAvailableShells()
         val activeName = configManager.getActiveShell()
@@ -10284,11 +10627,13 @@ class StoreCatalogFragment : Fragment() {
     // ФИЛЬТРАЦИЯ
     // ============================================================
 
+    /** Применяет текущий фильтр и рендерит отфильтрованный список. */
     private fun applyFilter() {
         val filtered = allItems.filter(currentFilter.predicate)
         render(filtered)
     }
 
+    /** Рендерит список или пустое состояние. */
     private fun render(items: List<StoreItemModel>) {
         if (items.isEmpty()) {
             showEmpty()
@@ -10303,31 +10648,37 @@ class StoreCatalogFragment : Fragment() {
     // СОСТОЯНИЯ
     // ============================================================
 
+    /** Показывает состояние «загрузка». */
     private fun showLoading() {
         loadingState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает состояние «загрузка». */
     private fun hideLoading() {
         loadingState.visibility = View.GONE
     }
 
+    /** Показывает состояние «ошибка». */
     private fun showError(message: String) {
         errorMessage.text = message
         errorState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает состояние «ошибка». */
     private fun hideError() {
         errorState.visibility = View.GONE
     }
 
+    /** Показывает пустое состояние для текущего фильтра. */
     private fun showEmpty() {
         emptyMessage.text = getString(currentFilter.emptyRes)
         emptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает пустое состояние. */
     private fun hideEmpty() {
         emptyState.visibility = View.GONE
     }
@@ -10336,6 +10687,7 @@ class StoreCatalogFragment : Fragment() {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
@@ -10403,6 +10755,7 @@ class StoreImportFragment : Fragment() {
         previewAndConfirm(uri)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -10411,6 +10764,7 @@ class StoreImportFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_import, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и вешает клик выбора файла. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -10425,6 +10779,7 @@ class StoreImportFragment : Fragment() {
         hideState()
     }
 
+    /** Находит все view по id. */
     private fun initViews(view: View) {
         selectFileRow = view.findViewById(R.id.import_select_file_row)
 
@@ -10457,6 +10812,7 @@ class StoreImportFragment : Fragment() {
     // ПРЕДПРОСМОТР + ДИАЛОГ
     // ============================================================
 
+    /** Читает выбранный файл и показывает диалог предпросмотра. */
     private fun previewAndConfirm(uri: Uri) {
         showChecking()
 
@@ -10574,6 +10930,7 @@ class StoreImportFragment : Fragment() {
     // ИМПОРТ
     // ============================================================
 
+    /** Импортирует оболочку и показывает результат. */
     private fun importShell(uri: Uri, overwrite: Boolean) {
         showChecking()
 
@@ -10625,6 +10982,7 @@ class StoreImportFragment : Fragment() {
     // ДИАЛОГ ПЕРЕЗАПИСИ (гонка)
     // ============================================================
 
+    /** Диалог перезаписи существующей оболочки. */
     private fun showAlreadyExistsDialog(uri: Uri, name: String) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -10665,6 +11023,7 @@ class StoreImportFragment : Fragment() {
     // СОСТОЯНИЯ
     // ============================================================
 
+    /** Скрывает блок состояния. */
     private fun hideState() {
         stateContainer.isVisible = false
         stateProgressContainer.isVisible = false
@@ -10676,6 +11035,7 @@ class StoreImportFragment : Fragment() {
         stateSubtitle.isVisible = false
     }
 
+    /** Показывает состояние «проверка файла». */
     private fun showChecking() {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_server_checking)
@@ -10689,6 +11049,7 @@ class StoreImportFragment : Fragment() {
         stateBtnSecondary.isVisible = false
     }
 
+    /** Показывает состояние «импорт успешен». */
     private fun showSuccess(displayName: String) {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_check)
@@ -10719,6 +11080,7 @@ class StoreImportFragment : Fragment() {
         stateBtnSecondary.setOnClickListener { hideState() }
     }
 
+    /** Показывает состояние «ошибка импорта». */
     private fun showError(message: String) {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_error)
@@ -10740,12 +11102,14 @@ class StoreImportFragment : Fragment() {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Форматирует размер в B/KB/MB/GB. */
     private fun formatSize(bytes: Long): String {
         val locale = java.util.Locale.US
         return when {
@@ -10807,6 +11171,7 @@ class StoreItemDetailFragment : Fragment() {
     companion object {
         private const val ARG_ITEM_NAME = "arg_item_name"
 
+        /** Создаёт фрагмент для указанного имени элемента. */
         fun newInstance(itemName: String): StoreItemDetailFragment {
             return StoreItemDetailFragment().apply {
                 arguments = Bundle().apply {
@@ -10872,11 +11237,13 @@ class StoreItemDetailFragment : Fragment() {
 
     private var isProcessing = false
 
+    /** Читает имя элемента из arguments. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         itemName = arguments?.getString(ARG_ITEM_NAME) ?: return
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -10885,6 +11252,7 @@ class StoreItemDetailFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_item_detail, container, false)
     }
 
+    /** Находит view, получает менеджеры и биндит элемент. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -10933,6 +11301,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Находит все view по id. */
     private fun setupViews(view: View) {
         previewImage = view.findViewById(R.id.item_preview)
         nameText = view.findViewById(R.id.item_name)
@@ -11113,6 +11482,7 @@ class StoreItemDetailFragment : Fragment() {
         val visible: Boolean
     )
 
+    /** true, если файл существует и URI получается. */
     private fun canShareItem(item: StoreItemModel): Boolean {
         if (!item.canShare) return false
 
@@ -11205,6 +11575,7 @@ class StoreItemDetailFragment : Fragment() {
         return items
     }
 
+    /** Показывает popup-меню действий. */
     private fun showActionMenu(items: List<PopupMenuHelper.Item>) {
         PopupMenuHelper.show(
             anchor = btnMenu,
@@ -11344,6 +11715,7 @@ class StoreItemDetailFragment : Fragment() {
         updateActionUI(updated)
     }
 
+    /** Перечитывает элемент из StoreActivity и перерисовывает. */
     private fun reloadAndRebind() {
         val activity = activity as? StoreActivity ?: return
         val currentName = item?.name ?: return
@@ -11358,6 +11730,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Отправляет файл оболочки через share-диалог. */
     private fun shareItem(item: StoreItemModel) {
         val shell = item.localShell ?: return
         try {
@@ -11376,6 +11749,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Диалог подтверждения удаления. */
     private fun confirmDelete(item: StoreItemModel) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -11452,6 +11826,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Загружает превью оболочки (Glide по URL или Base64). */
     private fun bindPreview(item: StoreItemModel) {
         if (!item.previewUrl.isNullOrEmpty()) {
             Glide.with(this)
@@ -11482,6 +11857,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Показывает прогресс установки. */
     private fun showInstallProgress(percent: Int) {
         activeBadge.visibility = View.GONE
         installProgressContainer.visibility = View.VISIBLE
@@ -11490,11 +11866,13 @@ class StoreItemDetailFragment : Fragment() {
         installProgressText.text = getString(R.string.downloading_progress, percent)
     }
 
+    /** Скрывает прогресс установки. */
     private fun hideInstallProgress() {
         installProgressContainer.visibility = View.GONE
         item?.let { updateActionUI(it) }
     }
 
+    /** ISO YYYY-MM-DD > DD.MM.YYYY. */
     private fun formatDate(isoDate: String): String {
         if (isoDate.isBlank()) return ""
         return try {
@@ -11507,6 +11885,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Открывает URL во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -11559,6 +11938,7 @@ class StoreSettingsFragment : Fragment() {
     private lateinit var clearCacheRow: View
     private lateinit var sourceUrlValue: TextView
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -11567,6 +11947,7 @@ class StoreSettingsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_settings, container, false)
     }
 
+    /** Находит view, показывает URL источника и вешает очистку кэша. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -11854,17 +12235,29 @@ class ConfigManager(context: Context) {
     // ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
     // ============================================================
 
+    /** Имя оболочки по умолчанию. */
     fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
+
+    /** Ориентация по умолчанию. */
     fun getDefaultOrientation(): String = CoreConfig.DEFAULT_ORIENTATION
+
+    /** Fullscreen по умолчанию. */
     fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
+
+    /** Strict mode по умолчанию. */
     fun getDefaultStrictMode(): Boolean = CoreConfig.DEFAULT_STRICT_MODE
+
+    /** Тема по умолчанию. */
     fun getDefaultThemeMode(): String = CoreConfig.DEFAULT_THEME_MODE
+
+    /** Язык по умолчанию. */
     fun getDefaultLanguage(): String = CoreConfig.DEFAULT_LANGUAGE
 
     // ============================================================
     // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
+    /** Возвращает имя активной оболочки. */
     fun getActiveShell(): String {
         return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
@@ -11879,6 +12272,7 @@ class ConfigManager(context: Context) {
         return prefs.getString("active_shell_version", "") ?: ""
     }
 
+    /** Сохраняет версию активной оболочки. */
     fun setActiveShellVersion(version: String) {
         prefs.edit { putString("active_shell_version", version) }
     }
@@ -11887,10 +12281,12 @@ class ConfigManager(context: Context) {
     // SAFE MODE
     // ============================================================
 
+    /** true, если активен Safe Mode. */
     fun isSafeModeActive(): Boolean {
         return prefs.getBoolean(KEY_SAFE_MODE, false)
     }
 
+    /** Устанавливает флаг Safe Mode с логированием изменения. */
     fun setSafeModeActive(active: Boolean) {
         val previous = isSafeModeActive()
         if (previous == active) return
@@ -11906,10 +12302,12 @@ class ConfigManager(context: Context) {
     // ОРИЕНТАЦИЯ
     // ============================================================
 
+    /** Возвращает выбранную ориентацию. */
     fun getOrientation(): String {
         return prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
     }
 
+    /** Сохраняет ориентацию с логированием изменения. */
     fun setOrientation(orientation: String) {
         val previous = getOrientation()
         if (previous == orientation) return
@@ -11925,10 +12323,12 @@ class ConfigManager(context: Context) {
     // ПОЛНОЭКРАННЫЙ РЕЖИМ
     // ============================================================
 
+    /** true, если fullscreen включён. */
     fun isFullscreenEnabled(): Boolean {
         return prefs.getBoolean("fullscreen", getDefaultFullscreen())
     }
 
+    /** Сохраняет настройку fullscreen. */
     fun setFullscreenEnabled(enabled: Boolean) {
         val previous = isFullscreenEnabled()
         if (previous == enabled) return
@@ -11949,6 +12349,7 @@ class ConfigManager(context: Context) {
         return isFullscreenEnabled() && prefs.getBoolean("strict_mode", getDefaultStrictMode())
     }
 
+    /** Сохраняет настройку strict mode. */
     fun setStrictModeEnabled(enabled: Boolean) {
         val previous = prefs.getBoolean("strict_mode", getDefaultStrictMode())
         if (previous == enabled) return
@@ -11964,10 +12365,12 @@ class ConfigManager(context: Context) {
     // ЦВЕТОВАЯ СХЕМА
     // ============================================================
 
+    /** Возвращает id текущей цветовой схемы. */
     fun getColorScheme(): String {
         return prefs.getString("color_scheme", getDefaultColorScheme()) ?: getDefaultColorScheme()
     }
 
+    /** Сохраняет цветовую схему. */
     fun setColorScheme(schemeId: String) {
         val previous = getColorScheme()
         if (previous == schemeId) return
@@ -11979,12 +12382,16 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Возвращает id схемы по умолчанию. */
     fun getDefaultColorScheme(): String = CoreConfig.DEFAULT_COLOR_SCHEME
 
+    /** Возвращает HEX основного цвета текущей схемы. */
     fun getSchemePrimaryColor(): String = getColorSchemeObject().primaryColor
 
+    /** Возвращает HEX акцентного цвета текущей схемы. */
     fun getSchemeAccentColor(): String = getColorSchemeObject().accentColor
 
+    /** Возвращает объект текущей цветовой схемы. */
     fun getColorSchemeObject(): ColorSchemeModel {
         return ColorSchemeModel.getSchemeById(getColorScheme())
     }
@@ -11993,10 +12400,12 @@ class ConfigManager(context: Context) {
     // ТЕМА
     // ============================================================
 
+    /** Возвращает сохранённый режим темы. */
     fun getThemeMode(): String {
         return prefs.getString(KEY_THEME_MODE, getDefaultThemeMode()) ?: getDefaultThemeMode()
     }
 
+    /** Сохраняет режим темы. */
     fun setThemeMode(mode: String) {
         val previous = getThemeMode()
         if (previous == mode) return
@@ -12008,6 +12417,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** true, если фактическая тема тёмная. */
     @Suppress("unused")
     fun isDarkTheme(): Boolean {
         return when (getThemeMode()) {
@@ -12018,6 +12428,7 @@ class ConfigManager(context: Context) {
         }
     }
 
+    /** true, если системная тема тёмная. */
     private fun isSystemInDarkMode(): Boolean {
         val config = appContext.resources.configuration
         return (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
@@ -12038,14 +12449,17 @@ class ConfigManager(context: Context) {
     // ПЕРЕЗАПУСК ДЛЯ ОРИЕНТАЦИИ
     // ============================================================
 
+    /** true, если приложение должно перезапуститься для применения ориентации. */
     fun needRestartForOrientation(): Boolean {
         return prefs.getBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false)
     }
 
+    /** Сбрасывает флаг перезапуска для ориентации. */
     fun clearRestartForOrientationFlag() {
         prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false) }
     }
 
+    /** Ставит флаг перезапуска для применения ориентации. */
     fun setRestartForOrientationFlag() {
         prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
     }
@@ -12059,6 +12473,7 @@ class ConfigManager(context: Context) {
         return prefs.getBoolean(KEY_ANIMATIONS_ENABLED, getDefaultAnimationsEnabled())
     }
 
+    /** Сохраняет пользовательскую настройку анимаций. */
     fun setAnimationsEnabled(enabled: Boolean) {
         val previous = isAnimationsEnabled()
         if (previous == enabled) return
@@ -12070,6 +12485,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Значение анимаций по умолчанию. */
     fun getDefaultAnimationsEnabled(): Boolean = CoreConfig.DEFAULT_ANIMATIONS_ENABLED
 
     /** Системный флаг ANIMATOR_DURATION_SCALE > 0. */
@@ -12108,10 +12524,12 @@ class ConfigManager(context: Context) {
         prefs.edit { putString(KEY_LANGUAGE, initial) }
     }
 
+    /** Возвращает сохранённый язык. */
     fun getLanguage(): String {
         return prefs.getString(KEY_LANGUAGE, getDefaultLanguage()) ?: getDefaultLanguage()
     }
 
+    /** Сохраняет язык с нормализацией (только ru/en). */
     fun setLanguage(language: String) {
         val normalized = when (language) {
             CoreConfig.LANGUAGE_RU -> CoreConfig.LANGUAGE_RU
@@ -12128,6 +12546,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Возвращает код языка (ru/en). */
     fun getLanguageCode(): String = getLanguage()
 
     companion object {
@@ -12221,14 +12640,17 @@ object LoggerManager {
     // ЗАПИСЬ
     // ============================================================
 
+    /** Записывает DEBUG-сообщение. */
     fun debug(tag: LoggerTagModel, message: String, details: String? = null) {
         log(LoggerLevelModel.DEBUG, tag, message, details)
     }
 
+    /** Записывает INFO-сообщение. */
     fun info(tag: LoggerTagModel, message: String, details: String? = null) {
         log(LoggerLevelModel.INFO, tag, message, details)
     }
 
+    /** Записывает WARN-сообщение (опционально с throwable). */
     fun warn(
         tag: LoggerTagModel,
         message: String,
@@ -12243,6 +12665,7 @@ object LoggerManager {
         log(LoggerLevelModel.WARN, tag, fullMessage, details)
     }
 
+    /** Записывает ERROR-сообщение (опционально с throwable). */
     fun error(
         tag: LoggerTagModel,
         message: String,
@@ -12298,16 +12721,14 @@ object LoggerManager {
     // ЧТЕНИЕ
     // ============================================================
 
-    fun getAll(): List<LoggerEntryModel> = buffer.toList()
-
-    fun getAllReversed(): List<LoggerEntryModel> = buffer.toList().asReversed()
-
+    /** Возвращает количество записей в буфере. */
     fun size(): Int = buffer.size
 
     // ============================================================
     // ОЧИСТКА
     // ============================================================
 
+    /** Полностью очищает буфер и уведомляет подписчиков. */
     fun clear() {
         buffer.clear()
         notifyCleared()
@@ -12317,24 +12738,30 @@ object LoggerManager {
     // ВКЛЮЧЕНИЕ / ВЫКЛЮЧЕНИЕ
     // ============================================================
 
+    /** true, если логирование включено. */
     fun isEnabled(): Boolean = enabled
 
+    /** Включает/выключает логирование и сохраняет флаг. */
     fun setEnabled(context: Context, value: Boolean) {
         enabled = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putBoolean(KEY_ENABLED, value) }
     }
 
+    /** true, если включено автосохранение. */
     fun isAutoSaveEnabled(): Boolean = autoSave
 
+    /** Включает/выключает автосохранение и сохраняет флаг. */
     fun setAutoSaveEnabled(context: Context, value: Boolean) {
         autoSave = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putBoolean(KEY_AUTO_SAVE, value) }
     }
 
+    /** Возвращает текущий лимит длины details. */
     fun getDetailsLimit(): Int = detailsLimit
 
+    /** Сохраняет лимит длины details. */
     fun setDetailsLimit(context: Context, value: Int) {
         detailsLimit = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -12451,26 +12878,6 @@ object LoggerManager {
             }
         }
 
-    /** Синхронная версия writeToFile — для onDestroy. */
-    fun writeToFileBlocking(context: Context): String? {
-        return try {
-            val entries = buffer.toList()
-            if (entries.isEmpty()) return null
-
-            val actualName = generateFileName()
-            val content = formatEntries(entries)
-
-            val storageManager = StorageManager(context.applicationContext)
-            val file = File(storageManager.getDirectory(StorageDirectory.LOGS), actualName)
-            file.parentFile?.mkdirs()
-            file.writeText(content)
-
-            actualName
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     /** Возвращает список файлов логов, новые сверху. */
     fun listLogFiles(context: Context): List<File> {
         return try {
@@ -12543,20 +12950,24 @@ object LoggerManager {
     // ПОДПИСКА
     // ============================================================
 
+    /** Подписывает listener на новые записи. */
     fun subscribe(listener: LoggerListener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener)
         }
     }
 
+    /** Отписывает listener. */
     fun unsubscribe(listener: LoggerListener) {
         listeners.remove(listener)
     }
 
+    /** Уведомляет подписчиков о новой записи. */
     private fun notifyListeners(entry: LoggerEntryModel) {
         listeners.forEach { it.onEntryAdded(entry) }
     }
 
+    /** Уведомляет подписчиков об очистке буфера. */
     private fun notifyCleared() {
         listeners.forEach { it.onCleared() }
     }
@@ -12565,8 +12976,12 @@ object LoggerManager {
     // ИНТЕРФЕЙС ПОДПИСЧИКА
     // ============================================================
 
+    /** Колбэки подписчика логгера. */
     interface LoggerListener {
+        /** Вызывается при добавлении новой записи. */
         fun onEntryAdded(entry: LoggerEntryModel)
+
+        /** Вызывается при очистке буфера. */
         fun onCleared()
     }
 }
@@ -12606,32 +13021,19 @@ object PermissionManager {
         return REQUIRED_PERMISSIONS
     }
 
-    /**
-     * Проверяет, предоставлены ли все обязательные разрешения
-     * @param context контекст приложения
-     * @return true если все разрешения предоставлены
-     */
+    /** Проверяет, предоставлены ли все обязательные разрешения */
     fun hasAllRequiredPermissions(context: Context): Boolean {
         return REQUIRED_PERMISSIONS.all { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 
-    /**
-     * Проверяет, предоставлено ли конкретное разрешение
-     * @param context контекст приложения
-     * @param permission разрешение для проверки
-     * @return true если разрешение предоставлено
-     */
+    /** Проверяет, предоставлено ли конкретное разрешение */
     fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Возвращает список отсутствующих обязательных разрешений
-     * @param context контекст приложения
-     * @return список разрешений, которые ещё не предоставлены
-     */
+    /** Возвращает список отсутствующих обязательных разрешений */
     fun getMissingRequiredPermissions(context: Context): List<String> {
         return REQUIRED_PERMISSIONS.filter { permission ->
             ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED
@@ -12730,17 +13132,28 @@ class RecoveryManager(private val context: Context) {
 
     /** Результат чтения .qutyconfig. */
     sealed class ImportReadResult {
+        /** Успешное чтение. */
         data class Success(
             val formatVersion: Int,
             val appVersion: String,
             val data: Map<String, Map<String, Any>>
         ) : ImportReadResult()
 
+        /** Ошибки чтения. */
         sealed class Failure : ImportReadResult() {
+            /** Файл не найден. */
             object FileNotFound : Failure()
+
+            /** Файл пуст. */
             object FileEmpty : Failure()
+
+            /** Неверный format. */
             data class InvalidFormat(val expectedFormat: String) : Failure()
+
+            /** Нет секции data. */
             object NoData : Failure()
+
+            /** Ошибка парсинга. */
             data class ParseError(val message: String?) : Failure()
         }
     }
@@ -12960,6 +13373,7 @@ data class ShellManifest(
  * Результат предпросмотра файла оболочки.
  */
 sealed class ShellPreviewResult {
+    /** Успешный предпросмотр. */
     data class Success(
         val name: String,
         val displayName: String,
@@ -12970,13 +13384,27 @@ sealed class ShellPreviewResult {
         val alreadyExists: Boolean
     ) : ShellPreviewResult()
 
+    /** Ошибки предпросмотра. */
     sealed class Failure : ShellPreviewResult() {
+        /** Неподдерживаемое расширение. */
         object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать имя файла. */
         object CannotReadFileName : Failure()
+
+        /** Слишком большой файл. */
         object FileTooLarge : Failure()
+
+        /** Невалидный архив. */
         object InvalidArchive : Failure()
+
+        /** Нет manifest.json. */
         object ManifestMissing : Failure()
+
+        /** Невалидный manifest.json. */
         object ManifestInvalid : Failure()
+
+        /** Ошибка ввода-вывода. */
         data class IoError(val message: String?) : Failure()
     }
 }
@@ -12985,16 +13413,33 @@ sealed class ShellPreviewResult {
  * Результат импорта оболочки.
  */
 sealed class ShellImportResult {
+    /** Успешный импорт. */
     data class Success(val shell: Shell) : ShellImportResult()
 
+    /** Ошибки импорта. */
     sealed class Failure : ShellImportResult() {
+        /** Неподдерживаемое расширение. */
         object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать имя файла. */
         object CannotReadFileName : Failure()
+
+        /** Слишком большой файл. */
         object FileTooLarge : Failure()
+
+        /** Невалидный архив. */
         object InvalidArchive : Failure()
+
+        /** Нет manifest.json. */
         object ManifestMissing : Failure()
+
+        /** Невалидный manifest.json. */
         object ManifestInvalid : Failure()
+
+        /** Оболочка уже установлена. */
         data class AlreadyExists(val name: String) : Failure()
+
+        /** Ошибка ввода-вывода. */
         data class IoError(val message: String?) : Failure()
     }
 }
@@ -13023,6 +13468,7 @@ class ShellManager(
         File(context.filesDir, "shells/active")
     }
 
+    /** Создаёт папку active и подгружает активную оболочку из prefs. */
     init {
         if (!activeShellDir.exists()) {
             activeShellDir.mkdirs()
@@ -13830,6 +14276,7 @@ class StorageManager(private val context: Context) {
     // БАЗОВЫЕ ОПЕРАЦИИ
     // ============================================================
 
+    /** Возвращает File по строковому пути (абсолютному или относительно baseDir). */
     fun get(path: String): File {
         return if (path.startsWith("/") || path.contains(":")) {
             File(path)
@@ -13838,10 +14285,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Возвращает File в указанной директории по имени. */
     fun get(directory: StorageDirectory, name: String): File {
         return File(getDirectory(directory), name)
     }
 
+    /** Читает файл как строку (null при ошибке). */
     suspend fun getString(file: File): String? = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
@@ -13853,10 +14302,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Читает файл из директории как строку (null при ошибке). */
     suspend fun getString(directory: StorageDirectory, name: String): String? {
         return getString(get(directory, name))
     }
 
+    /** Возвращает список файлов директории с фильтром/расширением/сортировкой. */
     fun list(
         directory: StorageDirectory,
         filter: ((String) -> Boolean)? = null,
@@ -13880,6 +14331,7 @@ class StorageManager(private val context: Context) {
         } ?: emptyList()
     }
 
+    /** Возвращает content:// URI для файла через FileProvider (null при ошибке). */
     fun getUri(file: File): Uri? {
         return try {
             if (!file.exists()) {
@@ -13899,6 +14351,7 @@ class StorageManager(private val context: Context) {
     // ЗАПИСЬ (SET)
     // ============================================================
 
+    /** Пишет строку в файл. */
     suspend fun set(file: File, content: String, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -13913,10 +14366,12 @@ class StorageManager(private val context: Context) {
             }
         }
 
+    /** Пишет строку в файл в указанной директории. */
     suspend fun set(directory: StorageDirectory, name: String, content: String, overwrite: Boolean = true): Boolean {
         return set(get(directory, name), content, overwrite)
     }
 
+    /** Копирует InputStream в файл. */
     suspend fun set(file: File, inputStream: InputStream, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -13933,10 +14388,12 @@ class StorageManager(private val context: Context) {
             }
         }
 
+    /** Копирует InputStream в файл в указанной директории. */
     suspend fun set(directory: StorageDirectory, name: String, inputStream: InputStream, overwrite: Boolean = true): Boolean {
         return set(get(directory, name), inputStream, overwrite)
     }
 
+    /** Пишет байты в файл. */
     suspend fun set(file: File, data: ByteArray, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -13955,12 +14412,15 @@ class StorageManager(private val context: Context) {
     // ПРОВЕРКА СУЩЕСТВОВАНИЯ (EXISTS)
     // ============================================================
 
+    /** true, если файл существует. */
     fun exists(file: File): Boolean = file.exists()
 
+    /** true, если файл существует в указанной директории. */
     fun exists(directory: StorageDirectory, name: String): Boolean {
         return exists(get(directory, name))
     }
 
+    /** true, если директория существует. */
     fun exists(directory: StorageDirectory): Boolean {
         return getDirectory(directory).exists()
     }
@@ -13969,6 +14429,7 @@ class StorageManager(private val context: Context) {
     // УДАЛЕНИЕ (REMOVE)
     // ============================================================
 
+    /** Удаляет файл. */
     suspend fun remove(file: File): Boolean = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
@@ -13980,10 +14441,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Удаляет файл из директории. */
     suspend fun remove(directory: StorageDirectory, name: String): Boolean {
         return remove(get(directory, name))
     }
 
+    /** Удаляет все файлы директории (с опциональным фильтром). */
     suspend fun removeAll(
         directory: StorageDirectory,
         filter: ((String) -> Boolean)? = null,
@@ -14007,6 +14470,7 @@ class StorageManager(private val context: Context) {
     // ДОПОЛНИТЕЛЬНЫЕ ОПЕРАЦИИ
     // ============================================================
 
+    /** Возвращает суммарный размер директории в байтах. */
     fun getDirectorySize(directory: StorageDirectory): Long {
         val dir = getDirectory(directory)
         return if (dir.exists()) {
@@ -14018,15 +14482,18 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Создаёт временный файл в TEMP. */
     fun createTempFile(prefix: String, extension: String = EXT_TEMP): File {
         val timestamp = System.currentTimeMillis()
         return File(tempDir, "$prefix-$timestamp.$extension")
     }
 
+    /** true, если файл существует, это файл и он больше minSize. */
     fun isValidFile(file: File, minSize: Long = 0): Boolean {
         return file.exists() && file.isFile && file.length() > minSize
     }
 
+    /** Форматирует размер в GB/MB/KB/B. */
     fun formatSize(size: Long): String {
         val locale = Locale.US
         return when {
@@ -14041,6 +14508,7 @@ class StorageManager(private val context: Context) {
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ============================================================
 
+    /** Возвращает File для директории по enum. */
     fun getDirectory(directory: StorageDirectory): File {
         return when (directory) {
             StorageDirectory.SHELLS -> shellsDir
@@ -14372,6 +14840,7 @@ class StoreManager(private val context: Context) {
         return currentVersion.isNotEmpty() && UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
     }
 
+    /** Возвращает текущую versionName приложения. */
     private fun getCurrentLauncherVersion(): String {
         return try {
             val (versionName, _) = AppInfoHelper.getSplitVersion(context)
@@ -14393,8 +14862,13 @@ class StoreManager(private val context: Context) {
 
     /** Слушатель прогресса установки. */
     interface InstallListener {
+        /** Прогресс скачивания (0–100). */
         fun onProgress(percent: Int)
+
+        /** Установка завершена успешно. */
         fun onSuccess()
+
+        /** Ошибка установки. */
         fun onError(message: String)
     }
 
@@ -14567,12 +15041,15 @@ class SystemUpdateManager(private val context: Context) {
     // КЭШ ПОСЛЕДНЕГО РЕЗУЛЬТАТА ПРОВЕРКИ
     // ============================================================
 
+    /** Возвращает кэш последнего результата (или null). */
     fun getCachedUpdate(): UpdateCheckResult? = cachedUpdate
 
+    /** Сохраняет результат проверки в кэш. */
     fun setCachedUpdate(result: UpdateCheckResult) {
         cachedUpdate = result
     }
 
+    /** Сбрасывает кэш результата. */
     fun clearCachedUpdate() {
         cachedUpdate = null
     }
@@ -14581,10 +15058,12 @@ class SystemUpdateManager(private val context: Context) {
     // НАСТРОЙКИ АВТО-ПРОВЕРКИ
     // ============================================================
 
+    /** true, если авто-проверка включена. */
     fun isAutoCheckEnabled(): Boolean {
         return prefs.getBoolean(KEY_AUTO_CHECK_ENABLED, CoreConfig.AUTO_CHECK_DEFAULT_ENABLED)
     }
 
+    /** Включает/выключает авто-проверку с логированием. */
     fun setAutoCheckEnabled(enabled: Boolean) {
         val previous = isAutoCheckEnabled()
         if (previous == enabled) return
@@ -14596,10 +15075,12 @@ class SystemUpdateManager(private val context: Context) {
         )
     }
 
+    /** Возвращает интервал авто-проверки в часах. */
     fun getAutoCheckIntervalHours(): Int {
         return prefs.getInt(KEY_AUTO_CHECK_INTERVAL_HOURS, CoreConfig.AUTO_CHECK_DEFAULT_INTERVAL_HOURS)
     }
 
+    /** Сохраняет интервал авто-проверки с нормализацией. */
     fun setAutoCheckIntervalHours(hours: Int) {
         val normalized = if (hours in CoreConfig.AUTO_CHECK_AVAILABLE_INTERVALS) {
             hours
@@ -14617,10 +15098,12 @@ class SystemUpdateManager(private val context: Context) {
         )
     }
 
+    /** Возвращает время последней проверки (ms). */
     fun getLastCheckTime(): Long {
         return prefs.getLong(KEY_LAST_CHECK_TIME, 0L)
     }
 
+    /** Сохраняет время последней проверки. */
     fun setLastCheckTime(time: Long) {
         prefs.edit { putLong(KEY_LAST_CHECK_TIME, time) }
     }
@@ -14639,6 +15122,7 @@ class SystemUpdateManager(private val context: Context) {
     // ВЕРСИЯ ПРИЛОЖЕНИЯ
     // ============================================================
 
+    /** Возвращает versionCode приложения. */
     private fun getCurrentVersionCode(): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -14727,6 +15211,7 @@ class SystemUpdateManager(private val context: Context) {
     // ФАЙЛЫ ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Возвращает имя APK-файла для версии. */
     private fun getApkFileName(version: String): String {
         return "${CoreConfig.APK_FILE_PREFIX}-$version.apk"
     }
@@ -14755,6 +15240,7 @@ class SystemUpdateManager(private val context: Context) {
             }
         }
 
+    /** Удаляет APK-файл из UPDATES. */
     private suspend fun deleteApkFile(fileName: String) {
         try {
             storageManager.remove(StorageDirectory.UPDATES, fileName)
@@ -14762,6 +15248,7 @@ class SystemUpdateManager(private val context: Context) {
         }
     }
 
+    /** Удаляет все старые APK-файлы из UPDATES. */
     private suspend fun deleteOldApkFiles() {
         try {
             val apkFiles = storageManager.list(
@@ -14779,14 +15266,17 @@ class SystemUpdateManager(private val context: Context) {
     // МЕТКИ ЗАГРУЗКИ
     // ============================================================
 
+    /** Ставит метку «APK скачан» для versionCode. */
     private fun markDownloadComplete(versionCode: Int) {
         prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
     }
 
+    /** true, если APK для versionCode помечен как скачанный. */
     private fun isDownloadComplete(versionCode: Int): Boolean {
         return prefs.getBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", false)
     }
 
+    /** Снимает метку «APK скачан». */
     fun clearDownloadMark(versionCode: Int) {
         prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
     }
@@ -14944,6 +15434,7 @@ class SystemUpdateManager(private val context: Context) {
         }
     }
 
+    /** true, если свободного места больше требуемого на 10%. */
     private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
         return try {
             val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
@@ -14990,9 +15481,15 @@ class SystemUpdateManager(private val context: Context) {
     // СЛУШАТЕЛЬ
     // ============================================================
 
+    /** Слушатель прогресса скачивания APK. */
     interface DownloadListener {
+        /** Прогресс скачивания (0–100). */
         fun onProgress(percent: Int)
+
+        /** Скачивание завершено, возвращает URI файла. */
         fun onSuccess(uri: Uri)
+
+        /** Ошибка скачивания. */
         fun onError(message: String)
     }
 
@@ -15033,9 +15530,6 @@ import androidx.core.content.edit
  * Дубликаты подряд не сохраняются (как в bash): если пользователь
  * ввёл ту же команду второй раз подряд — она не добавляется в историю,
  * но в лог терминала выводится.
- *
- * Object, а не class — как PermissionManager. Состояние живёт в prefs,
- * не в памяти. Все методы — безопасные (не бросают исключений).
  */
 object TerminalHistoryManager {
 
@@ -15055,9 +15549,6 @@ object TerminalHistoryManager {
      * - если команда совпадает с последней сохранённой — не дублируем;
      * - иначе сдвигаем всё на 1 позицию вниз и пишем на позицию 0;
      * - если история достигла MAX_HISTORY — самый старый элемент вытесняется.
-     *
-     * @param context контекст приложения
-     * @param command введённая пользователем строка (до парсинга)
      */
     fun add(context: Context, command: String) {
         val trimmed = command.trim()
@@ -15507,6 +15998,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: СПРАВКА И ИНФО
     // ============================================================
 
+    /** Справка: список команд или по одной. */
     private fun helpHandler(context: Context, args: List<String>): String {
         val commands = getCommands(context)
 
@@ -15534,6 +16026,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** about: версия, автор, ссылки. */
     private fun aboutHandler(context: Context): String {
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(context)
         val fullVersion = if (suffix.isNotEmpty()) "$versionName $suffix" else versionName
@@ -15548,6 +16041,7 @@ object TerminalManager {
         }
     }
 
+    /** version: versionName + versionCode + канал. */
     private fun versionHandler(context: Context): String {
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(context)
         val versionCode = AppInfoHelper.getVersionCode(context)
@@ -15563,6 +16057,7 @@ object TerminalManager {
         }
     }
 
+    /** status: сводка состояния ядра. */
     private fun statusHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shell = shellManager.getActiveShell()
@@ -15601,6 +16096,7 @@ object TerminalManager {
         }
     }
 
+    /** device: модель/производитель/Android/SDK. */
     private fun deviceHandler(context: Context): String {
         val model = Build.MODEL.ifEmpty { context.getString(R.string.unknown) }
         val manufacturer = Build.MANUFACTURER.ifEmpty { context.getString(R.string.unknown) }
@@ -15615,6 +16111,7 @@ object TerminalManager {
         }
     }
 
+    /** shell.info: подробности активной оболочки. */
     private fun shellInfoHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shell = shellManager.getActiveShell()
@@ -15644,6 +16141,7 @@ object TerminalManager {
         }
     }
 
+    /** shell.list: список доступных оболочек. */
     private fun shellListHandler(context: Context, configManager: ConfigManager): String {
         val shellManager = ShellManager(context, configManager)
         val shells = shellManager.getAvailableShells()
@@ -15678,6 +16176,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** theme: фактическая тема + режим. */
     private fun themeHandler(context: Context, configManager: ConfigManager): String {
         val mode = configManager.getThemeMode()
         val actual = if (mode == "system") {
@@ -15688,10 +16187,12 @@ object TerminalManager {
         return "$actual (mode: $mode)"
     }
 
+    /** lang: текущий язык. */
     private fun langHandler(configManager: ConfigManager): String {
         return configManager.getLanguage()
     }
 
+    /** orientation: пользовательская + forced (если задана оболочкой). */
     private fun orientationHandler(context: Context, configManager: ConfigManager): String {
         val userOrientation = configManager.getOrientation()
         val shellManager = ShellManager(context, configManager)
@@ -15704,10 +16205,12 @@ object TerminalManager {
         }
     }
 
+    /** devmode: on/off. */
     private fun devModeHandler(context: Context): String {
         return if (isDevModeEnabled(context)) "on" else "off"
     }
 
+    /** storage: занятое место по категориям. */
     private fun storageHandler(context: Context): String {
         val storageManager = StorageManager(context)
 
@@ -15737,6 +16240,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: ДИАГНОСТИКА
     // ============================================================
 
+    /** doctor: диагностика состояния ядра. */
     private fun doctorHandler(context: Context, configManager: ConfigManager): String {
         val ok = context.getString(R.string.terminal_doctor_ok)
         val warn = context.getString(R.string.terminal_doctor_warn)
@@ -15867,6 +16371,7 @@ object TerminalManager {
         return sb.toString()
     }
 
+    /** memory: использование Java heap. */
     private fun memoryHandler(): String {
         val runtime = Runtime.getRuntime()
 
@@ -15883,6 +16388,7 @@ object TerminalManager {
         }
     }
 
+    /** webview: информация о текущем WebView. */
     private fun webViewHandler(context: Context): String {
         val packageInfo = try {
             WebViewCompat.getCurrentWebViewPackage(context)
@@ -15907,6 +16413,7 @@ object TerminalManager {
         }
     }
 
+    /** screen: разрешение и плотность экрана. */
     private fun screenHandler(context: Context): String {
         val metrics: DisplayMetrics = context.resources.displayMetrics
 
@@ -15954,6 +16461,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: API
     // ============================================================
 
+    /** api.list: список API-методов с маркерами. */
     private fun apiListHandler(context: Context, configManager: ConfigManager): String {
         val methods = ApiRouter.getRegisteredMethods()
         if (methods.isEmpty()) {
@@ -15994,6 +16502,7 @@ object TerminalManager {
         return sb.toString().trimEnd()
     }
 
+    /** api.call: прямой вызов API-метода. */
     private suspend fun apiCallHandler(context: Context, args: List<String>): String {
         if (args.isEmpty()) {
             return errorMessage(context.getString(R.string.terminal_api_call_usage))
@@ -16007,6 +16516,7 @@ object TerminalManager {
         }
     }
 
+    /** echo: повторяет аргументы. */
     private fun echoHandler(args: List<String>): String {
         return args.joinToString(" ")
     }
@@ -16015,6 +16525,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: ИСТОРИЯ
     // ============================================================
 
+    /** history: показывает историю команд (опционально N последних). */
     private fun historyHandler(context: Context, args: List<String>): String {
         val full = TerminalHistoryManager.getAll(context)
 
@@ -16039,6 +16550,7 @@ object TerminalManager {
         }.trimEnd()
     }
 
+    /** history.clear: очищает историю команд. */
     private fun historyClearHandler(context: Context): String {
         TerminalHistoryManager.clear(context)
         return context.getString(R.string.terminal_history_cleared)
@@ -16142,6 +16654,7 @@ object TerminalManager {
         }
     }
 
+    /** reload.shell: перезагружает активную оболочку. */
     private suspend fun reloadShellHandler(
         context: Context,
         configManager: ConfigManager
@@ -16152,6 +16665,7 @@ object TerminalManager {
         context.getString(R.string.terminal_set_ok_restart)
     }
 
+    /** clear.webview: очищает кэш WebView. */
     private suspend fun clearWebViewHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             try {
@@ -16172,12 +16686,14 @@ object TerminalManager {
             }
         }
 
+    /** clear.cache: очищает кэш приложений. */
     private suspend fun clearCacheHandler(): String = withContext(Dispatchers.IO) {
         CacheManager.clearCache()
         LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.clear.cache")
         "OK"
     }
 
+    /** reset.onboarding: сбрасывает онбординг и перезапускает приложение. */
     private suspend fun resetOnboardingHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             LoggerManager.warn(LoggerTagModel.TERMINAL, "TERMINAL.reset.onboarding")
@@ -16191,6 +16707,7 @@ object TerminalManager {
             context.getString(R.string.terminal_reset_onboarding_ok)
         }
 
+    /** restart: перезапускает приложение. */
     private suspend fun restartHandler(context: Context): String =
         withContext(Dispatchers.Main) {
             LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.restart")
@@ -16216,6 +16733,7 @@ object TerminalManager {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Парсит on/off/true/false в Boolean. */
     private fun parseOnOff(value: String): Boolean? {
         return when (value.lowercase()) {
             "on", "true" -> true
@@ -16224,10 +16742,12 @@ object TerminalManager {
         }
     }
 
+    /** Дополняет строку пробелами до ширины колонки. */
     private fun pad(text: String): String {
         return text.padEnd(STATUS_PAD_WIDTH, ' ')
     }
 
+    /** Форматирует байты в B/KB/MB/GB. */
     private fun formatBytes(bytes: Long): String {
         val locale = java.util.Locale.US
         return when {
@@ -16242,6 +16762,7 @@ object TerminalManager {
     // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
     // ============================================================
 
+    /** Распарсенная команда: имя + аргументы. */
     data class ParsedCommand(
         val name: String,
         val args: List<String>
@@ -16272,6 +16793,7 @@ data class ColorSchemeModel(
     @ColorRes val primaryRes: Int,
     @ColorRes val accentRes: Int
 ) {
+    /** Возвращает локализованное имя схемы. */
     fun getDisplayName(context: Context): String {
         return context.getString(displayNameRes)
     }
@@ -16671,6 +17193,7 @@ data class TerminalLineModel(
     val type: LineType,
     val text: String
 ) {
+    /** Тип строки терминала. */
     enum class LineType {
         INPUT,
         OUTPUT,
@@ -16729,6 +17252,7 @@ import android.os.Build
 /** versionName / versionCode / split version + suffix. */
 object AppInfoHelper {
 
+    /** Возвращает versionName приложения ("" при ошибке). */
     fun getVersionName(context: Context): String {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -16746,6 +17270,7 @@ object AppInfoHelper {
         }
     }
 
+    /** Возвращает versionCode приложения (0 при ошибке). */
     fun getVersionCode(context: Context): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -16792,6 +17317,7 @@ object AppInfoHelper {
         return Pair(fullVersionName, "")
     }
 
+    /** Возвращает (versionName без суффикса, суффикс) приложения. */
     fun getSplitVersion(context: Context): Pair<String, String> {
         return splitVersionName(getVersionName(context))
     }
@@ -16845,6 +17371,7 @@ object BadgeHelper {
         return Pair(semantic, hex)
     }
 
+    /** Конвертирует colorRes в HEX. */
     private fun colorResToHex(colorRes: Int, context: Context): String {
         val color = ContextCompat.getColor(context, colorRes)
         return String.format(Locale.US, "#%06X", color and 0xFFFFFF)
@@ -16879,6 +17406,7 @@ import by.quty.launch.R
  */
 object PopupMenuHelper {
 
+    /** Пункт меню. */
     data class Item(
         val text: String,
         val onClick: () -> Unit
@@ -16951,6 +17479,7 @@ object PopupMenuHelper {
         return popup
     }
 
+    /** Создаёт один пункт меню. */
     private fun createMenuItem(
         context: Context,
         item: Item,
@@ -16984,6 +17513,7 @@ object PopupMenuHelper {
         }
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)
@@ -17044,6 +17574,7 @@ object UpdateHelper {
         }
     }
 
+    /** true, если newVersion новее currentVersion. */
     fun isNewerVersion(newVersion: String, currentVersion: String): Boolean {
         return compareVersions(newVersion, currentVersion) > 0
     }
@@ -17208,13 +17739,21 @@ object UpdateHelper {
         }
     }
 
+    /** Куда сохранять файл. */
     sealed class Destination {
+        /** Сохранять по указанному пути. */
         data class CustomPath(val path: String) : Destination()
     }
 
+    /** Слушатель прогресса скачивания. */
     interface DownloadListener {
+        /** Прогресс (0–100). */
         fun onProgress(percent: Int)
+
+        /** Успешное скачивание. */
         fun onSuccess(file: File)
+
+        /** Ошибка скачивания. */
         fun onError(message: String)
     }
 }
@@ -17254,6 +17793,7 @@ class JsBridge(
 
     private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /** Сохраняет слабую ссылку на WebView для отправки результатов. */
     fun setWebView(webView: LauncherWebView) {
         webViewRef = WeakReference(webView)
     }
@@ -17405,6 +17945,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         private const val RETRY_DELAY_MS = CoreConfig.WEBVIEW_RETRY_DELAY_MS
     }
 
+    /** Настраивает WebView: настройки, asset loader, chrome client. */
     init {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
@@ -17437,6 +17978,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         }
     }
 
+    /** Настраивает asset loader, обработчик quty://, retry и внешних ссылок. */
     private fun setupAssetLoader() {
         val assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(appContext))
@@ -17459,6 +18001,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return assetLoader.shouldInterceptRequest(request.url)
             }
 
+            /** Отдаёт файл оболочки по quty://, с fallback на assets. */
             private fun handleQutyScheme(url: String): WebResourceResponse? {
                 try {
                     var path = url.replace("quty://", "")
@@ -17515,6 +18058,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 }
             }
 
+            /** Возвращает папку распакованной активной оболочки. */
             private fun getActiveShellDir(): File? {
                 activeShellName?.let { shellName ->
                     val shellDir = File(activeShellDir, shellName)
@@ -17531,6 +18075,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return null
             }
 
+            /** Ищет файл по имени рекурсивно в папке. */
             private fun findFileRecursively(dir: File, fileName: String): File? {
                 val files = dir.listFiles()
                 files?.forEach { file ->
@@ -17580,11 +18125,13 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return true
             }
 
+            /** Применяет состояние анимаций после загрузки страницы. */
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 applyAnimationsEnabledInternal(lastAnimationsEnabled)
             }
 
+            /** Логирует ошибку и пробует перезагрузить страницу оболочки. */
             @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView?,
@@ -17640,12 +18187,14 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return true
             }
 
+            /** true, если URL — страница оболочки. */
             private fun isShellPage(url: String): Boolean {
                 return url.contains("index.html") ||
                         url.endsWith("/") ||
                         url.matches(Regex(".*quty://.*"))
             }
 
+            /** Планирует повторную загрузку с лимитом попыток. */
             private fun scheduleRetry(url: String) {
                 if (lastErrorUrl == url) {
                     errorRetryCount++
@@ -26813,7 +27362,7 @@ FILE: app\src\main\res\values\ic_launcher_background.xml
 ==================================================
 
 
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/values/ic_launcher_background.xml -->
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
@@ -29403,13 +29952,7 @@ FILE: app\src\main\res\xml\backup_rules.xml
 ==================================================
 
 
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
+<!-- res/xml/backup_rules.xml -->
 <full-backup-content>
     <!--
    <include domain="sharedpref" path="."/>
@@ -29423,11 +29966,7 @@ FILE: app\src\main\res\xml\data_extraction_rules.xml
 ==================================================
 
 
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<!-- res/xml/data_extraction_rules.xml -->
 <data-extraction-rules>
     <cloud-backup>
         <!-- TODO: Use <include> and <exclude> to control what is backed up.

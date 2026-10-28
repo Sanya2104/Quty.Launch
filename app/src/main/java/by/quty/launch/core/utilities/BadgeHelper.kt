@@ -7,10 +7,10 @@ import by.quty.launch.R
 import by.quty.launch.configs.CoreConfig
 import java.util.Locale
 
-/** Маркеры: семантика → HEX. */
+/** Маркеры: семантика > HEX. */
 object BadgeHelper {
 
-    /** Семантика ("accent"/"warning"/"error") → HEX "#RRGGBB". */
+    /** Семантика ("accent"/"warning"/"error") > HEX "#RRGGBB". */
     fun resolveHex(semanticColor: String?, context: Context): String? {
         if (semanticColor.isNullOrEmpty()) return null
 
@@ -24,7 +24,7 @@ object BadgeHelper {
         return colorResToHex(colorRes, context)
     }
 
-    /** isCritical → "error"/"accent". */
+    /** isCritical > "error"/"accent". */
     fun resolveUpdateSemantic(isCritical: Boolean): String {
         return if (isCritical) {
             CoreConfig.BADGE_COLOR_ERROR
@@ -40,6 +40,7 @@ object BadgeHelper {
         return Pair(semantic, hex)
     }
 
+    /** Конвертирует colorRes в HEX. */
     private fun colorResToHex(colorRes: Int, context: Context): String {
         val color = ContextCompat.getColor(context, colorRes)
         return String.format(Locale.US, "#%06X", color and 0xFFFFFF)

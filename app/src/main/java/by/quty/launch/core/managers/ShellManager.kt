@@ -62,6 +62,7 @@ data class ShellManifest(
  * Результат предпросмотра файла оболочки.
  */
 sealed class ShellPreviewResult {
+    /** Успешный предпросмотр. */
     data class Success(
         val name: String,
         val displayName: String,
@@ -72,13 +73,27 @@ sealed class ShellPreviewResult {
         val alreadyExists: Boolean
     ) : ShellPreviewResult()
 
+    /** Ошибки предпросмотра. */
     sealed class Failure : ShellPreviewResult() {
+        /** Неподдерживаемое расширение. */
         object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать имя файла. */
         object CannotReadFileName : Failure()
+
+        /** Слишком большой файл. */
         object FileTooLarge : Failure()
+
+        /** Невалидный архив. */
         object InvalidArchive : Failure()
+
+        /** Нет manifest.json. */
         object ManifestMissing : Failure()
+
+        /** Невалидный manifest.json. */
         object ManifestInvalid : Failure()
+
+        /** Ошибка ввода-вывода. */
         data class IoError(val message: String?) : Failure()
     }
 }
@@ -87,16 +102,33 @@ sealed class ShellPreviewResult {
  * Результат импорта оболочки.
  */
 sealed class ShellImportResult {
+    /** Успешный импорт. */
     data class Success(val shell: Shell) : ShellImportResult()
 
+    /** Ошибки импорта. */
     sealed class Failure : ShellImportResult() {
+        /** Неподдерживаемое расширение. */
         object UnsupportedExtension : Failure()
+
+        /** Не удалось прочитать имя файла. */
         object CannotReadFileName : Failure()
+
+        /** Слишком большой файл. */
         object FileTooLarge : Failure()
+
+        /** Невалидный архив. */
         object InvalidArchive : Failure()
+
+        /** Нет manifest.json. */
         object ManifestMissing : Failure()
+
+        /** Невалидный manifest.json. */
         object ManifestInvalid : Failure()
+
+        /** Оболочка уже установлена. */
         data class AlreadyExists(val name: String) : Failure()
+
+        /** Ошибка ввода-вывода. */
         data class IoError(val message: String?) : Failure()
     }
 }
@@ -125,6 +157,7 @@ class ShellManager(
         File(context.filesDir, "shells/active")
     }
 
+    /** Создаёт папку active и подгружает активную оболочку из prefs. */
     init {
         if (!activeShellDir.exists()) {
             activeShellDir.mkdirs()

@@ -45,6 +45,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         private const val RETRY_DELAY_MS = CoreConfig.WEBVIEW_RETRY_DELAY_MS
     }
 
+    /** Настраивает WebView: настройки, asset loader, chrome client. */
     init {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
@@ -77,6 +78,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         }
     }
 
+    /** Настраивает asset loader, обработчик quty://, retry и внешних ссылок. */
     private fun setupAssetLoader() {
         val assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(appContext))
@@ -99,6 +101,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return assetLoader.shouldInterceptRequest(request.url)
             }
 
+            /** Отдаёт файл оболочки по quty://, с fallback на assets. */
             private fun handleQutyScheme(url: String): WebResourceResponse? {
                 try {
                     var path = url.replace("quty://", "")
@@ -155,6 +158,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 }
             }
 
+            /** Возвращает папку распакованной активной оболочки. */
             private fun getActiveShellDir(): File? {
                 activeShellName?.let { shellName ->
                     val shellDir = File(activeShellDir, shellName)
@@ -171,6 +175,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return null
             }
 
+            /** Ищет файл по имени рекурсивно в папке. */
             private fun findFileRecursively(dir: File, fileName: String): File? {
                 val files = dir.listFiles()
                 files?.forEach { file ->
@@ -220,11 +225,13 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return true
             }
 
+            /** Применяет состояние анимаций после загрузки страницы. */
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 applyAnimationsEnabledInternal(lastAnimationsEnabled)
             }
 
+            /** Логирует ошибку и пробует перезагрузить страницу оболочки. */
             @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView?,
@@ -280,12 +287,14 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return true
             }
 
+            /** true, если URL — страница оболочки. */
             private fun isShellPage(url: String): Boolean {
                 return url.contains("index.html") ||
                         url.endsWith("/") ||
                         url.matches(Regex(".*quty://.*"))
             }
 
+            /** Планирует повторную загрузку с лимитом попыток. */
             private fun scheduleRetry(url: String) {
                 if (lastErrorUrl == url) {
                     errorRetryCount++

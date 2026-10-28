@@ -83,17 +83,28 @@ class RecoveryManager(private val context: Context) {
 
     /** Результат чтения .qutyconfig. */
     sealed class ImportReadResult {
+        /** Успешное чтение. */
         data class Success(
             val formatVersion: Int,
             val appVersion: String,
             val data: Map<String, Map<String, Any>>
         ) : ImportReadResult()
 
+        /** Ошибки чтения. */
         sealed class Failure : ImportReadResult() {
+            /** Файл не найден. */
             object FileNotFound : Failure()
+
+            /** Файл пуст. */
             object FileEmpty : Failure()
+
+            /** Неверный format. */
             data class InvalidFormat(val expectedFormat: String) : Failure()
+
+            /** Нет секции data. */
             object NoData : Failure()
+
+            /** Ошибка парсинга. */
             data class ParseError(val message: String?) : Failure()
         }
     }

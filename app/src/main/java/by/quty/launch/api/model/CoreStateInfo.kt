@@ -23,6 +23,7 @@ data class CoreStateInfo(
     val app: CoreAppInfo
 )
 
+/** Информация о цветовой схеме. */
 @Serializable
 data class ColorSchemeInfo(
     val id: String,
@@ -30,6 +31,7 @@ data class ColorSchemeInfo(
     val accent: String
 )
 
+/** Информация об активной оболочке. */
 @Serializable
 data class ShellInfo(
     val name: String,
@@ -39,6 +41,7 @@ data class ShellInfo(
     val orientation: String?
 )
 
+/** Информация о приложении (версия). */
 @Serializable
 data class CoreAppInfo(
     val version: String,

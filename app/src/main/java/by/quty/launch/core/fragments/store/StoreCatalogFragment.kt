@@ -57,6 +57,7 @@ class StoreCatalogFragment : Fragment() {
     private var isLoading = false
     private var isCacheShown = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -65,6 +66,7 @@ class StoreCatalogFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_catalog, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и запускает загрузку каталога. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -93,6 +95,7 @@ class StoreCatalogFragment : Fragment() {
         loadInitial()
     }
 
+    /** При возврате перерисовывает каталог из локальных данных. */
     override fun onResume() {
         super.onResume()
         if (isCacheShown) {
@@ -104,6 +107,7 @@ class StoreCatalogFragment : Fragment() {
     // НАСТРОЙКА UI
     // ============================================================
 
+    /** Настраивает swipe-to-refresh. */
     private fun setupSwipeRefresh() {
         val accentColor = getThemeColor(R.attr.buttonPrimaryColor)
         swipeRefresh.setColorSchemeColors(accentColor)
@@ -117,6 +121,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Настраивает RecyclerView каталога и обработчик кликов. */
     private fun setupRecyclerView() {
         adapter = StoreItemAdapter(emptyList()) { item ->
             (activity as? StoreActivity)?.showItemDetail(item)
@@ -125,6 +130,7 @@ class StoreCatalogFragment : Fragment() {
         recyclerView.adapter = adapter
     }
 
+    /** Вешает клик на кнопку «Повторить». */
     private fun setupButtons() {
         btnRetry.setOnClickListener {
             loadInitial()
@@ -167,6 +173,7 @@ class StoreCatalogFragment : Fragment() {
         updateChipStyles()
     }
 
+    /** Подсвечивает выбранный чип. */
     private fun updateChipStyles() {
         for (i in 0 until filtersContainer.childCount) {
             val chip = filtersContainer.getChildAt(i) as? TextView ?: continue
@@ -186,6 +193,7 @@ class StoreCatalogFragment : Fragment() {
     // ЗАГРУЗКА: КЭШ + СЕРВЕР
     // ============================================================
 
+    /** Первичная загрузка: сначала кэш, затем сервер. */
     private fun loadInitial() {
         if (isLoading) return
 
@@ -206,6 +214,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Перечитывает каталог из кэша и рендерит. */
     private fun rebuildFromLocal() {
         viewLifecycleOwner.lifecycleScope.launch {
             val cached = storeManager.getCachedItems() ?: emptyList()
@@ -213,6 +222,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
+    /** Собирает StoreItemModel из remote + локальных shell'ов. */
     private fun rebuildFromData(remote: List<StoreRemoteItemModel>) {
         val localShells = shellManager.getAvailableShells()
         val activeName = configManager.getActiveShell()
@@ -285,11 +295,13 @@ class StoreCatalogFragment : Fragment() {
     // ФИЛЬТРАЦИЯ
     // ============================================================
 
+    /** Применяет текущий фильтр и рендерит отфильтрованный список. */
     private fun applyFilter() {
         val filtered = allItems.filter(currentFilter.predicate)
         render(filtered)
     }
 
+    /** Рендерит список или пустое состояние. */
     private fun render(items: List<StoreItemModel>) {
         if (items.isEmpty()) {
             showEmpty()
@@ -304,31 +316,37 @@ class StoreCatalogFragment : Fragment() {
     // СОСТОЯНИЯ
     // ============================================================
 
+    /** Показывает состояние «загрузка». */
     private fun showLoading() {
         loadingState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает состояние «загрузка». */
     private fun hideLoading() {
         loadingState.visibility = View.GONE
     }
 
+    /** Показывает состояние «ошибка». */
     private fun showError(message: String) {
         errorMessage.text = message
         errorState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает состояние «ошибка». */
     private fun hideError() {
         errorState.visibility = View.GONE
     }
 
+    /** Показывает пустое состояние для текущего фильтра. */
     private fun showEmpty() {
         emptyMessage.text = getString(currentFilter.emptyRes)
         emptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
 
+    /** Скрывает пустое состояние. */
     private fun hideEmpty() {
         emptyState.visibility = View.GONE
     }
@@ -337,6 +355,7 @@ class StoreCatalogFragment : Fragment() {
     // ХЕЛПЕРЫ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)

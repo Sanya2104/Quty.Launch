@@ -45,6 +45,7 @@ object UpdateHelper {
         }
     }
 
+    /** true, если newVersion новее currentVersion. */
     fun isNewerVersion(newVersion: String, currentVersion: String): Boolean {
         return compareVersions(newVersion, currentVersion) > 0
     }
@@ -209,13 +210,21 @@ object UpdateHelper {
         }
     }
 
+    /** Куда сохранять файл. */
     sealed class Destination {
+        /** Сохранять по указанному пути. */
         data class CustomPath(val path: String) : Destination()
     }
 
+    /** Слушатель прогресса скачивания. */
     interface DownloadListener {
+        /** Прогресс (0–100). */
         fun onProgress(percent: Int)
+
+        /** Успешное скачивание. */
         fun onSuccess(file: File)
+
+        /** Ошибка скачивания. */
         fun onError(message: String)
     }
 }

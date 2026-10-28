@@ -295,6 +295,7 @@ class StoreManager(private val context: Context) {
         return currentVersion.isNotEmpty() && UpdateHelper.compareVersions(currentVersion, minVersion) >= 0
     }
 
+    /** Возвращает текущую versionName приложения. */
     private fun getCurrentLauncherVersion(): String {
         return try {
             val (versionName, _) = AppInfoHelper.getSplitVersion(context)
@@ -316,8 +317,13 @@ class StoreManager(private val context: Context) {
 
     /** Слушатель прогресса установки. */
     interface InstallListener {
+        /** Прогресс скачивания (0–100). */
         fun onProgress(percent: Int)
+
+        /** Установка завершена успешно. */
         fun onSuccess()
+
+        /** Ошибка установки. */
         fun onError(message: String)
     }
 

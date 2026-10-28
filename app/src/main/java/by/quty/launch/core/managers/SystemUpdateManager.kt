@@ -66,12 +66,15 @@ class SystemUpdateManager(private val context: Context) {
     // КЭШ ПОСЛЕДНЕГО РЕЗУЛЬТАТА ПРОВЕРКИ
     // ============================================================
 
+    /** Возвращает кэш последнего результата (или null). */
     fun getCachedUpdate(): UpdateCheckResult? = cachedUpdate
 
+    /** Сохраняет результат проверки в кэш. */
     fun setCachedUpdate(result: UpdateCheckResult) {
         cachedUpdate = result
     }
 
+    /** Сбрасывает кэш результата. */
     fun clearCachedUpdate() {
         cachedUpdate = null
     }
@@ -80,10 +83,12 @@ class SystemUpdateManager(private val context: Context) {
     // НАСТРОЙКИ АВТО-ПРОВЕРКИ
     // ============================================================
 
+    /** true, если авто-проверка включена. */
     fun isAutoCheckEnabled(): Boolean {
         return prefs.getBoolean(KEY_AUTO_CHECK_ENABLED, CoreConfig.AUTO_CHECK_DEFAULT_ENABLED)
     }
 
+    /** Включает/выключает авто-проверку с логированием. */
     fun setAutoCheckEnabled(enabled: Boolean) {
         val previous = isAutoCheckEnabled()
         if (previous == enabled) return
@@ -95,10 +100,12 @@ class SystemUpdateManager(private val context: Context) {
         )
     }
 
+    /** Возвращает интервал авто-проверки в часах. */
     fun getAutoCheckIntervalHours(): Int {
         return prefs.getInt(KEY_AUTO_CHECK_INTERVAL_HOURS, CoreConfig.AUTO_CHECK_DEFAULT_INTERVAL_HOURS)
     }
 
+    /** Сохраняет интервал авто-проверки с нормализацией. */
     fun setAutoCheckIntervalHours(hours: Int) {
         val normalized = if (hours in CoreConfig.AUTO_CHECK_AVAILABLE_INTERVALS) {
             hours
@@ -116,10 +123,12 @@ class SystemUpdateManager(private val context: Context) {
         )
     }
 
+    /** Возвращает время последней проверки (ms). */
     fun getLastCheckTime(): Long {
         return prefs.getLong(KEY_LAST_CHECK_TIME, 0L)
     }
 
+    /** Сохраняет время последней проверки. */
     fun setLastCheckTime(time: Long) {
         prefs.edit { putLong(KEY_LAST_CHECK_TIME, time) }
     }
@@ -138,6 +147,7 @@ class SystemUpdateManager(private val context: Context) {
     // ВЕРСИЯ ПРИЛОЖЕНИЯ
     // ============================================================
 
+    /** Возвращает versionCode приложения. */
     private fun getCurrentVersionCode(): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -226,6 +236,7 @@ class SystemUpdateManager(private val context: Context) {
     // ФАЙЛЫ ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Возвращает имя APK-файла для версии. */
     private fun getApkFileName(version: String): String {
         return "${CoreConfig.APK_FILE_PREFIX}-$version.apk"
     }
@@ -254,6 +265,7 @@ class SystemUpdateManager(private val context: Context) {
             }
         }
 
+    /** Удаляет APK-файл из UPDATES. */
     private suspend fun deleteApkFile(fileName: String) {
         try {
             storageManager.remove(StorageDirectory.UPDATES, fileName)
@@ -261,6 +273,7 @@ class SystemUpdateManager(private val context: Context) {
         }
     }
 
+    /** Удаляет все старые APK-файлы из UPDATES. */
     private suspend fun deleteOldApkFiles() {
         try {
             val apkFiles = storageManager.list(
@@ -278,14 +291,17 @@ class SystemUpdateManager(private val context: Context) {
     // МЕТКИ ЗАГРУЗКИ
     // ============================================================
 
+    /** Ставит метку «APK скачан» для versionCode. */
     private fun markDownloadComplete(versionCode: Int) {
         prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
     }
 
+    /** true, если APK для versionCode помечен как скачанный. */
     private fun isDownloadComplete(versionCode: Int): Boolean {
         return prefs.getBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", false)
     }
 
+    /** Снимает метку «APK скачан». */
     fun clearDownloadMark(versionCode: Int) {
         prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
     }
@@ -443,6 +459,7 @@ class SystemUpdateManager(private val context: Context) {
         }
     }
 
+    /** true, если свободного места больше требуемого на 10%. */
     private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
         return try {
             val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
@@ -489,9 +506,15 @@ class SystemUpdateManager(private val context: Context) {
     // СЛУШАТЕЛЬ
     // ============================================================
 
+    /** Слушатель прогресса скачивания APK. */
     interface DownloadListener {
+        /** Прогресс скачивания (0–100). */
         fun onProgress(percent: Int)
+
+        /** Скачивание завершено, возвращает URI файла. */
         fun onSuccess(uri: Uri)
+
+        /** Ошибка скачивания. */
         fun onError(message: String)
     }
 

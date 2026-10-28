@@ -34,8 +34,10 @@ class GetApps(
     override val iconRes: Int
         get() = R.drawable.ic_api_getapps
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Возвращает кэш или свежий список приложений с бейджами обновлений. */
     override suspend fun executeInternal(params: Unit?): String {
         val cachedApps = CacheManager.getCachedApps()
         if (cachedApps != null) {
@@ -86,6 +88,7 @@ class GetApps(
         }
     }
 
+    /** Собирает реальные и виртуальные приложения с иконками в Base64. */
     @SuppressLint("QueryPermissionsNeeded")
     private suspend fun loadFreshApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val packageManager = context.packageManager

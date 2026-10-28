@@ -50,6 +50,7 @@ class StoreActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран магазина, меню, восстанавливает состояние, загружает каталог. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -97,12 +98,14 @@ class StoreActivity : BaseActivity() {
         refreshItems()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("selected_item_id", selectedItemId)
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает UI при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -128,11 +131,13 @@ class StoreActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -220,6 +225,7 @@ class StoreActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(iconRes)
     }
 
+    /** Возвращает заголовок: имя элемента при детальном экране, иначе заголовок пункта меню. */
     private fun getCurrentTitle(): String {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
         if (currentFragment is StoreItemDetailFragment) {
@@ -231,6 +237,7 @@ class StoreActivity : BaseActivity() {
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню магазина. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -239,6 +246,7 @@ class StoreActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад с учётом диалога перезапуска. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener { checkAndShowRestartDialog() }
         binding.btnCloseContent.setOnClickListener { checkAndShowRestartDialog() }
@@ -247,6 +255,7 @@ class StoreActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик «Назад»: backStack → деталь, затем меню, затем выход. */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -272,6 +281,7 @@ class StoreActivity : BaseActivity() {
         )
     }
 
+    /** Строит список пунктов меню магазина. */
     private fun buildMenuItems(): List<MenuModel> {
         return listOf(
             MenuModel(
@@ -304,11 +314,13 @@ class StoreActivity : BaseActivity() {
         )
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Показывает фрагмент выбранного пункта меню. */
     private fun showItem(item: MenuModel) {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStackImmediate()
@@ -340,6 +352,7 @@ class StoreActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -356,6 +369,7 @@ class StoreActivity : BaseActivity() {
     // ДЕТАЛЬНЫЙ ЭКРАН
     // ============================================================
 
+    /** Открывает детальный экран элемента через addToBackStack. */
     fun showItemDetail(item: StoreItemModel) {
         val fragment = StoreItemDetailFragment.newInstance(item.name)
 
@@ -370,6 +384,7 @@ class StoreActivity : BaseActivity() {
         binding.btnBackContentIcon.setImageResource(R.drawable.ic_back)
     }
 
+    /** Закрывает детальный экран и возвращается к меню. */
     fun hideItemDetail() {
         if (isFinishing || isDestroyed) return
 
@@ -384,6 +399,7 @@ class StoreActivity : BaseActivity() {
     // ДАННЫЕ ДЛЯ ДЕТАЛЬНОГО ФРАГМЕНТА
     // ============================================================
 
+    /** Ищет элемент каталога по имени. */
     fun findItemByName(name: String): StoreItemModel? {
         return currentItems.find { it.name == name }
     }
@@ -409,6 +425,7 @@ class StoreActivity : BaseActivity() {
         }
     }
 
+    /** При возврате обновляет ориентацию, каталог и immersive. */
     override fun onResume() {
         super.onResume()
 

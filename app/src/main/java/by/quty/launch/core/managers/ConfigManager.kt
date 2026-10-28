@@ -27,17 +27,29 @@ class ConfigManager(context: Context) {
     // ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
     // ============================================================
 
+    /** Имя оболочки по умолчанию. */
     fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
+
+    /** Ориентация по умолчанию. */
     fun getDefaultOrientation(): String = CoreConfig.DEFAULT_ORIENTATION
+
+    /** Fullscreen по умолчанию. */
     fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
+
+    /** Strict mode по умолчанию. */
     fun getDefaultStrictMode(): Boolean = CoreConfig.DEFAULT_STRICT_MODE
+
+    /** Тема по умолчанию. */
     fun getDefaultThemeMode(): String = CoreConfig.DEFAULT_THEME_MODE
+
+    /** Язык по умолчанию. */
     fun getDefaultLanguage(): String = CoreConfig.DEFAULT_LANGUAGE
 
     // ============================================================
     // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
+    /** Возвращает имя активной оболочки. */
     fun getActiveShell(): String {
         return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
@@ -52,6 +64,7 @@ class ConfigManager(context: Context) {
         return prefs.getString("active_shell_version", "") ?: ""
     }
 
+    /** Сохраняет версию активной оболочки. */
     fun setActiveShellVersion(version: String) {
         prefs.edit { putString("active_shell_version", version) }
     }
@@ -60,10 +73,12 @@ class ConfigManager(context: Context) {
     // SAFE MODE
     // ============================================================
 
+    /** true, если активен Safe Mode. */
     fun isSafeModeActive(): Boolean {
         return prefs.getBoolean(KEY_SAFE_MODE, false)
     }
 
+    /** Устанавливает флаг Safe Mode с логированием изменения. */
     fun setSafeModeActive(active: Boolean) {
         val previous = isSafeModeActive()
         if (previous == active) return
@@ -79,10 +94,12 @@ class ConfigManager(context: Context) {
     // ОРИЕНТАЦИЯ
     // ============================================================
 
+    /** Возвращает выбранную ориентацию. */
     fun getOrientation(): String {
         return prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
     }
 
+    /** Сохраняет ориентацию с логированием изменения. */
     fun setOrientation(orientation: String) {
         val previous = getOrientation()
         if (previous == orientation) return
@@ -98,10 +115,12 @@ class ConfigManager(context: Context) {
     // ПОЛНОЭКРАННЫЙ РЕЖИМ
     // ============================================================
 
+    /** true, если fullscreen включён. */
     fun isFullscreenEnabled(): Boolean {
         return prefs.getBoolean("fullscreen", getDefaultFullscreen())
     }
 
+    /** Сохраняет настройку fullscreen. */
     fun setFullscreenEnabled(enabled: Boolean) {
         val previous = isFullscreenEnabled()
         if (previous == enabled) return
@@ -122,6 +141,7 @@ class ConfigManager(context: Context) {
         return isFullscreenEnabled() && prefs.getBoolean("strict_mode", getDefaultStrictMode())
     }
 
+    /** Сохраняет настройку strict mode. */
     fun setStrictModeEnabled(enabled: Boolean) {
         val previous = prefs.getBoolean("strict_mode", getDefaultStrictMode())
         if (previous == enabled) return
@@ -137,10 +157,12 @@ class ConfigManager(context: Context) {
     // ЦВЕТОВАЯ СХЕМА
     // ============================================================
 
+    /** Возвращает id текущей цветовой схемы. */
     fun getColorScheme(): String {
         return prefs.getString("color_scheme", getDefaultColorScheme()) ?: getDefaultColorScheme()
     }
 
+    /** Сохраняет цветовую схему. */
     fun setColorScheme(schemeId: String) {
         val previous = getColorScheme()
         if (previous == schemeId) return
@@ -152,12 +174,16 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Возвращает id схемы по умолчанию. */
     fun getDefaultColorScheme(): String = CoreConfig.DEFAULT_COLOR_SCHEME
 
+    /** Возвращает HEX основного цвета текущей схемы. */
     fun getSchemePrimaryColor(): String = getColorSchemeObject().primaryColor
 
+    /** Возвращает HEX акцентного цвета текущей схемы. */
     fun getSchemeAccentColor(): String = getColorSchemeObject().accentColor
 
+    /** Возвращает объект текущей цветовой схемы. */
     fun getColorSchemeObject(): ColorSchemeModel {
         return ColorSchemeModel.getSchemeById(getColorScheme())
     }
@@ -166,10 +192,12 @@ class ConfigManager(context: Context) {
     // ТЕМА
     // ============================================================
 
+    /** Возвращает сохранённый режим темы. */
     fun getThemeMode(): String {
         return prefs.getString(KEY_THEME_MODE, getDefaultThemeMode()) ?: getDefaultThemeMode()
     }
 
+    /** Сохраняет режим темы. */
     fun setThemeMode(mode: String) {
         val previous = getThemeMode()
         if (previous == mode) return
@@ -181,6 +209,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** true, если фактическая тема тёмная. */
     @Suppress("unused")
     fun isDarkTheme(): Boolean {
         return when (getThemeMode()) {
@@ -191,6 +220,7 @@ class ConfigManager(context: Context) {
         }
     }
 
+    /** true, если системная тема тёмная. */
     private fun isSystemInDarkMode(): Boolean {
         val config = appContext.resources.configuration
         return (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
@@ -211,14 +241,17 @@ class ConfigManager(context: Context) {
     // ПЕРЕЗАПУСК ДЛЯ ОРИЕНТАЦИИ
     // ============================================================
 
+    /** true, если приложение должно перезапуститься для применения ориентации. */
     fun needRestartForOrientation(): Boolean {
         return prefs.getBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false)
     }
 
+    /** Сбрасывает флаг перезапуска для ориентации. */
     fun clearRestartForOrientationFlag() {
         prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false) }
     }
 
+    /** Ставит флаг перезапуска для применения ориентации. */
     fun setRestartForOrientationFlag() {
         prefs.edit { putBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, true) }
     }
@@ -232,6 +265,7 @@ class ConfigManager(context: Context) {
         return prefs.getBoolean(KEY_ANIMATIONS_ENABLED, getDefaultAnimationsEnabled())
     }
 
+    /** Сохраняет пользовательскую настройку анимаций. */
     fun setAnimationsEnabled(enabled: Boolean) {
         val previous = isAnimationsEnabled()
         if (previous == enabled) return
@@ -243,6 +277,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Значение анимаций по умолчанию. */
     fun getDefaultAnimationsEnabled(): Boolean = CoreConfig.DEFAULT_ANIMATIONS_ENABLED
 
     /** Системный флаг ANIMATOR_DURATION_SCALE > 0. */
@@ -281,10 +316,12 @@ class ConfigManager(context: Context) {
         prefs.edit { putString(KEY_LANGUAGE, initial) }
     }
 
+    /** Возвращает сохранённый язык. */
     fun getLanguage(): String {
         return prefs.getString(KEY_LANGUAGE, getDefaultLanguage()) ?: getDefaultLanguage()
     }
 
+    /** Сохраняет язык с нормализацией (только ru/en). */
     fun setLanguage(language: String) {
         val normalized = when (language) {
             CoreConfig.LANGUAGE_RU -> CoreConfig.LANGUAGE_RU
@@ -301,6 +338,7 @@ class ConfigManager(context: Context) {
         )
     }
 
+    /** Возвращает код языка (ru/en). */
     fun getLanguageCode(): String = getLanguage()
 
     companion object {

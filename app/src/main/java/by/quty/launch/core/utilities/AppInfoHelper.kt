@@ -8,6 +8,7 @@ import android.os.Build
 /** versionName / versionCode / split version + suffix. */
 object AppInfoHelper {
 
+    /** Возвращает versionName приложения ("" при ошибке). */
     fun getVersionName(context: Context): String {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -25,6 +26,7 @@ object AppInfoHelper {
         }
     }
 
+    /** Возвращает versionCode приложения (0 при ошибке). */
     fun getVersionCode(context: Context): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -42,7 +44,7 @@ object AppInfoHelper {
         }
     }
 
-    /** "0.0.145-Alpha" → Pair("0.0.145", "Alpha"). */
+    /** "0.0.145-Alpha" > Pair("0.0.145", "Alpha"). */
     fun splitVersionName(fullVersionName: String): Pair<String, String> {
         if (fullVersionName.isEmpty()) {
             return Pair("", "")
@@ -71,6 +73,7 @@ object AppInfoHelper {
         return Pair(fullVersionName, "")
     }
 
+    /** Возвращает (versionName без суффикса, суффикс) приложения. */
     fun getSplitVersion(context: Context): Pair<String, String> {
         return splitVersionName(getVersionName(context))
     }

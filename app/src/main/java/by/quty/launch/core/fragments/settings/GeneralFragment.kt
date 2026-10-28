@@ -51,6 +51,7 @@ class GeneralFragment : Fragment() {
     private var isUpdating = false
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,6 +60,7 @@ class GeneralFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_general, container, false)
     }
 
+    /** Находит view, настраивает секции и обновляет состояние. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -100,6 +102,7 @@ class GeneralFragment : Fragment() {
         refreshSettings()
     }
 
+    /** Обновляет настройки и состояние home screen при возврате. */
     override fun onResume() {
         super.onResume()
 
@@ -116,6 +119,7 @@ class GeneralFragment : Fragment() {
     // ДОМАШНИЙ ЭКРАН
     // ============================================================
 
+    /** Вешает клик на строку «Домашний экран» и обновляет статус. */
     private fun setupHomeScreenRow() {
         updateHomeScreenState()
 
@@ -183,6 +187,7 @@ class GeneralFragment : Fragment() {
     // ТЕМА
     // ============================================================
 
+    /** Настраивает выбор темы (light/dark/system). */
     private fun setupThemeSelector() {
         val mode = configManager.getThemeMode()
         selectTheme(mode)
@@ -206,6 +211,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранную карточку темы. */
     private fun selectTheme(mode: String) {
         themeLightCard.setBackgroundResource(R.drawable.bg_theme_card)
         themeDarkCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -218,6 +224,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Сохраняет режим темы и применяет его. */
     private fun applyTheme(mode: String) {
         if (isUpdating) return
 
@@ -240,6 +247,7 @@ class GeneralFragment : Fragment() {
     // ОРИЕНТАЦИЯ
     // ============================================================
 
+    /** Настраивает выбор ориентации. */
     private fun setupOrientationSelector() {
         val orientation = configManager.getOrientation()
         selectOrientation(orientation)
@@ -272,6 +280,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранную карточку ориентации. */
     private fun selectOrientation(orientation: String) {
         orientationAutoCard.setBackgroundResource(R.drawable.bg_theme_card)
         orientationPortraitCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -284,6 +293,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Блокирует/разблокирует выбор ориентации в зависимости от forced оболочки. */
     private fun updateOrientationLockState() {
         isUpdating = true
 
@@ -298,6 +308,7 @@ class GeneralFragment : Fragment() {
         isUpdating = false
     }
 
+    /** Блокирует карточки ориентации и показывает подсказку. */
     private fun lockOrientationSelector(forcedOrientation: String) {
         val hintText = when (forcedOrientation) {
             "portrait" -> getString(R.string.orientation_lock_hint_portrait)
@@ -322,6 +333,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Разблокирует карточки ориентации и скрывает подсказку. */
     private fun unlockOrientationSelector() {
         orientationLockHint.visibility = View.GONE
 
@@ -340,6 +352,7 @@ class GeneralFragment : Fragment() {
     // FULLSCREEN / STRICT
     // ============================================================
 
+    /** Настраивает switch fullscreen. */
     private fun setupFullscreenSelector() {
         fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
 
@@ -363,6 +376,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Настраивает switch strict mode. */
     private fun setupStrictModeSelector() {
         strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
@@ -385,6 +399,7 @@ class GeneralFragment : Fragment() {
     // ЯЗЫК
     // ============================================================
 
+    /** Настраивает выбор языка. */
     private fun setupLanguageSelector() {
         val current = configManager.getLanguage()
         selectLanguage(current)
@@ -404,6 +419,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранный язык. */
     private fun selectLanguage(language: String) {
         languageRussianCard.setBackgroundResource(R.drawable.bg_theme_card)
         languageEnglishCard.setBackgroundResource(R.drawable.bg_theme_card)
@@ -414,6 +430,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
+    /** Применяет язык и пересоздаёт SettingsActivity. */
     private fun applyLanguage(language: String) {
         if (isUpdating) return
 
@@ -434,17 +451,20 @@ class GeneralFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Помечает, что для применения нужен рестарт. */
     private fun markRestartRequired() {
         needsRestart = true
         (activity as? SettingsActivity)?.markRestartRequired()
     }
 
+    /** Включает/выключает switch strict в зависимости от fullscreen. */
     private fun updateStrictModeState() {
         val fullscreenEnabled = fullscreenSwitch.isChecked
         strictModeSwitch.isEnabled = fullscreenEnabled
         strictModeSwitch.alpha = if (fullscreenEnabled) 1.0f else 0.5f
     }
 
+    /** Перечитывает все настройки и обновляет UI. */
     fun refreshSettings() {
         isUpdating = true
 
@@ -464,6 +484,7 @@ class GeneralFragment : Fragment() {
         isUpdating = false
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getColorFromAttribute(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)

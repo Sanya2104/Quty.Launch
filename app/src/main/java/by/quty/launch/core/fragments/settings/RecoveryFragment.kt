@@ -58,6 +58,7 @@ class RecoveryFragment : Fragment() {
         writeExportToUri(uri)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -66,6 +67,7 @@ class RecoveryFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_recovery, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -90,6 +92,7 @@ class RecoveryFragment : Fragment() {
     // BACKUP / RESTORE
     // ============================================================
 
+    /** Настраивает секцию «Восстановление»: backup и restore. */
     private fun setupRecoverySection() {
         backupRow.setOnClickListener {
             if (isProcessing) return@setOnClickListener
@@ -166,6 +169,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Открывает SAF для выбора .qutyconfig. */
     private fun openFilePicker() {
         try {
             openDocumentLauncher.launch(arrayOf("*/*"))
@@ -178,6 +182,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Копирует выбранный файл во временный и переходит к валидации. */
     private fun handleImportUri(uri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = readPickedFile(uri)) {
@@ -217,6 +222,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Читает файл, проверяет формат и показывает диалог импорта. */
     private suspend fun validateAndShowImportDialog(filePath: String) {
         when (val readResult = recoveryManager.readConfig(filePath)) {
             is RecoveryManager.ImportReadResult.Failure -> {
@@ -271,6 +277,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог о несовпадении версии формата. */
     private fun showVersionMismatchDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -317,6 +324,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Показывает диалог подтверждения импорта. */
     private fun showImportConfirmDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -357,6 +365,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Применяет импорт и показывает диалог перезапуска. */
     private fun performImport(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -389,6 +398,7 @@ class RecoveryFragment : Fragment() {
     // ПОЛНЫЙ СБРОС
     // ============================================================
 
+    /** Настраивает секцию «Полный сброс». */
     private fun setupResetSection() {
         fullResetRow.setOnClickListener {
             if (isProcessing) return@setOnClickListener
@@ -396,6 +406,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог подтверждения полного сброса. */
     private fun showFullResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -432,6 +443,7 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
+    /** Выполняет полный сброс и показывает диалог перезапуска. */
     private fun performFullReset() {
         isProcessing = true
 
@@ -456,6 +468,7 @@ class RecoveryFragment : Fragment() {
     // ДИАЛОГ ПЕРЕЗАПУСКА
     // ============================================================
 
+    /** Показывает диалог перезапуска после импорта/сброса. */
     private fun showRestartDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
 
@@ -493,8 +506,12 @@ class RecoveryFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ ТИПЫ
     // ============================================================
 
+    /** Результат копирования выбранного файла. */
     private sealed class ReadPickedFileResult {
+        /** Успешное копирование, путь к temp-файлу. */
         data class Success(val filePath: String) : ReadPickedFileResult()
+
+        /** Ошибка копирования. */
         data class Error(val message: String) : ReadPickedFileResult()
     }
 }

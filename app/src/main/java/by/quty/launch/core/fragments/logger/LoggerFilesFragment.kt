@@ -36,6 +36,7 @@ class LoggerFilesFragment : Fragment() {
 
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.US)
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,6 +45,7 @@ class LoggerFilesFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_logger_files, container, false)
     }
 
+    /** Находит view-элементы после создания view. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -51,6 +53,7 @@ class LoggerFilesFragment : Fragment() {
         emptyText = view.findViewById(R.id.logger_files_empty)
     }
 
+    /** Обновляет список файлов при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
         refreshFiles()
@@ -60,6 +63,7 @@ class LoggerFilesFragment : Fragment() {
     // СПИСОК ФАЙЛОВ
     // ============================================================
 
+    /** Асинхронно читает список лог-файлов и рендерит его. */
     private fun refreshFiles() {
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
@@ -69,6 +73,7 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Отрисовывает список файлов или пустое состояние. */
     private fun renderFiles(files: List<File>) {
         container.removeAllViews()
 
@@ -105,12 +110,14 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Форматирует метаданные файла: "HH:mm · size". */
     private fun formatMeta(file: File): String {
         val time = timeFormat.format(Date(file.lastModified()))
         val size = formatSize(file.length())
         return "$time · $size"
     }
 
+    /** Форматирует размер файла в B/KB/MB/GB. */
     private fun formatSize(bytes: Long): String {
         val locale = Locale.US
         return when {
@@ -125,6 +132,7 @@ class LoggerFilesFragment : Fragment() {
     // ПРЕВЬЮ ФАЙЛА
     // ============================================================
 
+    /** Показывает диалог с содержимым лог-файла и кнопкой копирования. */
     private fun showFileContent(file: File) {
         lifecycleScope.launch {
             val content = withContext(Dispatchers.IO) {
@@ -187,6 +195,7 @@ class LoggerFilesFragment : Fragment() {
     // МЕНЮ ФАЙЛА
     // ============================================================
 
+    /** Показывает popup-меню для файла (поделиться/удалить). */
     private fun showFileMenu(file: File, anchor: View) {
         PopupMenuHelper.show(
             anchor = anchor,
@@ -205,6 +214,7 @@ class LoggerFilesFragment : Fragment() {
         )
     }
 
+    /** Отправляет файл через системный share-диалог. */
     private fun shareFile(file: File) {
         try {
             val storageManager = StorageManager(requireContext())
@@ -220,6 +230,7 @@ class LoggerFilesFragment : Fragment() {
         }
     }
 
+    /** Удаляет лог-файл и обновляет список. */
     private fun deleteFile(file: File) {
         lifecycleScope.launch {
             val success = LoggerManager.deleteLogFile(requireContext(), file.name)

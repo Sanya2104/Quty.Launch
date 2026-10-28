@@ -63,8 +63,10 @@ class GetStatusBar(
         "/sys/class/power_supply/battery/temp"
     )
 
+    /** Параметров нет. */
     override fun parseParams(jsonString: String) = Unit
 
+    /** Собирает все данные статус-бара и сериализует в ответ. */
     override suspend fun executeInternal(params: Unit?): String = withContext(Dispatchers.IO) {
         val status = StatusBarInfo(
             cpuTemp = getAverageCpuTemp(),
@@ -149,6 +151,7 @@ class GetStatusBar(
         }
     }
 
+    /** Форматирует температуру в «NN°C». */
     private fun formatCpuTemp(temp: Float): String {
         return String.format(Locale.US, "%.0f°C", temp)
     }
@@ -222,6 +225,7 @@ class GetStatusBar(
         }
     }
 
+    /** Форматирует скорость в MB/s, KB/s или B/s. */
     private fun formatSpeed(bytesPerSecond: Double): String {
         return when {
             bytesPerSecond >= 1024 * 1024 -> {
@@ -240,6 +244,7 @@ class GetStatusBar(
 
     // ==================== ГРОМКОСТЬ ====================
 
+    /** Возвращает громкость музыки в процентах. */
     private fun getVolume(): String? {
         return try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -259,6 +264,7 @@ class GetStatusBar(
 
     // ==================== GSM СИГНАЛ ====================
 
+    /** Возвращает уровень GSM-сигнала (0–4). */
     @Suppress("DEPRECATION")
     private fun getGsmSignal(): Int? {
         return try {
@@ -273,6 +279,7 @@ class GetStatusBar(
         }
     }
 
+    /** Возвращает тип сети: 2G/3G/4G/5G/H+ или null. */
     @Suppress("DEPRECATION")
     private fun getGsmNetworkType(): String? {
         return try {
@@ -314,6 +321,7 @@ class GetStatusBar(
 
     // ==================== Wi-Fi ====================
 
+    /** Возвращает уровень Wi-Fi (0–4) по RSSI. */
     @Suppress("DEPRECATION")
     private fun getWifiSignalLevel(): Int? {
         return try {
@@ -345,6 +353,7 @@ class GetStatusBar(
 
     // ==================== Bluetooth ====================
 
+    /** true, если Bluetooth включён. */
     @Suppress("DEPRECATION")
     private fun isBluetoothEnabled(): Boolean {
         return try {
@@ -355,6 +364,7 @@ class GetStatusBar(
         }
     }
 
+    /** true, если активная сеть — Wi-Fi. */
     private fun isWifiEnabled(): Boolean {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -370,6 +380,7 @@ class GetStatusBar(
         }
     }
 
+    /** true, если GPS-провайдер включён. */
     private fun isGpsEnabled(): Boolean {
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -381,6 +392,7 @@ class GetStatusBar(
 
     // ==================== USB ====================
 
+    /** true, если подключено USB-устройство. */
     private fun isUsbConnected(): Boolean {
         return try {
             val usbManager = context.getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager

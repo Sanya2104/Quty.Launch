@@ -22,24 +22,29 @@ class LoggerFileAdapter(
     private val onMenuClick: (File, View) -> Unit
 ) : RecyclerView.Adapter<LoggerFileAdapter.ViewHolder>() {
 
+    /** Создаёт ViewHolder файла лога. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logger_file, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит один файл. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(files[position])
     }
 
+    /** Возвращает количество файлов. */
     override fun getItemCount(): Int = files.size
 
+    /** ViewHolder одного файла лога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val nameView: TextView = itemView.findViewById(R.id.logger_file_name)
         private val metaView: TextView = itemView.findViewById(R.id.logger_file_meta)
         private val menuButton: ImageButton = itemView.findViewById(R.id.logger_file_menu)
 
+        /** Заполняет имя/мету и вешает клики. */
         fun bind(file: File) {
             nameView.text = file.name
             metaView.text = formatMeta(file)
@@ -61,6 +66,7 @@ class LoggerFileAdapter(
             return "$time · $size"
         }
 
+        /** Форматирует размер файла в B/KB/MB/GB. */
         private fun formatSize(bytes: Long): String {
             val locale = Locale.US
             return when {

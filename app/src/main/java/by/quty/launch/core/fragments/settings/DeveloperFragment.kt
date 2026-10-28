@@ -61,6 +61,7 @@ class DeveloperFragment : Fragment() {
         requireContext().getSharedPreferences(PREFS_DEVELOPER, Context.MODE_PRIVATE)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -69,6 +70,7 @@ class DeveloperFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_developer, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и настраивает секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -100,6 +102,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 1: ОБОЛОЧКА
     // ============================================================
 
+    /** Настраивает секцию «Оболочка»: manifest и reload. */
     private fun setupShellSection() {
         shellManifestRow.setOnClickListener {
             showShellManifestDialog()
@@ -232,6 +235,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
+    /** Инвалидирует кэш и помечает restart при смене видимости. */
     private fun onAppVisibilityChanged() {
         CacheManager.invalidateCache()
         (activity as? SettingsActivity)?.markRestartRequired()
@@ -241,6 +245,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 3: ДАННЫЕ
     // ============================================================
 
+    /** Настраивает секцию «Управление данными». */
     private fun setupDataSection() {
         clearWebViewCacheRow.setOnClickListener {
             clearWebViewCache()
@@ -279,6 +284,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
+    /** Показывает диалог подтверждения сброса онбординга. */
     private fun showResetOnboardingDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_confirm, null)
 
@@ -326,6 +332,7 @@ class DeveloperFragment : Fragment() {
         showRestartAfterResetDialog()
     }
 
+    /** Диалог перезапуска после сброса онбординга. */
     private fun showRestartAfterResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 
@@ -364,6 +371,7 @@ class DeveloperFragment : Fragment() {
     // СЕКЦИЯ 4: ИНСТРУМЕНТЫ
     // ============================================================
 
+    /** Настраивает инструменты: таймер обновлений и рестарт. */
     private fun setupToolsSection() {
         resetUpdateTimerRow.setOnClickListener {
             resetUpdateTimer()
@@ -386,6 +394,7 @@ class DeveloperFragment : Fragment() {
         ).show()
     }
 
+    /** Показывает диалог подтверждения перезапуска приложения. */
     private fun showRestartAppDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 

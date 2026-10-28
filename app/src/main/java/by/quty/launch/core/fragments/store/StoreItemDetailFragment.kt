@@ -42,6 +42,7 @@ class StoreItemDetailFragment : Fragment() {
     companion object {
         private const val ARG_ITEM_NAME = "arg_item_name"
 
+        /** Создаёт фрагмент для указанного имени элемента. */
         fun newInstance(itemName: String): StoreItemDetailFragment {
             return StoreItemDetailFragment().apply {
                 arguments = Bundle().apply {
@@ -107,11 +108,13 @@ class StoreItemDetailFragment : Fragment() {
 
     private var isProcessing = false
 
+    /** Читает имя элемента из arguments. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         itemName = arguments?.getString(ARG_ITEM_NAME) ?: return
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -120,6 +123,7 @@ class StoreItemDetailFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_item_detail, container, false)
     }
 
+    /** Находит view, получает менеджеры и биндит элемент. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -168,6 +172,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Находит все view по id. */
     private fun setupViews(view: View) {
         previewImage = view.findViewById(R.id.item_preview)
         nameText = view.findViewById(R.id.item_name)
@@ -242,7 +247,7 @@ class StoreItemDetailFragment : Fragment() {
 
         statusNewerBadge.visibility = if (item.installedIsNewer) View.VISIBLE else View.GONE
 
-        // Второй блок: installed ≠ remote.
+        // Второй блок: installed ? remote.
         val showRemoteRow = item.isInstalled &&
                 !installedVersion.isNullOrEmpty() &&
                 !remoteVersion.isNullOrEmpty() &&
@@ -348,6 +353,7 @@ class StoreItemDetailFragment : Fragment() {
         val visible: Boolean
     )
 
+    /** true, если файл существует и URI получается. */
     private fun canShareItem(item: StoreItemModel): Boolean {
         if (!item.canShare) return false
 
@@ -440,6 +446,7 @@ class StoreItemDetailFragment : Fragment() {
         return items
     }
 
+    /** Показывает popup-меню действий. */
     private fun showActionMenu(items: List<PopupMenuHelper.Item>) {
         PopupMenuHelper.show(
             anchor = btnMenu,
@@ -579,6 +586,7 @@ class StoreItemDetailFragment : Fragment() {
         updateActionUI(updated)
     }
 
+    /** Перечитывает элемент из StoreActivity и перерисовывает. */
     private fun reloadAndRebind() {
         val activity = activity as? StoreActivity ?: return
         val currentName = item?.name ?: return
@@ -593,6 +601,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Отправляет файл оболочки через share-диалог. */
     private fun shareItem(item: StoreItemModel) {
         val shell = item.localShell ?: return
         try {
@@ -611,6 +620,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Диалог подтверждения удаления. */
     private fun confirmDelete(item: StoreItemModel) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -687,6 +697,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Загружает превью оболочки (Glide по URL или Base64). */
     private fun bindPreview(item: StoreItemModel) {
         if (!item.previewUrl.isNullOrEmpty()) {
             Glide.with(this)
@@ -717,6 +728,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Показывает прогресс установки. */
     private fun showInstallProgress(percent: Int) {
         activeBadge.visibility = View.GONE
         installProgressContainer.visibility = View.VISIBLE
@@ -725,11 +737,13 @@ class StoreItemDetailFragment : Fragment() {
         installProgressText.text = getString(R.string.downloading_progress, percent)
     }
 
+    /** Скрывает прогресс установки. */
     private fun hideInstallProgress() {
         installProgressContainer.visibility = View.GONE
         item?.let { updateActionUI(it) }
     }
 
+    /** ISO YYYY-MM-DD > DD.MM.YYYY. */
     private fun formatDate(isoDate: String): String {
         if (isoDate.isBlank()) return ""
         return try {
@@ -742,6 +756,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
+    /** Открывает URL во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())

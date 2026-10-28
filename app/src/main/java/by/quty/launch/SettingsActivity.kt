@@ -44,6 +44,7 @@ class SettingsActivity : BaseActivity() {
         (340 * resources.displayMetrics.density).toInt()
     }
 
+    /** Инициализирует экран настроек, меню и восстанавливает состояние. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -88,6 +89,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Сохраняет выбранный пункт и видимость фрагмента. */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -95,6 +97,7 @@ class SettingsActivity : BaseActivity() {
         outState.putBoolean("fragment_visible", isFragmentVisible)
     }
 
+    /** Перестраивает UI при повороте/смене размера. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -120,11 +123,13 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Определяет планшетный режим по ширине экрана. */
     private fun checkMode() {
         val widthDp = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         isTabletMode = widthDp >= 600
     }
 
+    /** Раскладывает панели под текущий режим (планшет/телефон). */
     private fun applyMode() {
         val menuParams = binding.menuPane.layoutParams as LinearLayout.LayoutParams
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
@@ -198,11 +203,13 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Возвращает строковый заголовок выбранного пункта меню. */
     private fun getMenuItemTitle(): String {
         val item = menuItems.find { it.id == selectedItemId }
         return if (item != null) getString(item.title) else ""
     }
 
+    /** Настраивает RecyclerView меню настроек. */
     private fun setupMenu() {
         val adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
@@ -212,6 +219,7 @@ class SettingsActivity : BaseActivity() {
         binding.recyclerMenu.adapter = adapter
     }
 
+    /** Вешает клики на кнопки закрытия/назад с учётом диалога перезапуска. */
     private fun setupButtons() {
         binding.btnClose.setOnClickListener {
             checkAndShowRestartDialog()
@@ -226,6 +234,7 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Настраивает обработчик системной кнопки «Назад». */
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(
             this,
@@ -414,6 +423,7 @@ class SettingsActivity : BaseActivity() {
         recreate()
     }
 
+    /** Показывает фрагмент выбранного пункта меню. */
     private fun showItem(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -441,6 +451,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** Восстанавливает UI для выбранного пункта без пересоздания фрагмента. */
     private fun restoreFragment(item: MenuModel) {
         isFragmentVisible = true
         selectedItemId = item.id
@@ -453,6 +464,7 @@ class SettingsActivity : BaseActivity() {
         applyMode()
     }
 
+    /** При возврате обновляет ориентацию, маркер обновления и immersive. */
     override fun onResume() {
         super.onResume()
 
@@ -475,6 +487,7 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
+    /** Хук уничтожения активности. */
     override fun onDestroy() {
         super.onDestroy()
     }

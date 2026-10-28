@@ -27,10 +27,12 @@ class LaunchApp(
     override val iconRes: Int
         get() = R.drawable.ic_api_launchapp
 
+    /** Парсит JSON в LaunchAppParams. */
     override fun parseParams(jsonString: String): LaunchAppParams {
         return json.decodeFromString(jsonString)
     }
 
+    /** Открывает соответствующую активность по пакету. */
     override suspend fun executeInternal(params: LaunchAppParams?): String {
         val packageName = params?.packageName
             ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_package_required))

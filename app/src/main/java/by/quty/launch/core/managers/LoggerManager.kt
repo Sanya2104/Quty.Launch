@@ -71,14 +71,17 @@ object LoggerManager {
     // ЗАПИСЬ
     // ============================================================
 
+    /** Записывает DEBUG-сообщение. */
     fun debug(tag: LoggerTagModel, message: String, details: String? = null) {
         log(LoggerLevelModel.DEBUG, tag, message, details)
     }
 
+    /** Записывает INFO-сообщение. */
     fun info(tag: LoggerTagModel, message: String, details: String? = null) {
         log(LoggerLevelModel.INFO, tag, message, details)
     }
 
+    /** Записывает WARN-сообщение (опционально с throwable). */
     fun warn(
         tag: LoggerTagModel,
         message: String,
@@ -93,6 +96,7 @@ object LoggerManager {
         log(LoggerLevelModel.WARN, tag, fullMessage, details)
     }
 
+    /** Записывает ERROR-сообщение (опционально с throwable). */
     fun error(
         tag: LoggerTagModel,
         message: String,
@@ -148,16 +152,14 @@ object LoggerManager {
     // ЧТЕНИЕ
     // ============================================================
 
-    fun getAll(): List<LoggerEntryModel> = buffer.toList()
-
-    fun getAllReversed(): List<LoggerEntryModel> = buffer.toList().asReversed()
-
+    /** Возвращает количество записей в буфере. */
     fun size(): Int = buffer.size
 
     // ============================================================
     // ОЧИСТКА
     // ============================================================
 
+    /** Полностью очищает буфер и уведомляет подписчиков. */
     fun clear() {
         buffer.clear()
         notifyCleared()
@@ -167,24 +169,30 @@ object LoggerManager {
     // ВКЛЮЧЕНИЕ / ВЫКЛЮЧЕНИЕ
     // ============================================================
 
+    /** true, если логирование включено. */
     fun isEnabled(): Boolean = enabled
 
+    /** Включает/выключает логирование и сохраняет флаг. */
     fun setEnabled(context: Context, value: Boolean) {
         enabled = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putBoolean(KEY_ENABLED, value) }
     }
 
+    /** true, если включено автосохранение. */
     fun isAutoSaveEnabled(): Boolean = autoSave
 
+    /** Включает/выключает автосохранение и сохраняет флаг. */
     fun setAutoSaveEnabled(context: Context, value: Boolean) {
         autoSave = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putBoolean(KEY_AUTO_SAVE, value) }
     }
 
+    /** Возвращает текущий лимит длины details. */
     fun getDetailsLimit(): Int = detailsLimit
 
+    /** Сохраняет лимит длины details. */
     fun setDetailsLimit(context: Context, value: Int) {
         detailsLimit = value
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -301,26 +309,6 @@ object LoggerManager {
             }
         }
 
-    /** Синхронная версия writeToFile — для onDestroy. */
-    fun writeToFileBlocking(context: Context): String? {
-        return try {
-            val entries = buffer.toList()
-            if (entries.isEmpty()) return null
-
-            val actualName = generateFileName()
-            val content = formatEntries(entries)
-
-            val storageManager = StorageManager(context.applicationContext)
-            val file = File(storageManager.getDirectory(StorageDirectory.LOGS), actualName)
-            file.parentFile?.mkdirs()
-            file.writeText(content)
-
-            actualName
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     /** Возвращает список файлов логов, новые сверху. */
     fun listLogFiles(context: Context): List<File> {
         return try {
@@ -393,20 +381,24 @@ object LoggerManager {
     // ПОДПИСКА
     // ============================================================
 
+    /** Подписывает listener на новые записи. */
     fun subscribe(listener: LoggerListener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener)
         }
     }
 
+    /** Отписывает listener. */
     fun unsubscribe(listener: LoggerListener) {
         listeners.remove(listener)
     }
 
+    /** Уведомляет подписчиков о новой записи. */
     private fun notifyListeners(entry: LoggerEntryModel) {
         listeners.forEach { it.onEntryAdded(entry) }
     }
 
+    /** Уведомляет подписчиков об очистке буфера. */
     private fun notifyCleared() {
         listeners.forEach { it.onCleared() }
     }
@@ -415,8 +407,12 @@ object LoggerManager {
     // ИНТЕРФЕЙС ПОДПИСЧИКА
     // ============================================================
 
+    /** Колбэки подписчика логгера. */
     interface LoggerListener {
+        /** Вызывается при добавлении новой записи. */
         fun onEntryAdded(entry: LoggerEntryModel)
+
+        /** Вызывается при очистке буфера. */
         fun onCleared()
     }
 }

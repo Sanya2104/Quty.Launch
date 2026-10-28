@@ -27,7 +27,7 @@ import by.quty.launch.core.managers.ShellPreviewResult
 import kotlinx.coroutines.launch
 
 /**
- * Импорт оболочки: SAF → preview → диалог → importShell.
+ * Импорт оболочки: SAF > preview > диалог > importShell.
  */
 class StoreImportFragment : Fragment() {
 
@@ -52,6 +52,7 @@ class StoreImportFragment : Fragment() {
         previewAndConfirm(uri)
     }
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -60,6 +61,7 @@ class StoreImportFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_store_import, container, false)
     }
 
+    /** Находит view, создаёт менеджеры и вешает клик выбора файла. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -74,6 +76,7 @@ class StoreImportFragment : Fragment() {
         hideState()
     }
 
+    /** Находит все view по id. */
     private fun initViews(view: View) {
         selectFileRow = view.findViewById(R.id.import_select_file_row)
 
@@ -106,6 +109,7 @@ class StoreImportFragment : Fragment() {
     // ПРЕДПРОСМОТР + ДИАЛОГ
     // ============================================================
 
+    /** Читает выбранный файл и показывает диалог предпросмотра. */
     private fun previewAndConfirm(uri: Uri) {
         showChecking()
 
@@ -223,6 +227,7 @@ class StoreImportFragment : Fragment() {
     // ИМПОРТ
     // ============================================================
 
+    /** Импортирует оболочку и показывает результат. */
     private fun importShell(uri: Uri, overwrite: Boolean) {
         showChecking()
 
@@ -274,6 +279,7 @@ class StoreImportFragment : Fragment() {
     // ДИАЛОГ ПЕРЕЗАПИСИ (гонка)
     // ============================================================
 
+    /** Диалог перезаписи существующей оболочки. */
     private fun showAlreadyExistsDialog(uri: Uri, name: String) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -314,6 +320,7 @@ class StoreImportFragment : Fragment() {
     // СОСТОЯНИЯ
     // ============================================================
 
+    /** Скрывает блок состояния. */
     private fun hideState() {
         stateContainer.isVisible = false
         stateProgressContainer.isVisible = false
@@ -325,6 +332,7 @@ class StoreImportFragment : Fragment() {
         stateSubtitle.isVisible = false
     }
 
+    /** Показывает состояние «проверка файла». */
     private fun showChecking() {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_server_checking)
@@ -338,6 +346,7 @@ class StoreImportFragment : Fragment() {
         stateBtnSecondary.isVisible = false
     }
 
+    /** Показывает состояние «импорт успешен». */
     private fun showSuccess(displayName: String) {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_check)
@@ -368,6 +377,7 @@ class StoreImportFragment : Fragment() {
         stateBtnSecondary.setOnClickListener { hideState() }
     }
 
+    /** Показывает состояние «ошибка импорта». */
     private fun showError(message: String) {
         stateContainer.isVisible = true
         stateIcon.setImageResource(R.drawable.ic_update_error)
@@ -389,12 +399,14 @@ class StoreImportFragment : Fragment() {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Форматирует размер в B/KB/MB/GB. */
     private fun formatSize(bytes: Long): String {
         val locale = java.util.Locale.US
         return when {

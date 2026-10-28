@@ -16,6 +16,7 @@ import by.quty.launch.core.managers.ShellManager
  */
 object ApiInitializer {
 
+    /** Создаёт менеджеры и регистрирует все API-методы в роутере. */
     fun init(context: Context) {
         val appContext = context.applicationContext
         val configManager = ConfigManager(appContext)

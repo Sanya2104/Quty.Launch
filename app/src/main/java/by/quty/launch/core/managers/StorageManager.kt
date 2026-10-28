@@ -73,6 +73,7 @@ class StorageManager(private val context: Context) {
     // БАЗОВЫЕ ОПЕРАЦИИ
     // ============================================================
 
+    /** Возвращает File по строковому пути (абсолютному или относительно baseDir). */
     fun get(path: String): File {
         return if (path.startsWith("/") || path.contains(":")) {
             File(path)
@@ -81,10 +82,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Возвращает File в указанной директории по имени. */
     fun get(directory: StorageDirectory, name: String): File {
         return File(getDirectory(directory), name)
     }
 
+    /** Читает файл как строку (null при ошибке). */
     suspend fun getString(file: File): String? = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
@@ -96,10 +99,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Читает файл из директории как строку (null при ошибке). */
     suspend fun getString(directory: StorageDirectory, name: String): String? {
         return getString(get(directory, name))
     }
 
+    /** Возвращает список файлов директории с фильтром/расширением/сортировкой. */
     fun list(
         directory: StorageDirectory,
         filter: ((String) -> Boolean)? = null,
@@ -123,6 +128,7 @@ class StorageManager(private val context: Context) {
         } ?: emptyList()
     }
 
+    /** Возвращает content:// URI для файла через FileProvider (null при ошибке). */
     fun getUri(file: File): Uri? {
         return try {
             if (!file.exists()) {
@@ -142,6 +148,7 @@ class StorageManager(private val context: Context) {
     // ЗАПИСЬ (SET)
     // ============================================================
 
+    /** Пишет строку в файл. */
     suspend fun set(file: File, content: String, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -156,10 +163,12 @@ class StorageManager(private val context: Context) {
             }
         }
 
+    /** Пишет строку в файл в указанной директории. */
     suspend fun set(directory: StorageDirectory, name: String, content: String, overwrite: Boolean = true): Boolean {
         return set(get(directory, name), content, overwrite)
     }
 
+    /** Копирует InputStream в файл. */
     suspend fun set(file: File, inputStream: InputStream, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -176,10 +185,12 @@ class StorageManager(private val context: Context) {
             }
         }
 
+    /** Копирует InputStream в файл в указанной директории. */
     suspend fun set(directory: StorageDirectory, name: String, inputStream: InputStream, overwrite: Boolean = true): Boolean {
         return set(get(directory, name), inputStream, overwrite)
     }
 
+    /** Пишет байты в файл. */
     suspend fun set(file: File, data: ByteArray, overwrite: Boolean = true): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -198,12 +209,15 @@ class StorageManager(private val context: Context) {
     // ПРОВЕРКА СУЩЕСТВОВАНИЯ (EXISTS)
     // ============================================================
 
+    /** true, если файл существует. */
     fun exists(file: File): Boolean = file.exists()
 
+    /** true, если файл существует в указанной директории. */
     fun exists(directory: StorageDirectory, name: String): Boolean {
         return exists(get(directory, name))
     }
 
+    /** true, если директория существует. */
     fun exists(directory: StorageDirectory): Boolean {
         return getDirectory(directory).exists()
     }
@@ -212,6 +226,7 @@ class StorageManager(private val context: Context) {
     // УДАЛЕНИЕ (REMOVE)
     // ============================================================
 
+    /** Удаляет файл. */
     suspend fun remove(file: File): Boolean = withContext(Dispatchers.IO) {
         try {
             if (!file.exists()) {
@@ -223,10 +238,12 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Удаляет файл из директории. */
     suspend fun remove(directory: StorageDirectory, name: String): Boolean {
         return remove(get(directory, name))
     }
 
+    /** Удаляет все файлы директории (с опциональным фильтром). */
     suspend fun removeAll(
         directory: StorageDirectory,
         filter: ((String) -> Boolean)? = null,
@@ -250,6 +267,7 @@ class StorageManager(private val context: Context) {
     // ДОПОЛНИТЕЛЬНЫЕ ОПЕРАЦИИ
     // ============================================================
 
+    /** Возвращает суммарный размер директории в байтах. */
     fun getDirectorySize(directory: StorageDirectory): Long {
         val dir = getDirectory(directory)
         return if (dir.exists()) {
@@ -261,15 +279,18 @@ class StorageManager(private val context: Context) {
         }
     }
 
+    /** Создаёт временный файл в TEMP. */
     fun createTempFile(prefix: String, extension: String = EXT_TEMP): File {
         val timestamp = System.currentTimeMillis()
         return File(tempDir, "$prefix-$timestamp.$extension")
     }
 
+    /** true, если файл существует, это файл и он больше minSize. */
     fun isValidFile(file: File, minSize: Long = 0): Boolean {
         return file.exists() && file.isFile && file.length() > minSize
     }
 
+    /** Форматирует размер в GB/MB/KB/B. */
     fun formatSize(size: Long): String {
         val locale = Locale.US
         return when {
@@ -284,6 +305,7 @@ class StorageManager(private val context: Context) {
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ============================================================
 
+    /** Возвращает File для директории по enum. */
     fun getDirectory(directory: StorageDirectory): File {
         return when (directory) {
             StorageDirectory.SHELLS -> shellsDir

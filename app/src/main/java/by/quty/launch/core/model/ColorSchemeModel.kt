@@ -16,6 +16,7 @@ data class ColorSchemeModel(
     @ColorRes val primaryRes: Int,
     @ColorRes val accentRes: Int
 ) {
+    /** Возвращает локализованное имя схемы. */
     fun getDisplayName(context: Context): String {
         return context.getString(displayNameRes)
     }

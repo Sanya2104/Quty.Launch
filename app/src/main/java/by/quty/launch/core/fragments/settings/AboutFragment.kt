@@ -51,6 +51,7 @@ class AboutFragment : Fragment() {
 
     private var progressToast: Toast? = null
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,6 +60,7 @@ class AboutFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_about, container, false)
     }
 
+    /** Находит view и настраивает все секции. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -84,6 +86,7 @@ class AboutFragment : Fragment() {
         setupContacts()
     }
 
+    /** Отменяет progress-toast при уничтожении view. */
     override fun onDestroyView() {
         super.onDestroyView()
 
@@ -95,6 +98,7 @@ class AboutFragment : Fragment() {
     // БЛОК «ПРИЛОЖЕНИЕ»
     // ============================================================
 
+    /** Заполняет versionName/versionCode/канал и вешает обработчик кликов. */
     private fun setupVersionInfo() {
         val versionCode = AppInfoHelper.getVersionCode(requireContext())
         val (versionName, suffix) = AppInfoHelper.getSplitVersion(requireContext())
@@ -155,6 +159,7 @@ class AboutFragment : Fragment() {
     // БЛОК «УСТРОЙСТВО»
     // ============================================================
 
+    /** Заполняет модель/версию Android/SDK/производителя. */
     private fun setupDeviceInfo() {
         deviceModelText.text = Build.MODEL.ifEmpty { getString(R.string.unknown) }
         deviceAndroidText.text = Build.VERSION.RELEASE.ifEmpty { getString(R.string.unknown) }
@@ -166,6 +171,7 @@ class AboutFragment : Fragment() {
     // БЛОК «КОНТАКТЫ»
     // ============================================================
 
+    /** Вешает клики на строки Telegram и GitHub. */
     private fun setupContacts() {
         contactTelegramRow.setOnClickListener {
             openUrl(CoreConfig.CONTACT_TELEGRAM_URL)
@@ -176,6 +182,7 @@ class AboutFragment : Fragment() {
         }
     }
 
+    /** Открывает ссылку во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -222,6 +229,7 @@ class AboutFragment : Fragment() {
         }
     }
 
+    /** Показывает toast «Осталось нажатий: N». */
     private fun showProgressToast(remaining: Int) {
         progressToast?.cancel()
         progressToast = Toast.makeText(

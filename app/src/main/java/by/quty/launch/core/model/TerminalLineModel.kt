@@ -6,6 +6,7 @@ data class TerminalLineModel(
     val type: LineType,
     val text: String
 ) {
+    /** Тип строки терминала. */
     enum class LineType {
         INPUT,
         OUTPUT,

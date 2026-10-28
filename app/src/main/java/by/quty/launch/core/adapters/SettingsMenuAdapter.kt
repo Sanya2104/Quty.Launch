@@ -28,11 +28,13 @@ class SettingsMenuAdapter(
 
     private var selectedItemId: Int = -1
 
+    /** Возвращает тип view (обычный пункт или спейсер). */
     override fun getItemViewType(position: Int): Int {
         val item = items[position]
         return if (item.id < 0) VIEW_TYPE_SPACER else VIEW_TYPE_ITEM
     }
 
+    /** Создаёт ViewHolder пункта меню или спейсера. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             VIEW_TYPE_SPACER -> {
@@ -54,6 +56,7 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** Биндит пункт меню или спейсер. */
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = items[position]
         when (holder) {
@@ -66,8 +69,10 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** Возвращает количество элементов. */
     override fun getItemCount(): Int = items.size
 
+    /** Обновляет выбранный пункт и перерисовывает два затронутых view. */
     fun setSelectedItem(itemId: Int) {
         val oldPosition = items.indexOfFirst { it.id == selectedItemId }
         selectedItemId = itemId
@@ -81,10 +86,12 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** ViewHolder обычного пункта меню. */
     class ItemViewHolder(
         private val binding: ItemSettingsMenuBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        /** Заполняет иконку/заголовок/описание, маркер и выделение. */
         fun bind(
             item: MenuModel,
             isSelected: Boolean,
@@ -148,5 +155,6 @@ class SettingsMenuAdapter(
         }
     }
 
+    /** ViewHolder пустого спейсера. */
     class SpacerViewHolder(view: View) : RecyclerView.ViewHolder(view)
 }

@@ -37,6 +37,7 @@ class ApiMethodsFragment : Fragment() {
     private lateinit var otherContainer: LinearLayout
     private lateinit var emptyText: TextView
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,6 +46,7 @@ class ApiMethodsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_api_methods, container, false)
     }
 
+    /** Находит view, получает менеджеры и строит список. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -70,6 +72,7 @@ class ApiMethodsFragment : Fragment() {
         rebuild()
     }
 
+    /** Перестраивает список при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
         rebuild()
@@ -79,6 +82,7 @@ class ApiMethodsFragment : Fragment() {
     // ПОСТРОЕНИЕ СПИСКА
     // ============================================================
 
+    /** Строит секции «используется оболочкой» и «остальные». */
     private fun rebuild() {
         activeContainer.removeAllViews()
         otherContainer.removeAllViews()
@@ -234,6 +238,7 @@ class ApiMethodsFragment : Fragment() {
         return view
     }
 
+    /** Создаёт горизонтальный разделитель. */
     private fun createDivider(): View {
         val height = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -258,6 +263,7 @@ class ApiMethodsFragment : Fragment() {
     // ДИАЛОГ-ЛЕГЕНДА
     // ============================================================
 
+    /** Показывает диалог-легенду цветов галочек. */
     private fun showLegendDialog() {
         val dialogView = layoutInflater.inflate(
             R.layout.dialog_api_methods_legend,
@@ -289,6 +295,7 @@ class ApiMethodsFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)

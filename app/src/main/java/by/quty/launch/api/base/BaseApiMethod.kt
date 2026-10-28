@@ -43,6 +43,9 @@ abstract class BaseApiMethod<P> {
         }
     }
 
+    /** Реализация самого метода. */
     protected abstract suspend fun executeInternal(params: P?): String
+
+    /** Парсит строку params в P. */
     protected abstract fun parseParams(jsonString: String): P
 }

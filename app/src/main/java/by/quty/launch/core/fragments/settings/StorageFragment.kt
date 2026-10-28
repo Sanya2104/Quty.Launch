@@ -56,6 +56,7 @@ class StorageFragment : Fragment() {
 
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,6 +65,7 @@ class StorageFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_storage, container, false)
     }
 
+    /** Находит view и настраивает очистку. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -88,6 +90,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Обновляет размеры при возврате во фрагмент. */
     override fun onResume() {
         super.onResume()
 
@@ -102,6 +105,7 @@ class StorageFragment : Fragment() {
     // РАЗМЕРЫ
     // ============================================================
 
+    /** Пересчитывает размеры категорий и перерисовывает UI. */
     private fun refreshSizes() {
         viewLifecycleOwner.lifecycleScope.launch {
             val sizes = withContext(Dispatchers.IO) {
@@ -128,6 +132,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Собирает список категорий с их размерами. */
     private fun buildCategoriesWithSizes(): List<StorageCategoryItem> {
         val cacheAppSize = requireContext().cacheDir.walkTopDown()
             .filter { it.isFile }
@@ -185,6 +190,7 @@ class StorageFragment : Fragment() {
     // ПОЛОСА-ИНДИКАТОР
     // ============================================================
 
+    /** Перестраивает сегментированную полосу занятого места. */
     private fun rebuildBar() {
         barContainer.removeAllViews()
 
@@ -218,6 +224,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Подсвечивает выбранный сегмент и приглушает остальные. */
     private fun applyBarSelection(selectedId: String?) {
         for (i in 0 until barContainer.childCount) {
             val segment = barContainer.getChildAt(i)
@@ -273,6 +280,7 @@ class StorageFragment : Fragment() {
     // СПИСОК КАТЕГОРИЙ
     // ============================================================
 
+    /** Перестраивает список категорий с разделителями. */
     private fun rebuildCategoryList() {
         categoriesContainer.removeAllViews()
 
@@ -304,6 +312,7 @@ class StorageFragment : Fragment() {
         }
     }
 
+    /** Создаёт строку одной категории. */
     private fun createCategoryRow(category: StorageCategoryItem): View {
         val view = layoutInflater.inflate(
             R.layout.item_storage_category,
@@ -336,6 +345,7 @@ class StorageFragment : Fragment() {
     // ВЫБОР КАТЕГОРИИ
     // ============================================================
 
+    /** Переключает выбор категории. */
     private fun onCategoryClicked(category: StorageCategoryItem) {
         if (isClearing) return
 
@@ -351,6 +361,7 @@ class StorageFragment : Fragment() {
         applyListSelection(category.id)
     }
 
+    /** Подсвечивает выбранную строку списка категорий. */
     private fun applyListSelection(selectedId: String?) {
         for (i in 0 until categoriesContainer.childCount) {
             val row = categoriesContainer.getChildAt(i)
@@ -368,6 +379,7 @@ class StorageFragment : Fragment() {
     // МАССОВАЯ ОЧИСТКА
     // ============================================================
 
+    /** Показывает диалог выбора категорий для очистки. */
     private fun showMassClearDialog() {
         if (isClearing) return
 
@@ -450,6 +462,7 @@ class StorageFragment : Fragment() {
         dialog.show()
     }
 
+    /** Очищает выбранные категории и обновляет размеры. */
     private fun clearSelectedCategories(ids: Set<String>) {
         if (isClearing) return
         isClearing = true
@@ -501,6 +514,7 @@ class StorageFragment : Fragment() {
     // ПУСТОЕ СОСТОЯНИЕ
     // ============================================================
 
+    /** Переключает пустое состояние полосы. */
     private fun updateEmptyState() {
         val totalSize = categories.sumOf { it.size }
         if (totalSize <= 0) {
@@ -516,12 +530,14 @@ class StorageFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
+    /** Резолвит цвет темы по атрибуту. */
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
+    /** Модель категории памяти. */
     data class StorageCategoryItem(
         val id: String,
         val titleRes: Int,

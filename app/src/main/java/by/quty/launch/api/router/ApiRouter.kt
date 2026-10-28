@@ -23,6 +23,7 @@ object ApiRouter {
 
     private const val PARAMS_LOG_MAX_LENGTH = 120
 
+    /** Регистрирует метод по его имени. */
     fun register(method: BaseApiMethod<*>) {
         methods[method.name] = method
     }
@@ -81,18 +82,22 @@ object ApiRouter {
         }
     }
 
+    /** Возвращает список зарегистрированных методов. */
     fun getRegisteredMethods(): List<BaseApiMethod<*>> {
         return methods.values.toList()
     }
 
+    /** Помечает метод как вызванный за сессию. */
     fun markMethodActive(name: String) {
         activeMethods.add(name)
     }
 
+    /** Возвращает набор вызванных за сессию методов. */
     fun getActiveMethods(): Set<String> {
         return activeMethods.toSet()
     }
 
+    /** Очищает набор вызванных методов. */
     fun clearActiveMethods() {
         activeMethods.clear()
     }

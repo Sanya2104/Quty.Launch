@@ -27,16 +27,19 @@ class LoggerAdapter(
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
+    /** Создаёт ViewHolder строки лога. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logger_entry, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит одну запись. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(entries[position])
     }
 
+    /** Возвращает количество записей. */
     override fun getItemCount(): Int = entries.size
 
     /** Добавляет запись в начало (новые сверху). */
@@ -45,6 +48,7 @@ class LoggerAdapter(
         notifyItemInserted(0)
     }
 
+    /** Полностью заменяет список записей. */
     @SuppressLint("NotifyDataSetChanged")
     fun submitEntries(newEntries: List<LoggerEntryModel>) {
         entries.clear()
@@ -52,6 +56,7 @@ class LoggerAdapter(
         notifyDataSetChanged()
     }
 
+    /** Очищает все записи. */
     fun clearAll() {
         val sizeBefore = entries.size
         if (sizeBefore == 0) return
@@ -60,6 +65,7 @@ class LoggerAdapter(
         notifyItemRangeRemoved(0, sizeBefore)
     }
 
+    /** ViewHolder одной записи лога. */
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val levelBar: View = itemView.findViewById(R.id.logger_level_bar)
@@ -67,6 +73,7 @@ class LoggerAdapter(
         private val tagView: TextView = itemView.findViewById(R.id.logger_tag)
         private val messageView: TextView = itemView.findViewById(R.id.logger_message)
 
+        /** Красит полоску уровня, заполняет поля, вешает тап по details. */
         fun bind(entry: LoggerEntryModel) {
             val context = itemView.context
 
@@ -99,6 +106,7 @@ class LoggerAdapter(
             }
         }
 
+        /** Возвращает цвет полоски для уровня. */
         private fun getLevelColor(context: android.content.Context, level: LoggerLevelModel): Int {
             return when (level) {
                 LoggerLevelModel.DEBUG ->

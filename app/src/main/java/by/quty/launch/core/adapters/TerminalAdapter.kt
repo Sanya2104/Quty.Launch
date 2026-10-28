@@ -17,22 +17,27 @@ class TerminalAdapter(
     private val lines: List<TerminalLineModel>
 ) : RecyclerView.Adapter<TerminalAdapter.ViewHolder>() {
 
+    /** Создаёт ViewHolder строки терминала. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_terminal_line, parent, false)
         return ViewHolder(view)
     }
 
+    /** Биндит строку. */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(lines[position])
     }
 
+    /** Возвращает количество строк. */
     override fun getItemCount(): Int = lines.size
 
+    /** ViewHolder одной строки терминала. */
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val textView: TextView = itemView.findViewById(R.id.terminal_line_text)
 
+        /** Красит и подписывает строку в зависимости от типа. */
         fun bind(line: TerminalLineModel) {
             val context = itemView.context
 
@@ -54,6 +59,7 @@ class TerminalAdapter(
             }
         }
 
+        /** Резолвит цвет темы по атрибуту. */
         private fun getThemeColor(context: android.content.Context, attr: Int): Int {
             val typedValue = android.util.TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)

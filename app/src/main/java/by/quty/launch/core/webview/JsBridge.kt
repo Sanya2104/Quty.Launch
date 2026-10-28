@@ -14,7 +14,7 @@ import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Мост JS ↔ Kotlin: асинхронные вызовы API и push-уведомления оболочке.
+ * Мост JS - Kotlin: асинхронные вызовы API и push-уведомления оболочке.
  */
 class JsBridge(
     private val core: Core,
@@ -27,6 +27,7 @@ class JsBridge(
 
     private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /** Сохраняет слабую ссылку на WebView для отправки результатов. */
     fun setWebView(webView: LauncherWebView) {
         webViewRef = WeakReference(webView)
     }

@@ -58,6 +58,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** Инициализирует ядро, WebView, JsBridge, оболочку и авто-проверку обновлений. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -176,11 +177,13 @@ class MainActivity : BaseActivity() {
         finishAnimated()
     }
 
+    /** Снимает колбэки и сбрасывает состояние удержания Volume Down. */
     private fun clearSafeModeState() {
         handler.removeCallbacks(safeModeRunnable)
         isVolumeDownHeld = false
     }
 
+    /** Чистит состояние Safe Mode при уничтожении. */
     override fun onDestroy() {
         clearSafeModeState()
         super.onDestroy()
@@ -190,6 +193,7 @@ class MainActivity : BaseActivity() {
     // ОСТАЛЬНАЯ ЛОГИКА
     // ============================================================
 
+    /** Логирует новый интент (например, повторный запуск лаунчера). */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         LoggerManager.debug(
@@ -220,6 +224,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** При возврате применяет ориентацию, язык, анимации, immersive и авто-проверку. */
     override fun onResume() {
         super.onResume()
 
@@ -260,6 +265,7 @@ class MainActivity : BaseActivity() {
         maybeRunAutoUpdateCheck()
     }
 
+    /** Уведомляет оболочку о смене конфигурации. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -272,6 +278,7 @@ class MainActivity : BaseActivity() {
     // ФОНОВАЯ АВТО-ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
+    /** Запускает фоновую авто-проверку обновлений, если пришло время. */
     private fun maybeRunAutoUpdateCheck() {
         if (!::updateManager.isInitialized) return
         if (isAutoCheckRunning) return

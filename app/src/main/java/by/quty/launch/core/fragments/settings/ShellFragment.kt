@@ -57,6 +57,7 @@ class ShellFragment : Fragment() {
 
     private var needsRestart = false
 
+    /** Создаёт view фрагмента. */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -65,6 +66,7 @@ class ShellFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings_shell, container, false)
     }
 
+    /** Находит view, настраивает все секции и обновляет активную оболочку. */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -102,6 +104,7 @@ class ShellFragment : Fragment() {
         refreshActiveShell()
     }
 
+    /** Обновляет активную оболочку, анимации и Safe Mode при возврате. */
     override fun onResume() {
         super.onResume()
 
@@ -154,6 +157,7 @@ class ShellFragment : Fragment() {
     // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
+    /** Обновляет карточку активной оболочки. */
     private fun refreshActiveShell() {
         val shell = shellManager.getActiveShell()
 
@@ -177,6 +181,7 @@ class ShellFragment : Fragment() {
         loadPreview(shell.previewBase64)
     }
 
+    /** Загружает превью оболочки из Base64 (или placeholder). */
     private fun loadPreview(base64: String?) {
         if (base64.isNullOrEmpty()) {
             shellPreview.setImageResource(R.drawable.ic_image)
@@ -196,6 +201,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Настраивает RecyclerView цветовых схем. */
     private fun setupColorSchemeSelector(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.color_scheme_list)
 
@@ -215,6 +221,7 @@ class ShellFragment : Fragment() {
         colorSchemeAdapter.setSelectedScheme(currentSchemeId)
     }
 
+    /** Применяет цветовую схему и пересоздаёт SettingsActivity. */
     private fun applyColorScheme(scheme: ColorSchemeModel) {
         configManager.setColorScheme(scheme.id)
 
@@ -231,6 +238,7 @@ class ShellFragment : Fragment() {
         (activity as? SettingsActivity)?.recreate()
     }
 
+    /** Настраивает switch анимаций с учётом системного флага. */
     private fun setupAnimationsSection() {
         val systemEnabled = configManager.isSystemAnimationEnabled()
         val userEnabled = configManager.isAnimationsEnabled()
@@ -254,6 +262,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Открывает экран магазина. */
     private fun openStore() {
         try {
             val intent = Intent(requireContext(), StoreActivity::class.java)
@@ -340,6 +349,7 @@ class ShellFragment : Fragment() {
         dialog.show()
     }
 
+    /** Маппит технический код ориентации в локализованную строку. */
     private fun mapOrientation(orientation: String?): String {
         return when (orientation) {
             "portrait" -> getString(R.string.orientation_portrait)
@@ -350,6 +360,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Открывает URL во внешнем браузере. */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
