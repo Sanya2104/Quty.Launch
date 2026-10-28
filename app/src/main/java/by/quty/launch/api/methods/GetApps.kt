@@ -21,22 +21,22 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import java.io.ByteArrayOutputStream
 
+/**
+ * Список приложений (установленные + виртуальные) с иконками Base64.
+ */
 class GetApps(
     private val context: Context
 ) : BaseApiMethod<Unit>() {
 
-    // описание метода для ядра
     override val descriptionRes: Int
         get() = R.string.api_getapps_desc
 
-    // иконка метода для ядра
     override val iconRes: Int
         get() = R.drawable.ic_api_getapps
 
     override fun parseParams(jsonString: String) = Unit
 
     override suspend fun executeInternal(params: Unit?): String {
-        // 1. Пробуем получить из кэша
         val cachedApps = CacheManager.getCachedApps()
         if (cachedApps != null) {
             return json.encodeToString(
@@ -45,10 +45,7 @@ class GetApps(
             )
         }
 
-        // 2. Если кэша нет - загружаем свежие
         val freshApps = loadFreshApps()
-
-        // 3. Сохраняем в кэш (без маркеров — маркеры навешиваются на выдаче)
         CacheManager.saveApps(freshApps)
 
         return json.encodeToString(
@@ -57,19 +54,7 @@ class GetApps(
         )
     }
 
-    /**
-     * Вешает маркеры на приложения, которым они нужны.
-     *
-     * Сейчас: если в кэше SystemUpdateManager есть обновление ядра —
-     * маркер вешается на «Настройки Quty.Launch».
-     *
-     * Маркеры НЕ сохраняются в кэш приложений (CacheManager) — они
-     * динамические, зависят от текущего состояния. Кэш хранит «чистый»
-     * список, а маркеры навешиваются при каждой выдаче.
-     *
-     * HEX для маркера рассчитывается через BadgeHelper из R.color.status_* —
-     * источник правды один (colors.xml), а не дублирующие константы.
-     */
+    /** Вешает маркер «есть обновление» на «Настройки Quty.Launch». */
     private fun applyBadges(apps: List<AppInfo>): List<AppInfo> {
         val cachedUpdate = try {
             SystemUpdateManager(context).getCachedUpdate()
@@ -77,14 +62,12 @@ class GetApps(
             null
         }
 
-        // Нет обновления — возвращаем как есть
         if (cachedUpdate?.hasUpdate != true) {
             return apps
         }
 
         val versionInfo = cachedUpdate.versionInfo ?: return apps
 
-        // Семантика + HEX через BadgeHelper (единый источник правды)
         val (badgeColor, badgeColorHex) = BadgeHelper.resolveUpdateBadge(
             isCritical = versionInfo.isCritical,
             context = context
@@ -107,10 +90,6 @@ class GetApps(
     private suspend fun loadFreshApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val packageManager = context.packageManager
 
-        // Android 11+ ограничивает видимость пакетов.
-        // Мы используем getInstalledApplications(0) + фильтр по LAUNCHER,
-        // что соответствует объявленному в манифесте <queries>.
-        // Это позволяет видеть только приложения с иконкой на рабочем столе.
         val realApps = packageManager
             .getInstalledApplications(0)
             .filter { packageManager.getLaunchIntentForPackage(it.packageName) != null }
@@ -120,31 +99,21 @@ class GetApps(
                     name = packageManager.getApplicationLabel(appInfo).toString(),
                     packageName = appInfo.packageName,
                     isCustom = false,
-                    iconBase64 = drawableToBase64(icon)  // иконка обычного приложения
+                    iconBase64 = drawableToBase64(icon)
                 )
             }
-            .sortedBy { it.name }  // Сортируем обычные приложения по алфавиту
+            .sortedBy { it.name }
 
-        // Кастомные приложения.
-        // Для кастомных используем PNG-иконки (ic_app_*) из drawable-nodpi,
-        // а не VectorDrawable — у вектора tint задан через ?attr/iconTintColor,
-        // который не резолвится в applicationContext, и иконка получается пустой.
-        //
-        // Порядок — строго по алфавиту отображаемых имён:
-        // Logger, Settings, Store, Terminal.
         val customApps = mutableListOf<AppInfo>()
 
-        // Проверяем DevMode — без него Терминал и Логгер скрыты
         val developerPrefs = context.getSharedPreferences(
             PREFS_DEVELOPER, Context.MODE_PRIVATE
         )
         val devMode = developerPrefs.getBoolean(KEY_DEVELOPER_MODE, false)
 
-        // Флаги отображения Терминала и Логгера в списке приложений
         val showTerminal = devMode && developerPrefs.getBoolean(KEY_SHOW_TERMINAL, false)
         val showLogger = devMode && developerPrefs.getBoolean(KEY_SHOW_LOGGER, false)
 
-        // 1. Настройки Quty.Launch
         val settingsIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_settings)
         val settingsIconBase64 = settingsIcon?.let { drawableToBase64(it) }
 
@@ -157,7 +126,6 @@ class GetApps(
             )
         )
 
-        // 2. Магазин оболочек (всегда доступен)
         val storeIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_store)
         val storeIconBase64 = storeIcon?.let { drawableToBase64(it) }
 
@@ -170,7 +138,6 @@ class GetApps(
             )
         )
 
-        // 3. Терминал — только если включён DevMode и флаг showTerminal
         if (showTerminal) {
             val terminalIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_terminal)
             val terminalIconBase64 = terminalIcon?.let { drawableToBase64(it) }
@@ -185,7 +152,6 @@ class GetApps(
             )
         }
 
-        // 4. Логгер — только если включён DevMode и флаг showLogger
         if (showLogger) {
             val loggerIcon = ContextCompat.getDrawable(context, R.drawable.ic_app_logger)
             val loggerIconBase64 = loggerIcon?.let { drawableToBase64(it) }
@@ -200,19 +166,10 @@ class GetApps(
             )
         }
 
-        // Объединяем: сначала кастомные, потом обычные
         customApps + realApps
     }
 
-    /**
-     * Конвертирует Drawable в Base64 строку.
-     *
-     * Используем androidx.core.graphics.drawable.toBitmap() — он корректно
-     * обрабатывает BitmapDrawable, VectorDrawable, AdaptiveIconDrawable.
-     *
-     * Base64.NO_WRAP — без переносов строк, иначе data:image/png;base64,...
-     * не работает в WebView.
-     */
+    /** Конвертирует Drawable в Base64 PNG (NO_WRAP). */
     private fun drawableToBase64(drawable: Drawable): String? {
         return try {
             val bitmap = drawable.toBitmap(
@@ -231,7 +188,6 @@ class GetApps(
     }
 
     companion object {
-        // SharedPreferences с настройками DevMode
         private const val PREFS_DEVELOPER = "developer_prefs"
         private const val KEY_DEVELOPER_MODE = "developer_mode"
         private const val KEY_SHOW_TERMINAL = "show_terminal_in_apps"

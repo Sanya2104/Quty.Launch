@@ -14,36 +14,13 @@ import by.quty.launch.core.model.StoreItemModel
 import com.bumptech.glide.Glide
 
 /**
- * Адаптер для списка элементов магазина.
- *
- * Карточка-строка (стиль Google Play):
- * - превью слева (140×100dp);
- * - название + автор/версия + размер/дата по центру;
- * - статусные плашки снизу.
- *
- * Кнопок действий в карточке нет — установка/обновление/применение
- * выполняются в детальном экране (StoreItemDetailFragment).
- *
- * Превью: приоритет — previewUrl (магазин), fallback — previewBase64 (локальный).
- *
- * Отображение версии в карточке:
- * - не установлено > показываем версию с сервера;
- * - установлено > показываем локальную (установленную) версию;
- * - есть обновление > плашка «Доступна v<remote>»;
- * - installed новее > плашка «Новее».
- *
- * Дата публикации в метаданных конвертируется из ISO-формата сервера
- * (YYYY-MM-DD) в человекочитаемый (DD.MM.YYYY) — единый формат
- * с детальным экраном (StoreItemDetailFragment).
+ * Карточка элемента магазина: превью, имя, автор/версия, метаданные, плашки.
  */
 class StoreItemAdapter(
     private var items: List<StoreItemModel>,
     private val onItemClick: (StoreItemModel) -> Unit
 ) : RecyclerView.Adapter<StoreItemAdapter.ViewHolder>() {
 
-    // Форматтеры даты. Не SimpleDateFormat как поле класса — он не потокобезопасен,
-    // а адаптер может использоваться в разных местах. Создаём при каждом вызове
-    // formatDate() — операция дешёвая по сравнению с bind() и IO.
     private val inputDateFormat = "yyyy-MM-dd"
     private val outputDateFormat = "dd.MM.yyyy"
 
@@ -59,23 +36,11 @@ class StoreItemAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    /**
-     * Заменяет весь список.
-     *
-     * Использует точечные уведомления:
-     * - если состав и порядок (по name) не изменились — notifyItemChanged
-     *   только для реально изменившихся записей;
-     * - иначе — notifyItemRangeRemoved + notifyItemRangeInserted.
-     *
-     * notifyDataSetChanged() не используется — lint flag + плохой UX
-     * (перерисовка всех ячеек, потеря позиции скролла).
-     */
+    /** Точечные уведомления: changed — если состав/порядок тот же, иначе remove+insert. */
     fun submitItems(newItems: List<StoreItemModel>) {
         val oldItems = items
         items = newItems
 
-        // Быстрый путь: тот же состав и порядок по name —
-        // точечно обновляем только изменившиеся элементы.
         if (oldItems.size == newItems.size &&
             oldItems.map { it.name } == newItems.map { it.name }
         ) {
@@ -87,7 +52,6 @@ class StoreItemAdapter(
             return
         }
 
-        // Состав/размер другой — сбрасываем и вставляем заново.
         if (oldItems.isNotEmpty()) {
             notifyItemRangeRemoved(0, oldItems.size)
         }
@@ -96,13 +60,7 @@ class StoreItemAdapter(
         }
     }
 
-    /**
-     * Конвертирует ISO-дату (YYYY-MM-DD) в человекочитаемый формат
-     * (DD.MM.YYYY). Используется в метаданных карточки, чтобы дата
-     * выглядела одинаково с детальным экраном.
-     *
-     * Если дата пустая или парсинг не удался — возвращает исходную строку.
-     */
+    /** ISO YYYY-MM-DD → DD.MM.YYYY. */
     private fun formatDate(isoDate: String): String {
         if (isoDate.isBlank()) return ""
 
@@ -132,19 +90,11 @@ class StoreItemAdapter(
         fun bind(item: StoreItemModel) {
             val context = itemView.context
 
-            // Превью — приоритет URL, fallback Base64
             bindPreview(item)
 
-            // Название
             nameText.text = item.displayName
 
-            // Автор · версия.
-            //
-            // Логика отображения версии в карточке:
-            // - установлено > показываем локальную (установленную) версию;
-            // - не установлено > показываем версию с сервера.
-            // Версия «с сервера» при наличии обновления / «новее»
-            // показывается отдельной плашкой снизу (см. bindStatuses).
+            // Версия: installed приоритет, иначе remote/fallback.
             val displayVersion: String? = when {
                 item.isInstalled && !item.installedVersion.isNullOrEmpty() -> item.installedVersion
                 else -> item.remoteInfo?.version ?: item.version
@@ -159,8 +109,6 @@ class StoreItemAdapter(
             )
 
             // Метаданные: размер · дата, иначе тип.
-            // Дата конвертируется из ISO (YYYY-MM-DD) в DD.MM.YYYY —
-            // единый формат с детальным экраном магазина.
             val metaParts = mutableListOf<String>()
             item.fileSize?.takeIf { it.isNotBlank() }?.let { metaParts.add(it) }
             item.datePublished?.takeIf { it.isNotBlank() }?.let { metaParts.add(formatDate(it)) }
@@ -175,18 +123,14 @@ class StoreItemAdapter(
             }
             metaText.text = metaParts.joinToString(" · ")
 
-            // Клик по карточке > детали
             itemView.setOnClickListener {
                 onItemClick(item)
             }
 
-            // ==== СТАТУСЫ ====
             bindStatuses(item)
         }
 
-        /**
-         * Загружает превью: сначала previewUrl (Glide), fallback — previewBase64.
-         */
+        /** previewUrl приоритет, fallback previewBase64. */
         private fun bindPreview(item: StoreItemModel) {
             val context = itemView.context
 
@@ -219,14 +163,7 @@ class StoreItemAdapter(
             }
         }
 
-        /**
-         * Заполняет статусные плашки.
-         *
-         * - «Активна» — isActive;
-         * - «Доступна v<remote>» — updateAvailable (версия с сервера новее);
-         * - «Установлено» — isInstalled && !isActive;
-         * - «Новее» — installedIsNewer (локальная версия новее серверной).
-         */
+        /** Плашки: Активна / Доступна v… / Установлено / Новее. */
         private fun bindStatuses(item: StoreItemModel) {
             val context = itemView.context
 

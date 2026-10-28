@@ -35,50 +35,25 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Фрагмент "Память" для Настроек
- *
- * Показывает занятое место по категориям в виде полосы-индикатора
- * и списка с возможностью очистки.
- *
- * Категории:
- * - Кэш (CACHE + context.cacheDir)
- * - Временные (TEMP)
- * - Обновления (UPDATES)
- * - Логи (LOGS)
- * - Оболочки (SHELLS) — не очищаются здесь
- *
- * Клик по категории — только выделение (полоса + строка).
- * Очистка — только через кнопку «Очистка» (диалог dialog_storage_clear).
- *
- * После очистки помечаем SettingsActivity как «требуется перезапуск»
- * (markRestartRequired) — при выходе появится диалог «Применить параметры».
- *
- * Разметка строки категории вынесена в item_storage_category.xml,
- * диалог очистки — в dialog_storage_clear.xml.
+ * «Память»: занятое место по категориям + массовая очистка.
  */
 class StorageFragment : Fragment() {
 
-    // Менеджеры
     private lateinit var storageManager: StorageManager
     private lateinit var configManager: ConfigManager
 
-    // UI
     private lateinit var barContainer: LinearLayout
     private lateinit var categoriesContainer: LinearLayout
     private lateinit var clearButton: Button
     private lateinit var emptyText: TextView
     private lateinit var totalValue: TextView
 
-    // Список категорий
     private val categories = mutableListOf<StorageCategoryItem>()
 
-    // Текущая выбранная категория (null = ничего не выбрано)
     private var selectedCategoryId: String? = null
 
-    // Идёт ли сейчас очистка (блокируем повторные клики)
     private var isClearing = false
 
-    // Флаг: была ли очистка (для показа диалога перезапуска при выходе)
     private var needsRestart = false
 
     override fun onCreateView(
@@ -106,7 +81,6 @@ class StorageFragment : Fragment() {
         emptyText = view.findViewById(R.id.storage_empty)
         totalValue = view.findViewById(R.id.storage_total_value)
 
-        // Скругление полосы-индикатора (clipToOutline доступен с API 21)
         barContainer.clipToOutline = true
 
         clearButton.setOnClickListener {
@@ -117,17 +91,15 @@ class StorageFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        // Синхронизируем флаг необходимости перезапуска с активностью
         (activity as? SettingsActivity)?.let {
             needsRestart = it.getNeedsRestart()
         }
 
-        // Пересчитываем размеры при каждом входе — данные меняются вне раздела
         refreshSizes()
     }
 
     // ============================================================
-    // ПОДСЧЁТ РАЗМЕРОВ
+    // РАЗМЕРЫ
     // ============================================================
 
     private fun refreshSizes() {
@@ -139,19 +111,16 @@ class StorageFragment : Fragment() {
             categories.clear()
             categories.addAll(sizes)
 
-            // Если ранее выбранная категория исчезла — сбрасываем выделение
             if (selectedCategoryId != null && categories.none { it.id == selectedCategoryId }) {
                 selectedCategoryId = null
             }
 
-            // Итого по всем категориям
             val total = categories.sumOf { it.size }
             totalValue.text = storageManager.formatSize(total)
 
             rebuildBar()
             rebuildCategoryList()
 
-            // Применяем сохранённое выделение (если есть)
             applyBarSelection(selectedCategoryId)
             applyListSelection(selectedCategoryId)
 
@@ -364,7 +333,7 @@ class StorageFragment : Fragment() {
     }
 
     // ============================================================
-    // КЛИК ПО КАТЕГОРИИ
+    // ВЫБОР КАТЕГОРИИ
     // ============================================================
 
     private fun onCategoryClicked(category: StorageCategoryItem) {
@@ -396,7 +365,7 @@ class StorageFragment : Fragment() {
     }
 
     // ============================================================
-    // ДИАЛОГ МАССОВОЙ ОЧИСТКИ
+    // МАССОВАЯ ОЧИСТКА
     // ============================================================
 
     private fun showMassClearDialog() {
@@ -442,9 +411,6 @@ class StorageFragment : Fragment() {
 
             row.alpha = if (isEmpty) 0.5f else 1f
 
-            // Клик по всей строке — переключает чекбокс.
-            // Сам чекбокс некликабельный (isClickable=false в XML),
-            // поэтому двойного переключения не будет.
             if (!isEmpty) {
                 row.setOnClickListener {
                     cb.isChecked = !cb.isChecked

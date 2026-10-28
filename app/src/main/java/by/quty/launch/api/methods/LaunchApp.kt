@@ -14,15 +14,16 @@ import by.quty.launch.TerminalActivity
 import by.quty.launch.configs.ApiConfig
 import kotlinx.serialization.builtins.serializer
 
+/**
+ * Запуск приложения по имени пакета (в т.ч. виртуальных).
+ */
 class LaunchApp(
     private val context: Context
 ) : BaseApiMethod<LaunchAppParams>() {
 
-    // описание метода для ядра
     override val descriptionRes: Int
         get() = R.string.api_launchapp_desc
 
-    // иконка метода для ядра
     override val iconRes: Int
         get() = R.drawable.ic_api_launchapp
 
@@ -36,31 +37,26 @@ class LaunchApp(
 
         when (packageName) {
             ApiConfig.SETTINGS_PACKAGE -> {
-                // Открываем Настройки
                 val intent = Intent(context, SettingsActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
             ApiConfig.STORE_PACKAGE -> {
-                // Открываем Магазин
                 val intent = Intent(context, StoreActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
             ApiConfig.TERMINAL_PACKAGE -> {
-                // Открываем Терминал
                 val intent = Intent(context, TerminalActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
             ApiConfig.LOGGER_PACKAGE -> {
-                // Открываем Логгер
                 val intent = Intent(context, LoggerActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
             }
             else -> {
-                // Обычное приложение
                 val intent = context.packageManager
                     .getLaunchIntentForPackage(packageName)
                     ?: throw IllegalArgumentException(context.getString(R.string.api_launchapp_not_found))

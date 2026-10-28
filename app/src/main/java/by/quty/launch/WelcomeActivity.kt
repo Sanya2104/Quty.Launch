@@ -24,21 +24,12 @@ import by.quty.launch.core.managers.PermissionManager
 import by.quty.launch.core.model.LoggerTagModel
 
 /**
- * Активность приветствия (онбординг)
- * Запрашивает необходимые разрешения перед запуском приложения
- *
- * UI построен по тому же паттерну, что и фрагменты настроек:
- * - шапка-карточка с иконкой приложения и заголовком;
- * - секция «Разрешения» — заголовок со счётчиком «X из Y» + карточка bg_card_rounded;
- * - секция прогресса — общий прогресс по обязательным разрешениям;
- * - кнопка действия + опциональный блок ошибки.
+ * Онбординг: запрашивает обязательные разрешения перед стартом.
  */
 class WelcomeActivity : BaseActivity() {
 
-    // Код запроса разрешений (из конфига) — используется только в legacy-пути
     private val permissionRequestCode = CoreConfig.PERMISSION_REQUEST_CODE
 
-    // UI элементы
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
     private lateinit var permissionsCounter: TextView
@@ -48,16 +39,12 @@ class WelcomeActivity : BaseActivity() {
     private lateinit var btnSettings: Button
     private lateinit var permissionsContainer: LinearLayout
 
-    // Карта статусов разрешений (permission → TextView статуса в item'е)
+    /** permission → TextView статуса. */
     private val permissionStatusViews = mutableMapOf<String, TextView>()
 
-    // Флаг, что мы уже запрашивали разрешения
     private var isRequestingPermissions = false
-
-    // Флаг, что активность уже завершается
     private var isFinishingActivity = false
 
-    // Регистрируем ActivityResult для запроса разрешений (Android 11+)
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
@@ -80,7 +67,6 @@ class WelcomeActivity : BaseActivity() {
         updatePermissionsUI()
         setupListeners()
 
-        // Проверяем, все ли разрешения уже есть
         if (PermissionManager.hasAllRequiredPermissions(this)) {
             finishAndGoToMain()
         }
@@ -123,7 +109,6 @@ class WelcomeActivity : BaseActivity() {
 
         val inflater = layoutInflater
 
-        // Список разрешений с иконками, названиями, описаниями
         val permissionsData = listOf(
             PermissionItem(
                 permission = Manifest.permission.READ_PHONE_STATE,
@@ -158,36 +143,29 @@ class WelcomeActivity : BaseActivity() {
                 false
             )
 
-            // Иконка + tint из темы
             val icon = row.findViewById<AppCompatImageView>(R.id.permission_icon)
             icon.setImageResource(item.iconRes)
             icon.imageTintList = android.content.res.ColorStateList.valueOf(
                 getColorFromAttribute(R.attr.textPrimaryColor)
             )
 
-            // Название / описание
             row.findViewById<TextView>(R.id.permission_title).text = getString(item.titleRes)
             row.findViewById<TextView>(R.id.permission_description).text = getString(item.descRes)
 
-            // Статус (id — для последующего обновления)
             val statusView = row.findViewById<TextView>(R.id.permission_status)
             permissionStatusViews[item.permission] = statusView
 
-            // Клик по строке — открыть системные настройки приложения
             row.setOnClickListener { openAppSettings() }
 
             permissionsContainer.addView(row)
 
-            // Разделитель между строками (как в настройках)
             if (index < permissionsData.lastIndex) {
                 permissionsContainer.addView(createDivider())
             }
         }
     }
 
-    /**
-     * Разделитель между строками внутри карточки.
-     */
+    /** Разделитель между строками разрешений. */
     private fun createDivider(): View {
         val height = (1 * resources.displayMetrics.density).toInt()
         val margin = resources.getDimensionPixelSize(R.dimen.spacing_l)
@@ -219,9 +197,6 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Запрашивает все необходимые разрешения
-     */
     private fun requestAllPermissions() {
         if (isRequestingPermissions) return
         isRequestingPermissions = true
@@ -234,13 +209,9 @@ class WelcomeActivity : BaseActivity() {
             return
         }
 
-        // Используем ActivityResult для Android 11+
         permissionLauncher.launch(missingPermissions.toTypedArray())
     }
 
-    /**
-     * Обрабатывает результаты запроса разрешений
-     */
     private fun handlePermissionResults(results: Map<String, Boolean>) {
         isRequestingPermissions = false
 
@@ -249,7 +220,6 @@ class WelcomeActivity : BaseActivity() {
         if (allGranted) {
             finishAndGoToMain()
         } else {
-            // Проверяем, были ли отклонены разрешения навсегда
             val hasDeniedPermanently = results.entries.any { (permission, granted) ->
                 !granted && !ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
             }
@@ -257,7 +227,6 @@ class WelcomeActivity : BaseActivity() {
             if (hasDeniedPermanently) {
                 showPermissionDeniedError()
             } else {
-                // Разрешения были отклонены, но их можно запросить снова
                 Toast.makeText(
                     this,
                     getString(R.string.welcome_permission_denied_message),
@@ -280,13 +249,11 @@ class WelcomeActivity : BaseActivity() {
         isRequestingPermissions = false
 
         if (requestCode == permissionRequestCode) {
-            // Для обратной совместимости со старыми устройствами
             val allGranted = PermissionManager.hasAllRequiredPermissions(this)
 
             if (allGranted) {
                 finishAndGoToMain()
             } else {
-                // Проверяем, были ли отклонены разрешения навсегда
                 val hasDeniedPermanently = permissions.indices.any { i ->
                     !grantResults[i].isGranted() &&
                             !ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])
@@ -312,11 +279,8 @@ class WelcomeActivity : BaseActivity() {
         return this == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Обновляет статусы разрешений в карточке, счётчик и прогресс-бар.
-     */
+    /** Обновляет статусы, счётчик, прогресс-бар и кнопку. */
     private fun updatePermissionsUI() {
-        // Обновляем статусы строк
         for ((permission, statusView) in permissionStatusViews) {
             val isGranted = PermissionManager.hasPermission(this, permission)
             statusView.text = if (isGranted) {
@@ -333,7 +297,6 @@ class WelcomeActivity : BaseActivity() {
             )
         }
 
-        // Подсчитываем прогресс
         val requiredPermissions = PermissionManager.getRequiredPermissions()
         val totalCount = requiredPermissions.size
 
@@ -341,7 +304,6 @@ class WelcomeActivity : BaseActivity() {
             PermissionManager.hasPermission(this, permission)
         }
 
-        // Счётчик «X из Y» рядом с заголовком секции
         permissionsCounter.text = getString(
             R.string.welcome_permissions_counter,
             grantedCount,
@@ -407,8 +369,6 @@ class WelcomeActivity : BaseActivity() {
         prefs.edit {
             putBoolean("onboarding_completed", true)
             putLong("onboarding_timestamp", System.currentTimeMillis())
-            // Снимаем флаг принудительного показа онбординга —
-            // следующий запуск пойдёт сразу в Main.
             remove("force_show_onboarding")
         }
 
@@ -426,12 +386,7 @@ class WelcomeActivity : BaseActivity() {
 
         updatePermissionsUI()
 
-        // Если стоит флаг force_show_onboarding (после сброса онбординга
-        // из DevMode) — НЕ автозапускаем Main, даже если все разрешения уже
-        // выданы. Пользователь увидит экран приветствия и сам нажмёт "Начать".
-        //
-        // Флаг снимается в finishAndGoToMain() — то есть после того, как
-        // пользователь пройдёт онбординг (или нажмёт "Начать").
+        // force_show_onboarding: не автозапускаем Main, даже если разрешения уже есть.
         val forceShow = getSharedPreferences("launcher_prefs", MODE_PRIVATE)
             .getBoolean("force_show_onboarding", false)
 
@@ -442,16 +397,12 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Получает цвет из атрибута темы
-     */
     private fun getColorFromAttribute(attr: Int): Int {
         val typedValue = android.util.TypedValue()
         theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 
-    // Внутренний класс для данных разрешения
     data class PermissionItem(
         val permission: String,
         val iconRes: Int,

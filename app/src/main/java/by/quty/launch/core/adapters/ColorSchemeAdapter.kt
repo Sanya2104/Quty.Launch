@@ -15,12 +15,7 @@ import by.quty.launch.R
 import by.quty.launch.core.model.ColorSchemeModel
 
 /**
- * Адаптер для отображения цветовых схем в виде квадратиков
- * Используется в настройках оформления
- *
- * Выбранная схема обводится **цветом самой схемы** с прозрачным gap'ом
- * между ring'ом и цветным квадратом — это гармонирует с квадратиком
- * и работает одинаково в светлой и тёмной теме.
+ * Квадратики цветовых схем; выбранная обводится цветом схемы.
  */
 class ColorSchemeAdapter(
     private val onSchemeSelected: (ColorSchemeModel) -> Unit
@@ -40,18 +35,11 @@ class ColorSchemeAdapter(
         val isSelected = scheme.id == selectedSchemeId
 
         holder.bind(scheme, isSelected) {
-            // Сохраняем старый ID для сравнения
             val oldSelectedId = selectedSchemeId
-
-            // Обновляем выбранный ID
             selectedSchemeId = scheme.id
 
-            // Обновляем только изменившиеся элементы
             if (oldSelectedId != scheme.id) {
-                // Находим позицию старого выбранного элемента
                 val oldPosition = schemes.indexOfFirst { it.id == oldSelectedId }
-
-                // Обновляем новый и старый элементы
                 if (oldPosition >= 0) {
                     notifyItemChanged(oldPosition)
                 }
@@ -64,16 +52,13 @@ class ColorSchemeAdapter(
 
     override fun getItemCount(): Int = schemes.size
 
-    /**
-     * Устанавливает выбранную схему
-     */
+    /** Устанавливает выбранную схему и обновляет два затронутых элемента. */
     fun setSelectedScheme(schemeId: String) {
         if (selectedSchemeId != schemeId) {
             val oldPosition = schemes.indexOfFirst { it.id == selectedSchemeId }
             selectedSchemeId = schemeId
             val newPosition = schemes.indexOfFirst { it.id == schemeId }
 
-            // Обновляем оба элемента
             if (oldPosition >= 0) {
                 notifyItemChanged(oldPosition)
             }
@@ -90,31 +75,25 @@ class ColorSchemeAdapter(
         fun bind(scheme: ColorSchemeModel, isSelected: Boolean, onClick: () -> Unit) {
             val context = itemView.context
 
-            // Устанавливаем цвет фона (сам цвет схемы)
             val primaryColor = ContextCompat.getColor(context, scheme.primaryRes)
             colorView.setBackgroundColor(primaryColor)
 
-            // Показываем обводку для выбранного
             if (isSelected) {
-                // Толщина ring'а и радиус (переименовали, чтобы не путать с cornerRadius свойства)
                 val ringWidth = context.resources.getDimensionPixelSize(R.dimen.spacing_xxs)
                 val radiusPx = context.resources.getDimension(R.dimen.radius_medium)
 
-                // Внешний ring — цветом схемы
                 val outerRing = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
                     cornerRadius = radiusPx
                     setStroke(ringWidth, primaryColor)
                 }
 
-                // Внутренний ring — цветом фона (gap между внешним ring'ом и цветным квадратом)
                 val innerRing = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
                     cornerRadius = radiusPx - ringWidth
                     setStroke(ringWidth, getThemeColor(context, R.attr.colorSurface))
                 }
 
-                // Накладываем слои: внешний ring + внутренний ring
                 val layer = LayerDrawable(arrayOf(outerRing, innerRing))
                 layer.setLayerInset(1, ringWidth, ringWidth, ringWidth, ringWidth)
 
@@ -125,13 +104,9 @@ class ColorSchemeAdapter(
                 selectedIndicator.visibility = View.GONE
             }
 
-            // Обработка клика
             itemView.setOnClickListener { onClick() }
         }
 
-        /**
-         * Получает цвет из атрибута темы.
-         */
         private fun getThemeColor(context: Context, attr: Int): Int {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)

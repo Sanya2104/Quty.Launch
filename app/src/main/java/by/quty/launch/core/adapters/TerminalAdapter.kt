@@ -11,12 +11,7 @@ import by.quty.launch.R
 import by.quty.launch.core.model.TerminalLineModel
 
 /**
- * Адаптер для лога терминала.
- *
- * Каждая строка — TextView с цветом и префиксом в зависимости от типа:
- * - INPUT → "> " акцентным цветом
- * - OUTPUT → без префикса, обычный цвет
- * - ERROR → "! " красным цветом
+ * Строка терминала: INPUT «> », ERROR «! », OUTPUT без префикса.
  */
 class TerminalAdapter(
     private val lines: List<TerminalLineModel>
@@ -44,7 +39,6 @@ class TerminalAdapter(
             when (line.type) {
                 TerminalLineModel.LineType.INPUT -> {
                     textView.text = "> ${line.text}"
-                    // Акцентный цвет из темы — учитывает выбранную цветовую схему
                     textView.setTextColor(getThemeColor(context, R.attr.buttonPrimaryColor))
                 }
                 TerminalLineModel.LineType.OUTPUT -> {
@@ -60,9 +54,6 @@ class TerminalAdapter(
             }
         }
 
-        /**
-         * Получает цвет из атрибута темы.
-         */
         private fun getThemeColor(context: android.content.Context, attr: Int): Int {
             val typedValue = android.util.TypedValue()
             context.theme.resolveAttribute(attr, typedValue, true)

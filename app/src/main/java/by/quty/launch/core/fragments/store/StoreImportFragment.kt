@@ -27,16 +27,13 @@ import by.quty.launch.core.managers.ShellPreviewResult
 import kotlinx.coroutines.launch
 
 /**
- * Фрагмент «Импорт» магазина.
- *
- * Импорт оболочки из файловой системы через SAF (OpenDocument).
+ * Импорт оболочки: SAF → preview → диалог → importShell.
  */
 class StoreImportFragment : Fragment() {
 
     private lateinit var shellManager: ShellManager
     private lateinit var configManager: ConfigManager
 
-    // ===== UI =====
     private lateinit var selectFileRow: View
 
     private lateinit var stateContainer: LinearLayout
@@ -48,7 +45,6 @@ class StoreImportFragment : Fragment() {
     private lateinit var stateBtnPrimary: Button
     private lateinit var stateBtnSecondary: Button
 
-    // ===== ActivityResult для SAF =====
     private val openDocumentLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -95,9 +91,7 @@ class StoreImportFragment : Fragment() {
     // SAF
     // ============================================================
 
-    /**
-     * Открывает системный файловый пикер.
-     */
+    /** MIME, потому что .qutyshell не зарегистрирован в системе. */
     private fun launchPicker() {
         try {
             openDocumentLauncher.launch(arrayOf("*/*"))
@@ -155,7 +149,7 @@ class StoreImportFragment : Fragment() {
         }
     }
 
-    /** Диалог предпросмотра */
+    /** Диалог предпросмотра с описанием и «Отмена»/«Продолжить». */
     private fun showPreviewDialog(uri: Uri, preview: ShellPreviewResult.Success) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_shell_import_preview, null)
 
@@ -182,7 +176,6 @@ class StoreImportFragment : Fragment() {
 
         nameView.text = preview.displayName
 
-        // Плашка «оболочка уже установлена»
         if (preview.alreadyExists) {
             warningView.isVisible = true
             warningView.setText(R.string.store_import_preview_already_exists)
@@ -210,7 +203,6 @@ class StoreImportFragment : Fragment() {
             orientationValue.text = orientationText
         }
 
-        // «Продолжить» в стиле Danger при перезаписи, иначе Primary
         if (preview.alreadyExists) {
             okButton.setText(R.string.store_import_overwrite_confirm)
         } else {
@@ -246,9 +238,6 @@ class StoreImportFragment : Fragment() {
                     showSuccess(result.shell.displayName ?: result.shell.name)
                 }
                 is ShellImportResult.Failure.AlreadyExists -> {
-                    // Гонка: между previewShell и importShell кто-то успел
-                    // создать файл с тем же именем. Показываем ещё раз
-                    // диалог подтверждения — простым confirm'ом.
                     showAlreadyExistsDialog(uri, result.name)
                 }
                 is ShellImportResult.Failure.UnsupportedExtension -> {
@@ -367,7 +356,6 @@ class StoreImportFragment : Fragment() {
                 if (found != null) {
                     store.showItemDetail(found)
                 } else {
-                    // refreshItems() мог ещё не закончиться — подождём
                     store.refreshItems {
                         val again = store.findItemByName(displayName)
                         if (again != null) store.showItemDetail(again)

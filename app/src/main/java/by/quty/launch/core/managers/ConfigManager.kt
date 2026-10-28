@@ -11,17 +11,22 @@ import by.quty.launch.core.model.ColorSchemeModel
 import by.quty.launch.core.model.LoggerTagModel
 import java.util.Locale
 
+/**
+ * Единая точка доступа к prefs launcher_prefs и логирования изменений.
+ */
 class ConfigManager(context: Context) {
 
     private val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
     private val appContext = context.applicationContext
 
     init {
-        // При первой инициализации — определяем язык системы и сохраняем
         ensureLanguageInitialized()
     }
 
-    // Значения по умолчанию из CoreConfig
+    // ============================================================
+    // ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
+    // ============================================================
+
     fun getDefaultShell(): String = CoreConfig.DEFAULT_SHELL
     fun getDefaultOrientation(): String = CoreConfig.DEFAULT_ORIENTATION
     fun getDefaultFullscreen(): Boolean = CoreConfig.DEFAULT_FULLSCREEN
@@ -29,32 +34,20 @@ class ConfigManager(context: Context) {
     fun getDefaultThemeMode(): String = CoreConfig.DEFAULT_THEME_MODE
     fun getDefaultLanguage(): String = CoreConfig.DEFAULT_LANGUAGE
 
-    // Получение активной оболочки
+    // ============================================================
+    // АКТИВНАЯ ОБОЛОЧКА
+    // ============================================================
+
     fun getActiveShell(): String {
         return prefs.getString("active_shell", getDefaultShell()) ?: getDefaultShell()
     }
 
-    // Сохранение активной оболочки.
-    //
-    // ВАЖНО: здесь НЕ логируем — это низкоуровневый сеттер,
-    // логирование смены оболочки делает ShellManager (тег SHELL).
+    /** Сохраняет имя активной оболочки (без логирования — это делает ShellManager). */
     fun setActiveShell(shellId: String) {
         prefs.edit { putString("active_shell", shellId) }
     }
 
-    // ============================================================
-    // ВЕРСИЯ АКТИВНОЙ ОБОЛОЧКИ
-    // ============================================================
-    //
-    // Хранит версию оболочки, которая РЕАЛЬНО загружена в WebView.
-    // Нужно, чтобы отличить:
-    // - «оболочка обновлена, но новая версия ещё не применена»
-    //   (файл на диске новый, но active_shell_version — старая);
-    // - «оболочка активна с текущей версией»
-    //   (active_shell_version совпадает с версией на диске).
-    //
-    // Пишется при каждом ShellManager.setActiveShell() (кроме Safe Mode).
-
+    /** Версия оболочки, реально загруженной в WebView. */
     fun getActiveShellVersion(): String {
         return prefs.getString("active_shell_version", "") ?: ""
     }
@@ -64,14 +57,9 @@ class ConfigManager(context: Context) {
     }
 
     // ============================================================
-    // БЕЗОПАСНЫЙ РЕЖИМ (SAFE MODE)
+    // SAFE MODE
     // ============================================================
 
-    /**
-     * Активен ли безопасный режим.
-     * В этом режиме ShellManager принудительно запускает оболочку "default",
-     * игнорируя пользовательский выбор из prefs.
-     */
     fun isSafeModeActive(): Boolean {
         return prefs.getBoolean(KEY_SAFE_MODE, false)
     }
@@ -83,16 +71,18 @@ class ConfigManager(context: Context) {
         prefs.edit { putBoolean(KEY_SAFE_MODE, active) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.safe_mode  $previous → $active"
+            "CONFIG.safe_mode  $previous > $active"
         )
     }
 
-    // Получение ориентации
+    // ============================================================
+    // ОРИЕНТАЦИЯ
+    // ============================================================
+
     fun getOrientation(): String {
         return prefs.getString("orientation", getDefaultOrientation()) ?: getDefaultOrientation()
     }
 
-    // Сохранение ориентации
     fun setOrientation(orientation: String) {
         val previous = getOrientation()
         if (previous == orientation) return
@@ -100,16 +90,18 @@ class ConfigManager(context: Context) {
         prefs.edit { putString("orientation", orientation) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.orientation  $previous → $orientation"
+            "CONFIG.orientation  $previous > $orientation"
         )
     }
 
-    // Получение полноэкранного режима
+    // ============================================================
+    // ПОЛНОЭКРАННЫЙ РЕЖИМ
+    // ============================================================
+
     fun isFullscreenEnabled(): Boolean {
         return prefs.getBoolean("fullscreen", getDefaultFullscreen())
     }
 
-    // Сохранение полноэкранного режима
     fun setFullscreenEnabled(enabled: Boolean) {
         val previous = isFullscreenEnabled()
         if (previous == enabled) return
@@ -117,16 +109,19 @@ class ConfigManager(context: Context) {
         prefs.edit { putBoolean("fullscreen", enabled) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.fullscreen  $previous → $enabled"
+            "CONFIG.fullscreen  $previous > $enabled"
         )
     }
 
-    // Получение строгого режима
+    // ============================================================
+    // СТРОГИЙ РЕЖИМ
+    // ============================================================
+
+    /** strict имеет смысл только при включённом fullscreen. */
     fun isStrictModeEnabled(): Boolean {
         return isFullscreenEnabled() && prefs.getBoolean("strict_mode", getDefaultStrictMode())
     }
 
-    // Сохранение строгого режима
     fun setStrictModeEnabled(enabled: Boolean) {
         val previous = prefs.getBoolean("strict_mode", getDefaultStrictMode())
         if (previous == enabled) return
@@ -134,7 +129,7 @@ class ConfigManager(context: Context) {
         prefs.edit { putBoolean("strict_mode", enabled) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.strict  $previous → $enabled"
+            "CONFIG.strict  $previous > $enabled"
         )
     }
 
@@ -153,41 +148,28 @@ class ConfigManager(context: Context) {
         prefs.edit { putString("color_scheme", schemeId) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.color  $previous → $schemeId"
+            "CONFIG.color  $previous > $schemeId"
         )
     }
 
-    fun getDefaultColorScheme(): String {
-        return CoreConfig.DEFAULT_COLOR_SCHEME
-    }
+    fun getDefaultColorScheme(): String = CoreConfig.DEFAULT_COLOR_SCHEME
 
-    fun getSchemePrimaryColor(): String {
-        return getColorSchemeObject().primaryColor
-    }
+    fun getSchemePrimaryColor(): String = getColorSchemeObject().primaryColor
 
-    fun getSchemeAccentColor(): String {
-        return getColorSchemeObject().accentColor
-    }
+    fun getSchemeAccentColor(): String = getColorSchemeObject().accentColor
 
     fun getColorSchemeObject(): ColorSchemeModel {
         return ColorSchemeModel.getSchemeById(getColorScheme())
     }
 
     // ============================================================
-    // ТЕМА (LIGHT / DARK / SYSTEM)
+    // ТЕМА
     // ============================================================
 
-    /**
-     * Возвращает режим темы: "light", "dark" или "system"
-     */
     fun getThemeMode(): String {
         return prefs.getString(KEY_THEME_MODE, getDefaultThemeMode()) ?: getDefaultThemeMode()
     }
 
-    /**
-     * Сохраняет режим темы
-     * @param mode "light", "dark" или "system"
-     */
     fun setThemeMode(mode: String) {
         val previous = getThemeMode()
         if (previous == mode) return
@@ -195,14 +177,10 @@ class ConfigManager(context: Context) {
         prefs.edit { putString(KEY_THEME_MODE, mode) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.theme  $previous → $mode"
+            "CONFIG.theme  $previous > $mode"
         )
     }
 
-    /**
-     * Возвращает true если должна быть включена тёмная тема.
-     * Используется в GeneralFragment для отображения состояния переключателя.
-     */
     @Suppress("unused")
     fun isDarkTheme(): Boolean {
         return when (getThemeMode()) {
@@ -213,19 +191,12 @@ class ConfigManager(context: Context) {
         }
     }
 
-    /**
-     * Проверяет, включена ли тёмная тема в системе
-     */
     private fun isSystemInDarkMode(): Boolean {
-        val resources = appContext.resources
-        val config = resources.configuration
+        val config = appContext.resources.configuration
         return (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 
-    /**
-     * Применяет тему через AppCompatDelegate
-     * Вызывается из BaseActivity
-     */
+    /** Применяет тему через AppCompatDelegate. */
     fun applyTheme() {
         val mode = when (getThemeMode()) {
             "dark" -> AppCompatDelegate.MODE_NIGHT_YES
@@ -235,6 +206,10 @@ class ConfigManager(context: Context) {
         }
         AppCompatDelegate.setDefaultNightMode(mode)
     }
+
+    // ============================================================
+    // ПЕРЕЗАПУСК ДЛЯ ОРИЕНТАЦИИ
+    // ============================================================
 
     fun needRestartForOrientation(): Boolean {
         return prefs.getBoolean(KEY_NEED_RESTART_FOR_ORIENTATION, false)
@@ -252,17 +227,11 @@ class ConfigManager(context: Context) {
     // АНИМАЦИИ
     // ============================================================
 
-    /**
-     * Пользовательская настройка: хочет ли пользователь анимации.
-     * НЕ учитывает системный флаг ANIMATOR_DURATION_SCALE.
-     */
+    /** Пользовательская настройка анимаций (без учёта системного флага). */
     fun isAnimationsEnabled(): Boolean {
         return prefs.getBoolean(KEY_ANIMATIONS_ENABLED, getDefaultAnimationsEnabled())
     }
 
-    /**
-     * Сохраняет пользовательскую настройку анимаций.
-     */
     fun setAnimationsEnabled(enabled: Boolean) {
         val previous = isAnimationsEnabled()
         if (previous == enabled) return
@@ -270,22 +239,13 @@ class ConfigManager(context: Context) {
         prefs.edit { putBoolean(KEY_ANIMATIONS_ENABLED, enabled) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.animations  $previous → $enabled"
+            "CONFIG.animations  $previous > $enabled"
         )
     }
 
-    /**
-     * Значение по умолчанию для пользовательской настройки анимаций.
-     */
     fun getDefaultAnimationsEnabled(): Boolean = CoreConfig.DEFAULT_ANIMATIONS_ENABLED
 
-    /**
-     * Системный флаг: включены ли анимации на уровне ОС.
-     * Читает Settings.Global.ANIMATOR_DURATION_SCALE.
-     *
-     * Возвращает true, если не удалось прочитать (fail-safe: не отключаем
-     * анимации из-за ошибки доступа к Settings).
-     */
+    /** Системный флаг ANIMATOR_DURATION_SCALE > 0. */
     fun isSystemAnimationEnabled(): Boolean {
         return try {
             val scale = Settings.Global.getFloat(
@@ -299,13 +259,7 @@ class ConfigManager(context: Context) {
         }
     }
 
-    /**
-     * Фактическое состояние анимаций: пользовательская настройка
-     * И системный флаг.
-     *
-     * Используется в BaseActivity (overridePendingTransition) и для
-     * передачи в WebView через CSS-инжект.
-     */
+    /** Фактическое состояние: пользовательская настройка И системный флаг. */
     fun isEffectiveAnimationsEnabled(): Boolean {
         return isAnimationsEnabled() && isSystemAnimationEnabled()
     }
@@ -314,11 +268,7 @@ class ConfigManager(context: Context) {
     // ЯЗЫК
     // ============================================================
 
-    /**
-     * При первой инициализации — определяет язык системы.
-     * Если язык системы русский — ставит "ru", иначе "en".
-     * Если ключ уже есть — ничего не делает.
-     */
+    /** При первом обращении сохраняет язык системы (ru/en). */
     private fun ensureLanguageInitialized() {
         if (prefs.contains(KEY_LANGUAGE)) return
 
@@ -331,17 +281,10 @@ class ConfigManager(context: Context) {
         prefs.edit { putString(KEY_LANGUAGE, initial) }
     }
 
-    /**
-     * Возвращает выбранный язык: "ru" или "en"
-     */
     fun getLanguage(): String {
         return prefs.getString(KEY_LANGUAGE, getDefaultLanguage()) ?: getDefaultLanguage()
     }
 
-    /**
-     * Сохраняет выбранный язык
-     * @param language "ru" или "en"
-     */
     fun setLanguage(language: String) {
         val normalized = when (language) {
             CoreConfig.LANGUAGE_RU -> CoreConfig.LANGUAGE_RU
@@ -354,16 +297,11 @@ class ConfigManager(context: Context) {
         prefs.edit { putString(KEY_LANGUAGE, normalized) }
         LoggerManager.info(
             LoggerTagModel.CONFIG,
-            "CONFIG.language  $previous → $normalized"
+            "CONFIG.language  $previous > $normalized"
         )
     }
 
-    /**
-     * Возвращает BCP-47 код языка для передачи в WebView
-     */
-    fun getLanguageCode(): String {
-        return getLanguage()
-    }
+    fun getLanguageCode(): String = getLanguage()
 
     companion object {
         const val LANGUAGE_RU = CoreConfig.LANGUAGE_RU
@@ -375,5 +313,4 @@ class ConfigManager(context: Context) {
         private const val KEY_ANIMATIONS_ENABLED = "animations_enabled"
         private const val KEY_SAFE_MODE = "safe_mode_active"
     }
-
 }

@@ -6,28 +6,22 @@ import androidx.annotation.ColorRes
 import by.quty.launch.R
 
 /**
- * Модель цветовой схемы
- * Содержит идентификатор, отображаемое имя, цвета и ссылки на ресурсы
+ * Цветовая схема: id, имя, HEX и ресурсы primary/accent.
  */
 data class ColorSchemeModel(
-    val id: String,                     // Уникальный идентификатор (teal, orange, ...)
-    val displayNameRes: Int,            // Ресурс отображаемого имени
-    val primaryColor: String,           // Primary цвет в HEX (#009688)
-    val accentColor: String,            // Accent цвет в HEX (#4CAF50)
-    @ColorRes val primaryRes: Int,      // Ресурс primary цвета
-    @ColorRes val accentRes: Int        // Ресурс accent цвета
+    val id: String,
+    val displayNameRes: Int,
+    val primaryColor: String,
+    val accentColor: String,
+    @ColorRes val primaryRes: Int,
+    @ColorRes val accentRes: Int
 ) {
-    /**
-     * Возвращает отображаемое имя из ресурсов
-     */
     fun getDisplayName(context: Context): String {
         return context.getString(displayNameRes)
     }
 
     companion object {
-        /**
-         * Возвращает список всех доступных цветовых схем
-         */
+        /** Все схемы. */
         fun getAllSchemes(): List<ColorSchemeModel> {
             return listOf(
                 ColorSchemeModel(
@@ -105,24 +99,13 @@ data class ColorSchemeModel(
             )
         }
 
-        /**
-         * Возвращает схему по ID.
-         *
-         * Если схема с указанным ID не найдена — возвращает дефолтную (teal).
-         * НЕ вызывает getDefaultScheme() во избежание рекурсии.
-         */
+        /** Схема по id, fallback — teal. */
         fun getSchemeById(id: String): ColorSchemeModel {
             return getAllSchemes().find { it.id == id }
                 ?: getDefaultScheme()
         }
 
-        /**
-         * Возвращает схему по умолчанию (teal).
-         *
-         * Создаётся напрямую — независимо от getAllSchemes() и getSchemeById(),
-         * чтобы гарантированно не уйти в рекурсию, если схема "teal" вдруг
-         * исчезнет из списка.
-         */
+        /** Дефолтная схема (teal), создаётся напрямую. */
         fun getDefaultScheme(): ColorSchemeModel {
             return ColorSchemeModel(
                 id = "teal",

@@ -23,7 +23,7 @@ import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
 /**
- * Модель оболочки с расширенной информацией
+ * Модель оболочки.
  */
 data class Shell(
     val name: String,
@@ -37,21 +37,13 @@ data class Shell(
     val previewBase64: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
-    /**
-     * Ссылка на Telegram-канал/чат оболочки (опционально).
-     * Задаётся в manifest.json в поле "telegram".
-     */
     val telegramUrl: String? = null,
     val minQutyLaunchVersion: String? = null,
-    /**
-     * Список API методов, заявленных оболочкой в manifest.json.
-     * Если поле не указано — пустой список.
-     */
     val apiMethods: List<String> = emptyList()
 )
 
 /**
- * Структура manifest.json оболочки
+ * Структура manifest.json оболочки.
  */
 @Serializable
 data class ShellManifest(
@@ -61,39 +53,22 @@ data class ShellManifest(
     val preview: String? = null,
     val orientation: String? = null,
     val repoUrl: String? = null,
-    /**
-     * Ссылка на Telegram-канал/чат оболочки (опционально).
-     * Соответствует полю "telegram" в manifest.json.
-     */
     val telegram: String? = null,
     val minQutyLaunchVersion: String? = null,
-    /**
-     * Список API методов, которые использует оболочка.
-     * Опциональное поле — для старых оболочек по умолчанию пустой список.
-     */
     val apiMethods: List<String> = emptyList()
 )
 
 /**
- * Результат предпросмотра файла оболочки (без копирования в SHELLS).
- *
- * Фрагмент показывает диалог с описанием и кнопками «Отмена» / «Продолжить».
+ * Результат предпросмотра файла оболочки.
  */
 sealed class ShellPreviewResult {
     data class Success(
-        /** Имя оболочки из manifest.json. */
         val name: String,
-        /** Отображаемое имя (совпадает с name; оставлено для UI). */
         val displayName: String,
-        /** Версия из manifest.json. */
         val version: String?,
-        /** Автор из manifest.json. */
         val author: String?,
-        /** Ориентация из manifest.json. */
         val orientation: String?,
-        /** Размер файла в байтах. */
         val sizeBytes: Long,
-        /** Уже установлена оболочка с таким же именем. */
         val alreadyExists: Boolean
     ) : ShellPreviewResult()
 
@@ -109,81 +84,51 @@ sealed class ShellPreviewResult {
 }
 
 /**
- * Результат импорта оболочки из файловой системы.
- *
- * Sealed-иерархия вместо строк — фрагмент сам локализует через
- * getString(...), как в RecoveryManager.ImportReadResult.
+ * Результат импорта оболочки.
  */
 sealed class ShellImportResult {
     data class Success(val shell: Shell) : ShellImportResult()
 
     sealed class Failure : ShellImportResult() {
-        /** Расширение файла не входит в CoreConfig.SHELL_EXTENSIONS. */
         object UnsupportedExtension : Failure()
-
-        /** Не удалось прочитать displayName из ContentResolver. */
         object CannotReadFileName : Failure()
-
-        /** Файл больше CoreConfig.MAX_SHELL_SIZE_BYTES. */
         object FileTooLarge : Failure()
-
-        /** Не удалось открыть файл как ZIP (битый / не ZIP). */
         object InvalidArchive : Failure()
-
-        /** В ZIP нет manifest.json. */
         object ManifestMissing : Failure()
-
-        /** manifest.json есть, но не парсится / нет поля name. */
         object ManifestInvalid : Failure()
-
-        /**
-         * Оболочка с таким именем уже установлена.
-         * Возвращается ДО копирования файла в SHELLS — фрагмент
-         * должен спросить подтверждение и повторить вызов
-         * с overwrite = true.
-         */
         data class AlreadyExists(val name: String) : Failure()
-
-        /** Ошибка ввода-вывода при копировании/сохранении. */
         data class IoError(val message: String?) : Failure()
     }
 }
 
+/**
+ * Управление оболочками: список, активная, распаковка, импорт, удаление.
+ */
 class ShellManager(
     private val context: Context,
     private val configManager: ConfigManager
 ) {
 
     companion object {
-        /** Расширение файла оболочки (с точкой) - из конфига */
         const val SHELL_EXTENSION_WITH_DOT = CoreConfig.SHELL_EXTENSION_WITH_DOT
-
-        /** Поддерживаемые расширения файлов оболочки (без точки) - из конфига */
         val SHELL_EXTENSIONS = CoreConfig.SHELL_EXTENSIONS
-
     }
 
-    // Хранилище и менеджеры
     private val storageManager = StorageManager(context)
 
-    // Активная оболочка в памяти
     private var activeShell: Shell? = null
 
-    // JSON парсер
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Директория активной оболочки (для распакованных файлов)
+    /** Директория распакованных оболочек. */
     private val activeShellDir: File by lazy {
         File(context.filesDir, "shells/active")
     }
 
     init {
-        // Создаём директорию для активной оболочки
         if (!activeShellDir.exists()) {
             activeShellDir.mkdirs()
         }
-
-        // Загружаем активную оболочку из конфига
         loadActiveShellFromConfig()
     }
 
@@ -191,47 +136,28 @@ class ShellManager(
     // ЗАГРУЗКА АКТИВНОЙ ОБОЛОЧКИ
     // ============================================================
 
-    /**
-     * Загружает активную оболочку из конфига в память
-     */
+    /** Подгружает активную оболочку из prefs; при ошибке — откат к Default. */
     private fun loadActiveShellFromConfig() {
         val shells = getAvailableShells()
         val activeShellId = configManager.getActiveShell()
-
-        // Проверяем, существует ли оболочка в списке доступных
         val foundShell = shells.find { it.name == activeShellId }
 
         if (foundShell != null) {
             activeShell = foundShell
         } else {
-            // Оболочка не найдена — восстанавливаем Default
             restoreDefaultShell()
         }
 
-        // Сохраняем принудительную ориентацию
         saveForcedOrientation()
     }
 
-    /**
-     * Восстанавливает оболочку по умолчанию, если активная оболочка не найдена
-     */
+    /** Откатывается на Default, если активная оболочка не найдена. */
     private fun restoreDefaultShell() {
         val shells = getAvailableShells()
 
-        // Ищем оболочку по умолчанию
         var defaultShell = shells.find { it.isDefault }
-
-        // Если оболочка по умолчанию не найдена, ищем по имени "Default"
-        if (defaultShell == null) {
-            defaultShell = shells.find { it.name == "Default" }
-        }
-
-        // Если всё ещё не найдена, берём первую доступную оболочку
-        if (defaultShell == null) {
-            defaultShell = shells.firstOrNull()
-        }
-
-        // Если совсем нет оболочек — создаём базовую оболочку
+        if (defaultShell == null) defaultShell = shells.find { it.name == "Default" }
+        if (defaultShell == null) defaultShell = shells.firstOrNull()
         if (defaultShell == null) {
             defaultShell = Shell(
                 name = "Default",
@@ -242,7 +168,6 @@ class ShellManager(
             )
         }
 
-        // Сохраняем оболочку по умолчанию как активную
         activeShell = defaultShell
         configManager.setActiveShell(defaultShell.name)
         configManager.setActiveShellVersion(defaultShell.version ?: "")
@@ -252,7 +177,6 @@ class ShellManager(
             "SHELL.restored  ${defaultShell.name}"
         )
 
-        // Показываем уведомление о восстановлении
         val message = context.getString(R.string.shell_active_not_found) + "\n" +
                 context.getString(R.string.shell_restored_default, defaultShell.displayName ?: defaultShell.name)
 
@@ -261,9 +185,7 @@ class ShellManager(
         }
     }
 
-    /**
-     * Сохраняет принудительную ориентацию текущей оболочки в SharedPreferences
-     */
+    /** Сохраняет forced_orientation активной оболочки в prefs. */
     private fun saveForcedOrientation() {
         val prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
         val forcedOrientation = getForcedOrientationFromActiveShell()
@@ -281,27 +203,18 @@ class ShellManager(
     // ПОЛУЧЕНИЕ ОБОЛОЧЕК
     // ============================================================
 
-    /**
-     * Получить список всех доступных оболочек
-     * Встроенные оболочки заменяются кастомными версиями с тем же именем
-     */
+    /** Возвращает встроенные и кастомные оболочки (кастомные перекрывают встроенные по имени). */
     fun getAvailableShells(): List<Shell> {
         val builtInShells = getBuiltInShells()
         val customShells = getCustomShells()
 
         val result = mutableListOf<Shell>()
 
-        // Для каждой встроенной оболочки проверяем, есть ли кастомная версия
         builtInShells.forEach { builtIn ->
             val customVersion = customShells.find { it.name == builtIn.name }
-            if (customVersion != null) {
-                result.add(customVersion)
-            } else {
-                result.add(builtIn)
-            }
+            if (customVersion != null) result.add(customVersion) else result.add(builtIn)
         }
 
-        // Добавляем остальные кастомные оболочки
         customShells.forEach { custom ->
             if (result.none { it.name == custom.name }) {
                 result.add(custom)
@@ -311,13 +224,10 @@ class ShellManager(
         return result
     }
 
-    /**
-     * Получить кастомные оболочки из хранилища
-     */
+    /** Возвращает кастомные оболочки из SHELLS. */
     private fun getCustomShells(): List<Shell> {
         val shells = mutableListOf<Shell>()
 
-        // Получаем все файлы оболочек из директории SHELLS
         val shellFiles = storageManager.list(
             directory = StorageDirectory.SHELLS,
             filter = { fileName ->
@@ -354,9 +264,7 @@ class ShellManager(
         return shells
     }
 
-    /**
-     * Получить встроенные оболочки из assets
-     */
+    /** Возвращает встроенные оболочки из assets. */
     private fun getBuiltInShells(): List<Shell> {
         val shells = mutableListOf<Shell>()
 
@@ -364,7 +272,6 @@ class ShellManager(
             val assetPaths = context.assets.list("shells") ?: return shells
 
             assetPaths.forEach { shellFolder ->
-                // Проверяем наличие index.html
                 try {
                     context.assets.open("shells/$shellFolder/index.html").close()
                 } catch (_: Exception) {
@@ -404,7 +311,6 @@ class ShellManager(
                 )
             }
         } catch (_: Exception) {
-            // Игнорируем ошибки чтения assets
         }
 
         return shells
@@ -414,9 +320,7 @@ class ShellManager(
     // ЧТЕНИЕ MANIFEST И ПРЕВЬЮ
     // ============================================================
 
-    /**
-     * Читает manifest.json из ZIP-файла оболочки
-     */
+    /** Читает manifest.json из ZIP. */
     private fun readManifestFromZip(zipFile: File): ShellManifest? {
         return try {
             ZipFile(zipFile).use { zip ->
@@ -435,9 +339,7 @@ class ShellManager(
         }
     }
 
-    /**
-     * Загружает превью из ZIP-файла оболочки
-     */
+    /** Загружает превью из ZIP и конвертирует в Base64. */
     private fun loadPreviewFromZip(zipFile: File, previewPath: String?): String? {
         if (previewPath.isNullOrEmpty()) return null
 
@@ -454,9 +356,7 @@ class ShellManager(
         }
     }
 
-    /**
-     * Загружает превью из assets
-     */
+    /** Загружает превью из assets и конвертирует в Base64. */
     private fun loadPreviewFromAssets(shellFolder: String, previewPath: String?): String? {
         if (previewPath.isNullOrEmpty()) return null
 
@@ -470,9 +370,7 @@ class ShellManager(
         }
     }
 
-    /**
-     * Конвертирует Bitmap в Base64
-     */
+    /** Конвертирует Bitmap в Base64 (JPEG, 80%). */
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val outputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
@@ -484,18 +382,10 @@ class ShellManager(
     // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
-    /**
-     * Получить оболочку для активации
-     *
-     * ВАЖНО: если активен Safe Mode — принудительно возвращаем
-     * встроенную оболочку "Default", игнорируя пользовательский выбор
-     * из prefs. Выбор пользователя при этом НЕ сбрасывается — как
-     * только Safe Mode будет выключен, загрузится его оболочка.
-     */
+    /** Возвращает оболочку для загрузки в WebView. В Safe Mode — принудительно Default. */
     fun getShellToActivate(): Shell {
         val shells = getAvailableShells()
 
-        // Safe Mode — принудительно Default
         if (configManager.isSafeModeActive()) {
             val defaultShell = shells.find { it.name == "Default" }
             if (defaultShell != null) {
@@ -525,19 +415,13 @@ class ShellManager(
         )
     }
 
-    /**
-     * Получить активную оболочку
-     */
+    /** Возвращает активную оболочку из памяти. */
     fun getActiveShell(): Shell? {
-        if (activeShell == null) {
-            loadActiveShellFromConfig()
-        }
+        if (activeShell == null) loadActiveShellFromConfig()
         return activeShell
     }
 
-    /**
-     * Принудительно перезагружает активную оболочку из файла
-     */
+    /** Перечитывает активную оболочку из файла. */
     fun reloadActiveShell() {
         val shells = getAvailableShells()
         val activeShellId = configManager.getActiveShell()
@@ -551,51 +435,20 @@ class ShellManager(
     }
 
     /**
-     * Устанавливает активную оболочку
-     *
-     * ВАЖНО: список активных API методов сбрасывается ТОЛЬКО при смене
-     * оболочки (когда имя реально изменилось). При пересоздании MainActivity
-     * (например, при смене темы Light/Dark) с той же оболочкой состояние
-     * активных методов сохраняется — пользователь не теряет картину
-     * «кто что вызывал» в разделе Настроек > API методы.
-     *
-     * SAFE MODE (баг-фикс): раньше в Safe Mode запись в prefs ПРОПУСКАЛАСЬ,
-     * чтобы «не затереть выбор пользователя». Но это ломало UX: пользователь
-     * в магазине применял оболочку в Safe Mode, UI писал «применено,
-     * требуется перезагрузка», а после рестарта загружалась Default —
-     * потому что prefs не обновились. Смысл Safe Mode — дать возможность
-     * выбрать/применить оболочку при сломанной текущей. Поэтому теперь:
-     * - prefs (active_shell, active_shell_version) пишутся ВСЕГДА;
-     * - загрузка в WebView по-прежнему идёт через getShellToActivate(),
-     *   который в Safe Mode принудительно отдаёт Default.
-     * После выхода из Safe Mode пользователь увидит именно ту оболочку,
-     * которую применил в Safe Mode.
-     *
-     * active_shell_version: пишется сюда же — это «версия, реально
-     * загруженная в WebView». Используется магазином, чтобы отличить
-     * «оболочка обновлена, но не применена» от «оболочка активна
-     * с текущей версией».
+     * Устанавливает активную оболочку.
+     * В Safe Mode prefs всё равно пишутся — выбор применится после выхода.
      */
     suspend fun setActiveShell(shell: Shell) = withContext(Dispatchers.IO) {
-        // Запоминаем имя предыдущей активной оболочки
         val previousShellName = activeShell?.name
 
-        // Пишем выбор пользователя в prefs ВСЕГДА, включая Safe Mode.
-        // В Safe Mode это не активирует оболочку в WebView (см.
-        // getShellToActivate() — там принудительный Default), но
-        // сохранит выбор на момент выхода из Safe Mode.
         configManager.setActiveShell(shell.name)
         configManager.setActiveShellVersion(shell.version ?: "")
 
-        // Обновляем в памяти
         activeShell = shell
 
-        // Сбрасываем список активных API методов только если оболочка
-        // реально поменялась
         if (previousShellName != shell.name) {
             ApiRouter.clearActiveMethods()
 
-            // Маркер [custom] — только для кастомных оболочек
             val marker = if (shell.isCustom) "  [custom]" else ""
 
             LoggerManager.info(
@@ -604,25 +457,13 @@ class ShellManager(
             )
         }
 
-        // Сохраняем принудительную ориентацию.
-        //
-        // ВАЖНО (баг-фикс): раньше вызов был обёрнут в withContext(Dispatchers.Main),
-        // хотя saveForcedOrientation() делает SharedPreferences.edit{} — это IO.
-        // SharedPreferences.apply() асинхронный, но чтение + запись самой мапы
-        // (edit {} выполняет commit в памяти) — не бесплатно, и на Main этого
-        // делать не нужно. Метод уже выполняется на Dispatchers.IO (см. заголовок),
-        // поэтому просто убираем Main-обёртку.
         saveForcedOrientation()
 
-        // Очищаем директорию активной оболочки
         clearActiveDir()
 
-        // Если это не asset оболочка — распаковываем
         if (!shell.isAsset) {
             val extractDir = File(activeShellDir, shell.name)
-            if (!extractDir.exists()) {
-                extractDir.mkdirs()
-            }
+            if (!extractDir.exists()) extractDir.mkdirs()
             unzipShell(shell.sourcePath, extractDir)
         }
     }
@@ -631,51 +472,22 @@ class ShellManager(
     // РАСПАКОВКА ОБОЛОЧКИ
     // ============================================================
 
-    /**
-     * Очищает директорию активной оболочки.
-     *
-     * ВАЖНО (баг-фикс): раньше вызывался `storageManager.remove(activeDir)`,
-     * но `StorageManager.remove(File)` использует `File.delete()`, а
-     * `File.delete()` на НЕПУСТОЙ директории возвращает false и НИЧЕГО
-     * не удаляет. В результате содержимое `active/` не очищалось, и при
-     * следующей распаковке старой оболочки могли «перемешиваться» файлы
-     * от старой и новой версий.
-     *
-     * Теперь используем `File.deleteRecursively()` — рекурсивное удаление
-     * содержимого и самой директории, затем `mkdirs()` создаёт пустую.
-     *
-     * Всё выполняется в IO-контексте (вызывается из setActiveShell,
-     * который уже на Dispatchers.IO).
-     */
+    /** Рекурсивно очищает activeShellDir. */
     private suspend fun clearActiveDir() {
         withContext(Dispatchers.IO) {
             try {
                 if (activeShellDir.exists()) {
-                    // Рекурсивно удаляем содержимое и саму директорию.
-                    // File.deleteRecursively() возвращает true, если всё
-                    // удалилось (или уже не было), false — если что-то
-                    // не удалилось (занято, нет прав и т.п.).
                     activeShellDir.deleteRecursively()
                 }
-                // Создаём заново — пустую.
                 if (!activeShellDir.exists()) {
                     activeShellDir.mkdirs()
                 }
             } catch (_: Exception) {
-                // Не роняем setActiveShell из-за проблем с очисткой —
-                // хуже будет, если оболочка вообще не установится.
             }
         }
     }
 
-    /**
-     * Распаковывает ZIP-архив оболочки.
-     *
-     * ВАЖНО: защита от ZIP Slip. Если entry.name содержит `..` и
-     * пытается выйти за пределы outputDir, entry пропускается.
-     * Это критично для оболочек, импортированных через SAF — сервер
-     * магазина доверенный, но пользовательский импорт — нет.
-     */
+    /** Распаковывает ZIP с защитой от ZIP Slip. */
     private suspend fun unzipShell(zipPath: String, outputDir: File) {
         val zipFile = File(zipPath)
         if (!zipFile.exists()) {
@@ -694,7 +506,6 @@ class ShellManager(
                     zip.entries().asSequence().forEach { entry ->
                         val outFile = File(canonicalOutput, entry.name).canonicalFile
 
-                        // ZIP Slip защита: файл должен лежать внутри canonicalOutput
                         val isValid = outFile.path == canonicalOutput.path ||
                                 outFile.path.startsWith(canonicalOutput.path + File.separator)
 
@@ -732,9 +543,7 @@ class ShellManager(
     // ПРИНУДИТЕЛЬНАЯ ОРИЕНТАЦИЯ
     // ============================================================
 
-    /**
-     * Получить принудительную ориентацию из активной оболочки
-     */
+    /** Возвращает принудительную ориентацию активной оболочки или null. */
     fun getForcedOrientationFromActiveShell(): String? {
         val shell = getActiveShell() ?: return null
         return when (val orientation = shell.orientation) {
@@ -743,9 +552,7 @@ class ShellManager(
         }
     }
 
-    /**
-     * Проверяет, задаёт ли текущая оболочка принудительную ориентацию
-     */
+    /** true, если активная оболочка задаёт portrait/landscape. */
     fun hasForcedOrientation(): Boolean {
         val forced = getForcedOrientationFromActiveShell()
         return forced == "portrait" || forced == "landscape"
@@ -755,24 +562,12 @@ class ShellManager(
     // УПРАВЛЕНИЕ ОБОЛОЧКАМИ
     // ============================================================
 
-    /**
-     * Удаляет кастомную оболочку по имени.
-     *
-     * Логика:
-     * - если файла .qutyshell нет — считаем «уже удалено» (true),
-     *   чтобы UI не показывал ложную ошибку при гонке;
-     * - иначе удаляем файл;
-     * - дополнительно чистим распакованную папку active/<name>
-     *   (хвост от прошлой активации);
-     * - если оболочка была активной — перечитываем конфиг
-     *   (подхватится встроенная версия или Default).
-     */
+    /** Удаляет кастомную оболочку по имени. */
     suspend fun deleteShellByName(name: String): Boolean {
         return try {
             val fileName = "$name${SHELL_EXTENSION_WITH_DOT}"
             val file = storageManager.get(StorageDirectory.SHELLS, fileName)
 
-            // Файла нет — уже удалён (или не было). Не считаем ошибкой.
             if (!file.exists()) {
                 LoggerManager.warn(
                     LoggerTagModel.SHELL,
@@ -784,14 +579,10 @@ class ShellManager(
             val deleted = storageManager.remove(file)
 
             if (deleted) {
-                // Чистим распакованную папку активной оболочки с этим именем
                 try {
                     val extractDir = File(activeShellDir, name)
-                    if (extractDir.exists()) {
-                        extractDir.deleteRecursively()
-                    }
+                    if (extractDir.exists()) extractDir.deleteRecursively()
                 } catch (_: Exception) {
-                    // Игнорируем
                 }
 
                 LoggerManager.info(
@@ -799,7 +590,6 @@ class ShellManager(
                     "SHELL.deleted  $name"
                 )
 
-                // Если оболочка была активной — перезагружаем
                 val currentActive = getActiveShell()
                 if (currentActive?.name == name && currentActive.isCustom) {
                     loadActiveShellFromConfig()
@@ -826,13 +616,10 @@ class ShellManager(
     // ПРЕДПРОСМОТР ФАЙЛА ОБОЛОЧКИ (БЕЗ КОПИРОВАНИЯ)
     // ============================================================
 
-    /**
-     * Читает файл оболочки по URI и возвращает его описание
-     */
+    /** Читает файл по URI и возвращает описание без копирования в SHELLS. */
     suspend fun previewShell(uri: Uri): ShellPreviewResult = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
 
-        // 1. displayName
         val displayName = try {
             resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                 ?.use { cursor ->
@@ -847,13 +634,11 @@ class ShellManager(
             null
         } ?: return@withContext ShellPreviewResult.Failure.CannotReadFileName
 
-        // 2. Расширение
         val extension = displayName.substringAfterLast('.', "").lowercase()
         if (extension !in SHELL_EXTENSIONS) {
             return@withContext ShellPreviewResult.Failure.UnsupportedExtension
         }
 
-        // 3. Копируем во временный файл (только для чтения — не в SHELLS)
         val tempFile = storageManager.createTempFile(
             prefix = "preview_${displayName.substringBeforeLast('.')}",
             extension = "tmp"
@@ -873,13 +658,11 @@ class ShellManager(
         }
 
         try {
-            // 4. Размер
             val sizeBytes = tempFile.length()
             if (sizeBytes > CoreConfig.MAX_SHELL_SIZE_BYTES) {
                 return@withContext ShellPreviewResult.Failure.FileTooLarge
             }
 
-            // 5. ZIP + manifest
             val manifest = try {
                 ZipFile(tempFile).use { zip ->
                     val entry = zip.getEntry("manifest.json")
@@ -898,7 +681,6 @@ class ShellManager(
                 return@withContext ShellPreviewResult.Failure.ManifestInvalid
             }
 
-            // 6. Проверка на существующую оболочку (только флаг, не ошибка)
             val targetFile = storageManager.get(
                 StorageDirectory.SHELLS,
                 "${manifest.name}$SHELL_EXTENSION_WITH_DOT"
@@ -923,14 +705,11 @@ class ShellManager(
     // ИМПОРТ ОБОЛОЧКИ ИЗ ФАЙЛОВОЙ СИСТЕМЫ
     // ============================================================
 
-    /**
-     * Импортирует оболочку из выбранного пользователем URI (SAF).
-     */
+    /** Импортирует оболочку из URI. При overwrite = true перезаписывает существующую. */
     suspend fun importShell(uri: Uri, overwrite: Boolean = false): ShellImportResult =
         withContext(Dispatchers.IO) {
             val resolver = context.contentResolver
 
-            // 1. displayName — для расширения и логов
             val displayName = try {
                 resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                     ?.use { cursor ->
@@ -945,7 +724,6 @@ class ShellManager(
                 null
             } ?: return@withContext ShellImportResult.Failure.CannotReadFileName
 
-            // 2. Расширение
             val extension = displayName.substringAfterLast('.', "").lowercase()
             if (extension !in SHELL_EXTENSIONS) {
                 LoggerManager.warn(
@@ -955,7 +733,6 @@ class ShellManager(
                 return@withContext ShellImportResult.Failure.UnsupportedExtension
             }
 
-            // 3. Копируем во временный файл
             val tempFile = storageManager.createTempFile(
                 prefix = "import_${displayName.substringBeforeLast('.')}",
                 extension = "tmp"
@@ -984,7 +761,6 @@ class ShellManager(
             }
 
             try {
-                // 4. Размер
                 if (tempFile.length() > CoreConfig.MAX_SHELL_SIZE_BYTES) {
                     LoggerManager.warn(
                         LoggerTagModel.SHELL,
@@ -993,7 +769,6 @@ class ShellManager(
                     return@withContext ShellImportResult.Failure.FileTooLarge
                 }
 
-                // 5. ZIP + manifest
                 val manifest = try {
                     ZipFile(tempFile).use { zip ->
                         val entry = zip.getEntry("manifest.json")
@@ -1012,7 +787,6 @@ class ShellManager(
                     return@withContext ShellImportResult.Failure.ManifestInvalid
                 }
 
-                // 6. Проверка на существующую оболочку
                 val targetName = manifest.name
                 val targetFile = storageManager.get(
                     StorageDirectory.SHELLS,
@@ -1027,7 +801,6 @@ class ShellManager(
                     return@withContext ShellImportResult.Failure.AlreadyExists(targetName)
                 }
 
-                // 7. Копируем в SHELLS
                 val saved = storageManager.set(
                     directory = StorageDirectory.SHELLS,
                     name = "$targetName$SHELL_EXTENSION_WITH_DOT",
@@ -1043,7 +816,6 @@ class ShellManager(
                     return@withContext ShellImportResult.Failure.IoError(null)
                 }
 
-                // 8. Собираем Shell для возврата
                 val previewBase64 = loadPreviewFromZip(targetFile, manifest.preview)
                 val imported = Shell(
                     name = targetName,
@@ -1062,8 +834,6 @@ class ShellManager(
                     apiMethods = manifest.apiMethods
                 )
 
-                // Если активная оболочка была с тем же именем — перечитываем
-                // из диска, чтобы версия/превью подхватились.
                 if (activeShell?.name == targetName) {
                     reloadActiveShell()
                 }
@@ -1076,7 +846,6 @@ class ShellManager(
                 ShellImportResult.Success(imported)
 
             } finally {
-                // Чистим временный файл в любом случае
                 tempFile.delete()
             }
         }

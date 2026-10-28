@@ -24,32 +24,29 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.util.Locale
 
+/**
+ * Данные статус-бара: температура, скорость сети, громкость, сигнал, Wi-Fi, GPS, USB.
+ */
 class GetStatusBar(
     private val context: Context
 ) : BaseApiMethod<Unit>() {
 
-    // описание метода для ядра
     override val descriptionRes: Int
         get() = R.string.api_getstatusbar_desc
 
-    // иконка метода для ядра
     override val iconRes: Int
         get() = R.drawable.ic_api_getstatusbar
 
-    // Для расчёта скорости интернета
     private var lastRxBytes = 0L
     private var lastTxBytes = 0L
     private var lastTimestamp = 0L
 
-    // Хранилище для усреднения значений
     private val speedHistory = mutableListOf<Double>()
     private val tempHistory = mutableListOf<Float>()
 
-    // Количество значений для усреднения (из конфига)
     private val speedHistorySize = ApiConfig.SPEED_HISTORY_SIZE
     private val tempHistorySize = ApiConfig.TEMP_HISTORY_SIZE
 
-    // Пути к файлам температуры (системные, оставляем локально)
     private val thermalPaths = listOf(
         "/sys/class/thermal/thermal_zone0/temp",
         "/sys/class/thermal/thermal_zone1/temp",
@@ -90,33 +87,26 @@ class GetStatusBar(
 
     // ==================== ТЕМПЕРАТУРА CPU ====================
 
-    /**
-     * Получение температуры CPU с усреднением (среднее арифметическое)
-     */
+    /** Средняя температура CPU по последним значениям. */
     private fun getAverageCpuTemp(): String? {
         val currentTemp = getRawCpuTemp()
 
         if (currentTemp != null) {
             tempHistory.add(currentTemp)
-            // Оставляем только последние tempHistorySize значений
             while (tempHistory.size > tempHistorySize) {
                 tempHistory.removeAt(0)
             }
         }
 
-        // Если в истории меньше 2 значений, возвращаем текущее
         if (tempHistory.size < 2) {
             return currentTemp?.let { formatCpuTemp(it) }
         }
 
-        // Вычисляем среднее арифметическое температур
         val average = tempHistory.average()
         return formatCpuTemp(average.toFloat())
     }
 
-    /**
-     * Получение сырых данных температуры CPU
-     */
+    /** Читает температуру из термальных зон, выбирает лучший источник. */
     private fun getRawCpuTemp(): Float? {
         return try {
             var bestTemp: Float? = null
@@ -128,19 +118,13 @@ class GetStatusBar(
                     try {
                         val value = RandomAccessFile(file, "r").readLine()?.trim()?.toFloatOrNull()
                         if (value != null && value > 0) {
-                            // Определяем температуру в градусах Цельсия
                             val celsius = when {
-                                // Значение больше 1000 (миллиградусы) → делим на 1000
                                 value > 1000 -> value / 1000f
-                                // Значение от 100 до 1000 (обычно градусы)
                                 value > 100 -> value
-                                // Значение от 0 до 100 (уже градусы)
                                 else -> value
                             }
 
-                            // Проверяем, что температура в разумных пределах (из конфига)
                             if (celsius in ApiConfig.MIN_CPU_TEMP_CELSIUS.toFloat()..ApiConfig.MAX_CPU_TEMP_CELSIUS.toFloat()) {
-                                // Оцениваем качество источника
                                 val score = when {
                                     path.contains("cpu") || path.contains("thermal_zone") -> 3
                                     path.contains("hwmon") -> 2
@@ -148,7 +132,6 @@ class GetStatusBar(
                                     else -> 0
                                 }
 
-                                // Выбираем источник с наивысшим качеством
                                 if (score > bestScore) {
                                     bestTemp = celsius
                                     bestScore = score
@@ -156,30 +139,23 @@ class GetStatusBar(
                             }
                         }
                     } catch (_: Exception) {
-                        // Пропускаем файл, который не можем прочитать
                     }
                 }
             }
 
-            // Форматируем результат
             bestTemp
         } catch (_: Exception) {
             null
         }
     }
 
-    /**
-     * Форматирует температуру в строку с символом градуса
-     */
     private fun formatCpuTemp(temp: Float): String {
         return String.format(Locale.US, "%.0f°C", temp)
     }
 
     // ==================== СКОРОСТЬ ИНТЕРНЕТА ====================
 
-    /**
-     * Получение скорости интернета с усреднением (среднее арифметическое)
-     */
+    /** Средняя скорость интернета по последним значениям. */
     private fun getAverageInternetSpeed(): String? {
         val currentSpeed = getRawInternetSpeed()
 
@@ -198,9 +174,7 @@ class GetStatusBar(
         return formatSpeed(averageSpeed)
     }
 
-    /**
-     * Получение сырых данных скорости интернета
-     */
+    /** Скорость по разнице TrafficStats между вызовами. */
     private fun getRawInternetSpeed(): Double? {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -248,9 +222,6 @@ class GetStatusBar(
         }
     }
 
-    /**
-     * Форматирует скорость в читаемый вид (B/s, KB/s, MB/s)
-     */
     private fun formatSpeed(bytesPerSecond: Double): String {
         return when {
             bytesPerSecond >= 1024 * 1024 -> {
@@ -269,9 +240,6 @@ class GetStatusBar(
 
     // ==================== ГРОМКОСТЬ ====================
 
-    /**
-     * Получение текущей громкости
-     */
     private fun getVolume(): String? {
         return try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -291,9 +259,6 @@ class GetStatusBar(
 
     // ==================== GSM СИГНАЛ ====================
 
-    /**
-     * Получение уровня GSM сигнала
-     */
     @Suppress("DEPRECATION")
     private fun getGsmSignal(): Int? {
         return try {
@@ -308,9 +273,6 @@ class GetStatusBar(
         }
     }
 
-    /**
-     * Получение типа сети (2G, 3G, 4G, 5G, H+)
-     */
     @Suppress("DEPRECATION")
     private fun getGsmNetworkType(): String? {
         return try {
@@ -322,14 +284,12 @@ class GetStatusBar(
             val networkType = telephonyManager.dataNetworkType
 
             when (networkType) {
-                // 2G
                 TelephonyManager.NETWORK_TYPE_GPRS,
                 TelephonyManager.NETWORK_TYPE_EDGE,
                 TelephonyManager.NETWORK_TYPE_CDMA,
                 TelephonyManager.NETWORK_TYPE_1xRTT,
                 TelephonyManager.NETWORK_TYPE_IDEN -> "2G"
 
-                // 3G
                 TelephonyManager.NETWORK_TYPE_UMTS,
                 TelephonyManager.NETWORK_TYPE_HSDPA,
                 TelephonyManager.NETWORK_TYPE_HSUPA,
@@ -339,13 +299,10 @@ class GetStatusBar(
                 TelephonyManager.NETWORK_TYPE_EVDO_B,
                 TelephonyManager.NETWORK_TYPE_EHRPD -> "3G"
 
-                // 4G
                 TelephonyManager.NETWORK_TYPE_LTE -> "4G"
 
-                // 5G
                 TelephonyManager.NETWORK_TYPE_NR -> "5G"
 
-                // HSPA+ (часто отображается как H+)
                 TelephonyManager.NETWORK_TYPE_HSPAP -> "H+"
 
                 else -> null
@@ -357,9 +314,6 @@ class GetStatusBar(
 
     // ==================== Wi-Fi ====================
 
-    /**
-     * Получение уровня сигнала Wi-Fi (0-4)
-     */
     @Suppress("DEPRECATION")
     private fun getWifiSignalLevel(): Int? {
         return try {
@@ -391,9 +345,6 @@ class GetStatusBar(
 
     // ==================== Bluetooth ====================
 
-    /**
-     * Проверка включен ли Bluetooth
-     */
     @Suppress("DEPRECATION")
     private fun isBluetoothEnabled(): Boolean {
         return try {
@@ -404,9 +355,6 @@ class GetStatusBar(
         }
     }
 
-    /**
-     * Проверка включен ли Wi-Fi
-     */
     private fun isWifiEnabled(): Boolean {
         return try {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -422,9 +370,6 @@ class GetStatusBar(
         }
     }
 
-    /**
-     * Проверка включен ли GPS
-     */
     private fun isGpsEnabled(): Boolean {
         return try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -436,14 +381,10 @@ class GetStatusBar(
 
     // ==================== USB ====================
 
-    /**
-     * Проверка подключения USB устройств
-     */
     private fun isUsbConnected(): Boolean {
         return try {
             val usbManager = context.getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
-            val deviceList = usbManager.deviceList
-            deviceList.isNotEmpty()  // true если есть подключённые USB устройства
+            usbManager.deviceList.isNotEmpty()
         } catch (_: Exception) {
             false
         }

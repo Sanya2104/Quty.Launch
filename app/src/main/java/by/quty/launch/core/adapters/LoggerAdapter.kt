@@ -18,23 +18,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Адаптер для списка логов.
- *
- * Формат строки:
- *   │ 12:34:56.789 CORE
- *   │ Core initialized
- *
- * Особенности:
- * - Слева — вертикальная полоска 3dp во всю высоту item, цвет = уровень.
- * - Справа — колонка: первая строка «время + тег», вторая — сообщение.
- * - ERROR-строки — лёгкий красный фон (10% opacity).
- * - WARN-строки — лёгкий оранжевый фон (10% opacity).
- * - INFO/DEBUG — прозрачный фон.
- * - Если у записи есть details — тап по item открывает диалог с полным
- *   содержимым (обработчик передаётся через onItemClick).
- *
- * Порядок записей: новые (индекс 0) → старые (конец списка).
- * addEntry() добавляет в начало списка.
+ * Строка лога: цветная полоска уровня, время+тег, сообщение. Тап — details.
  */
 class LoggerAdapter(
     private val entries: MutableList<LoggerEntryModel>,
@@ -55,18 +39,12 @@ class LoggerAdapter(
 
     override fun getItemCount(): Int = entries.size
 
-    /**
-     * Добавляет запись в начало списка (новые — сверху).
-     */
+    /** Добавляет запись в начало (новые сверху). */
     fun addEntry(entry: LoggerEntryModel) {
         entries.add(0, entry)
         notifyItemInserted(0)
     }
 
-    /**
-     * Полностью заменяет список записей.
-     * Используется при применении фильтра.
-     */
     @SuppressLint("NotifyDataSetChanged")
     fun submitEntries(newEntries: List<LoggerEntryModel>) {
         entries.clear()
@@ -74,9 +52,6 @@ class LoggerAdapter(
         notifyDataSetChanged()
     }
 
-    /**
-     * Полностью очищает список.
-     */
     fun clearAll() {
         val sizeBefore = entries.size
         if (sizeBefore == 0) return
@@ -95,23 +70,16 @@ class LoggerAdapter(
         fun bind(entry: LoggerEntryModel) {
             val context = itemView.context
 
-            // Цвет полоски по уровню
             val levelColor = getLevelColor(context, entry.level)
             ViewCompat.setBackgroundTintList(
                 levelBar,
                 ColorStateList.valueOf(levelColor)
             )
 
-            // Время
             timeView.text = timeFormat.format(Date(entry.timestamp))
-
-            // Тег
             tagView.text = entry.tag.displayName
-
-            // Сообщение
             messageView.text = entry.message
 
-            // Фон строки по уровню
             when (entry.level) {
                 LoggerLevelModel.ERROR -> {
                     itemView.setBackgroundResource(R.drawable.bg_logger_row_error)
@@ -124,7 +92,6 @@ class LoggerAdapter(
                 }
             }
 
-            // Тап по item — открыть диалог с полным details, если он есть
             itemView.setOnClickListener {
                 if (entry.details != null && onItemClick != null) {
                     onItemClick.invoke(entry)
@@ -132,10 +99,7 @@ class LoggerAdapter(
             }
         }
 
-        private fun getLevelColor(
-            context: android.content.Context,
-            level: LoggerLevelModel
-        ): Int {
+        private fun getLevelColor(context: android.content.Context, level: LoggerLevelModel): Int {
             return when (level) {
                 LoggerLevelModel.DEBUG ->
                     ContextCompat.getColor(context, R.color.text_dim)

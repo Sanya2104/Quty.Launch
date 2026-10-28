@@ -25,9 +25,7 @@ import java.net.URL
 import java.net.UnknownHostException
 import androidx.core.net.toUri
 
-/**
- * Информация о версии приложения
- */
+/** Информация о версии приложения. */
 @Serializable
 data class VersionInfo(
     val version: String,
@@ -39,9 +37,7 @@ data class VersionInfo(
     val size: String
 )
 
-/**
- * Результат проверки обновлений
- */
+/** Результат проверки обновлений. */
 @Serializable
 data class UpdateCheckResult(
     val hasUpdate: Boolean,
@@ -50,18 +46,16 @@ data class UpdateCheckResult(
 )
 
 /**
- * Менеджер обновления приложения
- * Проверяет наличие обновлений, скачивает и устанавливает APK
+ * Обновление ядра: проверка, скачивание APK, установка.
+ * Кэш последнего результата общий на процесс (companion object).
  */
 class SystemUpdateManager(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val storageManager = StorageManager(context)
 
-    // URL для проверки обновлений (из конфига)
     private val versionUrl = CoreConfig.UPDATE_SERVER_URL
 
-    // SharedPreferences для настроек авто-проверки и меток загрузки
     private val prefs = context.getSharedPreferences("update_prefs", Context.MODE_PRIVATE)
 
     init {
@@ -69,19 +63,8 @@ class SystemUpdateManager(private val context: Context) {
     }
 
     // ============================================================
-    // КЭШ ПОСЛЕДНЕГО РЕЗУЛЬТАТА ПРОВЕРКИ (ОБЩИЙ)
+    // КЭШ ПОСЛЕДНЕГО РЕЗУЛЬТАТА ПРОВЕРКИ
     // ============================================================
-    //
-    // ВАЖНО: cachedUpdate живёт в companion object, а НЕ как поле
-    // экземпляра. Раньше каждый SystemUpdateManager(context) имел
-    // свой кэш — UpdateFragment писал в один, GetApps читал из другого
-    // (свежего) и всегда видел null → маркер обновления не появлялся.
-    //
-    // Теперь кэш один на процесс:
-    // - MainActivity (авто-проверка) → setCachedUpdate()
-    // - UpdateFragment (ручная проверка) → setCachedUpdate()
-    // - GetApps / GetCoreState / SettingsActivity → getCachedUpdate()
-    // все видят одно и то же значение.
 
     fun getCachedUpdate(): UpdateCheckResult? = cachedUpdate
 
@@ -108,7 +91,7 @@ class SystemUpdateManager(private val context: Context) {
         prefs.edit { putBoolean(KEY_AUTO_CHECK_ENABLED, enabled) }
         LoggerManager.info(
             LoggerTagModel.UPDATE,
-            "UPDATE.auto_check.enabled  $previous → $enabled"
+            "UPDATE.auto_check.enabled  $previous > $enabled"
         )
     }
 
@@ -129,7 +112,7 @@ class SystemUpdateManager(private val context: Context) {
         prefs.edit { putInt(KEY_AUTO_CHECK_INTERVAL_HOURS, normalized) }
         LoggerManager.info(
             LoggerTagModel.UPDATE,
-            "UPDATE.auto_check.interval  $previous → $normalized"
+            "UPDATE.auto_check.interval  $previous > $normalized"
         )
     }
 
@@ -141,16 +124,7 @@ class SystemUpdateManager(private val context: Context) {
         prefs.edit { putLong(KEY_LAST_CHECK_TIME, time) }
     }
 
-    /**
-     * Проверяет, нужно ли запускать авто-проверку прямо сейчас.
-     *
-     * Условия:
-     * - авто-проверка включена;
-     * - с последней проверки прошло >= интервала.
-     *
-     * Если юзер зашёл позже заданного времени — тоже true
-     * (now - lastCheckTime будет больше интервала).
-     */
+    /** true, если авто-проверка включена и интервал истёк. */
     fun shouldRunAutoCheck(): Boolean {
         if (!isAutoCheckEnabled()) return false
 
@@ -161,12 +135,9 @@ class SystemUpdateManager(private val context: Context) {
     }
 
     // ============================================================
-    // ПОЛУЧЕНИЕ ИНФОРМАЦИИ О ВЕРСИИ
+    // ВЕРСИЯ ПРИЛОЖЕНИЯ
     // ============================================================
 
-    /**
-     * Получение текущей версии приложения через PackageManager
-     */
     private fun getCurrentVersionCode(): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -188,10 +159,7 @@ class SystemUpdateManager(private val context: Context) {
     // ПРОВЕРКА ОБНОВЛЕНИЙ
     // ============================================================
 
-    /**
-     * Проверка наличия обновлений
-     * @return UpdateCheckResult с информацией об обновлении
-     */
+    /** Проверяет сервер и сравнивает versionCode. */
     suspend fun checkForUpdates(): UpdateCheckResult = withContext(Dispatchers.IO) {
         try {
             LoggerManager.info(LoggerTagModel.UPDATE, "UPDATE.check  start")
@@ -255,40 +223,29 @@ class SystemUpdateManager(private val context: Context) {
     }
 
     // ============================================================
-    // УПРАВЛЕНИЕ ФАЙЛАМИ ОБНОВЛЕНИЙ
+    // ФАЙЛЫ ОБНОВЛЕНИЙ
     // ============================================================
 
-    /**
-     * Получить имя APK файла для указанной версии
-     */
     private fun getApkFileName(version: String): String {
         return "${CoreConfig.APK_FILE_PREFIX}-$version.apk"
     }
 
-    /**
-     * Проверяет, существует ли уже скачанный APK файл для указанной версии
-     * @param versionInfo информация о версии
-     * @return Pair(существует ли, URI файла)
-     */
+    /** Возвращает (есть ли готовый APK, URI). */
     suspend fun checkIfApkExists(versionInfo: VersionInfo): Pair<Boolean, Uri?> =
         withContext(Dispatchers.IO) {
             try {
                 val fileName = getApkFileName(versionInfo.version)
 
-                // Проверяем метку о завершении загрузки
                 if (!isDownloadComplete(versionInfo.versionCode)) {
-                    // Если метки нет, удаляем возможный файл-призрак
                     deleteApkFile(fileName)
                     return@withContext Pair(false, null)
                 }
 
-                // Проверяем существование файла через StorageManager
                 val file = storageManager.get(StorageDirectory.UPDATES, fileName)
                 if (storageManager.isValidFile(file)) {
                     val uri = storageManager.getUri(file)
                     return@withContext Pair(true, uri)
                 } else {
-                    // Файл повреждён или отсутствует — очищаем метку
                     clearDownloadMark(versionInfo.versionCode)
                     return@withContext Pair(false, null)
                 }
@@ -297,20 +254,13 @@ class SystemUpdateManager(private val context: Context) {
             }
         }
 
-    /**
-     * Удаляет APK файл по имени
-     */
     private suspend fun deleteApkFile(fileName: String) {
         try {
             storageManager.remove(StorageDirectory.UPDATES, fileName)
         } catch (_: Exception) {
-            // Игнорируем ошибки
         }
     }
 
-    /**
-     * Удаляет все старые APK файлы
-     */
     private suspend fun deleteOldApkFiles() {
         try {
             val apkFiles = storageManager.list(
@@ -321,38 +271,26 @@ class SystemUpdateManager(private val context: Context) {
                 storageManager.remove(file)
             }
         } catch (_: Exception) {
-            // Игнорируем ошибки
         }
     }
 
     // ============================================================
-    // УПРАВЛЕНИЕ МЕТКАМИ ЗАГРУЗКИ
+    // МЕТКИ ЗАГРУЗКИ
     // ============================================================
 
-    /**
-     * Сохраняет информацию об успешно скачанном файле
-     */
     private fun markDownloadComplete(versionCode: Int) {
         prefs.edit { putBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", true) }
     }
 
-    /**
-     * Проверяет, был ли файл успешно скачан
-     */
     private fun isDownloadComplete(versionCode: Int): Boolean {
         return prefs.getBoolean("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode", false)
     }
 
-    /**
-     * Очищает метку о загрузке
-     */
     fun clearDownloadMark(versionCode: Int) {
         prefs.edit { remove("${CoreConfig.DOWNLOAD_COMPLETE_KEY}$versionCode") }
     }
 
-    /**
-     * Очищает старые метки загрузки (для версий, которые уже не актуальны)
-     */
+    /** Удаляет метки для версий, которые уже не новее текущей. */
     private fun cleanupOldDownloadMarks() {
         try {
             val currentVersionCode = getCurrentVersionCode()
@@ -367,7 +305,6 @@ class SystemUpdateManager(private val context: Context) {
                 }
             }
         } catch (_: Exception) {
-            // Игнорируем ошибки
         }
     }
 
@@ -375,13 +312,7 @@ class SystemUpdateManager(private val context: Context) {
     // СКАЧИВАНИЕ И УСТАНОВКА
     // ============================================================
 
-    /**
-     * Скачивает APK файл
-     * @param versionInfo информация о версии
-     * @param listener слушатель прогресса
-     * @param forceDownload принудительно перескачать (игнорировать существующий)
-     * @return true при успехе
-     */
+    /** Скачивает APK. При forceDownload = false возвращает уже готовый файл. */
     suspend fun downloadApk(
         versionInfo: VersionInfo,
         listener: DownloadListener,
@@ -395,7 +326,6 @@ class SystemUpdateManager(private val context: Context) {
                 "UPDATE.download  start  ${versionInfo.version}"
             )
 
-            // Проверяем, существует ли уже скачанный APK
             if (!forceDownload) {
                 val (exists, existingUri) = checkIfApkExists(versionInfo)
                 if (exists && existingUri != null) {
@@ -406,8 +336,7 @@ class SystemUpdateManager(private val context: Context) {
                 }
             }
 
-            // Проверяем наличие свободного места
-            val fileSize = versionInfo.size.toLongOrNull() ?: (20 * 1024 * 1024) // 20 MB по умолчанию
+            val fileSize = versionInfo.size.toLongOrNull() ?: (20 * 1024 * 1024)
             if (!hasEnoughFreeSpace(fileSize)) {
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_not_enough_space))
@@ -415,13 +344,11 @@ class SystemUpdateManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Создаём временный файл
             val tempFile = storageManager.createTempFile(
                 prefix = "apk_download_${versionInfo.versionCode}",
                 extension = "tmp"
             )
 
-            // Скачиваем через UpdateHelper
             val file = UpdateHelper.downloadFile(
                 context = context,
                 url = versionInfo.downloadUrl,
@@ -431,7 +358,6 @@ class SystemUpdateManager(private val context: Context) {
                     }
 
                     override fun onSuccess(file: File) {
-                        // Файл скачан во временный файл
                     }
 
                     override fun onError(message: String) {
@@ -450,7 +376,6 @@ class SystemUpdateManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Проверяем, что файл не пустой
             if (file.length() == 0L) {
                 file.delete()
                 withContext(Dispatchers.Main) {
@@ -459,7 +384,6 @@ class SystemUpdateManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Сохраняем через StorageManager
             val success = storageManager.set(
                 directory = StorageDirectory.UPDATES,
                 name = fileName,
@@ -467,7 +391,6 @@ class SystemUpdateManager(private val context: Context) {
                 overwrite = true
             )
 
-            // Удаляем временный файл
             file.delete()
 
             if (!success) {
@@ -481,10 +404,8 @@ class SystemUpdateManager(private val context: Context) {
                 return@withContext false
             }
 
-            // Отмечаем загрузку как завершённую
             markDownloadComplete(versionInfo.versionCode)
 
-            // Получаем URI для установки
             val savedFile = storageManager.get(StorageDirectory.UPDATES, fileName)
             val uri = storageManager.getUri(savedFile)
 
@@ -522,42 +443,22 @@ class SystemUpdateManager(private val context: Context) {
         }
     }
 
-    /**
-     * Проверяет, достаточно ли свободного места для загрузки файла
-     */
     private fun hasEnoughFreeSpace(requiredSpace: Long): Boolean {
         return try {
             val freeSpace = storageManager.getDirectory(StorageDirectory.BASE).freeSpace
-            // Проверяем, что свободного места как минимум на 10% больше требуемого
             val requiredWithBuffer = (requiredSpace * 1.1).toLong()
             freeSpace >= requiredWithBuffer
         } catch (_: Exception) {
-            // Если не удалось проверить — считаем, что места достаточно
             true
         }
     }
 
-    /**
-     * Установка APK из Uri
-     * @param uri URI APK файла
-     * @param versionCode НЕ используется для очистки метки.
-     *
-     * ВАЖНО: метка загрузки НЕ очищается при старте установки.
-     * Если пользователь отменит установку — метка останется, файл останется,
-     * и следующая проверка обновлений подхватит APK без повторного скачивания.
-     *
-     * Метка будет очищена автоматически в cleanupOldDownloadMarks()
-     * при следующей проверке, когда текущая версия приложения станет
-     * >= установленной версии.
-     *
-     * Параметр versionCode оставлен для обратной совместимости API.
-     */
+    /** Запускает установку APK. Метка загрузки не очищается — пригодится при отмене. */
     @Suppress("UNUSED_PARAMETER")
     fun installApk(uri: Uri, versionCode: Int? = null) {
         try {
             LoggerManager.info(LoggerTagModel.UPDATE, "UPDATE.install  start")
 
-            // Проверяем разрешение на установку (для Android 8+)
             if (!context.packageManager.canRequestPackageInstalls()) {
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
                 intent.data = "package:${context.packageName}".toUri()
@@ -573,9 +474,6 @@ class SystemUpdateManager(private val context: Context) {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(intent)
-
-            // НЕ вызываем clearDownloadMark — метка нужна для повторного запуска установки.
-            // Автоочистка произойдёт в cleanupOldDownloadMarks() при следующей проверке.
 
         } catch (e: Exception) {
             LoggerManager.error(LoggerTagModel.UPDATE, "UPDATE.install  error", e)
@@ -598,7 +496,7 @@ class SystemUpdateManager(private val context: Context) {
     }
 
     // ============================================================
-    // КЛЮЧИ SHAREDPREFERENCES + ОБЩИЙ КЭШ
+    // КЛЮЧИ И ОБЩИЙ КЭШ
     // ============================================================
 
     companion object {
@@ -606,15 +504,7 @@ class SystemUpdateManager(private val context: Context) {
         private const val KEY_AUTO_CHECK_INTERVAL_HOURS = "auto_check_interval_hours"
         private const val KEY_LAST_CHECK_TIME = "last_check_time"
 
-        /**
-         * Общий кэш последнего результата checkForUpdates().
-         *
-         * @Volatile — пишется из Dispatchers.IO (MainActivity / UpdateFragment),
-         * читается из UI / других потоков (GetApps, GetCoreState, SettingsActivity).
-         *
-         * Живёт в рамках процесса. При перезапуске приложения — null,
-         * пока не отработает первая проверка.
-         */
+        /** Общий кэш последнего результата (на процесс). */
         @Volatile
         private var cachedUpdate: UpdateCheckResult? = null
     }

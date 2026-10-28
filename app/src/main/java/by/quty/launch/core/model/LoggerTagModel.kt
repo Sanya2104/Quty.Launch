@@ -1,14 +1,7 @@
 // *** core/model/LoggerTagModel.kt *** //
 package by.quty.launch.core.model
 
-/**
- * Тег (категория) записи лога.
- *
- * Используется для фильтрации и для быстрого понимания, из какой
- * подсистемы ядра пришла запись.
- *
- * @property displayName отображаемое имя тега в UI
- */
+/** Тег (категория) записи лога. */
 enum class LoggerTagModel(val displayName: String) {
     CORE("CORE"),
     SHELL("SHELL"),

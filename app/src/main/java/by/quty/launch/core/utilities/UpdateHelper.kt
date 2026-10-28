@@ -14,27 +14,17 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Вспомогательный объект для операций обновления
- * Содержит общую логику для SystemUpdateManager и ShellUpdateManager
- *
- * Использование:
- * - compareVersions() - сравнение версий
- * - isNewerVersion() - проверка, новее ли версия
- * - downloadFile() - скачивание файла
+ * Общие хелперы обновления: версии, размеры, скачивание файла.
  */
 object UpdateHelper {
 
-    // Размер буфера при скачивании (из конфига)
     private const val BUFFER_SIZE = CoreConfig.DOWNLOAD_BUFFER_SIZE
 
     // ============================================================
-    // РАБОТА С ВЕРСИЯМИ
+    // ВЕРСИИ
     // ============================================================
 
-    /**
-     * Сравнивает две версии (формат x.y.z)
-     * @return 1 если v1 > v2, 0 если равны, -1 если v1 < v2
-     */
+    /** Сравнивает x.y.z: 1 / 0 / -1. */
     fun compareVersions(v1: String, v2: String): Int {
         return try {
             val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
@@ -55,22 +45,15 @@ object UpdateHelper {
         }
     }
 
-    /**
-     * Проверяет, является ли новая версия новее текущей
-     */
     fun isNewerVersion(newVersion: String, currentVersion: String): Boolean {
         return compareVersions(newVersion, currentVersion) > 0
     }
 
     // ============================================================
-    // РАБОТА С РАЗМЕРАМИ
+    // РАЗМЕРЫ
     // ============================================================
 
-    /**
-     * Получает размер файла по URL (HEAD запрос)
-     * @param url ссылка на файл
-     * @return размер в байтах или -1 если не удалось
-     */
+    /** Размер файла по HEAD; -1 при ошибке. */
     suspend fun getFileSize(url: String): Long = withContext(Dispatchers.IO) {
         try {
             val connection = URL(url).openConnection() as HttpURLConnection
@@ -86,12 +69,7 @@ object UpdateHelper {
         }
     }
 
-    /**
-     * Проверяет, достаточно ли свободного места
-     * @param requiredSpace требуемое место в байтах
-     * @param path путь для проверки (по умолчанию внешнее хранилище)
-     * @return true если места достаточно
-     */
+    /** true, если свободно > required * 1.1. */
     fun hasEnoughFreeSpace(requiredSpace: Long, path: String = android.os.Environment.getExternalStorageDirectory().path): Boolean {
         return try {
             val stat = StatFs(path)
@@ -99,35 +77,18 @@ object UpdateHelper {
             val availableBlocks = stat.availableBlocksLong
             val freeSpace = blockSize * availableBlocks
 
-            // Проверяем, что свободного места как минимум на 10% больше требуемого
             val requiredWithBuffer = (requiredSpace * 1.1).toLong()
             freeSpace >= requiredWithBuffer
         } catch (_: Exception) {
-            // Если не удалось проверить — считаем, что места достаточно
             true
         }
     }
 
     // ============================================================
-    // СКАЧИВАНИЕ ФАЙЛОВ
+    // СКАЧИВАНИЕ
     // ============================================================
 
-    /**
-     * Скачивает файл из интернета.
-     *
-     * ВАЖНО: цикл чтения проверяет coroutineContext.isActive.
-     * Если корутина отменена (например, фрагмент уничтожен) — цикл
-     * прервётся, временный файл удалится, and exception будет брошен
-     * вверх по стеку для корректной обработки отмены.
-     *
-     * @param context контекст приложения
-     * @param url ссылка на файл
-     * @param listener слушатель прогресса
-     * @param destination куда сохранять (полный путь к файлу)
-     * @param connectTimeout тайм-аут подключения (мс)
-     * @param readTimeout тайм-аут чтения (мс)
-     * @return скачанный файл или null в случае ошибки
-     */
+    /** Скачивает файл; при отмене корутины бросает CancellationException. */
     suspend fun downloadFile(
         context: Context,
         url: String,
@@ -141,10 +102,8 @@ object UpdateHelper {
         var outputStream: FileOutputStream? = null
 
         try {
-            // Получаем размер файла
             val fileSize = getFileSize(url)
 
-            // Проверяем свободное место
             if (fileSize > 0 && !hasEnoughFreeSpace(fileSize)) {
                 withContext(Dispatchers.Main) {
                     listener.onError(context.getString(R.string.download_not_enough_space))
@@ -152,13 +111,11 @@ object UpdateHelper {
                 return@withContext null
             }
 
-            // Подключаемся
             connection = URL(url).openConnection() as HttpURLConnection
             connection.connectTimeout = connectTimeout
             connection.readTimeout = readTimeout
             connection.connect()
 
-            // Проверяем код ответа
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 val errorMsg = context.getString(R.string.download_http_error, connection.responseCode)
                 withContext(Dispatchers.Main) {
@@ -169,7 +126,6 @@ object UpdateHelper {
 
             inputStream = connection.inputStream
 
-            // Подготавливаем файл для сохранения
             val file = when (destination) {
                 is Destination.CustomPath -> {
                     val customFile = File(destination.path)
@@ -179,15 +135,12 @@ object UpdateHelper {
                 }
             }
 
-            // Скачиваем
             val buffer = ByteArray(BUFFER_SIZE)
             var bytesRead: Int
             var totalBytesRead = 0L
             var lastProgress = 0
 
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                // Проверяем отмену корутины — прерываем скачивание,
-                // если scope был отменён. Файл будет удалён в catch-блоке.
                 if (!isActive) {
                     throw kotlinx.coroutines.CancellationException("Download cancelled")
                 }
@@ -210,7 +163,6 @@ object UpdateHelper {
             inputStream?.close()
             connection.disconnect()
 
-            // Проверяем, что файл не пустой
             if (!file.exists() || file.length() == 0L) {
                 file.delete()
                 withContext(Dispatchers.Main) {
@@ -225,7 +177,6 @@ object UpdateHelper {
             return@withContext file
 
         } catch (e: kotlinx.coroutines.CancellationException) {
-            // Отмена корутины — чистим и пробрасываем дальше
             try {
                 outputStream?.close()
                 inputStream?.close()
@@ -258,24 +209,10 @@ object UpdateHelper {
         }
     }
 
-    // ============================================================
-    // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
-    // ============================================================
-
-    /**
-     * Назначение файла (куда сохранять)
-     */
     sealed class Destination {
-        /**
-         * Сохранить по указанному пути
-         * @param path полный путь к файлу
-         */
         data class CustomPath(val path: String) : Destination()
     }
 
-    /**
-     * Слушатель прогресса скачивания
-     */
     interface DownloadListener {
         fun onProgress(percent: Int)
         fun onSuccess(file: File)

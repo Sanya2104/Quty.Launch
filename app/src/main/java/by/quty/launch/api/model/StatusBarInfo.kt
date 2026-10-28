@@ -3,6 +3,7 @@ package by.quty.launch.api.model
 
 import kotlinx.serialization.Serializable
 
+/** Данные статус-бара для оболочки. */
 @Serializable
 data class StatusBarInfo(
     val cpuTemp: String? = null,

@@ -27,21 +27,10 @@ import by.quty.launch.core.model.StoreFilterModel
 import by.quty.launch.core.model.StoreItemModel
 import by.quty.launch.core.model.StoreRemoteItemModel
 import kotlinx.coroutines.launch
+import androidx.core.view.isNotEmpty
 
 /**
- * Фрагмент «Каталог» магазина.
- *
- * Один экран для всего: показывает объединённый список элементов
- * (с сервера + локальные). Сверху — чипы-фильтры (одиночный выбор).
- *
- * Загрузка:
- * - при первом заходе показываем кэш (если есть), фоном грузим сервер;
- * - если кэша нет — loading_state и грузим сервер;
- * - swipe-to-refresh — принудительная перезагрузка с сервера.
- *
- * Действия (установка / обновление / применение / удаление) —
- * в детальном экране (StoreItemDetailFragment), открывается через
- * StoreActivity.showItemDetail().
+ * Каталог: список элементов с фильтрами, кэш + фоновая загрузка, swipe-to-refresh.
  */
 class StoreCatalogFragment : Fragment() {
 
@@ -49,7 +38,6 @@ class StoreCatalogFragment : Fragment() {
     private lateinit var shellManager: ShellManager
     private lateinit var storeManager: StoreManager
 
-    // ===== UI =====
     private lateinit var filtersContainer: LinearLayout
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
@@ -60,16 +48,12 @@ class StoreCatalogFragment : Fragment() {
     private lateinit var emptyState: LinearLayout
     private lateinit var emptyMessage: TextView
 
-    // ===== Данные =====
     private lateinit var adapter: StoreItemAdapter
 
-    // Полный список (без фильтра)
     private var allItems: List<StoreItemModel> = emptyList()
 
-    // Текущий фильтр
     private var currentFilter: StoreFilterModel = StoreFilterModel.ALL
 
-    // Флаги
     private var isLoading = false
     private var isCacheShown = false
 
@@ -111,8 +95,6 @@ class StoreCatalogFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // После возврата из детального экрана локальный список мог измениться
-        // (установка, удаление, активация) — пересобрать без сети.
         if (isCacheShown) {
             rebuildFromLocal()
         }
@@ -149,9 +131,7 @@ class StoreCatalogFragment : Fragment() {
         }
     }
 
-    /**
-     * Создаёт чипы-фильтры в HorizontalScrollView.
-     */
+    /** Чипы фильтров в HorizontalScrollView. */
     private fun buildFilterChips() {
         filtersContainer.removeAllViews()
 
@@ -177,7 +157,7 @@ class StoreCatalogFragment : Fragment() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            if (filtersContainer.childCount > 0) {
+            if (filtersContainer.isNotEmpty()) {
                 lp.marginStart = resources.getDimensionPixelSize(R.dimen.spacing_s)
             }
             chip.layoutParams = lp
@@ -250,9 +230,8 @@ class StoreCatalogFragment : Fragment() {
 
     /**
      * Загрузка с сервера.
-     *
-     * @param isUserRefresh true, если инициатор — swipe-to-refresh.
-     * @param silentIfCache true, если уже показан кэш — не показывать loading_state.
+     * @param isUserRefresh true — swipe-to-refresh.
+     * @param silentIfCache true — не показывать loading_state.
      */
     private fun loadFromServer(isUserRefresh: Boolean, silentIfCache: Boolean = false) {
         if (isLoading) {
@@ -322,7 +301,7 @@ class StoreCatalogFragment : Fragment() {
     }
 
     // ============================================================
-    // УПРАВЛЕНИЕ СОСТОЯНИЯМИ
+    // СОСТОЯНИЯ
     // ============================================================
 
     private fun showLoading() {

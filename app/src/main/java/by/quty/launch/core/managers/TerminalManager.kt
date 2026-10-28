@@ -24,36 +24,15 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
 /**
- * Менеджер терминала Quty.Launch.
- *
- * Терминал — внутренняя консоль ядра. Он НЕ запускает системные процессы,
- * работает только с состоянием самого Quty.Launch через существующие менеджеры.
- *
- * Синтаксис команд:
- * - простые: help, version, status, clear, exit
- * - составные: shell.info, api.call, prefs.set (одно слово через точку)
- * - с аргументами: set theme "dark", api.call "LaunchApp" '{"packageName":"..."}'
- *
- * Аргументы с пробелами оборачиваются в двойные ИЛИ одинарные кавычки.
- * Одинарные удобны, когда внутри нужно передать JSON с двойными кавычками.
- * Экранирование кавычек внутри кавычек не поддерживается.
- *
- * Write-команды (изменяющие состояние) требуют активного DevMode —
- * флаг developer_mode в SharedPreferences "developer_prefs".
- * Write-команды также помечаются флагом isWrite — Activity по нему
- * выставляет needsRestart и при закрытии предлагает перезапуск.
+ * Менеджер внутренней консоли Quty.Launch.
+ * Ошибки возвращаются с префиксом "!" — TerminalActivity по нему отличает ERROR от OUTPUT.
  */
 object TerminalManager {
 
-    /**
-     * Ширина колонки в выводе команд (выравнивание ключей по левому краю).
-     */
+    /** Ширина колонки для `pad()`. */
     private const val STATUS_PAD_WIDTH = 13
 
-    /**
-     * Префикс сообщения об ошибке. TerminalActivity различает ERROR/OUTPUT
-     * по `result.startsWith("!")`.
-     */
+    /** Префикс ошибки. */
     private const val ERROR_PREFIX = "!"
 
     // ============================================================
@@ -66,21 +45,13 @@ object TerminalManager {
     private const val PREFS_LAUNCHER = "launcher_prefs"
     private const val PREFS_DEVELOPER = "developer_prefs"
 
-    /**
-     * Порог свободного места для doctor.
-     * Если меньше — предупреждение.
-     */
-    private const val DOCTOR_MIN_FREE_SPACE_BYTES = 10L * 1024 * 1024  // 10 MB
+    /** Порог свободного места для doctor. */
+    private const val DOCTOR_MIN_FREE_SPACE_BYTES = 10L * 1024 * 1024
 
-    /**
-     * Максимальный «возраст» кэша приложений (мс), после которого — предупреждение.
-     * Синхронизировано с CoreConfig.CACHE_APPS_VALIDITY_MS.
-     */
+    /** Максимальный возраст кэша приложений для doctor. */
     private const val DOCTOR_CACHE_MAX_AGE_MS = CoreConfig.CACHE_APPS_VALIDITY_MS
 
-    /**
-     * Возвращает список зарегистрированных команд.
-     */
+    /** Возвращает реестр команд. */
     fun getCommands(context: Context): List<TerminalCommandModel> {
         val configManager = ConfigManager(context)
 
@@ -304,17 +275,13 @@ object TerminalManager {
         )
     }
 
-    /**
-     * Проверяет, активен ли DevMode.
-     */
+    /** Активен ли DevMode. */
     fun isDevModeEnabled(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_DEVELOPER, Context.MODE_PRIVATE)
         return prefs.getBoolean("developer_mode", false)
     }
 
-    /**
-     * Разбирает строку ввода на имя команды и список аргументов.
-     */
+    /** Разбирает строку на имя команды и аргументы. */
     fun parse(input: String): ParsedCommand? {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return null
@@ -322,15 +289,10 @@ object TerminalManager {
         val tokens = tokenize(trimmed)
         if (tokens.isEmpty()) return null
 
-        val name = tokens.first()
-        val args = tokens.drop(1)
-
-        return ParsedCommand(name, args)
+        return ParsedCommand(tokens.first(), tokens.drop(1))
     }
 
-    /**
-     * Токенизация строки с поддержкой двойных И одинарных кавычек.
-     */
+    /** Токенизация с поддержкой "…" и '…'. */
     private fun tokenize(input: String): List<String> {
         val tokens = mutableListOf<String>()
         val current = StringBuilder()
@@ -338,12 +300,8 @@ object TerminalManager {
 
         for (ch in input) {
             when {
-                quoteChar == null && (ch == '"' || ch == '\'') -> {
-                    quoteChar = ch
-                }
-                quoteChar != null && ch == quoteChar -> {
-                    quoteChar = null
-                }
+                quoteChar == null && (ch == '"' || ch == '\'') -> quoteChar = ch
+                quoteChar != null && ch == quoteChar -> quoteChar = null
                 ch == ' ' && quoteChar == null -> {
                     if (current.isNotEmpty()) {
                         tokens.add(current.toString())
@@ -354,19 +312,11 @@ object TerminalManager {
             }
         }
 
-        if (current.isNotEmpty()) {
-            tokens.add(current.toString())
-        }
-
+        if (current.isNotEmpty()) tokens.add(current.toString())
         return tokens
     }
 
-    /**
-     * Выполняет команду по имени.
-     *
-     * ВАЖНО: все ошибки возвращаются с префиксом "!" — TerminalActivity
-     * различает ERROR/OUTPUT именно по этому префиксу.
-     */
+    /** Выполняет команду. Все ошибки возвращаются с префиксом "!". */
     suspend fun execute(context: Context, parsed: ParsedCommand): String {
         val commands = getCommands(context)
         val command = commands.find { it.name == parsed.name }
@@ -385,18 +335,12 @@ object TerminalManager {
         }
     }
 
-    /**
-     * Возвращает true, если команда является write-командой.
-     */
+    /** true, если команда является write-командой. */
     fun isWriteCommand(context: Context, name: String): Boolean {
         return getCommands(context).find { it.name == name }?.isWrite == true
     }
 
-    /**
-     * Формирует сообщение об ошибке с префиксом "!".
-     * TerminalActivity удалит префикс при выводе, но использует его
-     * для определения типа строки (ERROR / OUTPUT).
-     */
+    /** Оборачивает сообщение в "! ". */
     private fun errorMessage(message: String): String {
         return "$ERROR_PREFIX $message"
     }
@@ -825,6 +769,7 @@ object TerminalManager {
         }
     }
 
+    /** Возраст кэша приложений в мс или null. */
     private fun getCacheAgeMs(context: Context): Long? {
         return try {
             val storageManager = StorageManager(context)
@@ -945,9 +890,7 @@ object TerminalManager {
     // ОБРАБОТЧИКИ: WRITE
     // ============================================================
 
-    /**
-     * Обработчик `set <key> <value>`.
-     */
+    /** `set <key> <value>`. Все изменения идут через ConfigManager. */
     private fun setHandler(
         context: Context,
         args: List<String>
@@ -959,8 +902,6 @@ object TerminalManager {
         val key = args[0]
         val value = args[1]
 
-        // Локальный ConfigManager — единая точка правды для prefs.
-        // Логирование изменений (CONFIG.*) делает сам ConfigManager.
         val configManager = ConfigManager(context)
 
         return when (key) {
@@ -992,9 +933,6 @@ object TerminalManager {
                     )
                 }
                 configManager.setOrientation(value)
-                // Гарантируем перезапуск — иначе на части устройств
-                // (особенно Android 12+) смена ориентации не применится
-                // к уже запущенной MainActivity.
                 configManager.setRestartForOrientationFlag()
                 LoggerManager.info(LoggerTagModel.TERMINAL, "TERMINAL.set  orientation=$value")
                 context.getString(R.string.terminal_set_ok_restart)
@@ -1005,9 +943,7 @@ object TerminalManager {
                         context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                     )
                 configManager.setFullscreenEnabled(bool)
-                // Если выключаем полноэкранный — strict теряет смысл,
-                // снимаем его, чтобы не осталось противоречивого состояния
-                // (isStrictModeEnabled вернёт false, но prefs остались бы true).
+                // При выключении fullscreen strict теряет смысл — сбрасываем.
                 if (!bool && configManager.isStrictModeEnabled()) {
                     configManager.setStrictModeEnabled(false)
                 }
@@ -1019,10 +955,7 @@ object TerminalManager {
                     ?: return errorMessage(
                         context.getString(R.string.terminal_set_invalid_value, value, "on, off")
                     )
-                // Контракт ConfigManager: strict имеет смысл только при
-                // включённом fullscreen. Иначе — явная ошибка, чтобы юзер
-                // не получил «молчаливое» состояние, где strict=true,
-                // а isStrictModeEnabled()=false.
+                // strict работает только при включённом fullscreen.
                 if (bool && !configManager.isFullscreenEnabled()) {
                     return errorMessage(
                         context.getString(R.string.terminal_set_strict_requires_fullscreen)
@@ -1107,9 +1040,7 @@ object TerminalManager {
             context.getString(R.string.terminal_restart_ok)
         }
 
-    /**
-     * Перезапуск приложения.
-     */
+    /** Перезапускает приложение через MainActivity. */
     private fun restartApp(context: Context) {
         val intent = Intent(context, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

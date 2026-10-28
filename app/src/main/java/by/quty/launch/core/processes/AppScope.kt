@@ -9,19 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 /**
- * Application-level scope для фоновых задач, которые должны пережить
- * жизненный цикл Activity/Fragment.
- * Этот scope живёт столько же, сколько процесс приложения
- *
- * Не использовать для задач, привязанных к UI (обновление View,
- * Toast, навигация) — для них есть `lifecycleScope` / `viewLifecycleOwner`.
+ * Application-level scope для задач, переживающих Activity/Fragment.
+ * Содержит CoroutineExceptionHandler — исключения логируются, но не роняют процесс.
  */
 object AppScope {
 
-    /**
-     * Обработчик исключений. Логирует и не даёт приложению упасть.
-     * `_` вместо `context` — контекст не нужен, только исключение.
-     */
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         LoggerManager.error(
             LoggerTagModel.CORE,
@@ -30,11 +22,6 @@ object AppScope {
         )
     }
 
-    /**
-     * Сам scope. `@Volatile` не нужен: `object` инициализируется
-     * один раз при первом обращении, все поля `val` безопасно
-     * публикуются через статическую инициализацию.
-     */
     val scope: CoroutineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + exceptionHandler
     )

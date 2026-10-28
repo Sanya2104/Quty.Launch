@@ -27,40 +27,20 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Фрагмент "Восстановление настроек" для Настроек.
- *
- * Содержит:
- * - Секция "Восстановление настроек":
- *   • Сделать backup настроек > создание .qutyconfig через SAF (CreateDocument)
- *   - Восстановить настройки > импорт из .qutyconfig через SAF (OpenDocument)
- *
- * - Секция "Полный сброс настроек":
- *   • Полный сброс настроек > очистка prefs + всех папок StorageManager
- *                                + cacheDir + WebView кэша
- *
- * ВАЖНО: backup сохраняется в выбранное пользователем место (Downloads,
- * Google Drive, любая папка) — файл НЕ хранится внутри приложения.
+ * Восстановление и сброс: backup/restore .qutyconfig через SAF, полный сброс.
  */
 class RecoveryFragment : Fragment() {
 
-    // Менеджеры
     private lateinit var configManager: ConfigManager
     private lateinit var recoveryManager: RecoveryManager
     private lateinit var storageManager: StorageManager
 
-    // UI — секция восстановления
     private lateinit var backupRow: View
     private lateinit var restoreRow: View
-
-    // UI — секция сброса
     private lateinit var fullResetRow: View
 
-    // Флаг, что идёт операция (блокируем повторные клики)
     private var isProcessing = false
 
-    /**
-     * ActivityResult для выбора файла `.qutyconfig` при импорте.
-     */
     private val openDocumentLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -68,11 +48,6 @@ class RecoveryFragment : Fragment() {
         handleImportUri(uri)
     }
 
-    /**
-     * ActivityResult для сохранения backup-файла `.qutyconfig` через SAF.
-     *
-     * Пользователь сам выбирает папку и имя файла.
-     */
     private val createDocumentLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument(CoreConfig.RECOVERY_MIME_TYPE)
     ) { uri: Uri? ->
@@ -112,7 +87,7 @@ class RecoveryFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 1: ВОССТАНОВЛЕНИЕ НАСТРОЕК
+    // BACKUP / RESTORE
     // ============================================================
 
     private fun setupRecoverySection() {
@@ -127,14 +102,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    // ---------- BACKUP (через SAF) ----------
-
-    /**
-     * Запускает SAF-диалог сохранения файла `.qutyconfig`.
-     *
-     * Пользователь сам выбирает папку (Downloads, Drive, ...).
-     * Имя файла по умолчанию — `qutyconfig_YYYY-MM-DD_HH-MM-SS.qutyconfig`.
-     */
+    /** Открывает SAF для сохранения .qutyconfig. */
     private fun performBackup() {
         isProcessing = true
 
@@ -153,11 +121,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Записывает JSON-содержимое в выбранный URI.
-     *
-     * @param uri URI, выбранный пользователем в SAF-диалоге.
-     */
+    /** Пишет JSON в выбранный URI. */
     private fun writeExportToUri(uri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch {
             val json = recoveryManager.buildExportJson()
@@ -202,11 +166,6 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    // ---------- IMPORT (через SAF) ----------
-
-    /**
-     * Открывает системный файловый пикер для выбора `.qutyconfig`.
-     */
     private fun openFilePicker() {
         try {
             openDocumentLauncher.launch(arrayOf("*/*"))
@@ -219,9 +178,6 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Обрабатывает выбранный URI: копирует файл во временный, читает, валидирует.
-     */
     private fun handleImportUri(uri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = readPickedFile(uri)) {
@@ -239,9 +195,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Читает содержимое выбранного файла во временный файл.
-     */
+    /** Копирует выбранный файл во временный. */
     private suspend fun readPickedFile(uri: Uri): ReadPickedFileResult = withContext(Dispatchers.IO) {
         try {
             val tempFile = storageManager.createTempFile(
@@ -263,13 +217,9 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Читает `.qutyconfig`, проверяет формат и версию, и показывает диалог подтверждения.
-     */
     private suspend fun validateAndShowImportDialog(filePath: String) {
         when (val readResult = recoveryManager.readConfig(filePath)) {
             is RecoveryManager.ImportReadResult.Failure -> {
-                // Удаляем временный файл
                 withContext(Dispatchers.IO) {
                     java.io.File(filePath).delete()
                 }
@@ -301,9 +251,7 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Локализует ошибку чтения `.qutyconfig` из sealed-иерархии.
-     */
+    /** Локализует ошибку чтения. */
     private fun getImportFailureText(failure: RecoveryManager.ImportReadResult.Failure): String {
         return when (failure) {
             is RecoveryManager.ImportReadResult.Failure.FileNotFound ->
@@ -323,9 +271,6 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Диалог предупреждения о несовпадении версии формата.
-     */
     private fun showVersionMismatchDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -342,7 +287,6 @@ class RecoveryFragment : Fragment() {
 
         dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-        // Заполняем контент
         val titleView = dialogView.findViewById<android.widget.TextView>(R.id.recovery_confirm_title)
         val messageView = dialogView.findViewById<android.widget.TextView>(R.id.recovery_confirm_message)
         val okButton = dialogView.findViewById<android.widget.Button>(R.id.recovery_confirm_ok_button)
@@ -362,7 +306,6 @@ class RecoveryFragment : Fragment() {
 
         cancelButton.setOnClickListener {
             dialog.dismiss()
-            // Удаляем временный файл
             java.io.File(filePath).delete()
         }
 
@@ -374,9 +317,6 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Диалог подтверждения импорта.
-     */
     private fun showImportConfirmDialog(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -417,9 +357,6 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Выполняет импорт: применяет prefs и удаляет временный файл.
-     */
     private fun performImport(
         filePath: String,
         readResult: RecoveryManager.ImportReadResult.Success
@@ -429,7 +366,6 @@ class RecoveryFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val applied = recoveryManager.applyImport(readResult.data)
 
-            // Удаляем временный файл
             withContext(Dispatchers.IO) {
                 java.io.File(filePath).delete()
             }
@@ -437,10 +373,7 @@ class RecoveryFragment : Fragment() {
             isProcessing = false
 
             if (applied) {
-                // Помечаем, что требуется перезапуск
                 (activity as? SettingsActivity)?.markRestartRequired()
-
-                // Показываем диалог перезапуска
                 showRestartDialog()
             } else {
                 Toast.makeText(
@@ -453,7 +386,7 @@ class RecoveryFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 2: ПОЛНЫЙ СБРОС НАСТРОЕК
+    // ПОЛНЫЙ СБРОС
     // ============================================================
 
     private fun setupResetSection() {
@@ -463,9 +396,6 @@ class RecoveryFragment : Fragment() {
         }
     }
 
-    /**
-     * Диалог подтверждения полного сброса.
-     */
     private fun showFullResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_recovery_confirm, null)
 
@@ -502,9 +432,6 @@ class RecoveryFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Выполняет полный сброс и показывает диалог перезапуска.
-     */
     private fun performFullReset() {
         isProcessing = true
 
@@ -513,10 +440,7 @@ class RecoveryFragment : Fragment() {
             isProcessing = false
 
             if (success) {
-                // Помечаем, что требуется перезапуск
                 (activity as? SettingsActivity)?.markRestartRequired()
-
-                // Показываем диалог перезапуска
                 showRestartDialog()
             } else {
                 Toast.makeText(
@@ -529,15 +453,9 @@ class RecoveryFragment : Fragment() {
     }
 
     // ============================================================
-    // ДИАЛОГ ПЕРЕЗАПУСКА (использует существующий dialog_restart.xml)
+    // ДИАЛОГ ПЕРЕЗАПУСКА
     // ============================================================
 
-    /**
-     * Показывает диалог перезапуска (тот же, что и при выходе из настроек).
-     *
-     * Если SettingsActivity уже показывает свой диалог при выходе — этот
-     * вызывается сразу, чтобы пользователь мог перезапуститься не выходя.
-     */
     private fun showRestartDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_restart, null)
 
@@ -563,12 +481,8 @@ class RecoveryFragment : Fragment() {
             val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
-            // Сначала стартуем новый интент — иначе finishAffinity() может
-            // убить процесс раньше, чем интент будет доставлен.
             activity.startActivityAnimated(intent)
 
-            // Закрываем настройки, чтобы SettingsActivity при закрытии
-            // не показал свой диалог повторно.
             activity.finishAffinity()
         }
 

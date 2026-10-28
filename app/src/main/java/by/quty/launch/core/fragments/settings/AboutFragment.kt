@@ -23,22 +23,10 @@ import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.utilities.AppInfoHelper
 
 /**
- * Фрагмент "О системе" для Настроек
- * Содержит информацию о приложении и устройстве:
- * - шапка: иконка приложения, название, описание;
- * - блок "Приложение": версия (кликабельна — активация DevMode),
- *   код версии, канал, активная оболочка;
- * - блок "Устройство": модель, Android, SDK, производитель;
- * - блок "Контакты": Telegram, GitHub (кликабельны).
- *
- * При активации/деактивации DevMode:
- * - помечает SettingsActivity, что требуется перезапуск;
- * - просит SettingsActivity обновить список меню
- *   (пункт "Разработчикам" появляется/исчезает).
+ * «О системе»: версия, устройство, контакты. Клик по версии 5 раз — DevMode.
  */
 class AboutFragment : Fragment() {
 
-    // ===== Блок "Приложение" =====
     private lateinit var versionRow: View
     private lateinit var versionTextView: TextView
     private lateinit var versionCodeTextView: TextView
@@ -47,20 +35,17 @@ class AboutFragment : Fragment() {
     private lateinit var channelDivider: View
     private lateinit var shellTextView: TextView
 
-    // ===== Блок "Устройство" =====
     private lateinit var deviceModelText: TextView
     private lateinit var deviceAndroidText: TextView
     private lateinit var deviceSdkText: TextView
     private lateinit var deviceManufacturerText: TextView
 
-    // ===== Блок "Контакты" =====
     private lateinit var contactTelegramRow: View
     private lateinit var contactGithubRow: View
 
     private var versionClickCount = 0
     private var lastClickTime = 0L
 
-    // Параметры активации DevMode (из конфига)
     private val clickTimeoutMs = CoreConfig.DEV_MODE_CLICK_TIMEOUT_MS
     private val clicksToActivate = CoreConfig.DEV_MODE_CLICKS_TO_ACTIVATE
 
@@ -77,7 +62,6 @@ class AboutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Блок "Приложение"
         versionRow = view.findViewById(R.id.version_row)
         versionTextView = view.findViewById(R.id.version_text)
         versionCodeTextView = view.findViewById(R.id.version_code_text)
@@ -86,13 +70,11 @@ class AboutFragment : Fragment() {
         channelDivider = view.findViewById(R.id.channel_divider)
         shellTextView = view.findViewById(R.id.shell_text)
 
-        // Блок "Устройство"
         deviceModelText = view.findViewById(R.id.device_model_text)
         deviceAndroidText = view.findViewById(R.id.device_android_text)
         deviceSdkText = view.findViewById(R.id.device_sdk_text)
         deviceManufacturerText = view.findViewById(R.id.device_manufacturer_text)
 
-        // Блок "Контакты"
         contactTelegramRow = view.findViewById(R.id.contact_telegram_row)
         contactGithubRow = view.findViewById(R.id.contact_github_row)
 
@@ -105,13 +87,12 @@ class AboutFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        // Отменяем показ тоста прогресса DevMode
         progressToast?.cancel()
         progressToast = null
     }
 
     // ============================================================
-    // БЛОК "ПРИЛОЖЕНИЕ"
+    // БЛОК «ПРИЛОЖЕНИЕ»
     // ============================================================
 
     private fun setupVersionInfo() {
@@ -138,12 +119,6 @@ class AboutFragment : Fragment() {
             channelDivider.visibility = View.GONE
         }
 
-        /*
-         * DevMode активируется кликом по ВСЕЙ строке "Версия",
-         * а не только по значению версии.
-         * Слушатель вешаем на versionRow — контейнер строки,
-         * у которого есть ripple-эффект (bg_item_rounded).
-         */
         versionRow.isClickable = true
         versionRow.isFocusable = true
         versionRow.setOnClickListener {
@@ -151,10 +126,7 @@ class AboutFragment : Fragment() {
         }
     }
 
-    /**
-     * Информация об активной оболочке: "Название Версия".
-     * Если оболочка не найдена — "Неизвестно".
-     */
+    /** Показывает «Название Версия» активной оболочки. */
     private fun setupShellInfo() {
         try {
             val configManager = ConfigManager(requireContext())
@@ -180,7 +152,7 @@ class AboutFragment : Fragment() {
     }
 
     // ============================================================
-    // БЛОК "УСТРОЙСТВО"
+    // БЛОК «УСТРОЙСТВО»
     // ============================================================
 
     private fun setupDeviceInfo() {
@@ -191,7 +163,7 @@ class AboutFragment : Fragment() {
     }
 
     // ============================================================
-    // БЛОК "КОНТАКТЫ"
+    // БЛОК «КОНТАКТЫ»
     // ============================================================
 
     private fun setupContacts() {
@@ -204,10 +176,6 @@ class AboutFragment : Fragment() {
         }
     }
 
-    /**
-     * Открывает URL во внешнем приложении (браузер, Telegram и т.п.).
-     * При отсутствии подходящего приложения показывает тост.
-     */
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -228,13 +196,10 @@ class AboutFragment : Fragment() {
     }
 
     // ============================================================
-    // DEV MODE (клик по строке "Версия")
+    // DEV MODE
     // ============================================================
 
-    /**
-     * Обрабатывает клик по строке версии — 5 нажатий подряд активируют DevMode.
-     * Тайм-аут между кликами — из CoreConfig.DEV_MODE_CLICK_TIMEOUT_MS.
-     */
+    /** 5 кликов по версии с интервалом < 3 сек — переключение DevMode. */
     private fun handleVersionClick() {
         val currentTime = System.currentTimeMillis()
 
@@ -257,9 +222,6 @@ class AboutFragment : Fragment() {
         }
     }
 
-    /**
-     * Показывает тост «Осталось нажатий: N».
-     */
     private fun showProgressToast(remaining: Int) {
         progressToast?.cancel()
         progressToast = Toast.makeText(
@@ -270,14 +232,7 @@ class AboutFragment : Fragment() {
         progressToast?.show()
     }
 
-    /**
-     * Переключает режим разработчика.
-     *
-     * После переключения:
-     * - сообщает SettingsActivity, что нужен перезапуск;
-     * - просит SettingsActivity перестроить меню,
-     *   чтобы пункт "Разработчикам" появился или исчез.
-     */
+    /** Переключает DevMode, помечает restart, обновляет меню. */
     private fun toggleDeveloperMode() {
         val prefs = requireContext().getSharedPreferences("developer_prefs", Context.MODE_PRIVATE)
         val isCurrentlyEnabled = prefs.getBoolean("developer_mode", false)
@@ -285,15 +240,10 @@ class AboutFragment : Fragment() {
         val newState = !isCurrentlyEnabled
         prefs.edit {
             putBoolean("developer_mode", newState)
-
         }
 
-        // Инвалидируем кэш приложений при изменении DevMode
         CacheManager.invalidateCache()
 
-        // Сообщаем SettingsActivity:
-        // 1. что требуется перезапуск (при выходе покажется диалог);
-        // 2. что нужно перестроить меню (пункт "Разработчикам" появится/исчезнет).
         (activity as? SettingsActivity)?.let { settingsActivity ->
             settingsActivity.markRestartRequired()
             settingsActivity.refreshMenuItems()

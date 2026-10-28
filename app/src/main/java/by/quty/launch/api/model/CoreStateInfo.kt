@@ -3,41 +3,20 @@ package by.quty.launch.api.model
 
 import kotlinx.serialization.Serializable
 
-/**
- * Полное состояние ядра Quty.Launch для передачи в оболочку
- * через API-метод GetCoreState.
- */
+/** Полное состояние ядра для оболочки. */
 @Serializable
 data class CoreStateInfo(
-    val theme: String,              // "dark" | "light" — фактическая тема
-    val themeMode: String,          // "dark" | "light" | "system" — выбор пользователя
-    val language: String,           // "ru" | "en"
-    val locale: String,             // "ru-RU" | "en-US"
-    val orientation: String,        // "portrait" | "landscape" | "sensor" | "user"
+    val theme: String,
+    val themeMode: String,
+    val language: String,
+    val locale: String,
+    val orientation: String,
     val fullscreen: Boolean,
     val strictMode: Boolean,
-    /**
-     * Фактическое состояние анимаций: пользовательская настройка
-     * И системный флаг ANIMATOR_DURATION_SCALE.
-     */
     val animationsEnabled: Boolean,
-    /**
-     * Флаг наличия обновления ядра.
-     */
     val updateBadge: Boolean = false,
-    /**
-     * Семантический цвет маркера обновления:
-     * "accent" | "warning" | "error".
-     */
     val updateBadgeColor: String? = null,
-    /**
-     * HEX-цвет маркера обновления ("#RRGGBB") — готов к прямой подстановке.
-     */
     val updateBadgeColorHex: String? = null,
-    /**
-     * Флаг активного Safe Mode. Если true — оболочка должна
-     * показать баннер «Безопасный режим».
-     */
     val safeModeActive: Boolean = false,
     val colorScheme: ColorSchemeInfo,
     val shell: ShellInfo?,
@@ -46,22 +25,22 @@ data class CoreStateInfo(
 
 @Serializable
 data class ColorSchemeInfo(
-    val id: String,                 // "teal", "purple", ...
-    val primary: String,            // "#009688"
-    val accent: String              // "#4CAF50"
+    val id: String,
+    val primary: String,
+    val accent: String
 )
 
 @Serializable
 data class ShellInfo(
-    val name: String,               // "QutyAuto"
-    val displayName: String?,       // "QutyAuto"
-    val version: String?,           // "0.0.1"
-    val author: String?,            // "QutyTeam"
-    val orientation: String?        // "portrait" | "landscape" | "sensor" | null
+    val name: String,
+    val displayName: String?,
+    val version: String?,
+    val author: String?,
+    val orientation: String?
 )
 
 @Serializable
 data class CoreAppInfo(
-    val version: String,            // "0.0.150-Alpha"
-    val versionCode: Long           // 600
+    val version: String,
+    val versionCode: Long
 )

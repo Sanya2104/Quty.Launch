@@ -14,71 +14,40 @@ import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Мост между JavaScript и Kotlin.
- * Обрабатывает вызовы API из WebView.
- *
- * Методы applyColorScheme / applyLanguage удалены — теперь оболочка
- * сама запрашивает состояние ядра через API-метод GetCoreState
- * и подписывается на JS-событие window.onCoreStateChanged.
+ * Мост JS ↔ Kotlin: асинхронные вызовы API и push-уведомления оболочке.
  */
 class JsBridge(
     private val core: Core,
     private val context: Context
 ) {
 
-    // WeakReference для предотвращения утечки памяти
     private var webViewRef: WeakReference<LauncherWebView>? = null
 
-    // Тайм-аут выполнения метода (из конфига)
     private val timeoutMs = CoreConfig.JS_BRIDGE_TIMEOUT_MS
 
-    /**
-     * Единый scope для выполнения API-вызовов.
-     *
-     * SupervisorJob — чтобы падение одной корутины (например, ошибка
-     * в конкретном методе) не убивало остальные.
-     *
-     * Dispatchers.IO — потому что методы API делают I/O (файлы, сеть).
-     */
     private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /**
-     * Устанавливает ссылку на WebView для отправки результатов обратно в JS
-     * @param webView экземпляр LauncherWebView
-     */
     fun setWebView(webView: LauncherWebView) {
         webViewRef = WeakReference(webView)
     }
 
-    /**
-     * Вызов API метода из JavaScript (АСИНХРОННЫЙ)
-     * @param method имя метода (например, "GetApps")
-     * @param params JSON строка с параметрами
-     * @param callbackId уникальный идентификатор для ответа в JS
-     *
-     * Результат отправляется в JavaScript через callback
-     */
+    /** Вызов API из JS: результат уходит в callbackId. */
     @JavascriptInterface
     fun call(method: String, params: String?, callbackId: String) {
-        // Логируем вход — техническое сообщение, не локализуется
         LoggerManager.debug(
             LoggerTagModel.JSBRIDGE,
             "JSBRIDGE.call  $method"
         )
 
-        // Запускаем выполнение в общем scope
         bridgeScope.launch {
             try {
-                // Выполняем метод с таймаутом
                 val result = withTimeout(timeoutMs.milliseconds) {
                     core.execute(method, params)
                 }
 
-                // Отправляем результат обратно в JavaScript
                 sendResultToJs(callbackId, result, null)
 
             } catch (e: TimeoutCancellationException) {
-                // Тайм-аут выполнения
                 LoggerManager.warn(
                     LoggerTagModel.JSBRIDGE,
                     "JSBRIDGE.timeout  $method  ${timeoutMs}ms"
@@ -87,13 +56,11 @@ class JsBridge(
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: CancellationException) {
-                // Отмена выполнения
                 LoggerManager.warn(LoggerTagModel.JSBRIDGE, "JSBRIDGE.cancelled  $method")
                 val error = buildErrorJson(context.getString(R.string.js_bridge_cancelled_error))
                 sendResultToJs(callbackId, error, e)
 
             } catch (e: Exception) {
-                // Любая другая ошибка
                 LoggerManager.error(LoggerTagModel.JSBRIDGE, "JSBRIDGE.error  $method", e)
                 val error = buildErrorJson(e.message ?: "Unknown error")
                 sendResultToJs(callbackId, error, e)
@@ -101,9 +68,7 @@ class JsBridge(
         }
     }
 
-    /**
-     * Формирует JSON строку ответа с ошибкой.
-     */
+    /** Формирует JSON `{success:false, error:…}` через JSONObject.quote. */
     private fun buildErrorJson(message: String): String {
         return try {
             JSONObject().apply {
@@ -111,28 +76,14 @@ class JsBridge(
                 put("error", message)
             }.toString()
         } catch (_: Exception) {
-            // На случай, если что-то совсем странное — безопасный fallback.
             """{"success":false,"error":"Unknown error"}"""
         }
     }
 
-    /**
-     * Отправляет результат выполнения в JavaScript.
-     *
-     * ВАЖНО: результат и сообщение об ошибке экранируются через
-     * JSONObject.quote() — иначе апострофы, кавычки и спецсимволы
-     * внутри JSON сломают JS-код и callback не сработает.
-     *
-     * @param callbackId идентификатор callback в JS
-     * @param result JSON строка с результатом
-     * @param error исключение (если было)
-     */
+    /** Отправляет результат в JS через evaluateJavascript. */
     private fun sendResultToJs(callbackId: String, result: String, error: Throwable?) {
-        // Получаем WebView из WeakReference
         val webView = webViewRef?.get() ?: return
 
-        // Формируем JavaScript код для вызова callback.
-        // JSONObject.quote() корректно экранирует все спецсимволы.
         val jsCode = if (error == null) {
             val safeResult = JSONObject.quote(result)
             "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId']($safeResult);"
@@ -141,28 +92,19 @@ class JsBridge(
             "window._callbacks && window._callbacks['$callbackId'] && window._callbacks['$callbackId'](null, $safeError);"
         }
 
-        // Выполняем JavaScript в UI потоке
         webView.post {
             try {
                 webView.evaluateJavascript(jsCode, null)
             } catch (_: Exception) {
-                // Игнорируем ошибку отправки
             }
         }
     }
 
     // ============================================================
-    // PUSH-МОДЕЛЬ: СООБЩЕНИЕ ОБОЛОЧКЕ ОБ ИЗМЕНЕНИИ СОСТОЯНИЯ ЯДРА
+    // PUSH: СООБЩЕНИЕ ОБОЛОЧКЕ ОБ ИЗМЕНЕНИИ СОСТОЯНИЯ
     // ============================================================
 
-    /**
-     * Уведомляет оболочку об изменении состояния ядра (тема, язык,
-     * ориентация и т.д.). Вызывает JS-функцию window.onCoreStateChanged(),
-     * если она определена.
-     *
-     * Оболочка в этой функции обычно перезапрашивает состояние через
-     * Android.call('GetCoreState', null, callbackId).
-     */
+    /** Вызывает window.onCoreStateChanged(), если он определён. */
     fun notifyCoreStateChanged() {
         val webView = webViewRef?.get() ?: return
 
@@ -178,7 +120,6 @@ class JsBridge(
             try {
                 webView.evaluateJavascript(jsCode, null)
             } catch (_: Exception) {
-                // Игнорируем ошибку
             }
         }
     }

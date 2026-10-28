@@ -27,15 +27,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Фрагмент списка сохранённых файлов логов.
- *
- * В отличие от обычного RecyclerView, здесь используется ScrollView +
- * LinearLayout-контейнер (как в fragment_settings_about.xml) — чтобы
- * шапка с градиентом не перекрывала контент.
- *
- * Действия:
- * - Тап по файлу — предпросмотр содержимого (dialog_logger_file);
- * - Кнопка меню — «Поделиться», «Удалить».
+ * Список сохранённых логов: превью по тапу, меню — поделиться/удалить.
  */
 class LoggerFilesFragment : Fragment() {
 
@@ -65,7 +57,7 @@ class LoggerFilesFragment : Fragment() {
     }
 
     // ============================================================
-    // ЗАГРУЗКА И ОТРИСОВКА СПИСКА
+    // СПИСОК ФАЙЛОВ
     // ============================================================
 
     private fun refreshFiles() {
@@ -130,7 +122,7 @@ class LoggerFilesFragment : Fragment() {
     }
 
     // ============================================================
-    // ПРЕДПРОСМОТР СОДЕРЖИМОГО
+    // ПРЕВЬЮ ФАЙЛА
     // ============================================================
 
     private fun showFileContent(file: File) {
@@ -225,7 +217,6 @@ class LoggerFilesFragment : Fragment() {
             }
             startActivity(android.content.Intent.createChooser(intent, null))
         } catch (_: Exception) {
-            // Игнорируем
         }
     }
 

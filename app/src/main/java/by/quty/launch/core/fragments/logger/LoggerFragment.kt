@@ -37,26 +37,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Главный фрагмент логгера — вывод записей.
- *
- * Подписывается на LoggerManager в onStart, отписывается в onStop.
- * При возврате в onStart — синхронизируется с буфером.
- *
- * Порядок записей: новые — сверху, старые сдвигаются вниз.
- *
- * Фильтр:
- * - Кнопка filter в панели действий → диалог с двумя секциями:
- *   «Уровни» (ERROR → WARN → INFO → DEBUG) и «Теги» (как в enum).
- * - Оба набора хранятся в LoggerManager (prefs).
- * - Если любой из наборов отличается от дефолтного — иконка меняется
- *   на ic_filter_x и подсвечивается цветом активной цветовой схемы.
+ * Логи: лента записей, фильтр по уровням/тегам, сохранение/копирование/очистка.
  */
 class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
 
-    /**
-     * Порядок уровней в диалоге — от важного к неважному.
-     * Не завязываемся на порядок enum, чтобы можно было менять независимо.
-     */
     private val levelsOrder = listOf(
         LoggerLevelModel.ERROR,
         LoggerLevelModel.WARN,
@@ -75,11 +59,9 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
 
     private lateinit var adapter: LoggerAdapter
 
-    // Локальная копия записей — источник для адаптера.
-    // Порядок: новые (индекс 0) → старые (конец списка).
+    /** Новые (индекс 0) → старые. */
     private val entries = mutableListOf<LoggerEntryModel>()
 
-    // Форматтер для диалога details
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
     override fun onCreateView(
@@ -102,8 +84,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         btnClear = view.findViewById(R.id.logger_action_clear)
         btnCopy = view.findViewById(R.id.logger_action_copy)
 
-        // clipToOutline в XML недоступен для API 29-30,
-        // включаем в коде — работает с API 21.
         cardView.clipToOutline = true
 
         setupRecycler()
@@ -130,7 +110,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         )
 
         recyclerLog.layoutManager = LinearLayoutManager(requireContext()).apply {
-            // Новые записи — сверху, старые сдвигаются вниз.
             stackFromEnd = false
         }
         recyclerLog.adapter = adapter
@@ -151,11 +130,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     // ФИЛЬТР
     // ============================================================
 
-    /**
-     * Обновляет иконку и цвет кнопки фильтра.
-     * Если фильтр дефолтный (все уровни и теги) — ic_filter + dim.
-     * Иначе — ic_filter_x + buttonPrimaryColor.
-     */
+    /** ic_filter / ic_filter_x + подсветка, если фильтр не дефолтный. */
     private fun updateFilterIcon() {
         val isDefault = LoggerManager.isFilterDefault(requireContext())
 
@@ -175,10 +150,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         btnFilter.imageTintList = ColorStateList.valueOf(tintColor)
     }
 
-    /**
-     * Показывает диалог фильтра: две секции — «Уровни» и «Теги».
-     * Кнопка «Применить» сохраняет оба набора.
-     */
+    /** Диалог фильтра: уровни + теги. */
     private fun showFilterDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_logger_filter, null)
 
@@ -209,7 +181,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         val levelCheckboxes = mutableMapOf<LoggerLevelModel, CheckBox>()
         val tagCheckboxes = mutableMapOf<LoggerTagModel, CheckBox>()
 
-        // ===== УРОВНИ =====
         levelsOrder.forEach { level ->
             val row = layoutInflater.inflate(
                 R.layout.item_logger_filter,
@@ -221,7 +192,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
             val name = row.findViewById<TextView>(R.id.filter_level_name)
             val cb = row.findViewById<CheckBox>(R.id.filter_level_checkbox)
 
-            // Цвет полоски — цвет уровня
             val levelColor = getLevelColor(requireContext(), level)
             ViewCompat.setBackgroundTintList(
                 bar,
@@ -241,7 +211,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
             levelCheckboxes[level] = cb
         }
 
-        // ===== ТЕГИ =====
         LoggerTagModel.entries.forEach { tag ->
             val row = layoutInflater.inflate(
                 R.layout.item_logger_filter,
@@ -253,8 +222,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
             val name = row.findViewById<TextView>(R.id.filter_level_name)
             val cb = row.findViewById<CheckBox>(R.id.filter_level_checkbox)
 
-            // Цвет полоски — нейтральный (text_dim), чтобы не путать
-            // с цветами уровней
             val tagColor = getThemeColor(requireContext(), R.attr.textDimColor)
             ViewCompat.setBackgroundTintList(
                 bar,
@@ -278,13 +245,11 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
             dialog.dismiss()
         }
 
-        // Сброс — включить все уровни и все теги
         resetButton.setOnClickListener {
             levelCheckboxes.forEach { (_, cb) -> cb.isChecked = true }
             tagCheckboxes.forEach { (_, cb) -> cb.isChecked = true }
         }
 
-        // Применить — сохранить оба набора
         applyButton.setOnClickListener {
             val selectedLevels = levelCheckboxes
                 .filterValues { it.isChecked }
@@ -304,7 +269,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
             updateFilterIcon()
             applyFilter()
 
-            // Тост
             val message = when {
                 selectedLevels.isEmpty() && selectedTags.isEmpty() ->
                     getString(R.string.logger_filter_applied_none)
@@ -328,9 +292,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         dialog.show()
     }
 
-    /**
-     * Применяет текущий фильтр к списку логов.
-     */
     @SuppressLint("NotifyDataSetChanged")
     private fun applyFilter() {
         val snapshot = LoggerManager.getFilteredEntries(requireContext())
@@ -412,10 +373,6 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         ).show()
     }
 
-    /**
-     * Форматирует все видимые (отфильтрованные) записи в текст
-     * для буфера обмена. Порядок — как в UI: новые сверху.
-     */
     private fun formatAllEntries(): String {
         return buildString {
             entries.forEach { entry ->
@@ -490,7 +447,7 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
     }
 
     // ============================================================
-    // СИНХРОНИЗАЦИЯ С БУФЕРОМ
+    // СИНХРОНИЗАЦИЯ
     // ============================================================
 
     @SuppressLint("NotifyDataSetChanged")
@@ -549,12 +506,10 @@ class LoggerFragment : Fragment(), LoggerManager.LoggerListener {
         lifecycleScope.launch(Dispatchers.Main) {
             if (!isAdded || view == null) return@launch
 
-            // Проверяем, проходит ли запись текущий фильтр
             val enabledLevels = LoggerManager.getFilterLevels(requireContext())
             val enabledTags = LoggerManager.getFilterTags(requireContext())
 
             if (entry.level !in enabledLevels || entry.tag !in enabledTags) {
-                // Не проходит — не показываем
                 return@launch
             }
 

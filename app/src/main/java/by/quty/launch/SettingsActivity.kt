@@ -23,6 +23,9 @@ import by.quty.launch.core.model.MenuModel
 import by.quty.launch.core.utilities.BadgeHelper
 import by.quty.launch.databinding.ActivitySettingsBinding
 
+/**
+ * Настройки: меню слева, контент справа (телефон — переключение экранов).
+ */
 class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
@@ -33,14 +36,10 @@ class SettingsActivity : BaseActivity() {
     private var isTabletMode = false
     private var selectedItemId = -1
 
-    // Кэш текущего списка пунктов меню (может меняться при DevMode)
     private var menuItems: List<MenuModel> = emptyList()
 
-    // Последнее известное состояние «есть обновление» — чтобы
-    // в onResume() понять, надо ли пересобрать меню (маркер на «Центр обновления»)
     private var lastUpdateAvailable: Boolean = false
 
-    // Ширина меню в пикселях для планшетного режима
     private val menuWidthPx: Int by lazy {
         (340 * resources.displayMetrics.density).toInt()
     }
@@ -54,14 +53,12 @@ class SettingsActivity : BaseActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Запоминаем начальное состояние обновления
         lastUpdateAvailable = try {
             SystemUpdateManager(this).getCachedUpdate()?.hasUpdate == true
         } catch (_: Exception) {
             false
         }
 
-        // Формируем меню (с учётом текущего состояния DevMode и обновления)
         menuItems = buildMenuItems()
 
         checkMode()
@@ -78,14 +75,12 @@ class SettingsActivity : BaseActivity() {
                 if (item != null) {
                     restoreFragment(item)
                 } else {
-                    // Пункт больше не существует (например, DeveloperFragment после DevMode off)
                     isFragmentVisible = false
                     selectedItemId = -1
                 }
             }
         }
 
-        // На планшете при первом открытии сразу показываем первый пункт
         if (isTabletMode && selectedItemId == -1 && menuItems.isNotEmpty()) {
             showItem(menuItems.first())
         }
@@ -108,15 +103,12 @@ class SettingsActivity : BaseActivity() {
         val previousTabletMode = isTabletMode
         checkMode()
 
-        // Если переключились на планшет
         if (!previousTabletMode && isTabletMode) {
             if (selectedItemId == -1) {
-                // Ничего не выбрано — показываем первый пункт
                 if (menuItems.isNotEmpty()) {
                     showItem(menuItems.first())
                 }
             } else {
-                // Есть выбранный пункт — восстанавливаем его
                 val item = menuItems.find { it.id == selectedItemId }
                 if (item != null) {
                     showItem(item)
@@ -138,7 +130,6 @@ class SettingsActivity : BaseActivity() {
         val contentParams = binding.contentPane.layoutParams as LinearLayout.LayoutParams
 
         if (isTabletMode) {
-            // === ПЛАНШЕТ: меню слева 340dp, контент справа ===
             menuParams.width = menuWidthPx
             menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             menuParams.weight = 0f
@@ -150,15 +141,10 @@ class SettingsActivity : BaseActivity() {
             binding.menuPane.visibility = View.VISIBLE
             binding.contentPane.visibility = View.VISIBLE
 
-            /*
-             * В планшетном режиме крестик закрытия находится
-             * только в панели содержимого.
-             */
             binding.btnClose.visibility = View.GONE
             binding.btnCloseContent.visibility = View.VISIBLE
 
         } else {
-            // === ТЕЛЕФОН: только одна панель на весь экран ===
             menuParams.width = ViewGroup.LayoutParams.MATCH_PARENT
             menuParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             menuParams.weight = 0f
@@ -167,9 +153,6 @@ class SettingsActivity : BaseActivity() {
             contentParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             contentParams.weight = 0f
 
-            /*
-             * В телефонном режиме оба крестика работают
-             */
             binding.btnClose.visibility = View.VISIBLE
             binding.btnCloseContent.visibility = View.VISIBLE
 
@@ -185,7 +168,6 @@ class SettingsActivity : BaseActivity() {
         binding.menuPane.layoutParams = menuParams
         binding.contentPane.layoutParams = contentParams
 
-        // === ВИДИМОСТЬ КОНТЕНТА ===
         if (isFragmentVisible) {
             binding.fragmentContainer.visibility = View.VISIBLE
             binding.contentToolbar.visibility = View.VISIBLE
@@ -194,20 +176,10 @@ class SettingsActivity : BaseActivity() {
             if (isTabletMode) {
                 binding.recyclerMenu.visibility = View.VISIBLE
                 binding.btnBackContent.visibility = View.GONE
-
-                /*
-                 * В планшетном режиме активный пункт меню
-                 * подсвечивается.
-                 */
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(selectedItemId)
             } else {
                 binding.recyclerMenu.visibility = View.GONE
                 binding.btnBackContent.visibility = View.VISIBLE
-
-                /*
-                 * В телефонном режиме активный пункт меню
-                 * не должен подсвечиваться.
-                 */
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
             }
 
@@ -218,13 +190,6 @@ class SettingsActivity : BaseActivity() {
             binding.btnBackContent.visibility = View.GONE
             binding.contentTitle.text = ""
 
-            /*
-             * В телефонном режиме при возврате из фрагмента
-             * меню отображается без активного пункта.
-             *
-             * В планшетном режиме этот блок нужен только для случая,
-             * когда фрагмент ещё не выбран.
-             */
             if (!isTabletMode) {
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
             } else if (selectedItemId != -1) {
@@ -252,12 +217,10 @@ class SettingsActivity : BaseActivity() {
             checkAndShowRestartDialog()
         }
 
-        // Кнопка ЗАКРЫТЬ в правой панели (стеклянная)
         binding.btnCloseContent.setOnClickListener {
             checkAndShowRestartDialog()
         }
 
-        // Кнопка НАЗАД в правой панели (стеклянная)
         binding.btnBackContent.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
@@ -269,26 +232,12 @@ class SettingsActivity : BaseActivity() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (!isTabletMode && isFragmentVisible) {
-                        /*
-                         * Сначала сбрасываем подсветку активного пункта меню,
-                         * чтобы избежать моргания.
-                         */
                         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
-
-                        /*
-                         * В телефонном режиме возвращаемся
-                         * из фрагмента обратно в меню.
-                         *
-                         * selectedItemId НЕ сбрасываем,
-                         * чтобы сохранить последний выбор для
-                         * возможного перехода в планшетный режим.
-                         */
                         isFragmentVisible = false
                         applyMode()
                         return
                     }
 
-                    // В планшетном режиме или при закрытом фрагменте — проверяем изменения
                     checkAndShowRestartDialog()
                 }
             }
@@ -296,24 +245,14 @@ class SettingsActivity : BaseActivity() {
     }
 
     // ============================================================
-    // МЕНЮ (ДИНАМИЧЕСКОЕ)
+    // МЕНЮ
     // ============================================================
 
-    /**
-     * Строит список пунктов меню с учётом текущего состояния DevMode.
-     *
-     * Пункт "Разработчикам" появляется только когда DevMode активирован.
-     * На пункт "Центр обновления" вешается маркер, если в кэше
-     * SystemUpdateManager есть обновление.
-     *
-     * HEX-цвет маркера рассчитывается через BadgeHelper — единая
-     * точка правды, синхронизирована с GetApps и GetCoreState.
-     */
+    /** Строит меню: DevMode-пункт только при активном DevMode; маркер на «Центр обновления». */
     private fun buildMenuItems(): List<MenuModel> {
         val prefs = getSharedPreferences("developer_prefs", MODE_PRIVATE)
         val isDevMode = prefs.getBoolean("developer_mode", false)
 
-        // Определяем, есть ли обновление — для маркера на "Центр обновления"
         val cachedUpdate = try {
             SystemUpdateManager(this).getCachedUpdate()
         } catch (_: Exception) {
@@ -336,7 +275,6 @@ class SettingsActivity : BaseActivity() {
 
         val items = mutableListOf<MenuModel>()
 
-        // === ГРУППА 1: Основное ===
         items.add(
             MenuModel(
                 1,
@@ -349,7 +287,6 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // === ГРУППА 2: Персонализация ===
         items.add(
             MenuModel(
                 2,
@@ -362,7 +299,6 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // === ГРУППА 3: Система ===
         items.add(
             MenuModel(
                 6,
@@ -375,7 +311,6 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // === API методы ===
         items.add(
             MenuModel(
                 8,
@@ -388,7 +323,6 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // === Центр обновления — с маркером при наличии обновления ===
         items.add(
             MenuModel(
                 3,
@@ -404,7 +338,6 @@ class SettingsActivity : BaseActivity() {
             )
         )
 
-        // === Пункт "Разработчикам" — только при активном DevMode ===
         if (isDevMode) {
             items.add(
                 MenuModel(
@@ -446,29 +379,16 @@ class SettingsActivity : BaseActivity() {
         return items
     }
 
-    /**
-     * Перестраивает список пунктов меню.
-     * Вызывается из AboutFragment при активации/деактивации DevMode.
-     *
-     * Логика:
-     * - Пересобирает menuItems с учётом нового состояния DevMode;
-     * - Если текущий открытый фрагмент больше не существует в списке
-     *   (например, DeveloperFragment после деактивации DevMode),
-     *   возвращает пользователя в главное меню;
-     * - Обновляет адаптер RecyclerView.
-     */
+    /** Пересобирает меню (DevMode переключён) и закрывает исчезнувший фрагмент. */
     fun refreshMenuItems() {
         menuItems = buildMenuItems()
 
-        // Если открытый фрагмент больше не в списке — закрываем его
         if (isFragmentVisible && selectedItemId != -1) {
             val stillExists = menuItems.any { it.id == selectedItemId }
             if (!stillExists) {
-                // Пункт исчез (DeveloperFragment после DevMode off)
                 isFragmentVisible = false
                 selectedItemId = -1
 
-                // Убираем текущий фрагмент (синхронно, чтобы не было мельканий)
                 supportFragmentManager.findFragmentById(R.id.fragment_container)?.let { fragment ->
                     supportFragmentManager.beginTransaction()
                         .setReorderingAllowed(true)
@@ -478,19 +398,10 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
-        /*
-         * Обновляем адаптер.
-         *
-         * notifyDataSetChanged() не вызывается: новый экземпляр адаптера
-         * автоматически подхватывается RecyclerView, и он же строит
-         * полный список заново. Дополнительное уведомление избыточно
-         * и является анти-паттерном (см. lint: NotifyDataSetChanged).
-         */
         binding.recyclerMenu.adapter = SettingsMenuAdapter(menuItems) { item ->
             showItem(item)
         }
 
-        // Пересчитываем режим (может потребоваться обновить видимость)
         applyMode()
     }
 
@@ -498,10 +409,7 @@ class SettingsActivity : BaseActivity() {
     // СМЕНА ЯЗЫКА
     // ============================================================
 
-    /**
-     * Пересоздаёт SettingsActivity после смены языка.
-     * MainActivity сама применит язык при возврате (onResume) — через JsBridge.
-     */
+    /** Пересоздаёт SettingsActivity после смены языка. */
     fun applyLanguageAndRecreate() {
         recreate()
     }
@@ -517,13 +425,6 @@ class SettingsActivity : BaseActivity() {
                 item.fragment.name
             )
 
-            /*
-             * commitNow() вместо commit() — транзакция выполняется
-             * синхронно, поэтому старый фрагмент удаляется ДО того,
-             * как applyMode() переключит видимость панелей.
-             * Это предотвращает кратковременное «моргание» старого
-             * фрагмента при переключении между пунктами меню.
-             */
             supportFragmentManager
                 .beginTransaction()
                 .setReorderingAllowed(true)
@@ -531,13 +432,8 @@ class SettingsActivity : BaseActivity() {
                 .commitNow()
 
         } catch (_: Exception) {
-            // Игнорируем ошибки
         }
 
-        /*
-         * Подсветка активного пункта меню разрешена
-         * только в планшетном режиме.
-         */
         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
             if (isTabletMode) item.id else -1
         )
@@ -550,10 +446,6 @@ class SettingsActivity : BaseActivity() {
         selectedItemId = item.id
         binding.contentTitle.text = getString(item.title)
 
-        /*
-         * Подсветка активного пункта меню разрешена
-         * только в планшетном режиме.
-         */
         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(
             if (isTabletMode) item.id else -1
         )
@@ -566,10 +458,6 @@ class SettingsActivity : BaseActivity() {
 
         applyOrientation(shellManager)
 
-        // Проверяем, не появилось ли обновление (например, из фоновой проверки
-        // в MainActivity, пока пользователь был в настройках).
-        // Если состояние изменилось — пересобираем меню, чтобы маркер
-        // на «Центр обновления» появился/исчез.
         val currentUpdateAvailable = try {
             SystemUpdateManager(this).getCachedUpdate()?.hasUpdate == true
         } catch (_: Exception) {
@@ -588,9 +476,6 @@ class SettingsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        // НЕ вызываем popBackStackImmediate — FragmentManager при destroy
-        // сам корректно очищает фрагменты. Ручной popBackStackImmediate
-        // на этой стадии может привести к IllegalStateException.
         super.onDestroy()
     }
 }

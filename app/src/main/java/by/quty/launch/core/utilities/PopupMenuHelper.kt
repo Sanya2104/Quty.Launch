@@ -16,53 +16,16 @@ import androidx.core.graphics.drawable.toDrawable
 import by.quty.launch.R
 
 /**
- * Универсальный хелпер для показа кастомного выпадающего меню (PopupWindow).
- *
- * Использование:
- * ```
- * PopupMenuHelper.show(
- *     anchor = anchorView,
- *     items = listOf(
- *         PopupMenuHelper.Item(text = "Информация") { showInfoDialog() },
- *         PopupMenuHelper.Item(text = "Удалить") { confirmDelete() }
- *     )
- * )
- * ```
- *
- * Ripple-эффект пункта: используется готовый drawable bg_item_rounded
- * (ripple + скругление radius_medium) — тот же, что в настройках,
- * логгере и других экранах.
- *
- * ВАЖНО: кастомный ripple через ?android:attr/colorControlHighlight
- * в PopupWindow НЕ работает — атрибут темы в контексте PopupWindow
- * резолвится в прозрачный цвет, и ripple не виден. bg_item_rounded —
- * проверенный drawable, работает в любом контексте.
- *
- * Пункты разделены небольшим вертикальным отступом (spacing_xxs),
- * чтобы скруглённые ripple'ы не слипались.
+ * Кастомное PopupWindow-меню с ripple; позиционируется под anchor.
  */
 object PopupMenuHelper {
 
-    /**
-     * Один пункт меню.
-     *
-     * @param text Текст пункта (уже локализованный — берётся через `context.getString(...)`)
-     * @param onClick Колбэк, вызываемый при клике. Popup закрывается **до** вызова колбэка.
-     */
     data class Item(
         val text: String,
         val onClick: () -> Unit
     )
 
-    /**
-     * Показывает popup под anchor'ом.
-     * Popup автоматически позиционируется так, чтобы не выходить за границы экрана.
-     *
-     * @param anchor View, к которому привязывается меню
-     * @param items Список пунктов
-     * @param gravity Выравнивание (`Gravity.END` — по правому краю, `Gravity.START` — по левому)
-     * @return Созданный PopupWindow (можно сохранить и закрыть вручную)
-     */
+    /** Показывает меню под anchor. */
     @SuppressLint("InflateParams")
     fun show(
         anchor: View,
@@ -75,23 +38,20 @@ object PopupMenuHelper {
         val popupView = inflater.inflate(R.layout.popup_menu, null)
         val content = popupView.findViewById<LinearLayout>(R.id.popup_content)
 
-        // Создаём PopupWindow
         val popup = PopupWindow(
             popupView,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            true // focusable
+            true
         )
 
         popup.isOutsideTouchable = true
         popup.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
-        // Добавляем пункты
         items.forEach { item ->
             content.addView(createMenuItem(context, item, popup))
         }
 
-        // Измеряем popup, чтобы знать его размеры
         popupView.measure(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -100,11 +60,9 @@ object PopupMenuHelper {
         val popupWidth = popupView.measuredWidth
         val popupHeight = popupView.measuredHeight
 
-        // Координаты anchor'а на экране
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
 
-        // Позиция по умолчанию — под anchor'ом
         var x = when (gravity) {
             Gravity.END -> anchorLocation[0] + anchor.width - popupWidth
             Gravity.START -> anchorLocation[0]
@@ -112,7 +70,6 @@ object PopupMenuHelper {
         }
         var y = anchorLocation[1] + anchor.height
 
-        // Корректировка по ширине экрана
         val screenWidth = context.resources.displayMetrics.widthPixels
         val screenHeight = context.resources.displayMetrics.heightPixels
 
@@ -123,32 +80,18 @@ object PopupMenuHelper {
             x = 0
         }
 
-        // Корректировка по высоте экрана
         if (y + popupHeight > screenHeight) {
-            // Не помещается снизу — показываем над anchor'ом
             y = anchorLocation[1] - popupHeight
         }
         if (y < 0) {
-            // Не помещается сверху — прижимаем к верхнему краю
             y = 0
         }
 
-        // Показываем popup в вычисленной позиции
         popup.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
 
         return popup
     }
 
-    /**
-     * Создаёт один пункт меню.
-     *
-     * Ripple: bg_item_rounded — существующий drawable с ripple и
-     * скруглением radius_medium (тот же, что в настройках, логгере
-     * и других экранах).
-     *
-     * Между пунктами добавляется вертикальный отступ (spacing_xxs),
-     * чтобы скруглённые ripple'ы соседних пунктов не сливались.
-     */
     private fun createMenuItem(
         context: Context,
         item: Item,
@@ -159,8 +102,6 @@ object PopupMenuHelper {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                // Отступ между пунктами — чтобы ripple-скругления
-                // не сливались в сплошную полосу.
                 bottomMargin = resources.getDimensionPixelSize(R.dimen.spacing_xxs)
             }
 
@@ -175,8 +116,6 @@ object PopupMenuHelper {
             isClickable = true
             isFocusable = true
 
-            // Ripple + скругление. bg_item_rounded уже используется
-            // в других местах проекта — проверенный drawable.
             setBackgroundResource(R.drawable.bg_item_rounded)
 
             setOnClickListener {
@@ -186,9 +125,6 @@ object PopupMenuHelper {
         }
     }
 
-    /**
-     * Получает цвет из кастомного атрибута темы.
-     */
     private fun getThemeColor(context: Context, attr: Int): Int {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(attr, typedValue, true)

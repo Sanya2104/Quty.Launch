@@ -19,33 +19,11 @@ import by.quty.launch.databinding.ActivityLoggerBinding
 import kotlinx.coroutines.launch
 
 /**
- * Активность логгера Quty.Launch.
- *
- * Многофрагментная активность по паттерну SettingsActivity:
- * - на телефоне — меню и контент переключаются как экраны;
- * - на планшете — меню слева, контент справа.
- *
- * Разделы:
- * - Логи (LoggerFragment, id=1) — вывод записей; корневой раздел;
- * - Файлы (LoggerFilesFragment) — сохранённые логи;
- * - Настройки (LoggerSettingsFragment) — настройки логгера.
- *
- * Особенность: при первом запуске (без сохранённого состояния)
- * сразу открывается «Логи» — и на планшете, и на телефоне.
- * При этом на телефоне иконка кнопки «Назад» в шапке меняется:
- * - на «Логи» — три полоски (ic_menu), тап ведёт к списку разделов;
- * - на «Файлы» / «Настройки» — стрелка назад (ic_back).
- *
- * При выходе: если включено автосохранение — буфер сохраняется в файл
- * в StorageDirectory.LOGS.
+ * Логгер: Логи / Файлы / Настройки. На телефоне — переключение, на планшете — две панели.
  */
 class LoggerActivity : BaseActivity() {
 
     companion object {
-        /**
-         * id пункта меню «Логи» — используется для определения,
-         * какая иконка должна быть на кнопке назад.
-         */
         private const val LOGGER_FRAGMENT_ID = 1
     }
 
@@ -91,8 +69,6 @@ class LoggerActivity : BaseActivity() {
             }
         }
 
-        // При первом открытии (без сохранённого состояния) сразу
-        // показываем первый пункт меню — «Логи».
         if (selectedItemId == -1 && menuItems.isNotEmpty()) {
             showItem(menuItems.first())
         }
@@ -194,7 +170,6 @@ class LoggerActivity : BaseActivity() {
                 binding.btnBackContent.visibility = View.VISIBLE
                 (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
 
-                // Меняем иконку кнопки в зависимости от текущего фрагмента
                 updateBackButtonIcon()
             }
 
@@ -213,15 +188,7 @@ class LoggerActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Обновляет иконку кнопки «Назад» в шапке контента.
-     *
-     * Когда открыт LoggerFragment (корневой раздел «Логи») — иконка «меню»
-     * (три полоски), потому что тап ведёт к списку разделов.
-     *
-     * Когда открыт любой другой раздел (Файлы, Настройки) — стрелка «назад»,
-     * визуально намекающая на «шаг назад».
-     */
+    /** Логи — ic_menu; остальные — ic_back. */
     private fun updateBackButtonIcon() {
         val iconRes = if (selectedItemId == LOGGER_FRAGMENT_ID) {
             R.drawable.ic_menu
@@ -270,9 +237,6 @@ class LoggerActivity : BaseActivity() {
         )
     }
 
-    /**
-     * Строит список пунктов меню логгера.
-     */
     private fun buildMenuItems(): List<MenuModel> {
         val items = mutableListOf<MenuModel>()
 
@@ -354,9 +318,7 @@ class LoggerActivity : BaseActivity() {
         applyMode()
     }
 
-    /**
-     * При выходе: если включено автосохранение — сохраняем буфер в файл.
-     */
+    /** При выходе: если включено автосохранение — пишем буфер в файл через AppScope. */
     override fun onDestroy() {
         if (LoggerManager.isAutoSaveEnabled() && LoggerManager.size() > 0) {
             val appContext = applicationContext

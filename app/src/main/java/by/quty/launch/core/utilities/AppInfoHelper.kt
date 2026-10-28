@@ -5,17 +5,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 
-/**
- * Утилита для получения информации о приложении.
- * Используется в разных местах (Центр обновления, О системе и т.д.),
- * чтобы не дублировать логику работы с PackageManager.
- */
+/** versionName / versionCode / split version + suffix. */
 object AppInfoHelper {
 
-    /**
-     * Возвращает versionName приложения (полный, с суффиксом).
-     * Например: "0.0.145-Alpha".
-     */
     fun getVersionName(context: Context): String {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -33,9 +25,6 @@ object AppInfoHelper {
         }
     }
 
-    /**
-     * Возвращает versionCode приложения.
-     */
     fun getVersionCode(context: Context): Long {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -53,17 +42,12 @@ object AppInfoHelper {
         }
     }
 
-    /**
-     * Разбивает versionName на версию и суффикс (канал).
-     * Например, "0.0.145-Alpha" → Pair("0.0.145", "Alpha").
-     * Если суффикса нет — второй элемент пустой строкой.
-     */
+    /** "0.0.145-Alpha" → Pair("0.0.145", "Alpha"). */
     fun splitVersionName(fullVersionName: String): Pair<String, String> {
         if (fullVersionName.isEmpty()) {
             return Pair("", "")
         }
 
-        // Ищем разделитель
         val separators = listOf("-", "_", " ")
         for (separator in separators) {
             val index = fullVersionName.indexOf(separator)
@@ -74,7 +58,6 @@ object AppInfoHelper {
             }
         }
 
-        // Fallback — регулярка по цифрам
         val digitRegex = Regex("^[\\d.]+")
         val match = digitRegex.find(fullVersionName)
         if (match != null) {
@@ -88,10 +71,6 @@ object AppInfoHelper {
         return Pair(fullVersionName, "")
     }
 
-    /**
-     * Возвращает пару (версия без суффикса, суффикс/канал).
-     * Удобно для отображения: отдельно версия, отдельно канал.
-     */
     fun getSplitVersion(context: Context): Pair<String, String> {
         return splitVersionName(getVersionName(context))
     }

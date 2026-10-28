@@ -12,16 +12,11 @@ import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
 /**
- * Инициализация всех API методов.
- *
- * Для добавления нового метода:
- * 1. Импортировать его здесь.
- * 2. Добавить в список методов.
+ * Регистрирует все API-методы в ApiRouter.
  */
 object ApiInitializer {
 
     fun init(context: Context) {
-        // GetCoreState нужны менеджеры — создаём их здесь
         val appContext = context.applicationContext
         val configManager = ConfigManager(appContext)
         val shellManager = ShellManager(appContext, configManager)

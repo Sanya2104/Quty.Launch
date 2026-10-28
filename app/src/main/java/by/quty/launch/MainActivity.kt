@@ -22,17 +22,8 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Главная активность Quty.Launch.
- *
- * Одновременно:
- * - HOME-лаунчер по умолчанию (если юзер его назначил) — на неё
- *   система присылает Intent.ACTION_MAIN + CATEGORY_HOME при нажатии
- *   кнопки Home;
- * - Хост WebView с активной оболочкой.
- *
- * Safe Mode: если при запуске зажать Volume Down на 1.5 секунды —
- * включится безопасный режим (грузится оболочка "default", выбранная
- * пользователем сохраняется в prefs и вернётся после выхода из Safe Mode).
+ * HOME-лаунчер + хост WebView с активной оболочкой.
+ * Volume Down 1.5 сек при старте — Safe Mode.
  */
 class MainActivity : BaseActivity() {
 
@@ -42,37 +33,21 @@ class MainActivity : BaseActivity() {
     private lateinit var jsBridge: JsBridge
     private lateinit var updateManager: SystemUpdateManager
 
-    // Последнее применённое состояние — чтобы не дёргать WebView зря
     private var lastAppliedLanguage: String? = null
 
-    // Последнее применённое состояние анимаций — чтобы не инжектить CSS зря
     private var lastAppliedAnimations: Boolean? = null
 
-    // Последнее известное состояние обновления — чтобы отследить смену
     private var lastUpdateAvailable: Boolean = false
 
-    // Флаг, что авто-проверка сейчас выполняется
     private var isAutoCheckRunning: Boolean = false
 
     // ===== Safe Mode: перехват Volume Down =====
 
-    /**
-     * Окно удержания Volume Down для включения Safe Mode (мс).
-     * 1500 мс — достаточно, чтобы случайное нажатие не сработало,
-     * но и не заставлять юзера держать кнопку вечность.
-     */
+    /** Время удержания Volume Down для Safe Mode. */
     private val safeModeHoldDurationMs = 1500L
 
-    /**
-     * Флаг, что кнопка Volume Down сейчас зажата.
-     * Защита от повторного запуска таймера.
-     */
     private var isVolumeDownHeld = false
 
-    /**
-     * Флаг, что Safe Mode уже сработал в этой сессии MainActivity.
-     * После срабатывания ничего не делаем — перезапуск сам всё сделает.
-     */
     private var isSafeModeTriggered = false
 
     private val handler = Handler(Looper.getMainLooper())
@@ -91,7 +66,6 @@ class MainActivity : BaseActivity() {
             "CORE.main  created"
         )
 
-        // Проверяем, нужно ли перезапустить приложение для применения ориентации
         if (configManager.needRestartForOrientation()) {
             configManager.clearRestartForOrientationFlag()
             val intent = Intent(this, MainActivity::class.java)
@@ -127,7 +101,6 @@ class MainActivity : BaseActivity() {
             enableImmersiveMode(strictMode)
         }
 
-        // Фоновая авто-проверка обновлений — с задержкой
         lifecycleScope.launch {
             delay(CoreConfig.AUTO_CHECK_START_DELAY_MS.milliseconds)
             maybeRunAutoUpdateCheck()
@@ -135,23 +108,10 @@ class MainActivity : BaseActivity() {
     }
 
     // ============================================================
-    // SAFE MODE (перехват Volume Down)
+    // SAFE MODE
     // ============================================================
 
-    /**
-     * Перехват нажатия Volume Down.
-     *
-     * - ACTION_DOWN → запускаем таймер на safeModeHoldDurationMs.
-     * - ACTION_UP или отмена → отменяем таймер.
-     *
-     * Если таймер сработал — включаем Safe Mode.
-     * Если кнопка отпущена раньше — уменьшаем громкость вручную,
-     * компенсируя проглоченный ACTION_DOWN (иначе кнопка работала бы
-     * «через раз» при коротком нажатии).
-     *
-     * ВАЖНО: возвращаем true на ACTION_DOWN / ACTION_UP, чтобы
-     * не пикало при удержании.
-     */
+    /** Перехват Volume Down: удержание 1.5 сек включает Safe Mode. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
 
@@ -161,7 +121,6 @@ class MainActivity : BaseActivity() {
                         isVolumeDownHeld = true
                         handler.postDelayed(safeModeRunnable, safeModeHoldDurationMs)
                     }
-                    // Блокируем системный звук, пока считаем таймер
                     return true
                 }
                 KeyEvent.ACTION_UP -> {
@@ -169,8 +128,6 @@ class MainActivity : BaseActivity() {
                         isVolumeDownHeld = false
                         handler.removeCallbacks(safeModeRunnable)
 
-                        // Если Safe Mode не сработал — компенсируем
-                        // пропущенный ACTION_DOWN вручную.
                         if (!isSafeModeTriggered) {
                             decreaseVolumeManually()
                         }
@@ -185,12 +142,7 @@ class MainActivity : BaseActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    /**
-     * Уменьшает громкость вручную (компенсация проглоченного ACTION_DOWN).
-     *
-     * Нужно, чтобы юзер не замечал, что кнопка Volume Down
-     * работает «через раз» при коротком нажатии.
-     */
+    /** Компенсация «проглоченного» ACTION_DOWN при коротком нажатии. */
     private fun decreaseVolumeManually() {
         try {
             val audioManager = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
@@ -200,17 +152,10 @@ class MainActivity : BaseActivity() {
                 android.media.AudioManager.FLAG_SHOW_UI
             )
         } catch (_: Exception) {
-            // Игнорируем ошибки
         }
     }
 
-    /**
-     * Включает Safe Mode:
-     * - ставит флаг safe_mode_active = true;
-     * - показывает тост;
-     * - перезапускает MainActivity, чтобы ShellManager перечитал
-     *   активную оболочку и загрузил default.
-     */
+    /** Ставит флаг Safe Mode и перезапускает приложение. */
     private fun enableSafeMode() {
         LoggerManager.warn(
             LoggerTagModel.CORE,
@@ -225,17 +170,12 @@ class MainActivity : BaseActivity() {
             Toast.LENGTH_LONG
         ).show()
 
-        // Перезапускаем активность — onCreate пересоздаст ShellManager
-        // и подхватит Safe Mode.
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivityAnimated(intent)
         finishAnimated()
     }
 
-    /**
-     * Снимает таймер и освобождает ресурсы.
-     */
     private fun clearSafeModeState() {
         handler.removeCallbacks(safeModeRunnable)
         isVolumeDownHeld = false
@@ -250,9 +190,6 @@ class MainActivity : BaseActivity() {
     // ОСТАЛЬНАЯ ЛОГИКА
     // ============================================================
 
-    /**
-     * Обработка повторного запуска через Home.
-     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         LoggerManager.debug(
@@ -261,9 +198,7 @@ class MainActivity : BaseActivity() {
         )
     }
 
-    /**
-     * Загрузка активной оболочки в WebView
-     */
+    /** Загружает активную оболочку в WebView. */
     private fun loadShell() {
         lifecycleScope.launch {
             val shellToActivate = shellManager.getShellToActivate()
@@ -299,7 +234,7 @@ class MainActivity : BaseActivity() {
             if (lastAppliedLanguage != null && lastAppliedLanguage != currentLang) {
                 LoggerManager.info(
                     LoggerTagModel.CORE,
-                    "CORE.language  $lastAppliedLanguage → $currentLang"
+                    "CORE.language  $lastAppliedLanguage > $currentLang"
                 )
                 lastAppliedLanguage = currentLang
                 jsBridge.notifyCoreStateChanged()
@@ -309,7 +244,7 @@ class MainActivity : BaseActivity() {
             if (lastAppliedAnimations != currentAnimations) {
                 LoggerManager.info(
                     LoggerTagModel.CORE,
-                    "CORE.animations  $lastAppliedAnimations → $currentAnimations"
+                    "CORE.animations  $lastAppliedAnimations > $currentAnimations"
                 )
                 lastAppliedAnimations = currentAnimations
                 webView.applyAnimationsEnabled(currentAnimations)

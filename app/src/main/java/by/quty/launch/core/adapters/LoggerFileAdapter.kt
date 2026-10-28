@@ -14,10 +14,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Адаптер для списка сохранённых файлов логов.
- *
- * Каждая строка: имя файла + метаданные (время изменения, размер).
- * Кнопка меню справа — для контекстных действий (открыть, поделиться, удалить).
+ * Список файлов логов: имя + метаданные + кнопка меню.
  */
 class LoggerFileAdapter(
     private val files: MutableList<File>,
@@ -36,18 +33,6 @@ class LoggerFileAdapter(
     }
 
     override fun getItemCount(): Int = files.size
-
-    /**
-     * Полностью обновляет список файлов.
-     * Использует notifyDataSetChanged, потому что список меняется
-     * фрагментарно (удаление, добавление) — DiffUtil тут был бы оверкиллом.
-     */
-    @Suppress("NotifyDataSetChanged")
-    fun submitFiles(newFiles: List<File>) {
-        files.clear()
-        files.addAll(newFiles)
-        notifyDataSetChanged()
-    }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -68,9 +53,7 @@ class LoggerFileAdapter(
             }
         }
 
-        /**
-         * Формат: "14:30 · 12.34 KB"
-         */
+        /** Формат: "14:30 · 12.34 KB". */
         private fun formatMeta(file: File): String {
             val timeFormatter = SimpleDateFormat("HH:mm", Locale.US)
             val time = timeFormatter.format(Date(file.lastModified()))

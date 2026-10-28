@@ -7,6 +7,9 @@ import by.quty.launch.R
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.serializer
 
+/**
+ * Базовый класс API-метода: имя, описание, иконка, execute/parseParams.
+ */
 abstract class BaseApiMethod<P> {
 
     protected val json = Json {
@@ -14,36 +17,24 @@ abstract class BaseApiMethod<P> {
         encodeDefaults = true
     }
 
-    /**
-     * Имя метода для регистрации в ApiRouter
-     * Теперь возвращает имя класса как есть (с большой буквы)
-     * Например: "GetApps", "LaunchApp", "GetStatusBar"
-     */
+    /** Имя метода для регистрации (совпадает с именем класса). */
     open val name: String
         get() = this::class.simpleName ?: "unknown"
 
-    /**
-     * Краткое описание метода для UI (в разделе «API методы»).
-     * Локализуется через @StringRes.
-     */
+    /** Краткое описание для UI. */
     @get:StringRes
     abstract val descriptionRes: Int
 
-    /**
-     * Иконка метода для UI.
-     * По умолчанию — универсальная ic_api_method.
-     * Каждый метод может переопределить под свою суть.
-     */
+    /** Иконка для UI. */
     @get:DrawableRes
     open val iconRes: Int
         get() = R.drawable.ic_api_method
 
-    // Этот метод нужно вызывать из JsBridge
+    /** Точка входа: парсит params, выполняет, ловит ошибки в ApiResponse. */
     suspend fun execute(params: String?): String {
         return try {
             val parsedParams = params?.let { parseParams(it) }
-            val result = executeInternal(parsedParams)
-            result
+            executeInternal(parsedParams)
         } catch (e: Exception) {
             json.encodeToString(
                 ApiResponse.serializer(Unit.serializer()),
@@ -52,7 +43,6 @@ abstract class BaseApiMethod<P> {
         }
     }
 
-    // Абстрактный метод, который возвращает уже сериализованную строку
     protected abstract suspend fun executeInternal(params: P?): String
     protected abstract fun parseParams(jsonString: String): P
 }

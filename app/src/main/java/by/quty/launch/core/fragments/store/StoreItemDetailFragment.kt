@@ -35,55 +35,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Детальный экран элемента магазина.
- *
- * Один фрагмент на все случаи. Принимает имя элемента через arguments;
- * сам элемент запрашивает из StoreActivity.findItemByName().
- *
- * Бейдж «Активна» (item_action_button) отображается ТОЛЬКО когда элемент
- * активен (isActiveSameVersion == true). Стилизован под статус «Активна»
- * в каталоге (bg_status_active + status_granted + 13sp + medium).
- * Клик по нему не обрабатывается — это не кнопка, а индикатор.
- *
- * Во всех остальных случаях бейдж скрыт, а действия доступны через
- * выпадающее меню (ic_menu_dots) справа от названия:
- *   Установить > Обновить > Применить > Поделиться > Удалить
- * (пункт появляется только если соответствующее условие выполнено).
- *
- * ВАЖНО: «Установить» и «Обновить» доступны И для активной оболочки.
- * Это позволяет обновить активную версию поверх: installItem() сам
- * перераспакует оболочку через shellManager.setActiveShell() и вызовет
- * markRestartRequired() — при выходе из магазина покажется диалог
- * перезапуска. При холодном старте (юзер убил приложение без выхода
- * через крестик) MainActivity.onCreate подтянет свежий .qutyshell
- * с диска — обновление применится автоматически.
- *
- * «Применить» — только для неактивной (активную применять некуда).
- * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
- *
- * Отображение версий:
- * - не установлено > «Версия» = версия с сервера;
- * - установлено без обновления > «Версия» = локальная версия;
- * - есть обновление > «Версия» = локальная, вторым блоком
- *   «Доступна версия» = версия с сервера + бейдж NEW;
- * - локальная новее серверной > «Версия» = локальная + бейдж «Новее»,
- *   вторым блоком «Версия с сервера» = версия с сервера (без бейджа NEW).
- *
- * Пункт «Поделиться» показывается только если файл реально существует
- * и StorageManager может выдать на него URI (см. canShareItem()).
- *
- * Пункт «Удалить» показывается только если файл реально лежит в
- * StorageDirectory.SHELLS (см. canDeleteItem()).
- *
- * Если в меню нет ни одного пункта — ic_menu_dots тоже скрыт.
- *
- * После установки / применения / удаления — markRestartRequired() на
- * StoreActivity, чтобы при выходе показался диалог перезапуска.
- *
- * После удаления — ждём refreshItems() через колбэк и:
- * - если элемент остался (например, встроенная с тем же именем) —
- *   перерисовываем деталь по актуальной модели;
- * - если элемента нет — закрываем деталь.
+ * Детальный экран элемента магазина: превью, метаданные, меню действий.
  */
 class StoreItemDetailFragment : Fragment() {
 
@@ -107,7 +59,6 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var storeManager: StoreManager
     private lateinit var storageManager: StorageManager
 
-    // ===== UI =====
     private lateinit var previewImage: ImageView
     private lateinit var nameText: TextView
     private lateinit var authorText: TextView
@@ -145,7 +96,6 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var orientationValue: TextView
     private lateinit var orientationDivider: View
 
-    // ===== Репозиторий / Telegram (ряды, не кнопки) =====
     private lateinit var repoContainer: LinearLayout
     private lateinit var repoRow: LinearLayout
     private lateinit var telegramContainer: LinearLayout
@@ -155,7 +105,6 @@ class StoreItemDetailFragment : Fragment() {
     private lateinit var deleteButton: Button
     private lateinit var actionsContainer: LinearLayout
 
-    // Флаг, что установка/применение сейчас выполняется
     private var isProcessing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -197,6 +146,7 @@ class StoreItemDetailFragment : Fragment() {
         bindItem(found)
     }
 
+    /** Перечитывает модель из StoreActivity при возврате (могла устареть). */
     override fun onResume() {
         super.onResume()
 
@@ -208,13 +158,10 @@ class StoreItemDetailFragment : Fragment() {
         val fresh = activity.findItemByName(currentName)
 
         if (fresh == null) {
-            // Элемент исчез (удалён извне) — закрываем деталь.
             activity.hideItemDetail()
             return
         }
 
-        // Перерисовываем только если модель реально изменилась —
-        // чтобы не дёргать Glide / не сбрасывать скролл зря.
         if (fresh != item) {
             item = fresh
             bindItem(fresh)
@@ -232,13 +179,11 @@ class StoreItemDetailFragment : Fragment() {
         installProgressBar = view.findViewById(R.id.install_progress_bar)
         installProgressText = view.findViewById(R.id.install_progress_text)
 
-        // Блок «Версия» (главный)
         versionContainer = view.findViewById(R.id.item_version_container)
         versionDivider = view.findViewById(R.id.item_version_divider)
         versionValue = view.findViewById(R.id.item_version_value)
         statusNewerBadge = view.findViewById(R.id.item_status_newer)
 
-        // Блок «Доступна версия» / «Версия с сервера» (второй)
         remoteVersionContainer = view.findViewById(R.id.item_installed_version_container)
         remoteVersionDivider = view.findViewById(R.id.item_installed_version_divider)
         remoteVersionLabel = view.findViewById(R.id.item_installed_version_label)
@@ -271,6 +216,7 @@ class StoreItemDetailFragment : Fragment() {
         actionsContainer = view.findViewById(R.id.item_actions_container)
     }
 
+    /** Заполняет UI по модели. */
     private fun bindItem(item: StoreItemModel) {
         val context = requireContext()
 
@@ -279,15 +225,10 @@ class StoreItemDetailFragment : Fragment() {
         nameText.text = item.displayName
         authorText.text = item.author ?: context.getString(R.string.author_default)
 
-        // ===== Значения метаданных =====
-
         val remoteVersion = item.remoteInfo?.version
         val installedVersion = item.installedVersion
 
-        // Главная версия:
-        // - установлено > локальная версия;
-        // - не установлено > версия с сервера;
-        // - ни того, ни другого > fallback на item.version (локальный shell).
+        // Главная версия: installed, иначе remote, иначе fallback.
         val primaryVersion: String? = when {
             item.isInstalled && !installedVersion.isNullOrEmpty() -> installedVersion
             !remoteVersion.isNullOrEmpty() -> remoteVersion
@@ -299,12 +240,9 @@ class StoreItemDetailFragment : Fragment() {
             versionValue.text = "v$primaryVersion"
         }
 
-        // Бейдж «Новее» у главной версии — только если локальная новее серверной.
         statusNewerBadge.visibility = if (item.installedIsNewer) View.VISIBLE else View.GONE
 
-        // Второй блок: версия с сервера.
-        // Показываем ТОЛЬКО когда установлено и серверная версия отличается
-        // от локальной (т.е. есть обновление или локальная новее).
+        // Второй блок: installed ≠ remote.
         val showRemoteRow = item.isInstalled &&
                 !installedVersion.isNullOrEmpty() &&
                 !remoteVersion.isNullOrEmpty() &&
@@ -313,14 +251,6 @@ class StoreItemDetailFragment : Fragment() {
         if (showRemoteRow) {
             remoteVersionValue.text = "v$remoteVersion"
 
-            // Label и бейдж:
-            // - локальная новее серверной > «Версия с сервера», бейджа NEW нет
-            //   (это не «доступна», а «на сервере старая»);
-            // - серверная новее локальной (есть обновление) > «Доступна версия»
-            //   + бейдж NEW.
-            //
-            // getString(Int) возвращает String однозначно, а .text = String
-            // тоже однозначно — не бывает ошибки "Cannot infer type for T".
             val labelText: String = if (item.installedIsNewer) {
                 getString(R.string.store_version_remote_label)
             } else {
@@ -337,32 +267,27 @@ class StoreItemDetailFragment : Fragment() {
             remoteVersionBadge.visibility = View.GONE
         }
 
-        // Размер
         val hasSize = !item.fileSize.isNullOrEmpty()
         if (hasSize) {
             sizeValue.text = item.fileSize
         }
 
-        // Дата публикации
         val hasDate = !item.datePublished.isNullOrEmpty()
         if (hasDate) {
             dateValue.text = formatDate(item.datePublished)
         }
 
-        // Тип — всегда видим
         typeValue.text = when {
             item.localShell?.isAsset == true -> context.getString(R.string.store_type_builtin)
             item.localShell?.isCustom == true -> context.getString(R.string.store_type_custom)
             else -> context.getString(R.string.store_type_catalog)
         }
 
-        // Мин. версия Quty.Launch
         val hasMinVersion = !item.minQutyLaunchVersion.isNullOrEmpty()
         if (hasMinVersion) {
             minVersionValue.text = item.minQutyLaunchVersion
         }
 
-        // Ориентация
         val hasOrientation = !item.orientation.isNullOrEmpty()
         if (hasOrientation) {
             orientationValue.text = when (item.orientation) {
@@ -374,11 +299,7 @@ class StoreItemDetailFragment : Fragment() {
             }
         }
 
-        // ===== Разделители + видимость блоков =====
-        //
-        // Правило одинаково для всех блоков:
-        // - у первого видимого блока divider = GONE;
-        // - у каждого следующего видимого блока divider = VISIBLE.
+        // Первый видимый блок без divider'а, остальные с divider'ом.
         val rows = listOf(
             Row(versionContainer, versionDivider, hasPrimaryVersion),
             Row(remoteVersionContainer, remoteVersionDivider, showRemoteRow),
@@ -401,7 +322,6 @@ class StoreItemDetailFragment : Fragment() {
             }
         }
 
-        // ===== Репозиторий — весь ряд кликабельный =====
         if (item.repoUrl.isNullOrEmpty()) {
             repoContainer.visibility = View.GONE
             repoRow.setOnClickListener(null)
@@ -410,7 +330,6 @@ class StoreItemDetailFragment : Fragment() {
             repoRow.setOnClickListener { openUrl(item.repoUrl) }
         }
 
-        // ===== Telegram — весь ряд кликабельный =====
         if (item.telegramUrl.isNullOrEmpty()) {
             telegramContainer.visibility = View.GONE
             telegramRow.setOnClickListener(null)
@@ -419,24 +338,16 @@ class StoreItemDetailFragment : Fragment() {
             telegramRow.setOnClickListener { openUrl(item.telegramUrl) }
         }
 
-        // ===== Бейдж «Активна» + меню =====
         updateActionUI(item)
     }
 
-    /**
-     * Пара «контейнер блока + разделитель ПЕРЕД ним».
-     * Используется для единой логики разделителей:
-     * у первого видимого блока divider = GONE, у остальных = VISIBLE.
-     */
+    /** Пара «контейнер + divider». */
     private data class Row(
         val container: View,
         val divider: View?,
         val visible: Boolean
     )
 
-    /**
-     * Проверяет, можно ли реально поделиться файлом ресурса.
-     */
     private fun canShareItem(item: StoreItemModel): Boolean {
         if (!item.canShare) return false
 
@@ -445,10 +356,7 @@ class StoreItemDetailFragment : Fragment() {
         return !(!file.exists() || !file.isFile) && storageManager.getUri(file) != null
     }
 
-    /**
-     * Проверяет, можно ли реально удалить оболочку.
-     * См. подробное описание в KDoc класса.
-     */
+    /** false для активной, asset, файлов вне SHELLS. */
     private fun canDeleteItem(item: StoreItemModel): Boolean {
         if (item.isActive) return false
 
@@ -466,9 +374,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Пересчитывает состояние бейджа «Активна» и кнопки-меню.
-     */
+    /** Бейдж «Активна» + кнопка меню. */
     private fun updateActionUI(item: StoreItemModel) {
         if (isProcessing) {
             btnMenu.visibility = View.GONE
@@ -487,24 +393,10 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Собирает пункты выпадающего меню для текущего элемента.
-     *
-     * «Установить» и «Обновить» доступны и для активной оболочки:
-     * installItem() корректно обрабатывает nowActive == true —
-     * перераспаковывает оболочку через shellManager.setActiveShell()
-     * и вызывает markRestartRequired(). При холодном старте
-     * MainActivity.onCreate подтянет свежий .qutyshell с диска.
-     *
-     * «Применить» — только для неактивной (активную применять некуда).
-     * «Удалить» — только для неактивной кастомной (см. canDeleteItem()).
-     */
+    /** Установить/Обновить доступны и для активной; Применить — только для неактивной. */
     private fun buildMenuItems(item: StoreItemModel): List<PopupMenuHelper.Item> {
         val items = mutableListOf<PopupMenuHelper.Item>()
 
-        // «Установить» — если не установлено ИЛИ версия локального файла
-        // неизвестна (встроенная без version в manifest). Доступно и для
-        // активной: можно переустановить поверх, если файл повреждён.
         if (item.canInstall) {
             items.add(
                 PopupMenuHelper.Item(text = getString(R.string.store_install)) {
@@ -513,10 +405,6 @@ class StoreItemDetailFragment : Fragment() {
             )
         }
 
-        // «Обновить» — если на сервере новее установленной. Доступно и для
-        // активной: installItem() сам перераспакует оболочку и вызовет
-        // setActiveShell(updatedShell), а markRestartRequired() предложит
-        // перезапуск при выходе из магазина.
         if (item.canUpdate) {
             items.add(
                 PopupMenuHelper.Item(text = getString(R.string.store_update)) {
@@ -525,8 +413,6 @@ class StoreItemDetailFragment : Fragment() {
             )
         }
 
-        // «Применить» — только если установлено и НЕ активно.
-        // Для активной применять нечего: она уже загружена в WebView.
         if (!item.isActiveSameVersion && item.canApply) {
             items.add(
                 PopupMenuHelper.Item(text = getString(R.string.store_apply)) {
@@ -561,9 +447,7 @@ class StoreItemDetailFragment : Fragment() {
         )
     }
 
-    /**
-     * Установка / обновление.
-     */
+    /** Установка / обновление. Перепроверяет nowActive после завершения. */
     private fun installItem(item: StoreItemModel) {
         if (isProcessing) return
         isProcessing = true
@@ -585,12 +469,10 @@ class StoreItemDetailFragment : Fragment() {
                         isProcessing = false
                         hideInstallProgress()
 
-                        // Перечитываем оболочку
                         val updatedShell = shellManager.getAvailableShells()
                             .find { it.name == item.name }
 
-                        // Перепроверяем «активна ли» уже ПОСЛЕ установки —
-                        // между кликом и onSuccess активная могла смениться.
+                        // Перепроверяем nowActive — активная могла смениться.
                         val nowActive = configManager.getActiveShell() == item.name
 
                         if (updatedShell != null) {
@@ -639,9 +521,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Применить (сделать активной).
-     */
+    /** Сделать активной. */
     private fun applyItem(item: StoreItemModel) {
         if (isProcessing) return
         isProcessing = true
@@ -679,9 +559,7 @@ class StoreItemDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Локально применяет состояние «элемент активен с версией [activeVersion]».
-     */
+    /** Локально обновляет модель: isActive = true + активная версия. */
     private fun applyLocalActiveState(activeVersion: String?) {
         val current = item ?: return
 
@@ -701,9 +579,6 @@ class StoreItemDetailFragment : Fragment() {
         updateActionUI(updated)
     }
 
-    /**
-     * Пересобирает текущий item через StoreActivity.
-     */
     private fun reloadAndRebind() {
         val activity = activity as? StoreActivity ?: return
         val currentName = item?.name ?: return
@@ -733,7 +608,6 @@ class StoreItemDetailFragment : Fragment() {
             }
             startActivity(Intent.createChooser(intent, null))
         } catch (_: Exception) {
-            // Игнорируем
         }
     }
 
@@ -771,27 +645,11 @@ class StoreItemDetailFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Удаление оболочки.
-     *
-     * После удаления файла сначала дожидаемся пересборки currentItems
-     * в StoreActivity (через колбэк refreshItems), и только потом решаем,
-     * что делать с текущим экраном:
-     * - если элемент всё ещё существует (например, встроенная оболочка
-     *   с тем же именем — кастомная была поверх неё) — перерисовываем
-     *   деталь по актуальной модели;
-     * - если элемента больше нет (ни локально, ни на сервере) —
-     *   закрываем деталь.
-     *
-     * ВАЖНО: проверяем isAdded после suspend-вызова удаления —
-     * пользователь мог выйти, пока идёт удаление.
-     */
+    /** Удаляет оболочку; после refreshItems закрывает или обновляет экран. */
     private fun performDelete(item: StoreItemModel) {
         viewLifecycleOwner.lifecycleScope.launch {
             val success = shellManager.deleteShellByName(item.name)
 
-            // Проверяем, что фрагмент ещё жив — иначе Toast/requireContext()
-            // упадёт, а колбэк refreshItems отработает уже ни к чему.
             if (!isAdded) return@launch
 
             if (!success) {

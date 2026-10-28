@@ -15,13 +15,7 @@ import by.quty.launch.core.managers.StoreManager
 import kotlinx.coroutines.launch
 
 /**
- * Фрагмент «Настройки» магазина.
- *
- * Пока содержит:
- * - «Очистить кэш каталога»
- * - read-only «Источник каталога» (URL)
- *
- * Позже сюда добавятся настройки авто-проверки обновлений оболочек.
+ * Настройки магазина: источник каталога, очистка кэша.
  */
 class StoreSettingsFragment : Fragment() {
 
@@ -46,10 +40,8 @@ class StoreSettingsFragment : Fragment() {
         clearCacheRow = view.findViewById(R.id.store_clear_cache_row)
         sourceUrlValue = view.findViewById(R.id.store_source_url_value)
 
-        // Источник каталога
         sourceUrlValue.text = CoreConfig.STORE_URL
 
-        // Очистка кэша
         clearCacheRow.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 val success = storeManager.clearCache()

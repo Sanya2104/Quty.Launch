@@ -22,34 +22,13 @@ import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
 /**
- * Фрагмент "API методы" для Настроек.
- *
- * Показывает список всех API методов ядра.
- *
- * Разделение на секции:
- * - «Используется оболочкой» — методы, которые либо заявлены
- *   в manifest.json активной оболочки, либо реально вызывались
- *   за текущую сессию.
- * - «Остальные методы» — все прочие.
- *
- * Метки (галочка справа):
- * - Зелёная галочка — метод вызван (реально используется).
- * - Серая галочка — метод заявлен в manifest, но ещё не вызывался.
- * - Оранжевая галочка — метод вызван, но НЕ заявлен в manifest
- *   (оболочка не декларировала его использование).
- * - Нет галочки — метод и не заявлен, и не вызывался.
- *
- * Подсказка с легендой цветов доступна через иконку «i» рядом
- * с заголовком активной секции. Иконка показывается только если
- * есть хотя бы один «аномальный» метод (оранжевый или серый).
+ * Список API-методов с разбивкой на «используется оболочкой» и «остальные».
  */
 class ApiMethodsFragment : Fragment() {
 
-    // Менеджеры
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
 
-    // UI
     private lateinit var infoIcon: ImageView
     private lateinit var activeSectionHeader: TextView
     private lateinit var activeSectionCounter: TextView
@@ -93,7 +72,6 @@ class ApiMethodsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Активные методы могли измениться, пока фрагмент был на паузе
         rebuild()
     }
 
@@ -108,7 +86,6 @@ class ApiMethodsFragment : Fragment() {
         val allMethods = ApiRouter.getRegisteredMethods()
         val activeNames = ApiRouter.getActiveMethods()
 
-        // Методы, заявленные активной оболочкой в manifest.json
         val activeShell = shellManager.getActiveShell()
         val declaredNames = activeShell?.apiMethods?.toSet() ?: emptySet()
 
@@ -125,8 +102,6 @@ class ApiMethodsFragment : Fragment() {
 
         emptyText.visibility = View.GONE
 
-        // Метод попадает в активную секцию, если он либо заявлен,
-        // либо реально вызывался
         val activeList = allMethods.filter {
             it.name in declaredNames || it.name in activeNames
         }
@@ -134,24 +109,19 @@ class ApiMethodsFragment : Fragment() {
             it.name !in declaredNames && it.name !in activeNames
         }
 
-        // === Определяем «аномалии» для показа иконки-подсказки ===
-        // Аномалия — метод, у которого цвет галочки не зелёный:
-        //   - isCalled && !isDeclared → оранжевая
-        //   - !isCalled && isDeclared → серая
+        // «Аномалия» — метод, у которого цвет галочки не зелёный.
         val hasAnomalies = activeList.any { method ->
             val isDeclared = method.name in declaredNames
             val isCalled = method.name in activeNames
             (isCalled && !isDeclared) || (!isCalled && isDeclared)
         }
 
-        // Секция 1: Используется оболочкой
         if (activeList.isNotEmpty()) {
             infoIcon.visibility = if (hasAnomalies) View.VISIBLE else View.GONE
             activeSectionHeader.visibility = View.VISIBLE
             activeSectionCounter.visibility = View.VISIBLE
             activeContainer.visibility = View.VISIBLE
 
-            // Заголовок — только название оболочки
             val shellName = activeShell?.displayName
                 ?: activeShell?.name
                 ?: getString(R.string.unknown)
@@ -160,7 +130,6 @@ class ApiMethodsFragment : Fragment() {
                 shellName
             )
 
-            // Счётчик — «X из Y» справа
             activeSectionCounter.text = getString(
                 R.string.api_methods_active_counter,
                 activeList.size,
@@ -186,7 +155,6 @@ class ApiMethodsFragment : Fragment() {
             activeContainer.visibility = View.GONE
         }
 
-        // Секция 2: Остальные методы
         if (otherList.isNotEmpty()) {
             otherSectionHeader.visibility = View.VISIBLE
             otherContainer.visibility = View.VISIBLE
@@ -213,18 +181,7 @@ class ApiMethodsFragment : Fragment() {
     // СОЗДАНИЕ СТРОК
     // ============================================================
 
-    /**
-     * Заполняет строку метода данными из item_api_method.xml.
-     *
-     * @param isDeclared метод заявлен в manifest.json оболочки
-     * @param isCalled   метод реально вызывался за текущую сессию
-     *
-     * Логика галочки:
-     * - isCalled && isDeclared → зелёная (используется, заявлен)
-     * - isCalled && !isDeclared → оранжевая (используется, но не заявлен)
-     * - !isCalled && isDeclared → серая (заявлен, но не вызывался)
-     * - !isCalled && !isDeclared → нет галочки
-     */
+    /** Строка метода. Галочка: зелёная / оранжевая / серая / нет. */
     private fun createMethodRow(
         method: BaseApiMethod<*>,
         isDeclared: Boolean,
@@ -241,19 +198,15 @@ class ApiMethodsFragment : Fragment() {
         val description = view.findViewById<TextView>(R.id.api_method_description)
         val check = view.findViewById<ImageView>(R.id.api_method_check)
 
-        // Иконка метода — индивидуальная для каждого метода
         icon.setImageResource(method.iconRes)
         icon.imageTintList = ColorStateList.valueOf(
             getThemeColor(R.attr.textDimColor)
         )
 
-        // Название
         name.text = method.name
 
-        // Описание
         description.text = getString(method.descriptionRes)
 
-        // Галочка
         when {
             isCalled && isDeclared -> {
                 check.visibility = View.VISIBLE
@@ -305,11 +258,6 @@ class ApiMethodsFragment : Fragment() {
     // ДИАЛОГ-ЛЕГЕНДА
     // ============================================================
 
-    /**
-     * Показывает диалог с легендой цветов галочек.
-     * Использует ту же прозрачную тему, что и другие диалоги настроек,
-     * чтобы был виден CardView со скруглением.
-     */
     private fun showLegendDialog() {
         val dialogView = layoutInflater.inflate(
             R.layout.dialog_api_methods_legend,
@@ -324,15 +272,12 @@ class ApiMethodsFragment : Fragment() {
             .setCancelable(true)
             .create()
 
-        // Прозрачный фон окна — чтобы был виден CardView со скруглением
         dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-        // Кнопка закрытия
         dialogView.findViewById<View>(R.id.legend_close_button).setOnClickListener {
             dialog.dismiss()
         }
 
-        // Кнопка «Понятно»
         dialogView.findViewById<android.widget.Button>(R.id.legend_ok_button).setOnClickListener {
             dialog.dismiss()
         }

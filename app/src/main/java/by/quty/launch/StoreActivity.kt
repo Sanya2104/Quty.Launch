@@ -23,23 +23,8 @@ import by.quty.launch.databinding.ActivityStoreBinding
 import kotlinx.coroutines.launch
 
 /**
- * Активность магазина Quty.Launch.
- *
- * Паттерн SettingsActivity / LoggerActivity:
- * - на телефоне — меню и контент переключаются как экраны;
- * - на планшете — меню слева, контент справа.
- *
- * Меню:
- * - Каталог (StoreCatalogFragment, id=1)
- * - Настройки (StoreSettingsFragment, id=2)
- * - Импорт (StoreImportFragment, id=3)
- *
- * Детальный экран элемента (StoreItemDetailFragment) открывается
- * через addToBackStack поверх текущего контента.
- *
- * При выходе: если было выполнено действие (установка / обновление /
- * применение / удаление / импорт) — показывается диалог перезапуска
- * (BaseActivity).
+ * Магазин: Каталог / Настройки / Импорт. На телефоне — переключение, на планшете — две панели.
+ * Детальный экран — через addToBackStack.
  */
 class StoreActivity : BaseActivity() {
 
@@ -58,7 +43,6 @@ class StoreActivity : BaseActivity() {
 
     private var menuItems: List<MenuModel> = emptyList()
 
-    // Актуальный список элементов (кэш для детального фрагмента)
     private var currentItems: List<StoreItemModel> = emptyList()
     private var currentRemote: List<StoreRemoteItemModel> = emptyList()
 
@@ -110,7 +94,6 @@ class StoreActivity : BaseActivity() {
             enableImmersiveMode(strictMode)
         }
 
-        // Подгружаем данные для детального фрагмента
         refreshItems()
     }
 
@@ -223,11 +206,7 @@ class StoreActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Иконка кнопки «Назад» в шапке контента (телефон):
-     * - корневой «Каталог» > три полоски (ic_menu);
-     * - «Настройки» / «Импорт» / детальный экран > стрелка (ic_back).
-     */
+    /** Каталог — ic_menu; остальные — ic_back. */
     private fun updateBackButtonIcon() {
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
         val isDetail = currentFragment is StoreItemDetailFragment
@@ -273,7 +252,6 @@ class StoreActivity : BaseActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // 1. Детальный экран — закрыть его
                     if (supportFragmentManager.backStackEntryCount > 0) {
                         supportFragmentManager.popBackStackImmediate()
                         binding.contentTitle.text = getMenuItemTitle()
@@ -281,7 +259,6 @@ class StoreActivity : BaseActivity() {
                         return
                     }
 
-                    // 2. Телефон: из фрагмента вернуться в меню
                     if (!isTabletMode && isFragmentVisible) {
                         (binding.recyclerMenu.adapter as? SettingsMenuAdapter)?.setSelectedItem(-1)
                         isFragmentVisible = false
@@ -289,7 +266,6 @@ class StoreActivity : BaseActivity() {
                         return
                     }
 
-                    // 3. Проверяем изменения (диалог перезапуска) или закрываем
                     checkAndShowRestartDialog()
                 }
             }
@@ -412,17 +388,7 @@ class StoreActivity : BaseActivity() {
         return currentItems.find { it.name == name }
     }
 
-    /**
-     * Пересобирает текущий список (после установки / удаления / активации /
-     * импорта).
-     *
-     * ВАЖНО: перед пересборкой и перед вызовом onDone проверяем
-     * isFinishing/isDestroyed — иначе колбэк может дёрнуть UI-операции
-     * (findItemByName, hideItemDetail) уже после уничтожения активности.
-     *
-     * @param onDone колбэк, вызываемый после пересборки currentItems
-     *               (в основном потоке).
-     */
+    /** Пересобирает currentItems из кэша и локальных shell'ов. */
     fun refreshItems(onDone: (() -> Unit)? = null) {
         lifecycleScope.launch {
             if (isFinishing || isDestroyed) return@launch

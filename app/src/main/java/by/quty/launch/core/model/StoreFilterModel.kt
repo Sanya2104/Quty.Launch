@@ -4,16 +4,7 @@ package by.quty.launch.core.model
 import androidx.annotation.StringRes
 import by.quty.launch.R
 
-/**
- * Фильтр списка магазина.
- *
- * Чипы над списком в StoreCatalogFragment. Одиночный выбор —
- * как табы в Google Play.
- *
- * @property labelRes ресурс локализованного названия
- * @property emptyRes ресурс текста пустого состояния для этого фильтра
- * @property predicate предикат для фильтрации списка
- */
+/** Фильтр каталога: Все / Установленные / Обновления / Не установленные. */
 enum class StoreFilterModel(
     @StringRes val labelRes: Int,
     @StringRes val emptyRes: Int,

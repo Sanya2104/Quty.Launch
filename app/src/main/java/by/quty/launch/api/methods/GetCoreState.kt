@@ -17,10 +17,7 @@ import by.quty.launch.core.utilities.AppInfoHelper
 import by.quty.launch.core.utilities.BadgeHelper
 
 /**
- * Возвращает полное состояние ядра Quty.Launch для текущей оболочки.
- *
- * Оболочка вызывает этот метод при старте и при получении
- * JS-события window.onCoreStateChanged().
+ * Полное состояние ядра для оболочки (тема, язык, ориентация, shell, update).
  */
 class GetCoreState(
     private val context: Context,
@@ -39,8 +36,6 @@ class GetCoreState(
     override suspend fun executeInternal(params: Unit?): String {
         val themeMode = normalizeThemeMode(configManager.getThemeMode())
 
-        // Кэш обновления — прокидываем в оболочку, чтобы она могла
-        // отреагировать на появление обновления без перезапроса GetApps
         val cachedUpdate = try {
             SystemUpdateManager(context).getCachedUpdate()
         } catch (_: Exception) {
@@ -100,13 +95,6 @@ class GetCoreState(
         )
     }
 
-    /**
-     * Нормализует themeMode до одного из допустимых значений:
-     * "light", "dark", "system".
-     *
-     * Если в SharedPreferences оказался мусор или неизвестное значение —
-     * возвращает "system" (значение по умолчанию).
-     */
     private fun normalizeThemeMode(mode: String): String {
         return when (mode) {
             "light", "dark", "system" -> mode
@@ -114,10 +102,6 @@ class GetCoreState(
         }
     }
 
-    /**
-     * Определяет фактическую тему: dark / light.
-     * Если themeMode == "system" — смотрит на системную конфигурацию.
-     */
     private fun resolveTheme(themeMode: String): String {
         return when (themeMode) {
             "dark" -> "dark"
@@ -131,9 +115,6 @@ class GetCoreState(
         }
     }
 
-    /**
-     * Определяет BCP-47 локаль: "ru-RU" или "en-US".
-     */
     private fun resolveLocale(language: String): String {
         return when (language) {
             "ru" -> "ru-RU"

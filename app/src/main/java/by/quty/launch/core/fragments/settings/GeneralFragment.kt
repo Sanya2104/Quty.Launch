@@ -23,22 +23,17 @@ import by.quty.launch.core.managers.ConfigManager
 import by.quty.launch.core.managers.ShellManager
 
 /**
- * Фрагмент "Основное" для Настроек
- * Содержит: переключение темы (Light/Dark/System), ориентация экрана,
- * полноэкранный режим, строгий режим, выбор языка,
- * статус «Домашний экран» (default launcher).
+ * «Основное»: тема, ориентация, fullscreen/strict, язык, home screen.
  */
 class GeneralFragment : Fragment() {
 
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
 
-    // UI элементы для темы
     private lateinit var themeLightCard: LinearLayout
     private lateinit var themeDarkCard: LinearLayout
     private lateinit var themeSystemCard: LinearLayout
 
-    // UI элементы для ориентации
     private lateinit var orientationAutoCard: LinearLayout
     private lateinit var orientationPortraitCard: LinearLayout
     private lateinit var orientationLandscapeCard: LinearLayout
@@ -47,18 +42,13 @@ class GeneralFragment : Fragment() {
     private lateinit var fullscreenSwitch: SwitchCompat
     private lateinit var strictModeSwitch: SwitchCompat
 
-    // UI элементы для языка
     private lateinit var languageRussianCard: LinearLayout
     private lateinit var languageEnglishCard: LinearLayout
 
-    // UI элементы для «Домашний экран»
     private lateinit var homeScreenRow: View
     private lateinit var homeScreenState: TextView
 
-    // Флаг для предотвращения множественных обновлений
     private var isUpdating = false
-
-    // Флаг, что требуется перезагрузка
     private var needsRestart = false
 
     override fun onCreateView(
@@ -78,12 +68,10 @@ class GeneralFragment : Fragment() {
             needsRestart = settingsActivity.getNeedsRestart()
         }
 
-        // Тема
         themeLightCard = view.findViewById(R.id.theme_light_card)
         themeDarkCard = view.findViewById(R.id.theme_dark_card)
         themeSystemCard = view.findViewById(R.id.theme_system_card)
 
-        // Ориентация
         orientationAutoCard = view.findViewById(R.id.orientation_auto_card)
         orientationPortraitCard = view.findViewById(R.id.orientation_portrait_card)
         orientationLandscapeCard = view.findViewById(R.id.orientation_landscape_card)
@@ -92,11 +80,9 @@ class GeneralFragment : Fragment() {
         fullscreenSwitch = view.findViewById(R.id.fullscreen_switch)
         strictModeSwitch = view.findViewById(R.id.strict_mode_switch)
 
-        // Язык
         languageRussianCard = view.findViewById(R.id.language_russian_card)
         languageEnglishCard = view.findViewById(R.id.language_english_card)
 
-        // Домашний экран
         homeScreenRow = view.findViewById(R.id.home_screen_row)
         homeScreenState = view.findViewById(R.id.home_screen_state)
 
@@ -123,13 +109,11 @@ class GeneralFragment : Fragment() {
 
         refreshSettings()
 
-        // Проверяем статус «Домашний экран» при возврате с системных настроек
-        // (юзер мог вернуться из ACTION_HOME_SETTINGS, где выбрал наш лаунчер).
         updateHomeScreenState()
     }
 
     // ============================================================
-    // ДОМАШНИЙ ЭКРАН (DEFAULT LAUNCHER)
+    // ДОМАШНИЙ ЭКРАН
     // ============================================================
 
     private fun setupHomeScreenRow() {
@@ -137,9 +121,6 @@ class GeneralFragment : Fragment() {
 
         homeScreenRow.setOnClickListener {
             try {
-                // Системный экран выбора HOME-приложения.
-                // После выбора система вернёт нас сюда через onResume(),
-                // где мы перепроверим состояние.
                 val intent = Intent(Settings.ACTION_HOME_SETTINGS)
                 startActivity(intent)
             } catch (_: Exception) {
@@ -152,10 +133,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
-    /**
-     * Проверяет, является ли Quty.Launch лаунчером по умолчанию,
-     * и обновляет TextView состояния.
-     */
+    /** Обновляет TextView статуса дефолтного HOME. */
     private fun updateHomeScreenState() {
         if (!isAdded) return
 
@@ -180,18 +158,7 @@ class GeneralFragment : Fragment() {
         }
     }
 
-    /**
-     * Проверяет, обрабатывает ли Quty.Launch HOME-интент сейчас.
-     *
-     * Использует PackageManager.resolveActivity() с MATCH_DEFAULT_ONLY —
-     * это не-deprecated способ узнать, какая Activity выберется системой
-     * для HOME-интента. Если это наша MainActivity — мы назначены
-     * дефолтным лаунчером.
-     *
-     * Fallback (когда HOME-приложение вообще не выбрано) НЕ считается
-     * назначением — resolveActivity в этом случае может вернуть
-     * системный resolver или null.
-     */
+    /** true, если Quty.Launch — дефолтный HOME. */
     private fun isQutyLaunchDefaultHome(): Boolean {
         return try {
             val packageManager = requireContext().packageManager
@@ -208,14 +175,12 @@ class GeneralFragment : Fragment() {
             val resolvedPackage = resolved?.activityInfo?.packageName
             resolvedPackage == requireContext().packageName
         } catch (_: Exception) {
-            // На некоторых прошивках resolveActivity может бросать
-            // SecurityException или возвращать null — считаем, что не назначены
             false
         }
     }
 
     // ============================================================
-    // ТЕМА (LIGHT / DARK / SYSTEM)
+    // ТЕМА
     // ============================================================
 
     private fun setupThemeSelector() {
@@ -372,7 +337,7 @@ class GeneralFragment : Fragment() {
     }
 
     // ============================================================
-    // ПОЛНОЭКРАННЫЙ РЕЖИМ
+    // FULLSCREEN / STRICT
     // ============================================================
 
     private fun setupFullscreenSelector() {
@@ -397,10 +362,6 @@ class GeneralFragment : Fragment() {
             ).show()
         }
     }
-
-    // ============================================================
-    // СТРОГИЙ РЕЖИМ
-    // ============================================================
 
     private fun setupStrictModeSelector() {
         strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
@@ -458,24 +419,19 @@ class GeneralFragment : Fragment() {
 
         configManager.setLanguage(language)
 
-        // Тост показываем на СТАРОМ языке (активность ещё не пересоздана)
         val message = when (language) {
             ConfigManager.LANGUAGE_RU -> getString(R.string.toast_language_ru)
             else -> getString(R.string.toast_language_en)
         }
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
-        // ВАЖНО: помечаем, что требуется перезапуск.
-        // При выходе из настроек SettingsActivity покажет диалог перезапуска.
-        // Флаг сохраняется через onSaveInstanceState и переживёт recreate().
         markRestartRequired()
 
-        // Мгновенно пересоздаём SettingsActivity → UI обновится на новый язык
         (activity as? SettingsActivity)?.applyLanguageAndRecreate()
     }
 
     // ============================================================
-    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
     private fun markRestartRequired() {
@@ -492,22 +448,17 @@ class GeneralFragment : Fragment() {
     fun refreshSettings() {
         isUpdating = true
 
-        // Тема
         val mode = configManager.getThemeMode()
         selectTheme(mode)
 
-        // Ориентация
         updateOrientationLockState()
 
-        // Полноэкранный и строгий
         fullscreenSwitch.isChecked = configManager.isFullscreenEnabled()
         strictModeSwitch.isChecked = configManager.isStrictModeEnabled()
         updateStrictModeState()
 
-        // Язык
         selectLanguage(configManager.getLanguage())
 
-        // Домашний экран
         updateHomeScreenState()
 
         isUpdating = false

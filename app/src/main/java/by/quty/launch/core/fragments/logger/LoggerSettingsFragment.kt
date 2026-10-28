@@ -16,24 +16,10 @@ import by.quty.launch.core.managers.LoggerManager
 import kotlinx.coroutines.launch
 
 /**
- * Фрагмент настроек логгера.
- *
- * Содержит:
- * - Секция «Запись»:
- *   • Toggle «Включить логирование» — запись в буфер (по умолчанию on)
- *   • Toggle «Автосохранение в файл» — сохранение буфера в файл при выходе
- *     из LoggerActivity (по умолчанию off)
- * - Секция «Отображение»:
- *   • Spinner «Лимит длины деталей» — 1000 / 3000 / 5000 символов
- * - Секция «Действия»:
- *   • «Сохранить текущий лог» — сохранить буфер в файл в StorageDirectory.LOGS
- *   • «Удалить все файлы логов» — удалить все файлы из StorageDirectory.LOGS
+ * Настройки логгера: enabled, autosave, лимит details, сохранение/удаление файлов.
  */
 class LoggerSettingsFragment : Fragment() {
 
-    /**
-     * Доступные значения лимита длины details.
-     */
     private val detailsLimitOptions = listOf(1000, 3000, 5000)
 
     private lateinit var enabledSwitch: SwitchCompat
@@ -42,7 +28,6 @@ class LoggerSettingsFragment : Fragment() {
     private lateinit var saveRow: View
     private lateinit var deleteFilesRow: View
 
-    // Защита от срабатывания OnItemSelectedListener при программной установке
     private var isSpinnerInitializing = false
 
     override fun onCreateView(
@@ -70,7 +55,7 @@ class LoggerSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // SWITCH: ВКЛЮЧИТЬ ЛОГИРОВАНИЕ
+    // SWITCH: ЛОГИРОВАНИЕ
     // ============================================================
 
     private fun setupEnabledSwitch() {
@@ -108,7 +93,7 @@ class LoggerSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // SPINNER: ЛИМИТ ДЛИНЫ DETAILS
+    // SPINNER: ЛИМИТ DETAILS
     // ============================================================
 
     private fun setupDetailsLimitSpinner() {
@@ -120,7 +105,6 @@ class LoggerSettingsFragment : Fragment() {
         adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
         detailsLimitSpinner.adapter = adapter
 
-        // Устанавливаем текущее значение
         val currentLimit = LoggerManager.getDetailsLimit()
         val currentIndex = detailsLimitOptions.indexOf(currentLimit).takeIf { it >= 0 } ?: 1
         isSpinnerInitializing = true
@@ -148,13 +132,12 @@ class LoggerSettingsFragment : Fragment() {
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                // Ничего не делаем
             }
         }
     }
 
     // ============================================================
-    // ДЕЙСТВИЕ: СОХРАНИТЬ ТЕКУЩИЙ ЛОГ
+    // СОХРАНИТЬ ТЕКУЩИЙ ЛОГ
     // ============================================================
 
     private fun setupSaveRow() {
@@ -188,7 +171,7 @@ class LoggerSettingsFragment : Fragment() {
     }
 
     // ============================================================
-    // ДЕЙСТВИЕ: УДАЛИТЬ ВСЕ ФАЙЛЫ ЛОГОВ
+    // УДАЛИТЬ ВСЕ ФАЙЛЫ
     // ============================================================
 
     private fun setupDeleteFilesRow() {

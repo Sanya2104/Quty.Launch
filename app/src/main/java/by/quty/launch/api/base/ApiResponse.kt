@@ -3,6 +3,7 @@ package by.quty.launch.api.base
 
 import kotlinx.serialization.Serializable
 
+/** Единый ответ API-метода. */
 @Serializable
 data class ApiResponse<T>(
     val success: Boolean,

@@ -21,31 +21,25 @@ import java.io.FileInputStream
 import java.net.URLConnection
 import androidx.core.net.toUri
 
+/**
+ * WebView-хост оболочки: asset-загрузчик, quty://, внешние ссылки, CSS для отключения анимаций.
+ */
 @Suppress("DEPRECATION")
 @SuppressLint("SetJavaScriptEnabled")
 class LauncherWebView(context: Context) : WebView(context.applicationContext) {
 
-    // Используем applicationContext для предотвращения утечек памяти
     private val appContext = context.applicationContext
 
     private val activeShellDir = File(appContext.filesDir, "shells/active")
 
-    // Храним имя активной оболочки для корректной загрузки
     private var activeShellName: String? = null
 
-    /**
-     * Последнее применённое состояние анимаций.
-     * Хранится, чтобы после onPageFinished повторно применить CSS-инжект —
-     * страница загружается асинхронно, и evaluateJavascript на момент
-     * loadShell() может уйти в никуда (head ещё пуст).
-     */
+    /** Последнее применённое состояние анимаций — для onPageFinished. */
     private var lastAnimationsEnabled: Boolean = true
 
-    // Счётчик попыток перезагрузки при ошибке
     private var errorRetryCount = 0
     private var lastErrorUrl: String? = null
 
-    // Максимальное количество попыток перезагрузки (из конфига)
     private companion object {
         private const val MAX_RETRY_COUNT = CoreConfig.WEBVIEW_MAX_RETRY_COUNT
         private const val RETRY_DELAY_MS = CoreConfig.WEBVIEW_RETRY_DELAY_MS
@@ -55,45 +49,30 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
 
-        // ВАЖНО: Отключаем старый опасный доступ к файлам
         settings.allowFileAccess = true
         settings.allowFileAccessFromFileURLs = true
         settings.allowUniversalAccessFromFileURLs = true
 
-        // LOAD_DEFAULT вместо LOAD_NO_CACHE — на ряде прошивок LOAD_NO_CACHE
-        // ломает загрузку data:image/...;base64,... URI в WebView
-        // (иконки приложений не отображаются).
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
-        // Используем аппаратное ускорение для современных CSS
         setLayerType(LAYER_TYPE_HARDWARE, null)
 
-        // Включаем отладку WebView
         setWebContentsDebuggingEnabled(true)
 
-        // Настраиваем WebViewAssetLoader
         setupAssetLoader()
-
-        // Настраиваем WebChromeClient — console.log перехват отключён
         setupWebChromeClient()
     }
 
-    /**
-     * Настройка WebChromeClient.
-     * Перехват console.log() отключён — оболочки используют
-     * Android.call для обращения к ядру, а JS console не пробрасывается.
-     */
+    /** WebChromeClient без перехвата console.log. */
     private fun setupWebChromeClient() {
         webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                // Пропускаем — консоль не пробрасывается
                 return false
             }
 
             @Suppress("DEPRECATION")
             @Deprecated("Use onConsoleMessage(ConsoleMessage) instead")
             override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
-                // Ничего не делаем
             }
         }
     }
@@ -113,12 +92,10 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
             ): WebResourceResponse? {
                 val url = request.url.toString()
 
-                // Обрабатываем наш собственный протокол
                 if (url.startsWith("quty://")) {
                     return handleQutyScheme(url)
                 }
 
-                // Всё остальное через стандартный загрузчик
                 return assetLoader.shouldInterceptRequest(request.url)
             }
 
@@ -130,20 +107,15 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                         path = path.substring(2)
                     }
 
-                    // Определяем папку оболочки по имени активной оболочки
                     val shellDir = getActiveShellDir() ?: return null
 
-                    // Пытаемся найти файл в папке оболочки
                     var file = File(shellDir, path)
 
-                    // Если файл не найден и путь начинается с shells/active/,
-                    // пробуем убрать этот префикс
                     if (!file.exists() && path.startsWith("shells/active/")) {
                         val relativePath = path.replace("shells/active/", "")
                         file = File(shellDir, relativePath)
                     }
 
-                    // Если всё ещё не найден, пробуем найти файл в подпапках оболочки
                     if (!file.exists()) {
                         val foundFile = findFileRecursively(shellDir, File(path).name)
                         if (foundFile != null) {
@@ -157,7 +129,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                         return WebResourceResponse(mimeType, "UTF-8", FileInputStream(file))
                     }
 
-                    // Если файл не найден, пробуем загрузить из assets (запасной вариант)
                     if (path.startsWith("shells/")) {
                         val assetPath = path.replace("shells/", "")
                         try {
@@ -166,7 +137,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                                 ?: "text/html"
                             return WebResourceResponse(mimeType, "UTF-8", inputStream)
                         } catch (_: Exception) {
-                            // Файла нет в assets
                         }
                     }
 
@@ -185,12 +155,7 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 }
             }
 
-            /**
-             * Возвращает директорию активной оболочки по имени
-             * Использует сохранённое имя активной оболочки для точного поиска
-             */
             private fun getActiveShellDir(): File? {
-                // Если есть сохранённое имя активной оболочки — ищем конкретную папку
                 activeShellName?.let { shellName ->
                     val shellDir = File(activeShellDir, shellName)
                     if (shellDir.exists() && shellDir.isDirectory) {
@@ -198,7 +163,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     }
                 }
 
-                // Если имя не сохранено или папка не найдена — ищем первую папку
                 val shellDirs = activeShellDir.listFiles { it.isDirectory }
                 if (!shellDirs.isNullOrEmpty()) {
                     return shellDirs[0]
@@ -223,33 +187,22 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                 return null
             }
 
-            /**
-             * Перехватываем навигацию по внешним ссылкам.
-             *
-             * - quty:// — внутренняя схема, грузим сами (вернуть false).
-             * - appassets.androidplatform.net — локальный asset-домен, грузим сами.
-             * - http(s):// на внешний домен — открываем во внешнем браузере,
-             *   чтобы пользователь не «утонул» внутри WebView.
-             */
+            /** Внутренние схемы — грузим сами, внешние — в браузер. */
             override fun shouldOverrideUrlLoading(
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url?.toString() ?: return false
 
-                // Внутренняя схема — грузим сами
                 if (url.startsWith("quty://")) return false
 
-                // Asset-домен (WebViewAssetLoader) — грузим сами
                 if (url.startsWith("https://appassets.androidplatform.net/")) return false
 
-                // data:, about:, file: — грузим сами (нужно для JS-логики оболочек)
                 if (url.startsWith("data:") ||
                     url.startsWith("about:") ||
                     url.startsWith("file:")
                 ) return false
 
-                // Всё остальное — внешняя ссылка, открываем во внешнем браузере
                 try {
                     LoggerManager.debug(
                         LoggerTagModel.WEBVIEW,
@@ -262,23 +215,13 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                     appContext.startActivity(intent)
                 } catch (_: Exception) {
-                    // Игнорируем ошибку открытия ссылки
                 }
 
-                // Возвращаем true — WebView сам НЕ грузит ссылку
                 return true
             }
 
-            /**
-             * Страница загружена — повторно применяем состояние анимаций.
-             *
-             * Нужно, потому что loadShell() вызывается ДО того, как документ
-             * готов: evaluateJavascript из applyAnimationsEnabled() на этот
-             * момент может не найти document.head.
-             */
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                // Повторно применяем к уже загруженному документу
                 applyAnimationsEnabledInternal(lastAnimationsEnabled)
             }
 
@@ -298,16 +241,12 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     "WEBVIEW.error  code=$errorCode  $description"
                 )
 
-                // Если это страница оболочки (не ресурс) — пробуем перезагрузить
                 if (isShellPage(url)) {
                     scheduleRetry(url)
                 }
             }
 
-            /**
-             * Render-процесс WebView упал (обычно из-за OOM).
-             * Возвращаем true — обработали ситуацию, приложение не упадёт.
-             */
+            /** Render-процесс упал: возвращаем true, перезапускаем MainActivity. */
             override fun onRenderProcessGone(
                 view: WebView?,
                 detail: RenderProcessGoneDetail?
@@ -335,36 +274,26 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                         )
                         appContext.startActivity(intent)
                     } catch (_: Exception) {
-                        // Игнорируем ошибку перезапуска
                     }
                 }
 
                 return true
             }
 
-            /**
-             * Проверяет, является ли URL страницей оболочки (не ресурсом)
-             */
             private fun isShellPage(url: String): Boolean {
                 return url.contains("index.html") ||
                         url.endsWith("/") ||
                         url.matches(Regex(".*quty://.*"))
             }
 
-            /**
-             * Планирует повторную загрузку с задержкой
-             */
             private fun scheduleRetry(url: String) {
-                // Если это тот же URL, увеличиваем счётчик
                 if (lastErrorUrl == url) {
                     errorRetryCount++
                 } else {
-                    // Новый URL — сбрасываем счётчик
                     errorRetryCount = 1
                     lastErrorUrl = url
                 }
 
-                // Если превышен лимит — не перезагружаем
                 if (errorRetryCount > MAX_RETRY_COUNT) {
                     LoggerManager.warn(
                         LoggerTagModel.WEBVIEW,
@@ -378,7 +307,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
                     "WEBVIEW.retry  attempt=$errorRetryCount"
                 )
 
-                // Задержка перед перезагрузкой
                 postDelayed({
                     if (url == lastErrorUrl) {
                         loadUrl(url)
@@ -388,16 +316,10 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         }
     }
 
-    /**
-     * Загружает оболочку
-     * @param shellName имя оболочки (например, "default" или "custom_shell")
-     * @param isAsset true если оболочка из assets, false если кастомная
-     */
+    /** Загружает оболочку: assets или quty://. */
     fun loadShell(shellName: String, isAsset: Boolean = true) {
-        // Сохраняем имя активной оболочки для корректной загрузки ресурсов
         activeShellName = shellName
 
-        // Сбрасываем счётчик ошибок при новой загрузке
         errorRetryCount = 0
         lastErrorUrl = null
 
@@ -409,39 +331,18 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
         val url = if (isAsset) {
             "https://appassets.androidplatform.net/assets/shells/$shellName/index.html"
         } else {
-            // Для кастомных оболочек используем quty:// схему
             "quty://shells/active/index.html"
         }
         loadUrl(url)
     }
 
-    /**
-     * Применяет состояние анимаций к содержимому WebView.
-     *
-     * Если enabled == false — инжектит тег <style id="__quty_no_anim">
-     * в <head>, который глушит все CSS-анимации и transitions:
-     *   *, *::before, *::after { animation-duration: 0s !important;
-     *                             transition-duration: 0s !important; }
-     *
-     * Если enabled == true — удаляет этот тег.
-     *
-     * ВАЖНО: работает независимо от того, поддерживает ли оболочка
-     * флаг animationsEnabled из GetCoreState. Если не поддерживает —
-     * CSS-инжект всё равно погасит все CSS-анимации.
-     *
-     * Состояние сохраняется в lastAnimationsEnabled и повторно
-     * применяется в onPageFinished — потому что loadShell() может быть
-     * вызван раньше, чем документ готов.
-     */
+    /** Включает/выключает CSS-анимации через инжект `<style>`. */
     fun applyAnimationsEnabled(enabled: Boolean) {
         lastAnimationsEnabled = enabled
         applyAnimationsEnabledInternal(enabled)
     }
 
-    /**
-     * Внутренний метод — выполняет сам инжект.
-     * Вызывается из applyAnimationsEnabled() и onPageFinished().
-     */
+    /** Сам инжект. Вызывается из applyAnimationsEnabled и onPageFinished. */
     private fun applyAnimationsEnabledInternal(enabled: Boolean) {
         val js = if (enabled) {
             """
@@ -466,7 +367,6 @@ class LauncherWebView(context: Context) : WebView(context.applicationContext) {
             try {
                 evaluateJavascript(js, null)
             } catch (_: Exception) {
-                // Игнорируем — WebView может быть не готов
             }
         }
     }

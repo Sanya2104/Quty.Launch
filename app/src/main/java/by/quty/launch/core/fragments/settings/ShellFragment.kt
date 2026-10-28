@@ -32,7 +32,7 @@ import by.quty.launch.core.managers.ShellManager
 import by.quty.launch.core.model.ColorSchemeModel
 
 /**
- * Фрагмент "Персонализация" для Настроек
+ * «Персонализация»: активная оболочка, магазин, цветовые схемы, анимации, Safe Mode баннер.
  */
 class ShellFragment : Fragment() {
 
@@ -40,7 +40,6 @@ class ShellFragment : Fragment() {
     private lateinit var shellManager: ShellManager
     private lateinit var colorSchemeAdapter: ColorSchemeAdapter
 
-    // Карточка активной оболочки
     private lateinit var shellCard: View
     private lateinit var shellEmpty: TextView
     private lateinit var shellPreview: ImageView
@@ -48,14 +47,11 @@ class ShellFragment : Fragment() {
     private lateinit var shellVersion: TextView
     private lateinit var shellMenuButton: ImageButton
 
-    // Ссылка на магазин
     private lateinit var storeRow: View
 
-    // Секция «Анимации»
     private lateinit var animationsSwitch: SwitchCompat
     private lateinit var animationsSystemHint: TextView
 
-    // Safe Mode баннер и кнопка выхода
     private lateinit var safeModeBanner: View
     private lateinit var safeModeExitButton: Button
 
@@ -119,13 +115,10 @@ class ShellFragment : Fragment() {
     }
 
     // ============================================================
-    // SAFE MODE БАННЕР
+    // SAFE MODE
     // ============================================================
 
-    /**
-     * Показывает/скрывает баннер Safe Mode в зависимости от флага.
-     * Кнопка «Выйти» снимает флаг и перезапускает приложение.
-     */
+    /** Баннер Safe Mode + кнопка «Выйти» (снимает флаг + рестарт). */
     private fun setupSafeModeBanner() {
         val isSafeMode = configManager.isSafeModeActive()
 
@@ -140,7 +133,6 @@ class ShellFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
 
-                // Перезапускаем, чтобы ShellManager подхватил обычную оболочку
                 val baseActivity = activity as? by.quty.launch.BaseActivity
                 val intent = Intent(requireContext(), by.quty.launch.MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -159,7 +151,7 @@ class ShellFragment : Fragment() {
     }
 
     // ============================================================
-    // ОБОЛОЧКА
+    // АКТИВНАЯ ОБОЛОЧКА
     // ============================================================
 
     private fun refreshActiveShell() {
@@ -262,9 +254,6 @@ class ShellFragment : Fragment() {
         }
     }
 
-    /**
-     * Открывает магазин оболочек.
-     */
     private fun openStore() {
         try {
             val intent = Intent(requireContext(), StoreActivity::class.java)
@@ -278,6 +267,7 @@ class ShellFragment : Fragment() {
         }
     }
 
+    /** Диалог с информацией об активной оболочке. */
     @SuppressLint("InflateParams")
     private fun showShellInfoDialog() {
         val shell = shellManager.getActiveShell()
@@ -308,7 +298,6 @@ class ShellFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.shell_info_orientation_value).text =
             mapOrientation(shell.orientation)
 
-        // ===== Репозиторий — весь ряд кликабельный =====
         val repoContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_container)
         val repoRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_repo_row)
 
@@ -322,7 +311,6 @@ class ShellFragment : Fragment() {
             repoRow.setOnClickListener(null)
         }
 
-        // ===== Telegram — весь ряд кликабельный =====
         val telegramContainer = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_container)
         val telegramRow = dialogView.findViewById<LinearLayout>(R.id.shell_info_telegram_row)
 
@@ -374,5 +362,4 @@ class ShellFragment : Fragment() {
             ).show()
         }
     }
-
 }

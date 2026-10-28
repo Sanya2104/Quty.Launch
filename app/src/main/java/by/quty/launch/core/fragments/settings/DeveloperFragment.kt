@@ -34,48 +34,29 @@ import java.io.File
 import java.util.zip.ZipFile
 
 /**
- * Фрагмент "Разработчикам" для Настроек.
- *
- * Доступен только в DevMode (флаг в developer_prefs).
- * Содержит:
- * - Секция "Оболочка": просмотр manifest.json (с копированием), перезагрузка оболочки
- * - Секция "Приложения": переключатели отображения Терминала и Логгера в списке приложений
- * - Секция "Управление данными": очистка кэша WebView, сброс онбординга
- * - Секция "Инструменты": сброс таймера авто-проверки обновлений, перезапуск приложения
- *
- * Действия, требующие перезапуска приложения (reload shell, clear WebView cache,
- * reset onboarding, смена видимости приложений), помечаются через
- * SettingsActivity.markRestartRequired() — при выходе из настроек пользователю
- * будет предложен диалог перезапуска.
+ * DevMode-фрагмент: manifest shell, reload, видимость Терминала/Логгера, сброс данных, инструменты.
  */
 class DeveloperFragment : Fragment() {
 
-    // Менеджеры
     private lateinit var configManager: ConfigManager
     private lateinit var shellManager: ShellManager
     private lateinit var storageManager: StorageManager
     private lateinit var updateManager: SystemUpdateManager
 
-    // UI — Оболочка
     private lateinit var shellManifestRow: View
     private lateinit var shellReloadRow: View
 
-    // UI — Приложения (видимость Терминала и Логгера)
     private lateinit var showTerminalSwitch: SwitchCompat
     private lateinit var showLoggerSwitch: SwitchCompat
 
-    // UI — Данные
     private lateinit var clearWebViewCacheRow: View
     private lateinit var resetOnboardingRow: View
 
-    // UI — Инструменты
     private lateinit var resetUpdateTimerRow: View
     private lateinit var restartAppRow: View
 
-    // JSON парсер для manifest.json
     private val json = Json { prettyPrint = true }
 
-    // SharedPreferences с настройками DevMode
     private val devPrefs by lazy {
         requireContext().getSharedPreferences(PREFS_DEVELOPER, Context.MODE_PRIVATE)
     }
@@ -91,7 +72,6 @@ class DeveloperFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Инициализация менеджеров
         (activity as? SettingsActivity)?.let { settingsActivity ->
             configManager = settingsActivity.configManager
         } ?: run {
@@ -101,7 +81,6 @@ class DeveloperFragment : Fragment() {
         storageManager = StorageManager(requireContext())
         updateManager = SystemUpdateManager(requireContext())
 
-        // Инициализация UI-ссылок
         shellManifestRow = view.findViewById(R.id.dev_shell_manifest_row)
         shellReloadRow = view.findViewById(R.id.dev_shell_reload_row)
         showTerminalSwitch = view.findViewById(R.id.dev_show_terminal_switch)
@@ -134,15 +113,11 @@ class DeveloperFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
 
-            // Перезагрузка оболочки требует перезапуска приложения,
-            // чтобы WebView подхватил новую версию.
             (activity as? SettingsActivity)?.markRestartRequired()
         }
     }
 
-    /**
-     * Показывает диалог с содержимым manifest.json активной оболочки.
-     */
+    /** Диалог с manifest.json активной оболочки + копирование. */
     private fun showShellManifestDialog() {
         try {
             val activeShell = shellManager.getActiveShell()
@@ -165,7 +140,6 @@ class DeveloperFragment : Fragment() {
                     return
                 }
 
-            // Пытаемся распарсить и отформатировать JSON
             val displayText = try {
                 val parsed = json.decodeFromString<JsonObject>(content)
                 json.encodeToString(JsonObject.serializer(), parsed)
@@ -173,7 +147,6 @@ class DeveloperFragment : Fragment() {
                 content
             }
 
-            // Инфлейтим кастомный диалог
             val dialogView = layoutInflater.inflate(R.layout.dialog_dev_manifest, null)
 
             val dialog = AlertDialog.Builder(
@@ -186,16 +159,13 @@ class DeveloperFragment : Fragment() {
 
             dialog.window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
 
-            // Заполняем содержимое
             val contentTextView: TextView = dialogView.findViewById(R.id.dev_manifest_content)
             contentTextView.text = displayText
 
-            // Кнопка закрытия (крестик)
             dialogView.findViewById<ImageButton>(R.id.dev_manifest_close_button).setOnClickListener {
                 dialog.dismiss()
             }
 
-            // Кнопка "Копировать"
             dialogView.findViewById<Button>(R.id.dev_manifest_copy_button).setOnClickListener {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText("manifest.json", displayText)
@@ -219,9 +189,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
-    /**
-     * Читает содержимое manifest.json.
-     */
+    /** Читает manifest.json (assets или ZIP). */
     private fun readManifestContent(shellName: String, isAsset: Boolean, sourcePath: String): String? {
         return try {
             if (isAsset) {
@@ -242,21 +210,12 @@ class DeveloperFragment : Fragment() {
     }
 
     // ============================================================
-    // СЕКЦИЯ 2: ПРИЛОЖЕНИЯ (ВИДИМОСТЬ ТЕРМИНАЛА И ЛОГГЕРА)
+    // СЕКЦИЯ 2: ВИДИМОСТЬ ТЕРМИНАЛА И ЛОГГЕРА
     // ============================================================
 
     /**
-     * Настраивает два переключателя — отображение Терминала и Логгера
-     * в списке приложений, который возвращает API-метод GetApps.
-     *
-     * Изменение любого из переключателей:
-     * - сохраняет флаг в developer_prefs;
-     * - инвалидирует кэш приложений (CacheManager.invalidateCache());
-     * - помечает SettingsActivity, что нужен перезапуск (при выходе —
-     *   стандартный диалог "Применить параметры").
-     *
-     * Само отображение в списке приложений регулируется на стороне
-     * GetApps: он проверяет DevMode + соответствующий флаг.
+     * Переключатели видимости Терминала/Логгера в GetApps.
+     * При изменении — invalidateCache + markRestartRequired.
      */
     private fun setupAppsSection() {
         showTerminalSwitch.isChecked = devPrefs.getBoolean(KEY_SHOW_TERMINAL, false)
@@ -273,23 +232,13 @@ class DeveloperFragment : Fragment() {
         }
     }
 
-    /**
-     * Общая реакция на смену видимости приложений:
-     * инвалидация кэша + пометка о необходимости перезапуска.
-     *
-     * Без перезапуска MainActivity не перезапросит список приложений
-     * у оболочки — и изменения не применятся до следующего запуска.
-     */
     private fun onAppVisibilityChanged() {
-        // Сбрасываем кэш приложений — при следующем GetApps соберётся заново
         CacheManager.invalidateCache()
-
-        // Сообщаем SettingsActivity о необходимости перезапуска
         (activity as? SettingsActivity)?.markRestartRequired()
     }
 
     // ============================================================
-    // СЕКЦИЯ 3: УПРАВЛЕНИЕ ДАННЫМИ
+    // СЕКЦИЯ 3: ДАННЫЕ
     // ============================================================
 
     private fun setupDataSection() {
@@ -302,9 +251,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
-    /**
-     * Очищает кэш WebView: cacheDir + clearCache + clearHistory + clearFormData.
-     */
+    /** Очистка WebView cache/history/formData/ssl. */
     private fun clearWebViewCache() {
         try {
             requireContext().cacheDir.deleteRecursively()
@@ -332,9 +279,6 @@ class DeveloperFragment : Fragment() {
         }
     }
 
-    /**
-     * Диалог 1: подтверждение сброса онбординга (danger).
-     */
     private fun showResetOnboardingDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_confirm, null)
 
@@ -369,18 +313,7 @@ class DeveloperFragment : Fragment() {
         dialog.show()
     }
 
-    /**
-     * Сбрасывает флаг onboarding_completed.
-     *
-     * ВАЖНО: выставляем флаг force_show_onboarding = true.
-     * Без него WelcomeActivity при запуске сразу увидит, что все
-     * разрешения уже выданы, и мгновенно закроется (finishAndGoToMain),
-     * не показав экран пользователю.
-     *
-     * С флагом WelcomeActivity НЕ автозапускает Main и показывает UI
-     * (экран приветствия со списком разрешений и кнопкой "Начать").
-     * Флаг снимается в WelcomeActivity.finishAndGoToMain().
-     */
+    /** Сбрасывает onboarding_completed + ставит force_show_onboarding. */
     private fun performResetOnboarding() {
         val prefs = requireContext().getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
         prefs.edit {
@@ -393,9 +326,6 @@ class DeveloperFragment : Fragment() {
         showRestartAfterResetDialog()
     }
 
-    /**
-     * Диалог 2: перезапуск после сброса онбординга.
-     */
     private fun showRestartAfterResetDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 
@@ -444,20 +374,7 @@ class DeveloperFragment : Fragment() {
         }
     }
 
-    /**
-     * Сбрасывает таймер авто-проверки обновлений.
-     *
-     * Что делает:
-     * - setLastCheckTime(0) — при следующем MainActivity.onResume()
-     *   авто-проверка сработает сразу (now - 0 >= interval);
-     * - clearCachedUpdate() — сбрасывает кэш последнего результата,
-     *   чтобы маркер на «Настройки» / «Центр обновления» исчез до
-     *   новой проверки.
-     *
-     * Перезапуск приложения НЕ требуется — просто тост. Следующая
-     * проверка произойдёт при возврате в MainActivity (там вызывается
-     * maybeRunAutoUpdateCheck()).
-     */
+    /** Сбрасывает lastCheckTime и кэш update. */
     private fun resetUpdateTimer() {
         updateManager.setLastCheckTime(0L)
         updateManager.clearCachedUpdate()
@@ -469,9 +386,6 @@ class DeveloperFragment : Fragment() {
         ).show()
     }
 
-    /**
-     * Диалог подтверждения перезапуска приложения.
-     */
     private fun showRestartAppDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_dev_restart, null)
 
@@ -501,14 +415,7 @@ class DeveloperFragment : Fragment() {
     // ВСПОМОГАТЕЛЬНЫЕ
     // ============================================================
 
-    /**
-     * Перезапускает приложение — открывает MainActivity с флагом CLEAR_TASK.
-     *
-     * Если анимации отключены (в настройках Персонализации), переход
-     * выполняется без анимации — через BaseActivity.startActivityAnimated.
-     * Фрагмент не является наследником BaseActivity, поэтому вызываем
-     * метод через (activity as? BaseActivity).
-     */
+    /** Перезапуск через BaseActivity, если доступен. */
     private fun restartApp() {
         val intent = Intent(requireContext(), MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -518,14 +425,12 @@ class DeveloperFragment : Fragment() {
             baseActivity.startActivityAnimated(intent)
             baseActivity.finishAnimated()
         } else {
-            // Fallback — на случай, если фрагмент вдруг окажется не в BaseActivity
             startActivity(intent)
             requireActivity().finish()
         }
     }
 
     companion object {
-        // SharedPreferences с настройками DevMode
         private const val PREFS_DEVELOPER = "developer_prefs"
         private const val KEY_SHOW_TERMINAL = "show_terminal_in_apps"
         private const val KEY_SHOW_LOGGER = "show_logger_in_apps"

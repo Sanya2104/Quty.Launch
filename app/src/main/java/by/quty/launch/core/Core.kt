@@ -10,34 +10,21 @@ import by.quty.launch.core.managers.StorageManager
 import by.quty.launch.core.model.LoggerTagModel
 
 /**
- * Основной движок приложения.
- * Вызывает API методы через ApiRouter.
+ * Движок приложения: инициализация и точка входа для API-методов.
  */
 class Core(context: Context) {
 
     init {
-        // Инициализируем настройки логгера из prefs (enabled, autoSave)
-        // до первого логирования
         LoggerManager.init(context)
-
-        // Инициализируем все методы при старте
         ApiInitializer.init(context)
 
-        // Регистрируем BroadcastReceiver для отслеживания изменений приложений
-        // Создаём StorageManager для CacheManager
         val storageManager = StorageManager(context)
         CacheManager.init(storageManager, context)
 
         LoggerManager.info(LoggerTagModel.CORE, "CORE.init")
     }
 
-    /**
-     * Выполнение метода по имени.
-     *
-     * @param method - имя метода (например, "GetApps")
-     * @param params - JSON параметры метода
-     * @return JSON ответ в формате ApiResponse
-     */
+    /** Выполняет API-метод по имени. */
     suspend fun execute(method: String, params: String?): String {
         return ApiRouter.execute(method, params)
     }
